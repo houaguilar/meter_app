@@ -1,14 +1,14 @@
 
 
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/domain/repositories/projects/projects_local_repository.dart';
+import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
 
 import '../../../config/constants/error/failures.dart';
 import '../../../config/usecase/usecase.dart';
 import '../../entities/projects/project.dart';
 
 class GetAllProjects implements UseCase<List<Project>, NoParams> {
-  final ProjectsLocalRepository repository;
+  final ProjectsRepository repository;
 
   const GetAllProjects(this.repository);
 

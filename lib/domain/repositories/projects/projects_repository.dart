@@ -3,7 +3,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/config/constants/error/failures.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 
-abstract interface class ProjectsLocalRepository {
+abstract interface class ProjectsRepository {
   Future<Either<Failure, void>> saveProject(String name);
 
   Future<Either<Failure, List<Project>>> getAllProjects();

@@ -102,12 +102,12 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen> {
     final addMuro6 = ref.watch(addMuroLadrillo6Provider);
     final addMuro7 = ref.watch(addMuroLadrillo7Provider);
 
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        appBar: const AppBarWidget(titleAppBar: 'Datos',),
-        resizeToAvoidBottomInset: false,
-        body: Column(
+    return Scaffold(
+      appBar: const AppBarWidget(titleAppBar: 'Datos',),
+     // resizeToAvoidBottomInset: false,
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
@@ -167,7 +167,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen> {
                                 )
                             ),
                           ),
-                          const SizedBox(height: 200,)
+                          const SizedBox(height: 150,)
                         ],
                       ),
                     ),
@@ -453,10 +453,11 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen> {
               child: const Text("Metrar",
                   style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold)
+                      fontWeight: FontWeight.bold
+                  )
               ),
             ),
-            const SizedBox(height: 20,)
+            const SizedBox(height: 30,)
           ],
         ),
       ),

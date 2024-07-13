@@ -11,4 +11,5 @@ class Failure {
 enum FailureType {
   general,
   duplicateName,
+  unknown
 }

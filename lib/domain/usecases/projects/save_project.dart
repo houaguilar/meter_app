@@ -2,12 +2,12 @@
 
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/config/usecase/usecase.dart';
-import 'package:meter_app/domain/repositories/projects/projects_local_repository.dart';
+import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
 
 import '../../../config/constants/error/failures.dart';
 
 class CreateProject implements UseCase<void, CreateProjectParams> {
-  final ProjectsLocalRepository repository;
+  final ProjectsRepository repository;
 
   const CreateProject(this.repository);
 

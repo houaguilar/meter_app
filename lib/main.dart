@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/init_dependencies.dart';
+import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
@@ -33,6 +34,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final ProjectsBloc projectsBloc;
   late final MetradosBloc metradosBloc;
   late final ResultBloc resultBloc;
+  late final LocationsBloc locationsBloc;
 
   @override
   void initState() {
@@ -41,6 +43,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     projectsBloc = serviceLocator<ProjectsBloc>();
     metradosBloc = serviceLocator<MetradosBloc>();
     resultBloc = serviceLocator<ResultBloc>();
+    locationsBloc = serviceLocator<LocationsBloc>();
 
   }
 
@@ -49,6 +52,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     super.didChangeDependencies();
     authBloc.add(AuthIsUserLoggedIn());
     projectsBloc.add(LoadProjectsEvent());
+    locationsBloc.add(LoadLocations());
   }
 
   @override
@@ -73,7 +77,8 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
         BlocProvider(
             create: (_) => resultBloc,
-        )
+        ),
+        BlocProvider(create: (_) => locationsBloc),
       ],
       child: MaterialApp.router(
         title: 'METRASHOP',

@@ -9,3 +9,8 @@ final class AppUserLoggedIn extends AppUserState {
   final User user;
   AppUserLoggedIn(this.user);
 }
+
+final class AppUserError extends AppUserState {
+  final String message;
+  AppUserError(this.message);
+}

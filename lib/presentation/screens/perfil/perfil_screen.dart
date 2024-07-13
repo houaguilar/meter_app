@@ -40,6 +40,9 @@ class PerfilScreen extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                ElevatedButton(
+                    onPressed: () => context.pushNamed('register-location'),
+                    child: const Text('Regitrar Proveedor')),
                 const Spacer(),
                 Center(
                   child: ElevatedButton(

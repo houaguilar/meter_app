@@ -22,21 +22,21 @@ class _ProjectsScreenState extends State<ProjectsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Lista de Proyectos'),
-        centerTitle: true,
+        /*leadingWidth: 200,
+        leading: Text(
+          'Proyectos',
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFF33357E),
+          ),
+        ),*/
+        title: const Text('Proyectos'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(15.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Proyectos',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF33357E),
-              ),
-            ),
             const SizedBox(height: 10),
             Expanded(
               child: BlocConsumer<ProjectsBloc, ProjectsState>(
