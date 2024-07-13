@@ -45,5 +45,41 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+    <!-- Permisos de ubicación -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>La aplicación necesita acceso a tu ubicación para mostrar el mapa correctamente.</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>La aplicación necesita acceso a tu ubicación para mostrar el mapa correctamente.</string>
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>La aplicación necesita acceso a tu ubicación para mostrar el mapa correctamente.</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>We need access to your camera to take pictures.</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>We need access to your microphone to record audio.</string>
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>We need access to your photo library to save photos.</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>We need access to your photo library to select photos.</string>
+
+
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+    <key>LSApplicationQueriesSchemes</key>
+    <array>
+        <string>prefs</string>
+        <string>App-Prefs</string>
+        <string>tel</string>
+        <string>mailto</string>
+        <string>https</string>
+        <string>http</string>
+        <string>sms</string>
+        <string>whatsapp</string>
+    </array>
+
 </dict>
 </plist>

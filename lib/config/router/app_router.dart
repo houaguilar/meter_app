@@ -3,13 +3,14 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/home/muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/map_screen.dart';
+import 'package:meter_app/presentation/screens/perfil/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/projects/result/results_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
 
 import '../../presentation/blocs/auth/auth_bloc.dart';
-import '../../presentation/screens/perfil/resultados.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
 
@@ -165,6 +166,12 @@ class AppRouter {
                       ),
                     ],
                   ),
+                  GoRoute(
+                      parentNavigatorKey: _rootNavigator,
+                      path: 'map-screen',
+                      name: 'map-screen',
+                      builder: (context, state) => const MapScreen()
+                  )
                 ],
               ),
               GoRoute(
@@ -309,7 +316,12 @@ class AppRouter {
               GoRoute(
                 path: 'resultados',
                 name: 'resultados',
-                builder: (context, state) => const Resultados(),
+                builder: (context, state) => const MapScreen(),
+              ),
+              GoRoute(
+                path: 'register-location',
+                name: 'register-location',
+                builder: (context, state) => const RegisterLocationScreen(),
               ),
             ]
           ),

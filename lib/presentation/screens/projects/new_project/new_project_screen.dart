@@ -56,7 +56,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                 backgroundColor: Colors.green,
               ),
             );
-            context.pop(state.project); // Regresar el proyecto creado
+            context.pop(state.project);
           });
         }
         if (state is ProjectNameAlreadyExists) {
@@ -80,7 +80,7 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
                   TextFieldWidget(
                     label: 'Nombre',
                     hintText: 'Nombre del proyecto',
-                    icon: Icons.school,
+                    icon: Icons.text_snippet,
                     controller: _nameTextEditingController,
                     error: _errorName,
                   ),

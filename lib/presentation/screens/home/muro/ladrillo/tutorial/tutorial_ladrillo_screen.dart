@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/config/constants/colors.dart';
 
 import '../../../../widgets/widgets.dart';
 
@@ -23,9 +24,20 @@ class TutorialLadrilloScreen extends StatelessWidget {
                 onPressed: () {
                   context.pushNamed('ladrillo1');
                 },
-                child: const Text('Empecemos'),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  fixedSize: const Size(200, 50),
+                  backgroundColor: AppColors.orange
+                ),
+                child: const Text('Empecemos',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold
+                  ),
+                ),
               ),
             ),
+            const SizedBox(height: 30,)
           ],
         ),
       ),

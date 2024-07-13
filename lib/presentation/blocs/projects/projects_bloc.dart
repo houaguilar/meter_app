@@ -8,6 +8,7 @@ import '../../../config/usecase/usecase.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/usecases/projects/delete_project.dart';
 import '../../../domain/usecases/projects/edit_project.dart';
+import '../../../services/sync_service.dart';
 
 part 'projects_event.dart';
 part 'projects_state.dart';
@@ -17,17 +18,20 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   final GetAllProjects _getAllProjects;
   final DeleteProject _deleteProject;
   final EditProject _editProject;
+  final SyncService _syncService;
 
   ProjectsBloc({
     required CreateProject createProject,
     required GetAllProjects getAllProjects,
     required DeleteProject deleteProject,
     required EditProject editProject,
+    required SyncService syncService,
   })  : _createProject = createProject,
         _getAllProjects = getAllProjects,
         _deleteProject = deleteProject,
         _editProject = editProject,
-        super(ProjectInitial()) {
+        _syncService = syncService,
+      super(ProjectInitial()) {
     on<CreateProjectEvent>(_onCreateProject);
     on<LoadProjectsEvent>(_onLoadProjects);
     on<SaveProject>(_onSaveProject);
@@ -43,13 +47,16 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         if (failure.type == FailureType.duplicateName) {
           print('ProjectNameAlreadyExists create failure');
           emit(ProjectNameAlreadyExists(failure.message));
-          add(LoadProjectsEvent());
+       //   add(LoadProjectsEvent());
         } else {
           print('ProjectFailure create failure');
           emit(ProjectFailure(failure.message));
         }
       },
-          (_) => add(LoadProjectsEvent()),
+          (_) async {
+          //  await _syncService.syncProjects();
+            add(LoadProjectsEvent());
+      },
     );
   }
 
@@ -62,8 +69,11 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     final result = await _getAllProjects(NoParams());
     result.fold(
           (failure) => emit(ProjectFailure(failure.message)),
+
           (projects) => emit(ProjectSuccess(projects)),
     );
+
+
   }
 
   void _onSaveProject(
@@ -78,17 +88,19 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
         if (failure.type == FailureType.duplicateName) {
           print('ProjectNameAlreadyExists save failure');
           emit(ProjectNameAlreadyExists(failure.message));
-          add(LoadProjectsEvent());
+   //       add(LoadProjectsEvent());
 
         } else {
           print('ProjectFailure save failure');
           emit(ProjectFailure(failure.message));
         }
       },
-          (_) {
-        print('SaveProject succeeded');
-        emit(ProjectAdded(project: event.project));
-      },
+          (_) async {
+         //   await _syncService.syncProjects(); // Sincroniza después de guardar un proyecto
+            print('SaveProject succeeded');
+            emit(ProjectAdded(project: event.project));
+            add(LoadProjectsEvent());
+          },
     );
   }
 
@@ -100,7 +112,10 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
     final result = await _deleteProject(DeleteProjectParams(project: event.project));
     result.fold(
           (failure) => emit(ProjectFailure(failure.message)),
-          (_) => add(LoadProjectsEvent()),
+          (_) async {
+    //    await _syncService.syncProjects(); // Sincroniza después de eliminar un proyecto
+        add(LoadProjectsEvent());
+      },
     );
   }
 
@@ -114,20 +129,17 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
           print('ProjectNameAlreadyExists failure');
 
           emit(ProjectNameAlreadyExists(failure.message));
-          add(LoadProjectsEvent());
+    //      add(LoadProjectsEvent());
 
         } else {
           print('ProjectFailure failure');
-
           emit(ProjectFailure(failure.message));
         }
       },
-          (_) => add(LoadProjectsEvent()),
+          (_) async {
+   //     await _syncService.syncProjects(); // Sincroniza después de editar un proyecto
+        add(LoadProjectsEvent());
+      },
     );
-  }
-
-  String _mapFailureToMessage(Failure failure) {
-    // Puedes mapear los mensajes de fallo a mensajes específicos aquí.
-    return 'Server Failure';
   }
 }

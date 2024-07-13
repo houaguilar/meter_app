@@ -10,4 +10,6 @@ abstract interface class ProjectsLocalDataSource {
   Future<void> deleteProject(Project project);
 
   Future<void> editProject(Project project);
+
+  Future<void> saveProjects(List<Project> projects);
 }

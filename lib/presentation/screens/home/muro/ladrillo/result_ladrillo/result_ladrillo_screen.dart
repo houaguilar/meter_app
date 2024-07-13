@@ -81,7 +81,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
         const SizedBox(height: 10),
         FloatingActionButton.extended(
           onPressed: () {
-            context.goNamed('mapa');
+            context.goNamed('map-screen');
           },
           heroTag: "btnSearch",
           label: const Text('Buscar Ferreteria'),
@@ -326,9 +326,21 @@ class _BloquetaContainer extends ConsumerWidget {
   }
 
   Widget _buildBloquetaContainer(BuildContext context, List<Bloqueta> results) {
+
     double areaMuro(int index) {
       return double.parse(results[index].largo) * double.parse(results[index].altura);
     }
+
+    double calcularSumaTotalDeAreas(List<Bloqueta> results) {
+      double sumaTotal = 0.0;
+      for (int i = 0; i < results.length; i++) {
+        sumaTotal += areaMuro(i);
+      }
+      return sumaTotal;
+    }
+
+    double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
+
 
     return Column(
       children: [
@@ -353,9 +365,31 @@ class _BloquetaContainer extends ConsumerWidget {
           },
           itemCount: results.length,
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            const SizedBox(),
+            Column(
+              children: [
+       //         SizedBox(child: Divider(height: 2,)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    const Text('Total:'),
+                    const SizedBox(width: 15,),
+                    Text('$sumaTotalDeAreas m2'),
+                  ],
+                )
+              ],
+            )
+
+          ],
+        )
       ],
     );
   }
+
+
 }
 
 class _LadrilloContainer extends ConsumerWidget {
@@ -373,6 +407,16 @@ class _LadrilloContainer extends ConsumerWidget {
       return double.parse(results[index].largo) * double.parse(results[index].altura);
     }
 
+    double calcularSumaTotalDeAreas(List<Ladrillo> results) {
+      double sumaTotal = 0.0;
+      for (int i = 0; i < results.length; i++) {
+        sumaTotal += areaMuro(i);
+      }
+      return sumaTotal;
+    }
+
+    double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
+
     return Column(
       children: [
         const CommonContentResults(
@@ -396,9 +440,30 @@ class _LadrilloContainer extends ConsumerWidget {
           },
           itemCount: results.length,
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            const SizedBox(),
+            Column(
+              children: [
+                //         SizedBox(child: Divider(height: 2,)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Total:'),
+                    const SizedBox(width: 15,),
+                    Text('$sumaTotalDeAreas m2'),
+                  ],
+                )
+              ],
+            )
+
+          ],
+        ),
       ],
     );
   }
+
 }
 
 Future<File> generatePdf(WidgetRef ref) async {
@@ -499,9 +564,6 @@ double calcularAsentado(String tipoAsentado, double largo, double altura, double
       return 0;
   }
 }
-
-
-
 
 double calcularCantidadBloquetas(String tipoBloqueta, double largo, double altura) {
   switch (tipoBloqueta) {

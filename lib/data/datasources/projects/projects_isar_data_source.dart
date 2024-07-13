@@ -2,6 +2,7 @@
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/datasources/projects/projects_local_data_source.dart';
 import 'package:meter_app/domain/entities/entities.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../config/constants/error/failures.dart';
 
@@ -18,14 +19,11 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
   @override
   Future<void> saveProject(String name) async {
     final isar = isarService;
-
     final existingProject = await isar.projects.filter().nameEqualTo(name).findFirst();
     if (existingProject != null) {
       throw Failure(message: 'Project with name $name already exists', type: FailureType.duplicateName);
     }
-
-    final project = Project(name: name);
-
+    final project = Project(name: name, userId: const Uuid().v4().toString());
     await isar.writeTxn(() async {
       await isar.projects.put(project);
     });
@@ -57,6 +55,17 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
 
     await isar.writeTxn(() async {
       await isar.projects.put(project);
+    });
+  }
+
+  @override
+  Future<void> saveProjects(List<Project> projects) async {
+    final isar = isarService;
+
+    await isar.writeTxn(() async {
+      for (var project in projects) {
+        await isar.projects.put(project);
+      }
     });
   }
 }

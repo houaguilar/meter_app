@@ -5,7 +5,9 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   connectivity_plus
+  geolocator_windows
   isar_flutter_libs
+  permission_handler_windows
   printing
   share_plus
   url_launcher_windows

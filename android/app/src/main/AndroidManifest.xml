@@ -1,4 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permisos -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!-- Declaración de características de hardware -->
+    <uses-feature android:name="android.hardware.telephony" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.location.gps" />
+
     <application
         android:label="meter_app"
         android:name="${applicationName}"
@@ -6,6 +21,7 @@
 
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCQhVaoFnEm3PMeaUQw6pj5xH8XUDZ5XdQ"/>
+        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
 
         <activity
             android:name=".MainActivity"
@@ -46,4 +62,6 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+
+
 </manifest>
