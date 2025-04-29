@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../widgets/widgets.dart';
+import '../../../widgets/widgets.dart';
 
 class LosasScreen extends StatelessWidget {
   const LosasScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: AppBarWidget(titleAppBar: 'Losas',),
-      body: _LosasView(),
+      body: const _LosasView(),
     );
   }
 }

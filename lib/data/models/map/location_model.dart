@@ -1,14 +1,15 @@
 import '../../../domain/entities/map/location.dart';
 
-class LocationModel extends Location {
+class LocationModel extends LocationMap {
   LocationModel({
-    required super.id,
+    super.id,
     required super.title,
     required super.description,
     required super.latitude,
     required super.longitude,
     required super.address,
     super.userId,
+    super.imageUrl,
   });
 
   factory LocationModel.fromMap(Map<String, dynamic> map) {
@@ -20,6 +21,7 @@ class LocationModel extends Location {
       longitude: map['longitude'],
       address: map['address'],
       userId: map['user_id'],
+      imageUrl: map['image_url'],
     );
   }
 
@@ -32,6 +34,7 @@ class LocationModel extends Location {
       'longitude': longitude,
       'address': address,
       'user_id': userId,
+      'image_url': imageUrl,
     };
   }
 }

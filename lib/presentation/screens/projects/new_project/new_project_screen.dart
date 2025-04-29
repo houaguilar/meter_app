@@ -45,53 +45,58 @@ class _NewProjectScreenState extends State<NewProjectScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ProjectsBloc, ProjectsState>(
-      builder: (context, state) {
+    return BlocListener<ProjectsBloc, ProjectsState>(
+      listener: (context, state) {
         if (state is ProjectAdded) {
-          Future.delayed(Duration.zero, () {
-            context.read<ProjectsBloc>().add(LoadProjectsEvent());
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Proyecto agregado con éxito'),
-                backgroundColor: Colors.green,
-              ),
-            );
-            context.pop(state.project);
-          });
-        }
-        if (state is ProjectNameAlreadyExists) {
-          Future.delayed(Duration.zero, () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.orange,
-              ),
-            );
-          });
-        }
-        return Scaffold(
-          body: ContentWidget(
-            header: const HeaderWidget(
-              title: 'Nuevo Proyecto',
+          // Al detectar el estado ProjectAdded, mostrar un SnackBar y navegar hacia atrás
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Proyecto agregado con éxito'),
+              backgroundColor: Colors.green,
             ),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextFieldWidget(
-                    label: 'Nombre',
-                    hintText: 'Nombre del proyecto',
-                    icon: Icons.text_snippet,
-                    controller: _nameTextEditingController,
-                    error: _errorName,
-                  ),
-                  const SizedBox(height: 20.0),
-                  ButtonWidget(onPressed: _save),
-                ],
-              ),
+          );
+          // Navegar de vuelta a la pantalla de proyectos
+          context.pop();
+        } else if (state is ProjectNameAlreadyExists) {
+          // Mostrar error si el proyecto ya existe
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        } else if (state is ProjectFailure) {
+          // Mostrar error si ocurre un fallo al guardar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${state.message}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      },
+      child: Scaffold(
+        body: ContentWidget(
+          header: const HeaderWidget(
+            title: 'Nuevo Proyecto',
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              children: [
+                TextFieldWidget(
+                  label: 'Nombre',
+                  hintText: 'Nombre del proyecto',
+                  icon: Icons.text_snippet,
+                  controller: _nameTextEditingController,
+                  error: _errorName,
+                ),
+                const SizedBox(height: 20.0),
+                ButtonWidget(onPressed: _save),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 }

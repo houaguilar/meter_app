@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/domain/entities/home/piso/floor.dart';
+import 'package:meter_app/presentation/providers/home/piso/floor_providers.dart';
+import 'package:meter_app/presentation/widgets/cards/floor_card.dart';
 
+import '../../../../config/constants/constants.dart';
 import '../../../providers/providers.dart';
-import '../../widgets/widgets.dart';
+import '../../../widgets/widgets.dart';
 
 class PisosScreen extends StatelessWidget {
   const PisosScreen({super.key});
@@ -11,9 +15,9 @@ class PisosScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: AppBarWidget(titleAppBar: "Pisos",),
-      body: _PisosView(),
+      body: const _PisosView(),
     );
   }
 }
@@ -23,43 +27,65 @@ class _PisosView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
+    final floorsAsync = ref.watch(floorsProvider);
+    final selectedMaterial = ref.watch(selectedFloorProvider);
     ref.watch(tipoPisoProvider);
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Text('Que vas a construir ?', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          const SizedBox(height: 15,),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(tipoPisoProvider.notifier).selectPiso('falso');
-              context.pushNamed('falso-piso');
-            },
-            style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)
-                )
-            ),
-            child: const Text('FALSO PISO'),
-          ),
-          const SizedBox(height: 10,),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(tipoPisoProvider.notifier).selectPiso('contrapiso');
-              context.pushNamed('contrapiso');
-            },
-            style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)
-                )
-            ),
-            child: const Text('CONTRAPISO'),
-          ),
-        ],
+    return Scaffold(
+      body: floorsAsync.when(
+        data: (coatings) => _buildCoatingGrid(context, ref, coatings),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
+    );
+  }
+
+  Widget _buildCoatingGrid(BuildContext context, WidgetRef ref, List<Floor> floors) {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(24.0),
+          child: Text(
+            'Tipo de revestimiento',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: AppColors.primaryMetraShop,
+            ),
+            textAlign: TextAlign.start,
+          ),
+        ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.all(10.0),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 0.7),
+            itemCount: floors.length,
+            itemBuilder: (context, index) {
+              final floor = floors[index];
+              return GestureDetector(
+                onTap: () {
+                  ref.read(selectedFloorProvider.notifier).state = floor;
+                },
+                child: FloorCard(
+                  floor: floor,
+                  onTap: () {
+                    if (floor.id == '1') {
+                      ref.read(tipoPisoProvider.notifier).selectPiso('falso');
+                      context.pushNamed('falso-piso');
+                    } else if (floor.id == '2') {
+                      ref.read(tipoPisoProvider.notifier).selectPiso('porcelanato');
+                      context.pushNamed('porcelanato');
+                    } else {
+                      ref.read(tipoPisoProvider.notifier).selectPiso('contrapiso');
+                      context.pushNamed('contrapiso');
+                    }
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

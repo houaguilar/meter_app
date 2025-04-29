@@ -14,17 +14,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserLogin _userLogin;
   final CurrentUser _currentUser;
   final UserLogout _userLogout;
+  final UserSignInWithGoogle _userSignInWithGoogle;
   final AppUserCubit _appUserCubit;
   AuthBloc({
     required UserSignUp userSignUp,
     required UserLogin userLogin,
     required CurrentUser currentUser,
     required UserLogout userLogout,
-    required AppUserCubit appUserCubit,
-  })  : _userSignUp = userSignUp,
+    required UserSignInWithGoogle userSignInWithGoogle,
+    required AppUserCubit appUserCubit
+  })  :_userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
         _userLogout = userLogout,
+        _userSignInWithGoogle = userSignInWithGoogle,
       _appUserCubit = appUserCubit,
         super(AuthInitial()) {
     on<AuthEvent>((_, emit) => emit(AuthLoading()));
@@ -32,6 +35,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLogin>(_onAuthLogin);
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
     on<AuthLogout>(_onAuthLogout);
+    on<AuthLoginWithGoogle>(_onAuthLoginWithGoogle);
   }
 
   void _isUserLoggedIn(
@@ -50,6 +54,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthSignUp event,
       Emitter<AuthState> emit,
       ) async {
+    emit(AuthLoading());
     final res = await _userSignUp(
       UserSignUpParams(
         email: event.email,
@@ -57,6 +62,21 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         name: event.name,
       ),
     );
+
+    res.fold(
+          (failure) => emit(AuthFailure(failure.message)),
+          (user) => _emitAuthSuccess(user, emit),
+
+    );
+  }
+
+  void _onAuthLoginWithGoogle(
+      AuthLoginWithGoogle event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+
+    final res = await _userSignInWithGoogle(NoParams());
 
     res.fold(
           (failure) => emit(AuthFailure(failure.message)),
@@ -95,6 +115,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
   }
+
+  // void _emitAuthSuccess(
+  //     User user,
+  //     Emitter<AuthState> emit,
+  //     ) {
+  //   // Actualiza el estado del cubit con el usuario logueado
+  //   _appUserCubit.updateUser(user);
+  //
+  //   /*// Verifica si el estado de AppUserCubit es AppUserLoggedIn antes de acceder a user
+  //   final currentState = _appUserCubit.state;
+  //   if (currentState is AppUserLoggedIn) {
+  //     emit(AuthSuccess(currentState.user)); // Usa el user del estado loggedIn
+  //   } else {
+  //     emit(const AuthFailure('Error al obtener el usuario'));
+  //   }*/
+  //   emit(AuthSuccess(user));
+  // }
 
   void _emitAuthSuccess(
       User user,

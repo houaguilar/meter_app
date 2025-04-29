@@ -1,6 +1,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:meter_app/config/constants/constants.dart';
 
 
@@ -9,20 +10,19 @@ const niceColor = Color(0xFF3498db);
 
 class AppTheme {
 
-  final bool isDarkmode;
-
-  AppTheme({ required this.isDarkmode });
+  AppTheme();
 
 
   ThemeData getTheme() => ThemeData(
     useMaterial3: true,
-    colorSchemeSeed: AppColors.teal,
-    brightness: isDarkmode ? Brightness.dark : Brightness.light,
+    colorSchemeSeed: AppColors.primaryMetraShop,
 
     listTileTheme: const ListTileThemeData(
-      iconColor: AppColors.teal,
+      iconColor: AppColors.primaryMetraShop,
     ),
 
+    fontFamily: 'assets/fonts/Poppins',
+    textTheme: GoogleFonts.poppinsTextTheme()
   );
 
 }

@@ -8,7 +8,6 @@ import '../../../config/usecase/usecase.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/usecases/projects/delete_project.dart';
 import '../../../domain/usecases/projects/edit_project.dart';
-import '../../../services/sync_service.dart';
 
 part 'projects_event.dart';
 part 'projects_state.dart';
@@ -18,19 +17,16 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   final GetAllProjects _getAllProjects;
   final DeleteProject _deleteProject;
   final EditProject _editProject;
-  final SyncService _syncService;
 
   ProjectsBloc({
     required CreateProject createProject,
     required GetAllProjects getAllProjects,
     required DeleteProject deleteProject,
     required EditProject editProject,
-    required SyncService syncService,
   })  : _createProject = createProject,
         _getAllProjects = getAllProjects,
         _deleteProject = deleteProject,
         _editProject = editProject,
-        _syncService = syncService,
       super(ProjectInitial()) {
     on<CreateProjectEvent>(_onCreateProject);
     on<LoadProjectsEvent>(_onLoadProjects);

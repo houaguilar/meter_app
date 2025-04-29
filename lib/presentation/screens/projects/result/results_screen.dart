@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meter_app/presentation/widgets/app_bar/app_bar_projects_widget.dart';
 
 import '../../../../domain/entities/entities.dart';
 import '../../../blocs/projects/metrados/result/result_bloc.dart';
@@ -14,9 +15,7 @@ class ResultsScreen extends StatelessWidget {
     context.read<ResultBloc>().add(LoadResultsEvent(metradoId: metradoId));
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultados Guardados'),
-      ),
+      appBar: const AppBarProjectsWidget(titleAppBar: 'Resultados Guardados'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: BlocBuilder<ResultBloc, ResultState>(
@@ -81,7 +80,10 @@ class ResultsScreen extends StatelessWidget {
       children: results.map((result) {
         if (result is Ladrillo) {
           double area() {
-            return double.parse(result.largo) * double.parse(result.altura);
+            // Si largo o altura son nulos, retornamos 0.0 como valor por defecto
+            final largo = double.tryParse(result.largo ?? '') ?? 0.0;
+            final altura = double.tryParse(result.altura ?? '') ?? 0.0;
+            return largo * altura;
           }
           return ListTile(
             title: Text(result.description),
@@ -89,7 +91,7 @@ class ResultsScreen extends StatelessWidget {
           );
         } else if (result is Bloqueta) {
           double area() {
-            return double.parse(result.largo) * double.parse(result.altura);
+            return double.parse(result.largo ?? '') * double.parse(result.altura ?? '');
           }
           return ListTile(
             title: Text(result.description),
@@ -97,11 +99,12 @@ class ResultsScreen extends StatelessWidget {
           );
         } else if (result is Piso) {
           double volumen() {
-            return double.parse(result.largo) * double.parse(result.altura) * double.parse(result.ancho);
+           // return double.parse(result.largo) * double.parse(result.altura) * double.parse(result.ancho);
+            return 0.0;
           }
           return ListTile(
             title: Text(result.description),
-            subtitle: Text('Altura: ${result.altura}'),
+            subtitle: Text('Altura: ${result.ancho}'),
             trailing: Text('${volumen().toString()} (m3)'),
           );
         } else {

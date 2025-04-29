@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:meter_app/domain/datasources/map/location_data_source.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -33,8 +35,22 @@ class LocationDataSourceImpl implements LocationDataSource {
     } catch (e) {
       throw ServerException(e.toString());
     }
+  }
+
+  @override
+  Future<String> uploadImage(File image) async {
+    try {
+      final response = await supabaseClient.storage
+          .from('locations')
+          .upload('location/${DateTime.now().toIso8601String()}.jpg', image);
 
 
-
+      final url = supabaseClient.storage.from('locations').getPublicUrl(response);
+      return url;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException('Image upload failed: $e');
+    }
   }
 }

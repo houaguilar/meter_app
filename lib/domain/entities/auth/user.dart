@@ -1,13 +1,11 @@
-
 class User {
-
   late String id;
-  late String email;
   late String name;
+  late String email;
 
   User({
     required this.id,
-    required this.email,
     required this.name,
+    required this.email,
   });
 }

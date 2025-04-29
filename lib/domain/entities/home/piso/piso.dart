@@ -17,32 +17,40 @@ class Piso {
   final String idPiso;
   final String tipo;
   final String description;
-  final String largo;
-  final String ancho;
-  final String altura;
+  final String factorDesperdicio;
+  final String espesor;
+  final String? largo;
+  final String? ancho;
+  final String? area;
 
   Piso({
     required this.idPiso,
     required this.tipo,
     required this.description,
-    required this.largo,
-    required this.ancho,
-    required this.altura,
+    required this.factorDesperdicio,
+    required this.espesor,
+    this.largo,
+    this.ancho,
+    this.area
   });
 
   Piso copyWith({
     String? idPiso,
     String? tipo,
     String? description,
+    String? factorDesperdicio,
+    String? espesor,
     String? largo,
     String? ancho,
-    String? altura,
+    String? area,
   }) => Piso(
     idPiso: idPiso ?? this.idPiso,
     tipo: tipo ?? this.tipo,
     description: description ?? this.description,
+    factorDesperdicio: factorDesperdicio ?? this.factorDesperdicio,
+    espesor: espesor ?? this.espesor,
     largo: largo ?? this.largo,
     ancho: ancho ?? this.ancho,
-    altura: altura ?? this.altura,
+    area: area ?? this.area,
   )..id = id;
 }

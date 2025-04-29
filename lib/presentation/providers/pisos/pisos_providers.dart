@@ -1,4 +1,5 @@
 
+import 'package:meter_app/domain/services/piso_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
@@ -48,19 +49,35 @@ class CantidadPiedraChancada extends _$CantidadPiedraChancada {
 
 @riverpod
 class PisosResult extends _$PisosResult {
+  final PisoService _pisoService = PisoService();
   @override
   List<Piso> build() => [];
 
   void createPisos(
       String tipo,
       String description,
-      String largo,
-      String ancho,
-      String altura,
-      ) {
-    state = [
-      ...state, Piso(idPiso: uuid.v4(), tipo: tipo, description: description, largo: largo, ancho: ancho, altura: altura)
-    ];
+      String factor,
+      String espesor, {
+        String? largo,
+        String? ancho,
+        String? area,
+      }){
+    final newPiso = Piso(
+      idPiso: uuid.v4(),
+      description: description,
+      tipo: tipo,
+      factorDesperdicio: factor,
+      espesor: espesor,
+      largo: largo,
+      ancho: ancho,
+      area: area,
+    );
+
+    if (!_pisoService.esValido(newPiso)) {
+      throw Exception("El ladrillo debe tener largo y altura o área definida.");
+    }
+
+    state = [...state, newPiso];
   }
 
   void clearList() {
@@ -70,9 +87,11 @@ class PisosResult extends _$PisosResult {
 
 @riverpod
 List<double> volumenPiso(VolumenPisoRef ref) {
+  final pisoSrevice = PisoService();
   final pisos = ref.watch( pisosResultProvider );
 
-  return pisos.map((e) => double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toList();
+  return pisos.map((piso) => pisoSrevice.calcularArea(piso) ?? 0.0).toList();
+  //return pisos.map((e) => double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toList();
 }
 
 @riverpod

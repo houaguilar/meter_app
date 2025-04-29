@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../providers/providers.dart';
-import '../../../widgets/shared/custom_add_three_fields.dart';
-import '../../../widgets/widgets.dart';
+import '../../../../widgets/widgets.dart';
 
 class DatosLosasMacizasScreen extends ConsumerStatefulWidget {
   const DatosLosasMacizasScreen({super.key});
@@ -94,7 +93,7 @@ class _DatosLosasMacizasScreenState extends ConsumerState<DatosLosasMacizasScree
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: const AppBarWidget(titleAppBar: 'Losa Maciza',),
+        appBar: AppBarWidget(titleAppBar: 'Losa Maciza',),
         body: Column(
           children: [
             Expanded(

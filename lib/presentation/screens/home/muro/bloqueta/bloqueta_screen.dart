@@ -5,16 +5,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../data/models/models.dart';
 import '../../../../providers/providers.dart';
-import '../../../widgets/widgets.dart';
+import '../../../../widgets/widgets.dart';
 
 class BloquetaScreen extends StatelessWidget {
   const BloquetaScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: AppBarWidget(titleAppBar: "Bloqueta",),
-      body: _BloquetaScreenView(),
+      body: const _BloquetaScreenView(),
     );
   }
 }

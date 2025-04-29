@@ -1,12 +1,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../../config/constants/colors.dart';
 import '../../../../providers/providers.dart';
-import '../../../widgets/shared/custom_add_three_fields.dart';
-import '../../../widgets/widgets.dart';
+import '../../../../widgets/widgets.dart';
 
 class DatosEscalerasScreen extends ConsumerStatefulWidget {
   const DatosEscalerasScreen({super.key});
@@ -95,7 +93,7 @@ class _DatosEscalerasScreenState extends ConsumerState<DatosEscalerasScreen> {
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: const AppBarWidget(titleAppBar: 'Losa Aligerada',),
+        appBar: AppBarWidget(titleAppBar: 'Losa Aligerada',),
         body: Column(
           children: [
             Expanded(
@@ -179,7 +177,7 @@ class _DatosEscalerasScreenState extends ConsumerState<DatosEscalerasScreen> {
             ),
             MaterialButton(
               onPressed: () {
-                final FormState formDescription1 = _formKeyDescriptionMuro1.currentState!;
+                /*final FormState formDescription1 = _formKeyDescriptionMuro1.currentState!;
                 final FormState formLargo1 = _formKeyLargoMuro1.currentState!;
                 final FormState formAltura1 = _formKeyAnchoMuro1.currentState!;
 
@@ -282,7 +280,7 @@ class _DatosEscalerasScreenState extends ConsumerState<DatosEscalerasScreen> {
                   }
                 }  else {
                   null;
-                }
+                }*/
               },
               color: AppColors.orange,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),

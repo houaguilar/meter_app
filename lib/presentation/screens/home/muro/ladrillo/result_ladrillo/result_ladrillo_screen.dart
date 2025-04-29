@@ -2,13 +2,16 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/config/constants/colors.dart';
+import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../data/models/models.dart';
 import '../../../../../providers/providers.dart';
-import '../../../../widgets/widgets.dart';
+import '../../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class ResultLadrilloScreen extends ConsumerWidget {
@@ -23,46 +26,26 @@ class ResultLadrilloScreen extends ConsumerWidget {
         return true;
       },
       child: Scaffold(
-        appBar: const AppBarWidget(titleAppBar: 'Resultados'),
+        appBar: AppBarWidget(titleAppBar: 'Resultado'),
         body: const _ResultLadrilloScreenView(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: _buildFloatingActionButton(context, ref),
+        floatingActionButton: _buildFloatingActionButtons(context, ref),
       ),
     );
   }
 
-  Widget _buildFloatingActionButton(BuildContext context, WidgetRef ref) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: constraints.maxWidth > 450
-              ? _buildLargeScreenLayout(context, ref)
-              : _buildSmallScreenLayout(context, ref),
-        );
-      },
-    );
-  }
-
-  Widget _buildSmallScreenLayout(BuildContext context, WidgetRef ref) {
+  Widget _buildFloatingActionButtons(BuildContext context, WidgetRef ref) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            FloatingActionButton.extended(
-              tooltip: 'Compartir',
-              onPressed: () async {
-                _showOptionsDialog(context, ref);
-              },
-              heroTag: "btnShare",
-              label: const Text('Compartir'),
-              icon: const Icon(Icons.share_rounded),
-            ),
-            const SizedBox(width: 8),
-            FloatingActionButton.extended(
-              tooltip: 'Guardar resultados',
+            _buildActionButton(
+              context,
+              ref,
+              label: 'Guardar',
+              icon: Icons.add_box_rounded,
               onPressed: () {
                 final listaLadrillo = ref.watch(ladrilloResultProvider);
                 final listaBloqueta = ref.watch(bloquetaResultProvider);
@@ -72,69 +55,47 @@ class ResultLadrilloScreen extends ConsumerWidget {
                   context.pushNamed('save-bloqueta');
                 }
               },
-              heroTag: "btnSave",
-              label: const Text('Guardar'),
-              icon: const Icon(Icons.add_box_rounded),
+            ),
+            const SizedBox(width: 8),
+            _buildActionButton(
+              context,
+              ref,
+              label: 'Compartir',
+              icon: Icons.share_rounded,
+              onPressed: () => _showOptionsDialog(context, ref),
             ),
           ],
         ),
         const SizedBox(height: 10),
-        FloatingActionButton.extended(
-          onPressed: () {
-            context.goNamed('map-screen');
-          },
-          heroTag: "btnSearch",
-          label: const Text('Buscar Ferreteria'),
-          icon: const Icon(Icons.search_rounded),
-        ),
-        const SizedBox(height: 50),
-      ],
-    );
-  }
-
-  Widget _buildLargeScreenLayout(BuildContext context, WidgetRef ref) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        FloatingActionButton.extended(
-          tooltip: 'Compartir',
-          onPressed: () async {
-            _showOptionsDialog(context, ref);
-          },
-          heroTag: "btnShare",
-          label: const Text('Compartir'),
-          icon: const Icon(Icons.share_rounded),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.extended(
-          onPressed: () {
-            context.goNamed('mapa');
-          },
-          heroTag: "btnSearch",
-          label: const Text('Buscar Ferreteria'),
-          icon: const Icon(Icons.search_rounded),
-        ),
-        const SizedBox(width: 8),
-        FloatingActionButton.extended(
-          tooltip: 'Guardar resultados',
+        ElevatedButton.icon(
           onPressed: () {
             final listaLadrillo = ref.watch(ladrilloResultProvider);
             final listaBloqueta = ref.watch(bloquetaResultProvider);
             if (listaLadrillo.isNotEmpty) {
-              context.pushNamed('save-ladrillo');
-            } else if (listaBloqueta.isNotEmpty) {
-              context.pushNamed('save-bloqueta');
+              context.pushNamed('map-screen-2');
             } else {
-              return;
+              context.pushNamed('map-screen-1');
             }
           },
-          heroTag: "btnSave",
-          label: const Text('Guardar'),
-          icon: const Icon(Icons.add_box_rounded),
+          icon: const Icon(Icons.search_rounded),
+          label: const Text('Buscar proveedores'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+          ),
         ),
-
+        const SizedBox(height: 15),
       ],
+    );
+  }
+
+  Widget _buildActionButton(BuildContext context, WidgetRef ref, {required String label, required IconData icon, required VoidCallback onPressed}) {
+    return FloatingActionButton.extended(
+      label: Text(label),
+      icon: Icon(icon),
+      onPressed: onPressed,
     );
   }
 
@@ -204,33 +165,31 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
     final listaBloqueta = ref.watch(bloquetaResultProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
       child: Column(
         children: [
+          const SizedBox(height: 10,),
+          SvgPicture.asset(AppIcons.checkmarkCircleIcon),
+          const SizedBox(height: 6,),
+          const Text('Resumen del metrado', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryMetraShop),),
+          const SizedBox(height: 10,),
           if (listaLadrillo.isNotEmpty || listaBloqueta.isNotEmpty) ...[
-            _buildCard(
+            _buildSummaryCard(
               context,
               'Datos del Metrado',
-              listaLadrillo.isNotEmpty ? const _LadrilloContainer() : const _BloquetaContainer(),
+              listaLadrillo.isNotEmpty
+                  ? const _LadrilloContainer()
+                  : const _BloquetaContainer(),
             ),
             const SizedBox(height: 20),
-            _buildCard(
+            _buildSummaryCard(
               context,
               'Lista de Materiales',
               listaLadrillo.isNotEmpty
-                  ? _buildMaterialList(
-                cantidadPruebaLadToString: calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(2),
-                cantidadPruebaAreToString: calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2),
-                cantidadPruebaCemToString: calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble().toString(),
-              )
-                  : _buildMaterialList(
-                cantidadPruebaLadToString: cantidadBloquetas(listaBloqueta).toStringAsFixed(2),
-                cantidadPruebaAreToString: cantidadArena(listaBloqueta).toStringAsFixed(2),
-                cantidadPruebaCemToString: cantidadCemento(listaBloqueta).ceilToDouble().toString(),
-              ),
+                  ? _buildMaterialList(ref)
+                  : _buildMaterialList(ref),
             ),
           ],
-          const SizedBox(height: 20),
           /*Center(
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -248,67 +207,118 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
               },
             ),
           ),*/
-          const SizedBox(height: 20),
+          const SizedBox(height: 200,)
         ],
       ),
     );
   }
 
-  Widget _buildCard(BuildContext context, String title, Widget content) {
+  Widget _buildSummaryCard(BuildContext context, String title, Widget content) {
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(22),
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              color: AppColors.yellowMetraShop,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(15),
+                topRight: Radius.circular(15),
+              ),
             ),
-            const SizedBox(height: 10),
-            content,
-          ],
-        ),
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryMetraShop),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: content,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildMaterialList({
+  Widget _buildMaterialList(WidgetRef ref) {
+    final listaLadrillo = ref.watch(ladrilloResultProvider);
+
+    // Calcular cantidades totales usando las funciones actualizadas
+    final cantidadLadrillos = calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(0);
+    final cantidadArenaTotal = calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2);
+    final cantidadCementoTotal = calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble().toString();
+    final cantidadAguaTotal = calcularCantidadMaterial(listaLadrillo, calcularAgua).toStringAsFixed(2);
+
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2), // Ancho para la descripción
+        1: FlexColumnWidth(1), // Ancho para la unidad
+        2: FlexColumnWidth(2), // Ancho para la cantidad
+      },
+      children: [
+        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
+        _buildMaterialRow('Cemento', 'Bls', cantidadCementoTotal),
+        _buildMaterialRow('Arena gruesa', 'm3', cantidadArenaTotal),
+        _buildMaterialRow('Agua', 'm3', cantidadAguaTotal),
+        _buildMaterialRow('Ladrillo', 'Und', cantidadLadrillos),
+      ],
+    );
+  }
+
+  /*Widget _buildMaterialList({
     required String cantidadPruebaLadToString,
     required String cantidadPruebaAreToString,
     required String cantidadPruebaCemToString,
   }) {
-    return Column(
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2), // Ancho para la descripción
+        1: FlexColumnWidth(1), // Ancho para la unidad
+        2: FlexColumnWidth(2), // Ancho para la cantidad
+      },
       children: [
-        const CommonContentResults(
-          descripcion: '',
-          unidad: 'UNIDAD',
-          cantidad: 'CANTIDAD',
-          sizeText: 16,
-          weightText: FontWeight.w500,
+        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
+        _buildMaterialRow('Cemento', 'Bls', cantidadPruebaCemToString),
+        _buildMaterialRow('Arena fina', 'm3', cantidadPruebaAreToString),
+        _buildMaterialRow('Ladrillo', 'Und', cantidadPruebaLadToString),
+      ],
+    );
+  }*/
+
+  TableRow _buildMaterialRow(String description, String unit, String amount,
+      {bool isHeader = false}) {
+    final textStyle = TextStyle(
+      fontSize: isHeader ? 14 : 12,
+      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+    );
+
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            description,
+            style: textStyle,
+          ),
         ),
-        CommonContentResults(
-          descripcion: 'ARENA GRUESA',
-          unidad: 'm3',
-          cantidad: cantidadPruebaAreToString,
-          sizeText: 14,
-          weightText: FontWeight.normal,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            unit,
+            style: textStyle,
+          ),
         ),
-        CommonContentResults(
-          descripcion: 'CEMENTO',
-          unidad: 'bls',
-          cantidad: cantidadPruebaCemToString,
-          sizeText: 14,
-          weightText: FontWeight.normal,
-        ),
-        CommonContentResults(
-          descripcion: 'LADRILLO',
-          unidad: 'und',
-          cantidad: cantidadPruebaLadToString,
-          sizeText: 14,
-          weightText: FontWeight.normal,
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            amount,
+            style: textStyle,
+          ),
         ),
       ],
     );
@@ -327,14 +337,20 @@ class _BloquetaContainer extends ConsumerWidget {
 
   Widget _buildBloquetaContainer(BuildContext context, List<Bloqueta> results) {
 
-    double areaMuro(int index) {
-      return double.parse(results[index].largo) * double.parse(results[index].altura);
+    double calcularArea(Bloqueta bloqueta) {
+      if (bloqueta.area != null && bloqueta.area!.isNotEmpty) {
+        return double.tryParse(bloqueta.area!) ?? 0.0; // Si es área
+      } else {
+        final largo = double.tryParse(bloqueta.largo ?? '') ?? 0.0;
+        final altura = double.tryParse(bloqueta.altura ?? '') ?? 0.0;
+        return largo * altura; // Si es largo y altura
+      }
     }
 
     double calcularSumaTotalDeAreas(List<Bloqueta> results) {
       double sumaTotal = 0.0;
       for (int i = 0; i < results.length; i++) {
-        sumaTotal += areaMuro(i);
+        sumaTotal += calcularArea(results[i]);
       }
       return sumaTotal;
     }
@@ -342,50 +358,97 @@ class _BloquetaContainer extends ConsumerWidget {
     double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
 
 
-    return Column(
-      children: [
-        const CommonContentResults(
-          descripcion: '',
-          unidad: 'UNIDAD',
-          cantidad: 'CANTIDAD',
-          sizeText: 16,
-          weightText: FontWeight.w500,
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return CommonContentResults(
-              descripcion: results[index].description,
-              unidad: 'm2',
-              cantidad: areaMuro(index).toString(),
-              sizeText: 14,
-              weightText: FontWeight.normal,
-            );
-          },
-          itemCount: results.length,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const SizedBox(),
-            Column(
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
+          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
+          2: FlexColumnWidth(2), // Ancho fijo para la tercera columna
+        },
+        children: [
+          // Encabezados de tabla
+          const TableRow(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Descripción',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Und.',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Área',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          // Filas de datos
+          for (var result in results)
+            TableRow(
               children: [
-       //         SizedBox(child: Divider(height: 2,)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const Text('Total:'),
-                    const SizedBox(width: 15,),
-                    Text('$sumaTotalDeAreas m2'),
-                  ],
-                )
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    result.description,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'm2',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    calcularArea(result).toStringAsFixed(2),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
               ],
-            )
-
-          ],
-        )
-      ],
+            ),
+          // Fila del total
+          TableRow(
+            decoration: BoxDecoration(color: Colors.grey[300]),
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Total:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'm2',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  sumaTotalDeAreas.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -403,68 +466,122 @@ class _LadrilloContainer extends ConsumerWidget {
   }
 
   Widget _buildLadrilloContainer(BuildContext context, List<Ladrillo> results) {
-    double areaMuro(int index) {
-      return double.parse(results[index].largo) * double.parse(results[index].altura);
+    double calcularArea(Ladrillo ladrillo) {
+      if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
+        return double.tryParse(ladrillo.area!) ?? 0.0; // Si es área
+      } else {
+        final largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
+        final altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
+        return largo * altura; // Si es largo y altura
+      }
     }
 
+    // Calcular la suma total de todas las áreas
     double calcularSumaTotalDeAreas(List<Ladrillo> results) {
       double sumaTotal = 0.0;
       for (int i = 0; i < results.length; i++) {
-        sumaTotal += areaMuro(i);
+        sumaTotal += calcularArea(results[i]);
       }
       return sumaTotal;
     }
 
     double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
 
-    return Column(
-      children: [
-        const CommonContentResults(
-          descripcion: '',
-          unidad: 'UNIDAD',
-          cantidad: 'CANTIDAD',
-          sizeText: 16,
-          weightText: FontWeight.w500,
-        ),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemBuilder: (context, index) {
-            return CommonContentResults(
-              descripcion: results[index].description,
-              unidad: 'm2',
-              cantidad: areaMuro(index).toString(),
-              sizeText: 14,
-              weightText: FontWeight.normal,
-            );
-          },
-          itemCount: results.length,
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            const SizedBox(),
-            Column(
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
+          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
+          2: FlexColumnWidth(2), // Ancho fijo para la tercera columna
+        },
+        children: [
+          // Encabezados de tabla
+          const TableRow(
+            children: [
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Descripción',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Und.',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Área',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          // Filas de datos
+          for (var result in results)
+            TableRow(
               children: [
-                //         SizedBox(child: Divider(height: 2,)),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('Total:'),
-                    const SizedBox(width: 15,),
-                    Text('$sumaTotalDeAreas m2'),
-                  ],
-                )
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    result.description,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'm2',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    calcularArea(result).toStringAsFixed(2), // Mostrar el área calculada
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                  ),
+                ),
               ],
-            )
-
-          ],
-        ),
-      ],
+            ),
+          // Fila del total
+          TableRow(
+            decoration: BoxDecoration(color: Colors.grey[300]),
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Total:',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'm2',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  sumaTotalDeAreas.toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
-
 }
+
 
 Future<File> generatePdf(WidgetRef ref) async {
   final pdf = pw.Document();
@@ -502,101 +619,318 @@ Future<File> generatePdf(WidgetRef ref) async {
   return file;
 }
 
+// Función para obtener el área de un muro
+double obtenerAreaLadrillo(Ladrillo ladrillo) {
+  if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
+    return double.tryParse(ladrillo.area!) ?? 0.0;
+  } else {
+    double largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
+    double altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
+    return largo * altura;
+  }
+}
 
+// Función para calcular la cantidad de material basado en una función específica
 double calcularCantidadMaterial(List<Ladrillo> results, double Function(Ladrillo) calcular) {
   return results.fold(0.0, (suma, ladrillo) => suma + calcular(ladrillo));
 }
 
+// FUNCIÓN ACTUALIZADA: Calcular ladrillos según el Excel analizado
 double calcularLadrillos(Ladrillo ladrillo) {
-  double largo = double.parse(ladrillo.largo);
-  double altura = double.parse(ladrillo.altura);
+  double area = obtenerAreaLadrillo(ladrillo);
+  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
+
+  // Ancho de juntas estándar (1.5 cm)
+  const juntaHorizontal = 0.015; // metros
+  const juntaVertical = 0.015; // metros
+
+  // Calcular la cantidad de ladrillos según el tipo y forma de asentado
+  double ladrillosPorM2;
 
   switch (ladrillo.tipoLadrillo) {
-    case 'Pandereta':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 36 * (1 + 0.07), 30 * (1 + 0.07));
     case 'Kingkong':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 39 * (1 + 0.07), 29 * (1 + 0.07), 68 * (1 + 0.07));
+    // Dimensiones King Kong: 24 x 13 x 9 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        // Longitud: 24cm, Altura: 9cm
+        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        // Longitud: 13cm, Altura: 9cm
+        ladrillosPorM2 = 1 / ((0.13 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else { // canto
+        // Longitud: 24cm, Altura: 13cm
+        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.13 + juntaHorizontal));
+      }
+      break;
+
+    case 'Pandereta':
+    // Dimensiones Pandereta: 23 x 12 x 9 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        // Longitud: 23cm, Altura: 9cm
+        ladrillosPorM2 = 1 / ((0.23 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        // Longitud: 12cm, Altura: 9cm
+        ladrillosPorM2 = 1 / ((0.12 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else { // canto
+        // Longitud: 23cm, Altura: 12cm
+        ladrillosPorM2 = 1 / ((0.23 + juntaVertical) * (0.12 + juntaHorizontal));
+      }
+      break;
+
+    case 'Artesanal':
+    // Dimensiones Artesanal: 22 x 12.5 x 7.5 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        // Longitud: 22cm, Altura: 7.5cm
+        ladrillosPorM2 = 1 / ((0.22 + juntaVertical) * (0.075 + juntaHorizontal));
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        // Longitud: 12.5cm, Altura: 7.5cm
+        ladrillosPorM2 = 1 / ((0.125 + juntaVertical) * (0.075 + juntaHorizontal));
+      } else { // canto
+        // Longitud: 22cm, Altura: 12.5cm
+        ladrillosPorM2 = 1 / ((0.22 + juntaVertical) * (0.125 + juntaHorizontal));
+      }
+      break;
+
     default:
-    //  return 0;
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.024, 0.014, 0.054);
+    // Usar valores de King Kong por defecto
+      if (ladrillo.tipoAsentado == 'soga') {
+        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        ladrillosPorM2 = 1 / ((0.13 + juntaVertical) * (0.09 + juntaHorizontal));
+      } else { // canto
+        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.13 + juntaHorizontal));
+      }
   }
+
+  // Aplicar factor de desperdicio y multiplicar por área
+  return ladrillosPorM2 * (1 + factorDesperdicio) * area;
 }
 
+// Función auxiliar para calcular el volumen de mortero por muro
+double calcularVolumenMortero(Ladrillo ladrillo) {
+  double area = obtenerAreaLadrillo(ladrillo);
+
+  // Determinar espesor de muro según tipo de ladrillo y tipo de asentado
+  double espesor = 0.0;
+
+  switch (ladrillo.tipoLadrillo) {
+    case 'Kingkong':
+    // Dimensiones King Kong: 24 x 13 x 9 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        espesor = 0.13; // ancho
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        espesor = 0.24; // largo
+      } else { // canto
+        espesor = 0.09; // alto
+      }
+      break;
+
+    case 'Pandereta':
+    // Dimensiones Pandereta: 23 x 12 x 9 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        espesor = 0.12; // ancho
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        espesor = 0.23; // largo
+      } else { // canto
+        espesor = 0.09; // alto
+      }
+      break;
+
+    case 'Artesanal':
+    // Dimensiones Artesanal: 22 x 12.5 x 7.5 cm
+      if (ladrillo.tipoAsentado == 'soga') {
+        espesor = 0.125; // ancho
+      } else if (ladrillo.tipoAsentado == 'cabeza') {
+        espesor = 0.22; // largo
+      } else { // canto
+        espesor = 0.075; // alto
+      }
+      break;
+
+    default:
+    // Usar valores por defecto (King Kong soga)
+      espesor = 0.13;
+  }
+
+  // Calcular volumen bruto del muro (m³)
+  double volumenBruto = area * espesor;
+
+  // Calcular volumen ocupado por ladrillos
+  double volumenLadrillo;
+
+  switch (ladrillo.tipoLadrillo) {
+    case 'Kingkong':
+      volumenLadrillo = 0.24 * 0.13 * 0.09; // largo * ancho * alto
+      break;
+    case 'Pandereta':
+      volumenLadrillo = 0.23 * 0.12 * 0.09; // largo * ancho * alto
+      break;
+    case 'Artesanal':
+      volumenLadrillo = 0.22 * 0.125 * 0.075; // largo * ancho * alto
+      break;
+    default:
+      volumenLadrillo = 0.24 * 0.13 * 0.09; // Usar King Kong por defecto
+  }
+
+  // Sin considerar el factor de desperdicio para número base de ladrillos
+  double ladrillosSinDesperdicio = calcularLadrillos(ladrillo) / (1 + (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100);
+
+  // Volumen ocupado por los ladrillos
+  double volumenLadrillos = ladrillosSinDesperdicio * volumenLadrillo;
+
+  // Volumen de mortero = Volumen bruto - Volumen ladrillos
+  return volumenBruto - volumenLadrillos;
+}
+
+// FUNCIÓN ACTUALIZADA: Calcular cemento según Excel analizado
 double calcularCemento(Ladrillo ladrillo) {
-  double largo = double.parse(ladrillo.largo);
-  double altura = double.parse(ladrillo.altura);
+  // Obtener volumen de mortero para el muro
+  double volumenMortero = calcularVolumenMortero(ladrillo);
 
-  switch (ladrillo.tipoLadrillo) {
-    case 'Pandereta':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.19, 0.15);
-    case 'Kingkong':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.21, 0.123, 0.48);
-    default:
-    //  return 0;
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.024, 0.014, 0.054);
+  // Factor de desperdicio
+  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
+
+  // Cantidad de cemento según proporción de mortero
+  double cementoPorM3; // Bolsas por m³ de mortero
+
+  switch (ladrillo.proporcionMortero) {
+    case '3': // 1:3
+      cementoPorM3 = 454 / 42.5; // 454 kg / 42.5 kg por bolsa
+      break;
+    case '4': // 1:4
+      cementoPorM3 = 364 / 42.5; // 364 kg / 42.5 kg por bolsa
+      break;
+    case '5': // 1:5
+      cementoPorM3 = 302 / 42.5; // 302 kg / 42.5 kg por bolsa
+      break;
+    case '6': // 1:6
+      cementoPorM3 = 261 / 42.5; // 261 kg / 42.5 kg por bolsa
+      break;
+    default:  // Usar 1:4 por defecto
+      cementoPorM3 = 364 / 42.5;
   }
+
+  // Calcular cantidad de cemento para el volumen de mortero
+  double cemento = cementoPorM3 * volumenMortero;
+
+  // Aplicar factor de desperdicio
+  return cemento * (1 + factorDesperdicio);
 }
 
+// FUNCIÓN ACTUALIZADA: Calcular arena según Excel analizado
 double calcularArena(Ladrillo ladrillo) {
-  double largo = double.parse(ladrillo.largo);
-  double altura = double.parse(ladrillo.altura);
+  // Obtener volumen de mortero para el muro
+  double volumenMortero = calcularVolumenMortero(ladrillo);
 
-  switch (ladrillo.tipoLadrillo) {
-    case 'Pandereta':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.021, 0.017);
-    case 'Kingkong':
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.024, 0.014, 0.054);
-    default:
-  //    return 0;
-      return calcularAsentado(ladrillo.tipoAsentado, largo, altura, 0.024, 0.014, 0.054);
+  // Factor de desperdicio
+  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
+
+  // Cantidad de arena según proporción de mortero
+  double arenaPorM3; // m³ de arena por m³ de mortero
+
+  switch (ladrillo.proporcionMortero) {
+    case '3': // 1:3
+      arenaPorM3 = 1.10;
+      break;
+    case '4': // 1:4
+      arenaPorM3 = 1.16;
+      break;
+    case '5': // 1:5
+      arenaPorM3 = 1.20;
+      break;
+    case '6': // 1:6
+      arenaPorM3 = 1.20;
+      break;
+    default:  // Usar 1:4 por defecto
+      arenaPorM3 = 1.16;
   }
+
+  // Calcular cantidad de arena para el volumen de mortero
+  double arena = arenaPorM3 * volumenMortero;
+
+  // Aplicar factor de desperdicio
+  return arena * (1 + factorDesperdicio);
 }
 
-double calcularAsentado(String tipoAsentado, double largo, double altura, double soga, double canto, [double cabeza = 0]) {
+// NUEVA FUNCIÓN: Calcular agua según Excel analizado
+double calcularAgua(Ladrillo ladrillo) {
+  // Obtener volumen de mortero para el muro
+  double volumenMortero = calcularVolumenMortero(ladrillo);
+
+  // Factor de desperdicio
+  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
+
+  // Cantidad de agua según proporción de mortero
+  double aguaPorM3; // Litros por m³ de mortero
+
+  switch (ladrillo.proporcionMortero) {
+    case '3': // 1:3
+      aguaPorM3 = 250;
+      break;
+    case '4': // 1:4
+      aguaPorM3 = 240;
+      break;
+    case '5': // 1:5
+      aguaPorM3 = 240;
+      break;
+    case '6': // 1:6
+      aguaPorM3 = 235;
+      break;
+    default:  // Usar 1:4 por defecto
+      aguaPorM3 = 240;
+  }
+
+  // Convertir litros a m³ y calcular para el volumen de mortero
+  double agua = (aguaPorM3 / 1000) * volumenMortero;
+
+  // Aplicar factor de desperdicio
+  return agua * (1 + factorDesperdicio);
+}
+
+double calcularAsentado(String tipoAsentado, double area, double soga, double canto, [double cabeza = 0]) {
   switch (tipoAsentado) {
     case 'soga':
-      return largo * altura * soga;
+      return area * soga;
     case 'canto':
-      return largo * altura * canto;
+      return area * canto;
     case 'cabeza':
-      return largo * altura * cabeza;
+      return area * cabeza;
     default:
       return 0;
   }
 }
 
-double calcularCantidadBloquetas(String tipoBloqueta, double largo, double altura) {
+double calcularCantidadBloquetas(String tipoBloqueta, double area) {
   switch (tipoBloqueta) {
     case 'P7':
     case 'P10':
     case 'P12':
-      return largo * altura * 8 * (1 + 0.07);
+      return area * 8 * (1 + 0.07);
     default:
       return 0;
   }
 }
 
-double calcularCantidadArena(String tipoBloqueta, double largo, double altura) {
+double calcularCantidadArena(String tipoBloqueta, double area) {
   switch (tipoBloqueta) {
     case 'P7':
-      return largo * altura * 0.0059;
+      return area * 0.0059;
     case 'P10':
-      return largo * altura * 0.0085;
+      return area * 0.0085;
     case 'P12':
-      return largo * altura * 0.0102;
+      return area * 0.0102;
     default:
       return 0;
   }
 }
 
-double calcularCantidadCemento(String tipoBloqueta, double largo, double altura) {
+double calcularCantidadCemento(String tipoBloqueta, double area) {
   switch (tipoBloqueta) {
     case 'P7':
-      return largo * altura * 0.052;
+      return area * 0.052;
     case 'P10':
-      return largo * altura * 0.075;
+      return area * 0.075;
     case 'P12':
-      return largo * altura * 0.0901;
+      return area * 0.0901;
     default:
       return 0;
   }
@@ -605,9 +939,9 @@ double calcularCantidadCemento(String tipoBloqueta, double largo, double altura)
 double cantidadBloquetas(List<Bloqueta> results) {
   double sumaDeBloquetas = 0.0;
   for (Bloqueta bloqueta in results) {
-    double largo = double.parse(bloqueta.largo);
-    double altura = double.parse(bloqueta.altura);
-    sumaDeBloquetas += calcularCantidadBloquetas(bloqueta.tipoBloqueta, largo, altura);
+    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
+
+    sumaDeBloquetas += calcularCantidadBloquetas(bloqueta.tipoBloqueta, area);
   }
   return sumaDeBloquetas;
 }
@@ -615,9 +949,9 @@ double cantidadBloquetas(List<Bloqueta> results) {
 double cantidadArena(List<Bloqueta> results) {
   double sumaDeArena = 0.0;
   for (Bloqueta bloqueta in results) {
-    double largo = double.parse(bloqueta.largo);
-    double altura = double.parse(bloqueta.altura);
-    sumaDeArena += calcularCantidadArena(bloqueta.tipoBloqueta, largo, altura);
+    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
+
+    sumaDeArena += calcularCantidadArena(bloqueta.tipoBloqueta, area);
   }
   return sumaDeArena;
 }
@@ -625,11 +959,19 @@ double cantidadArena(List<Bloqueta> results) {
 double cantidadCemento(List<Bloqueta> results) {
   double sumaDeCemento = 0.0;
   for (Bloqueta bloqueta in results) {
-    double largo = double.parse(bloqueta.largo);
-    double altura = double.parse(bloqueta.altura);
-    sumaDeCemento += calcularCantidadCemento(bloqueta.tipoBloqueta, largo, altura);
+    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
+
+    sumaDeCemento += calcularCantidadCemento(bloqueta.tipoBloqueta, area);
   }
   return sumaDeCemento;
 }
 
-
+double obtenerAreaBloqueta(Bloqueta bloqueta) {
+  if (bloqueta.area != null && bloqueta.area!.isNotEmpty) {
+    return double.tryParse(bloqueta.area!) ?? 0.0; // Usar área si está disponible
+  } else {
+    double largo = double.tryParse(bloqueta.largo ?? '') ?? 0.0;
+    double altura = double.tryParse(bloqueta.altura ?? '') ?? 0.0;
+    return largo * altura; // Calcular área usando largo y altura
+  }
+}

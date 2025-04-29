@@ -2,6 +2,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/models/auth/user_model.dart';
+import '../../../data/models/auth/user_profile_model.dart';
+import '../../entities/auth/user_profile.dart';
 
 abstract interface class AuthRemoteDataSource {
   Session? get currentUserSession;
@@ -10,10 +12,15 @@ abstract interface class AuthRemoteDataSource {
     required String email,
     required String password,
   });
+  Future<UserModel?> signInWithGoogle();
   Future<UserModel> loginWithEmailPassword({
     required String email,
     required String password,
   });
   Future<UserModel?> getCurrentUserData();
+  Future<UserProfileModel?> getUserProfileData(String userId);
+  Future<void> updateUserProfileData(UserProfile userProfile);
+  Future<void> updateProfileImage(String userId, String filePath);
+  Future<String> uploadProfileImage(String filePath, String userId);
   Future<void> logout();
 }

@@ -1,18 +1,30 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/config/analytics/analytics_repository.dart';
+import 'package:meter_app/config/analytics/analytics_route_observer.dart';
+import 'package:meter_app/presentation/screens/articles/article_detail_screen.dart';
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
-import 'package:meter_app/presentation/screens/home/muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
+import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
+import 'package:meter_app/presentation/screens/home/muro/ladrillo/datos_ladrillo/datos.dart';
+import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/map_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/register_location_screen.dart';
-import 'package:meter_app/presentation/screens/projects/result/results_screen.dart';
+import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
+import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
 
 import '../../presentation/blocs/auth/auth_bloc.dart';
+import '../../presentation/screens/auth/init/metra_shop_screen.dart';
+import '../../presentation/screens/home/muro/bloqueta/datos_bloqueta/datos_b.dart';
+import '../../presentation/screens/home/pisos/datos/datos_p.dart';
+import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
+import '../../presentation/screens/projects/result/result_screen.dart';
 
 
 final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
@@ -20,28 +32,39 @@ final GlobalKey<NavigatorState> _shellNavigator = GlobalKey(debugLabel: 'shell')
 
 class AppRouter {
   final AuthBloc authBloc;
+ // final AnalyticsRepository analyticsRepository;
 
   AppRouter(this.authBloc);
 
   GoRouter get router => GoRouter(
-    initialLocation: '/login',
+    initialLocation: '/metrashop',
     navigatorKey: _rootNavigator,
+   /* observers: [
+      AnalyticsRouteObserver(analyticsRepository),
+    ],*/
     redirect: (context, state) {
       final authState = authBloc.state;
       final isAuthenticated = authState is AuthSuccess;
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      final isLoggingIn = state.matchedLocation == '/metrashop' ||
+          state.matchedLocation == '/login' ||
+          state.matchedLocation == '/register';
 
       if (!isAuthenticated && !isLoggingIn) {
-        return '/login';
+        return '/metrashop';
       }
 
       if (isAuthenticated && isLoggingIn) {
-        return '/home';
+        return '/welcome';
       }
 
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/metrashop',
+        name: 'metrashop',
+        builder: (context, state) => const MetraShopScreen(),
+      ),
       GoRoute(
         path: '/login',
         name: 'login',
@@ -51,6 +74,12 @@ class AppRouter {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+
+      GoRoute(
+        path: '/welcome',
+        name: 'welcome',
+        builder: (context, state) => const WelcomeScreen(),
       ),
       ShellRoute(
         navigatorKey: _shellNavigator,
@@ -64,6 +93,41 @@ class AppRouter {
             builder: (context, state) => const HomeView(),
             routes: [
               GoRoute(
+                  parentNavigatorKey: _rootNavigator,
+                  path: 'home-to-provider',
+                  name: 'home-to-provider',
+                  builder: (context, state) => const MapScreen()
+              ),
+              GoRoute(
+                  parentNavigatorKey: _rootNavigator,
+                  path: 'home-to-test',
+                  name: 'home-to-test',
+                  builder: (context, state) => MaterialListScreen(),
+                routes: [
+                  GoRoute(
+                      parentNavigatorKey: _rootNavigator,
+                      path: 'testpdf',
+                      name: 'testpdf',
+                      builder: (context, state) {
+                        final pdfFile = state.extra as File;
+                        return PreviewScreen(pdfFile: pdfFile);
+                      }
+                  ),
+                ]
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'detail/:id/:title/:videoId',
+                name: 'home-to-detail',
+                builder: (context, state) {
+                  final String id = state.pathParameters['id']!;
+                  final String title = state.pathParameters['title']!;
+                  final String video = state.pathParameters['videoId']!;
+                  return ArticleDetailScreen(articleId: id, articleName: title, articleVideo: video,);
+                },
+              ),
+
+              GoRoute(
                 parentNavigatorKey: _rootNavigator,
                 path: 'muro',
                 name: 'muro',
@@ -75,17 +139,11 @@ class AppRouter {
                     name: 'ladrillo',
                     builder: (context, state) => const LadrilloScreen(),
                     routes: [
-                      GoRoute(
-                        parentNavigatorKey: _rootNavigator,
-                        path: 'tutorial-ladrillo',
-                        name: 'tutorial-ladrillo',
-                        builder: (context, state) => const TutorialLadrilloScreen(),
-                        routes: [
                           GoRoute(
                             parentNavigatorKey: _rootNavigator,
                             path: 'ladrillo1',
                             name: 'ladrillo1',
-                            builder: (context, state) => const DatosLadrilloScreen(),
+                            builder: (context, state) => const DatosLadrilloScreens(),
                             routes: [
                               GoRoute(
                                 parentNavigatorKey: _rootNavigator,
@@ -94,10 +152,10 @@ class AppRouter {
                                 builder: (context, state) => const ResultLadrilloScreen(),
                                 routes: [
                                   GoRoute(
-                                    parentNavigatorKey: _rootNavigator,
-                                    path: 'ladrillo-pdf',
-                                    name: 'ladrillo-pdf',
-                                    builder: (context, state) => const PreviewScreen(),
+                                      parentNavigatorKey: _rootNavigator,
+                                      path: 'map-screen-2',
+                                      name: 'map-screen-2',
+                                      builder: (context, state) => const MapScreen()
                                   ),
                                   GoRoute(
                                     parentNavigatorKey: _rootNavigator,
@@ -117,9 +175,6 @@ class AppRouter {
                               ),
                             ],
                           ),
-                        ]
-                      ),
-
                     ],
                   ),
                   GoRoute(
@@ -132,7 +187,7 @@ class AppRouter {
                         parentNavigatorKey: _rootNavigator,
                         path: 'bloqueta1',
                         name: 'bloqueta1',
-                        builder: (context, state) => const DatosBloquetaScreen(),
+                        builder: (context, state) => const DatosBloquetaScreens(),
                         routes: [
                           GoRoute(
                             parentNavigatorKey: _rootNavigator,
@@ -140,6 +195,12 @@ class AppRouter {
                             name: 'bloqueta_results',
                             builder: (context, state) => const ResultLadrilloScreen(),
                             routes: [
+                              GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'map-screen-1',
+                                  name: 'map-screen-1',
+                                  builder: (context, state) => const MapScreen()
+                              ),
                               GoRoute(
                                 parentNavigatorKey: _rootNavigator,
                                 path: 'save-bloqueta',
@@ -154,32 +215,67 @@ class AppRouter {
                                   ),
                                 ]
                               ),
-                              GoRoute(
-                                parentNavigatorKey: _rootNavigator,
-                                path: 'bloqueta-pdf',
-                                name: 'bloqueta-pdf',
-                                builder: (context, state) => const PreviewScreen(),
-                              ),
                             ],
                           ),
                         ],
                       ),
                     ],
                   ),
-                  GoRoute(
-                      parentNavigatorKey: _rootNavigator,
-                      path: 'map-screen',
-                      name: 'map-screen',
-                      builder: (context, state) => const MapScreen()
-                  )
                 ],
               ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,
-                path: 'columna',
-                name: 'columna',
-                builder: (context, state) => const ColumnaScreen(),
-                routes: const [],
+                path: 'tarrajeo',
+                name: 'tarrajeo',
+                builder: (context, state) => const TarrajeoScreen(),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'tarrajeo-muro',
+                    name: 'tarrajeo-muro',
+                    builder: (context, state) => const DatosTarrajeoScreen(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'tarrajeo-cielorraso',
+                    name: 'tarrajeo-cielorraso',
+                    builder: (context, state) => const DatosTarrajeoScreen(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'tarrajeo-solaqueo',
+                    name: 'tarrajeo-solaqueo',
+                    builder: (context, state) => const DatosTarrajeoScreen(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'tarrajeo_results',
+                    name: 'tarrajeo_results',
+                    builder: (context, state) => const ResultTarrajeoScreen(),
+                    routes: [
+                      GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'map-screen-tarrajeo',
+                          name: 'map-screen-tarrajeo',
+                          builder: (context, state) => const MapScreen()
+                      ),
+                      GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'save-tarrajeo',
+                          name: 'save-tarrajeo',
+                          builder: (context, state) => const SaveResultScreen(),
+                          routes: [
+                            GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'new-project-tarrajeo',
+                              name: 'new-project-tarrajeo',
+                              builder: (context, state) => const NewProjectScreen(),
+                            ),
+                          ]
+                      ),
+                    ],
+                  ),
+                ],
               ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,
@@ -191,13 +287,13 @@ class AppRouter {
                     parentNavigatorKey: _rootNavigator,
                     path: 'falso-piso',
                     name: 'falso-piso',
-                    builder: (context, state) => const DatosPisosScreen(),
+                    builder: (context, state) => const DatosPisosScreens(),
                   ),
                   GoRoute(
                     parentNavigatorKey: _rootNavigator,
                     path: 'contrapiso',
                     name: 'contrapiso',
-                    builder: (context, state) => const DatosPisosScreen(),
+                    builder: (context, state) => const DatosPisosScreens(),
                   ),
                   GoRoute(
                     parentNavigatorKey: _rootNavigator,
@@ -205,6 +301,12 @@ class AppRouter {
                     name: 'pisos_results',
                     builder: (context, state) => const ResultPisosScreen(),
                     routes: [
+                      GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'map-screen-piso',
+                          name: 'map-screen-piso',
+                          builder: (context, state) => const MapScreen()
+                      ),
                       GoRoute(
                         parentNavigatorKey: _rootNavigator,
                         path: 'save-piso',
@@ -296,7 +398,7 @@ class AppRouter {
                     name: 'results',
                     builder: (context, state) {
                       final String metradoId = state.pathParameters['metradoId']!;
-                      return ResultsScreen(metradoId: metradoId);
+                      return ResultScreen(metradoId: metradoId);
                     },
                   ),
                 ],
@@ -304,9 +406,22 @@ class AppRouter {
             ]
           ),
           GoRoute(
-            path: '/mapa',
-            name: 'mapa',
-            builder: (context, state) => const MapaScreen(),
+            path: '/articles',
+            name: 'articles',
+            builder: (context, state) => const ArticlesScreen(),
+            routes: [
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'detail/:id/:title/:videoId',
+                name: 'detail',
+                builder: (context, state) {
+                  final String id = state.pathParameters['id']!;
+                  final String title = state.pathParameters['title']!;
+                  final String video = state.pathParameters['videoId']!;
+                  return ArticleDetailScreen(articleId: id, articleName: title, articleVideo: video,);
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: '/perfil',
@@ -314,14 +429,22 @@ class AppRouter {
             builder: (context, state) => const PerfilScreen(),
             routes: [
               GoRoute(
+                parentNavigatorKey: _rootNavigator,
                 path: 'resultados',
                 name: 'resultados',
                 builder: (context, state) => const MapScreen(),
               ),
               GoRoute(
+                parentNavigatorKey: _rootNavigator,
                 path: 'register-location',
                 name: 'register-location',
                 builder: (context, state) => const RegisterLocationScreen(),
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'profile-settings',
+                name: 'profile-settings',
+                builder: (context, state) => const ProfileSettingsScreen(),
               ),
             ]
           ),

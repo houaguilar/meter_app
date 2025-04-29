@@ -21,10 +21,10 @@ class ProjectAdded extends ProjectsState {
 }
 class ProjectNameAlreadyExists extends ProjectsState {
   final String message;
-  const ProjectNameAlreadyExists(this.message);
+  ProjectNameAlreadyExists(this.message);
 }
 
 final class ProjectFailure extends ProjectsState {
   final String message;
-  const ProjectFailure(this.message);
+  ProjectFailure(this.message);
 }
