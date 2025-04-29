@@ -12,3 +12,5 @@ export 'home/losas/losa_maciza_model.dart';
 export 'home/losas/viga_model.dart';
 export 'home/losas/escalera_model.dart';
 export '../../domain/entities/home/piso/piso.dart';
+
+export 'home/inicio/article_model.dart';

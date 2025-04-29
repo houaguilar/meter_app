@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    >
 
     <!-- Permisos -->
     <uses-permission android:name="android.permission.INTERNET"/>
@@ -15,9 +17,10 @@
     <uses-feature android:name="android.hardware.location.gps" />
 
     <application
-        android:label="meter_app"
+        android:usesCleartextTraffic="true"
+        android:label="MetraShop"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/launcher_icon">
 
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCQhVaoFnEm3PMeaUQw6pj5xH8XUDZ5XdQ"/>
@@ -65,3 +68,4 @@
 
 
 </manifest>
+<!---->

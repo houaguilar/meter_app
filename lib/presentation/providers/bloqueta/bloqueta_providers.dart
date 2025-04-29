@@ -1,3 +1,4 @@
+import 'package:meter_app/domain/services/services.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
@@ -47,6 +48,7 @@ class CantidadBloqueta extends _$CantidadBloqueta {
 
 @riverpod
 class BloquetaResult extends _$BloquetaResult {
+  final BloquetaService _bloquetaService = BloquetaService();
 
   @override
   List<Bloqueta> build() => [];
@@ -54,12 +56,26 @@ class BloquetaResult extends _$BloquetaResult {
   void createBloqueta(
       String description,
       String tipoBloqueta,
-      String largo,
-      String altura,
-      ) {
-    state = [
-      ...state, Bloqueta(idBloqueta: uuid.v4(), description: description, tipoBloqueta: tipoBloqueta, largo: largo, altura: altura)
-    ];
+      String factor, {
+        String? largo,
+        String? altura,
+        String? area,
+      }) {
+    final newBloqueta = Bloqueta(
+      idBloqueta: uuid.v4(),
+      description: description,
+      tipoBloqueta: tipoBloqueta,
+      factorDesperdicio: factor,
+      largo: largo,
+      altura: altura,
+      area: area,
+    );
+
+    if (!_bloquetaService.esValido(newBloqueta)) {
+      throw Exception("La Bloqueta debe tener largo y altura o área definida.");
+    }
+
+    state = [...state, newBloqueta];
   }
 
   void clearList() {
@@ -69,11 +85,15 @@ class BloquetaResult extends _$BloquetaResult {
 
 @riverpod
 List<double> areaBloqueta(AreaBloquetaRef ref) {
+  final bloquetaService = BloquetaService();
   final bloquetas = ref.watch( bloquetaResultProvider );
 
  // if (bloquetas.isNotEmpty) {
-    return bloquetas.map((e) => double.parse(e.largo) * double.parse(e.altura)).toList();
+ //   return bloquetas.map((e) => double.parse(e.largo) * double.parse(e.altura)).toList();
  // }
+  return bloquetas
+      .map((bloqueta) => bloquetaService.calcularArea(bloqueta) ?? 0.0)
+      .toList();
 }
 
 @riverpod

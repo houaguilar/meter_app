@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1088476245042",
+    "project_id": "meterapp-fe4fe",
+    "storage_bucket": "meterapp-fe4fe.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1088476245042:android:eba50f6d89a37d35aa602b",
+        "android_client_info": {
+          "package_name": "com.example.meter_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDV0QMntbgGXeFJhgwK9FWxWGaDm8QI8SM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

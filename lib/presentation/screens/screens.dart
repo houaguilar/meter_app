@@ -11,7 +11,7 @@ export 'home/muro/ladrillo/result_ladrillo/result_ladrillo_screen.dart';
 export 'home/muro/ladrillo/pdf_muro/preview_screen.dart';
 
 //Columna
-export 'home/columna/columna_screen.dart';
+export 'home/tarrajeo/tarrajeo_screen.dart';
 
 //Pisos
 export 'home/pisos/pisos_screen.dart';
@@ -27,10 +27,10 @@ export 'home/losas/datos/datos_vigas_screen.dart';
 export 'home/losas/datos/datos_escaleras_screen.dart';
 
 //Lista
-export 'projects//projects_screen.dart';
+export 'projects/projects_screen.dart';
 
 //Mapa
-export 'mapa/mapa_screen.dart';
+export 'articles/articles_screen.dart';
 
 //Perfil
 export 'perfil/perfil_screen.dart';

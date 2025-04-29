@@ -18,13 +18,23 @@ final class AuthSignUp extends AuthEvent {
 final class AuthLogin extends AuthEvent {
   final String email;
   final String password;
+  final bool rememberMe;
 
   AuthLogin({
     required this.email,
     required this.password,
+    this.rememberMe = false,
   });
 }
+
+final class AuthCheckEmailVerified extends AuthEvent {}
+
+final class AuthResendEmailVerification extends AuthEvent {}
+
 
 final class AuthIsUserLoggedIn extends AuthEvent {}
 
 final class AuthLogout extends AuthEvent {}
+
+final class AuthLoginWithGoogle extends AuthEvent {}
+

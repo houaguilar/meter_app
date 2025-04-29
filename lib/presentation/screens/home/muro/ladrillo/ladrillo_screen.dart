@@ -5,16 +5,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../data/models/models.dart';
 import '../../../../providers/providers.dart';
-import '../../../widgets/widgets.dart';
+import '../../../../widgets/widgets.dart';
 
 class LadrilloScreen extends StatelessWidget {
   const LadrilloScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    return Scaffold(
       appBar: AppBarWidget(titleAppBar: 'Ladrillo',),
-      body: _LadrilloScreenView(),
+      body: const _LadrilloScreenView(),
     );
   }
 }

@@ -69,7 +69,7 @@ Future<Uint8List> makePdfPisos(
                         (e) => TableRow(
                         children: [
                           PaddedText(e.description),
-                          PaddedText((double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toString(), align: TextAlign.center)
+                        //  PaddedText((double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toString(), align: TextAlign.center)
                         ],
                         ),
                 )

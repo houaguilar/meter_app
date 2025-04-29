@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../../config/constants/constants.dart';
+import '../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../init_dependencies.dart';
 import '../../../../../providers/providers.dart';
-import '../../../../widgets/shared/custom_add_three_fields.dart';
-import '../../../../widgets/widgets.dart';
+import '../../../../../widgets/widgets.dart';
+import '../../ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 
 class DatosBloquetaScreen extends ConsumerStatefulWidget {
@@ -19,6 +21,7 @@ class DatosBloquetaScreen extends ConsumerStatefulWidget {
 class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
 
   late String bloqueta;
+  late final SharedPreferencesHelper sharedPreferencesHelper;
 
   String? selectedValueBloqueta;
 
@@ -81,6 +84,29 @@ class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
   final TextEditingController _alturaMuro7Controller =  TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!sharedPreferencesHelper.isTutorialShown()) {
+        showTutorial();
+      }
+    });
+  }
+
+  void showTutorial() {
+    showDialog(
+      context: context,
+      builder: (context) => TutorialOverlay(
+        onSkip: () {
+          sharedPreferencesHelper.setTutorialShown(true);
+          context.pop();
+        },
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     ref.watch(bloquetaResultProvider);
@@ -93,27 +119,33 @@ class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
     final addMuro6 = ref.watch(addMuroBloqueta6Provider);
     final addMuro7 = ref.watch(addMuroBloqueta7Provider);
 
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: const AppBarWidget(titleAppBar: 'Datos',),
-        body: Column(
+    return Scaffold(
+      appBar: AppBarWidget(titleAppBar: 'Medición',),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 scrollDirection: Axis.vertical,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
                       child: Container(
-                        padding: const EdgeInsets.all(15),
-                        child: const Text('Complete los siguientes campos: ',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          children: [
+                            IconButton(onPressed: showTutorial, icon: const Icon(Icons.help_outline),color: AppColors.blueMetraShop,),
+                            const Text('Complete los siguientes campos: ',
+                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                    const SizedBox(height: 10,),
                     Container(
                         alignment: AlignmentDirectional.center,
                         padding: const EdgeInsets.all(10),
@@ -130,22 +162,27 @@ class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
                         formKey: _formKeyAlturaMuro1, description: 'Altura' ,controller: _alturaMuro1Controller, hintText: 'metros',),),
                     Visibility(
                       visible: addMuro1,
-                      child: Container(
-                        alignment: AlignmentDirectional.center,
-                        child: SizedBox(
-                            height: 50,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                ref.read(addMuroBloqueta1Provider.notifier).toggleAddMuro();
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text("Añadir muro"),
-                              style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)
-                                  )
-                              ),                          )
-                        ),
+                      child: Column(
+                        children: [
+                          Container(
+                            alignment: AlignmentDirectional.center,
+                            child: SizedBox(
+                                height: 50,
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    ref.read(addMuroBloqueta1Provider.notifier).toggleAddMuro();
+                                  },
+                                  icon: const Icon(Icons.add),
+                                  label: const Text("Añadir muro"),
+                                  style: ElevatedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(20)
+                                      )
+                                  ),                          )
+                            ),
+                          ),
+                          const SizedBox(height: 150,)
+                        ],
                       ),
                     ),
                     CustomAddThreeFields(formKey1: _formKeyDescriptionMuro2, formKey2: _formKeyLargoMuro2, formKey3: _formKeyAlturaMuro2, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Altura', visibility: addMuro1, titleMaterial: 'Muro 2', firstTextController: _descriptionMuro2Controller, secondTextController: _largoMuro2Controller, thirdTextController: _alturaMuro2Controller, firstHintText: 'ej. Muro de la sala', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addMuro2, pressed: () => ref.read(addMuroBloqueta2Provider.notifier).toggleAddMuro(), nameAddMaterial: 'Agregar Muro', pressedCancel: () { ref.read(addMuroBloqueta1Provider.notifier).toggleAddMuro();},),
@@ -159,96 +196,99 @@ class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
                 ),
               ),
             ),
-            MaterialButton(
-              onPressed: () {
-                final FormState formDescription1 = _formKeyDescriptionMuro1.currentState!;
-                final FormState formLargo1 = _formKeyLargoMuro1.currentState!;
-                final FormState formAltura1 = _formKeyAlturaMuro1.currentState!;
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: MaterialButton(
+                onPressed: () {
+                  /*final FormState formDescription1 = _formKeyDescriptionMuro1.currentState!;
+                  final FormState formLargo1 = _formKeyLargoMuro1.currentState!;
+                  final FormState formAltura1 = _formKeyAlturaMuro1.currentState!;
 
-                var datosBloqueta = ref.read(bloquetaResultProvider.notifier);
-                bloqueta = tipoBloqueta;
+                  var datosBloqueta = ref.read(bloquetaResultProvider.notifier);
+                  bloqueta = tipoBloqueta;
 
-                if (formDescription1.validate() && formLargo1.validate() && formAltura1.validate()) {
-                  datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                  if (addMuro1) {
-                    context.pushNamed('bloqueta_results');
-                  } else {
-                    ref.read(bloquetaResultProvider.notifier).clearList();
-                    final FormState formDescription2 = _formKeyDescriptionMuro2.currentState!;
-                    final FormState formLargo2 = _formKeyLargoMuro2.currentState!;
-                    final FormState formAltura2 = _formKeyAlturaMuro2.currentState!;
+                  if (formDescription1.validate() && formLargo1.validate() && formAltura1.validate()) {
+                    datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                    if (addMuro1) {
+                      context.pushNamed('bloqueta_results');
+                    } else {
+                      ref.read(bloquetaResultProvider.notifier).clearList();
+                      final FormState formDescription2 = _formKeyDescriptionMuro2.currentState!;
+                      final FormState formLargo2 = _formKeyLargoMuro2.currentState!;
+                      final FormState formAltura2 = _formKeyAlturaMuro2.currentState!;
 
-                    if (formDescription2.validate() && formLargo2.validate() && formAltura2.validate()) {
-                      datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                      datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                      if (addMuro2) {
-                        context.pushNamed('bloqueta_results');
-                      } else {
-                        ref.read(bloquetaResultProvider.notifier).clearList();
-                        final FormState formDescription3 = _formKeyDescriptionMuro3.currentState!;
-                        final FormState formLargo3 = _formKeyLargoMuro3.currentState!;
-                        final FormState formAltura3 = _formKeyAlturaMuro3.currentState!;
+                      if (formDescription2.validate() && formLargo2.validate() && formAltura2.validate()) {
+                        datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                        datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                        if (addMuro2) {
+                          context.pushNamed('bloqueta_results');
+                        } else {
+                          ref.read(bloquetaResultProvider.notifier).clearList();
+                          final FormState formDescription3 = _formKeyDescriptionMuro3.currentState!;
+                          final FormState formLargo3 = _formKeyLargoMuro3.currentState!;
+                          final FormState formAltura3 = _formKeyAlturaMuro3.currentState!;
 
-                        if (formDescription3.validate() && formLargo3.validate() && formAltura3.validate()) {
-                          datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                          datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                          datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
-                          if (addMuro3) {
-                            context.pushNamed('bloqueta_results');
-                          } else {
-                            ref.read(bloquetaResultProvider.notifier).clearList();
-                            final FormState formDescription4 = _formKeyDescriptionMuro4.currentState!;
-                            final FormState formLargo4 = _formKeyLargoMuro4.currentState!;
-                            final FormState formAltura4 = _formKeyAlturaMuro4.currentState!;
-                            if (formDescription4.validate() && formLargo4.validate() && formAltura4.validate()) {
-                              datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                              datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                              datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
-                              datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
-                              if (addMuro4) {
-                                context.pushNamed('bloqueta_results');
-                              } else {
-                                ref.read(bloquetaResultProvider.notifier).clearList();
-                                final FormState formDescription5 = _formKeyDescriptionMuro5.currentState!;
-                                final FormState formLargo5 = _formKeyLargoMuro5.currentState!;
-                                final FormState formAltura5 = _formKeyAlturaMuro5.currentState!;
-                                if (formDescription5.validate() && formLargo5.validate() && formAltura5.validate()) {
-                                  datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                                  datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                                  datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
-                                  datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
-                                  datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
-                                  if (addMuro5) {
-                                    context.pushNamed('bloqueta_results');
-                                  } else {
-                                    ref.read(bloquetaResultProvider.notifier).clearList();
-                                    final FormState formDescription6 = _formKeyDescriptionMuro6.currentState!;
-                                    final FormState formLargo6 = _formKeyLargoMuro6.currentState!;
-                                    final FormState formAltura6 = _formKeyAlturaMuro6.currentState!;
-                                    if (formDescription6.validate() && formLargo6.validate() && formAltura6.validate()) {
-                                      datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                                      datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                                      datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
-                                      datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
-                                      datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
-                                      datosBloqueta.createBloqueta(_descriptionMuro6Controller.text, bloqueta, _largoMuro6Controller.text, _alturaMuro6Controller.text);
-                                      if (addMuro6) {
-                                        context.pushNamed('bloqueta_results');
-                                      } else {
-                                        ref.read(bloquetaResultProvider.notifier).clearList();
-                                        final FormState formDescription7 = _formKeyDescriptionMuro7.currentState!;
-                                        final FormState formLargo7 = _formKeyLargoMuro7.currentState!;
-                                        final FormState formAltura7 = _formKeyAlturaMuro7.currentState!;
-                                        if (formDescription7.validate() && formLargo7.validate() && formAltura7.validate()) {
-                                          datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro6Controller.text, bloqueta, _largoMuro6Controller.text, _alturaMuro6Controller.text);
-                                          datosBloqueta.createBloqueta(_descriptionMuro7Controller.text, bloqueta, _largoMuro7Controller.text, _alturaMuro7Controller.text);
-                                          if (addMuro7) {
-                                            context.pushNamed('bloqueta_results');
+                          if (formDescription3.validate() && formLargo3.validate() && formAltura3.validate()) {
+                            datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                            datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                            datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
+                            if (addMuro3) {
+                              context.pushNamed('bloqueta_results');
+                            } else {
+                              ref.read(bloquetaResultProvider.notifier).clearList();
+                              final FormState formDescription4 = _formKeyDescriptionMuro4.currentState!;
+                              final FormState formLargo4 = _formKeyLargoMuro4.currentState!;
+                              final FormState formAltura4 = _formKeyAlturaMuro4.currentState!;
+                              if (formDescription4.validate() && formLargo4.validate() && formAltura4.validate()) {
+                                datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                                datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                                datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
+                                datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
+                                if (addMuro4) {
+                                  context.pushNamed('bloqueta_results');
+                                } else {
+                                  ref.read(bloquetaResultProvider.notifier).clearList();
+                                  final FormState formDescription5 = _formKeyDescriptionMuro5.currentState!;
+                                  final FormState formLargo5 = _formKeyLargoMuro5.currentState!;
+                                  final FormState formAltura5 = _formKeyAlturaMuro5.currentState!;
+                                  if (formDescription5.validate() && formLargo5.validate() && formAltura5.validate()) {
+                                    datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                                    datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                                    datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
+                                    datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
+                                    datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
+                                    if (addMuro5) {
+                                      context.pushNamed('bloqueta_results');
+                                    } else {
+                                      ref.read(bloquetaResultProvider.notifier).clearList();
+                                      final FormState formDescription6 = _formKeyDescriptionMuro6.currentState!;
+                                      final FormState formLargo6 = _formKeyLargoMuro6.currentState!;
+                                      final FormState formAltura6 = _formKeyAlturaMuro6.currentState!;
+                                      if (formDescription6.validate() && formLargo6.validate() && formAltura6.validate()) {
+                                        datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                                        datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                                        datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
+                                        datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
+                                        datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
+                                        datosBloqueta.createBloqueta(_descriptionMuro6Controller.text, bloqueta, _largoMuro6Controller.text, _alturaMuro6Controller.text);
+                                        if (addMuro6) {
+                                          context.pushNamed('bloqueta_results');
+                                        } else {
+                                          ref.read(bloquetaResultProvider.notifier).clearList();
+                                          final FormState formDescription7 = _formKeyDescriptionMuro7.currentState!;
+                                          final FormState formLargo7 = _formKeyLargoMuro7.currentState!;
+                                          final FormState formAltura7 = _formKeyAlturaMuro7.currentState!;
+                                          if (formDescription7.validate() && formLargo7.validate() && formAltura7.validate()) {
+                                            datosBloqueta.createBloqueta(_descriptionMuro1Controller.text, bloqueta, _largoMuro1Controller.text, _alturaMuro1Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro2Controller.text, bloqueta, _largoMuro2Controller.text, _alturaMuro2Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro3Controller.text, bloqueta, _largoMuro3Controller.text, _alturaMuro3Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro4Controller.text, bloqueta, _largoMuro4Controller.text, _alturaMuro4Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro5Controller.text, bloqueta, _largoMuro5Controller.text, _alturaMuro5Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro6Controller.text, bloqueta, _largoMuro6Controller.text, _alturaMuro6Controller.text);
+                                            datosBloqueta.createBloqueta(_descriptionMuro7Controller.text, bloqueta, _largoMuro7Controller.text, _alturaMuro7Controller.text);
+                                            if (addMuro7) {
+                                              context.pushNamed('bloqueta_results');
+                                            }
                                           }
                                         }
                                       }
@@ -261,60 +301,27 @@ class _DatosBloquetaScreenState extends ConsumerState<DatosBloquetaScreen> {
                         }
                       }
                     }
-                  }
-                }  else {
-                  null;
-                }
-              },
-              color: AppColors.orange,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              height: 50,
-              minWidth: 200,
-              child: const Text("Metrar",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)
+                  }  else {
+                    null;
+                  }*/
+                },
+                color: AppColors.blueMetraShop,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                height: 50,
+                minWidth: double.infinity,
+                child: const Text("Resultado",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                    )
+                ),
               ),
             ),
-            const SizedBox(height: 20,)
+            const SizedBox(height: 30,)
           ],
         ),
       ),
     );
   }
-
-  void enabledButton(String tipoBloqueta, BuildContext context) {
-
-    var datosBloqueta = ref.read(bloquetaResultProvider.notifier);
-    bloqueta = tipoBloqueta;
-    void createBloquetaIfNotEmpty(TextEditingController descriptionController, TextEditingController largoController, TextEditingController alturaController) {
-      if (descriptionController.text.isNotEmpty && largoController.text.isNotEmpty && alturaController.text.isNotEmpty) {
-        datosBloqueta.createBloqueta(descriptionController.text, bloqueta, largoController.text, alturaController.text);
-      }
-    }
-    
-    createBloquetaIfNotEmpty(_descriptionMuro1Controller, _largoMuro1Controller, _alturaMuro1Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro2Controller, _largoMuro2Controller, _alturaMuro2Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro3Controller, _largoMuro3Controller, _alturaMuro3Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro4Controller, _largoMuro4Controller, _alturaMuro4Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro5Controller, _largoMuro5Controller, _alturaMuro5Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro6Controller, _largoMuro6Controller, _alturaMuro6Controller);
-    createBloquetaIfNotEmpty(_descriptionMuro7Controller, _largoMuro7Controller, _alturaMuro7Controller);
-    
-    context.pushNamed('bloqueta_results');
-  }
 }
-
-
-/*void createBloquetaIfNotEmpty(TextEditingController descriptionController, TextEditingController largoController, TextEditingController alturaController) {
-                      if (descriptionController.text.isNotEmpty && largoController.text.isNotEmpty && alturaController.text.isNotEmpty) {
-                        datosBloqueta.createBloqueta(descriptionController.text, bloqueta, largoController.text, alturaController.text);
-                      }
-                    }
-                    createBloquetaIfNotEmpty(_descriptionMuro1Controller, _largoMuro1Controller, _alturaMuro1Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro2Controller, _largoMuro2Controller, _alturaMuro2Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro3Controller, _largoMuro3Controller, _alturaMuro3Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro4Controller, _largoMuro4Controller, _alturaMuro4Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro5Controller, _largoMuro5Controller, _alturaMuro5Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro6Controller, _largoMuro6Controller, _alturaMuro6Controller);
-                    createBloquetaIfNotEmpty(_descriptionMuro7Controller, _largoMuro7Controller, _alturaMuro7Controller);*/
