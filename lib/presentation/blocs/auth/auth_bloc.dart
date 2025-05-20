@@ -45,7 +45,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final res = await _currentUser(NoParams());
 
     res.fold(
-          (l) => emit(AuthFailure(l.message)),
+          (l) {
+        // Si el error es "User not logged in", simplemente emitimos AuthInitial
+        // en lugar de AuthFailure para no mostrar un error al usuario
+            if (l.message.contains('User not logged in')) {
+              _appUserCubit.clearUser();
+              emit(AuthInitial());
+            } else {
+              emit(AuthFailure(l.message));
+            }
+            },
           (r) => _emitAuthSuccess(r, emit),
     );
   }

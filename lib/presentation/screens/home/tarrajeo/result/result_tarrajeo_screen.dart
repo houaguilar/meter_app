@@ -1,19 +1,16 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/domain/entities/entities.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/constants/colors.dart';
-import '../../../../../data/models/models.dart';
+import '../../../../../domain/entities/entities.dart';
 import '../../../../assets/icons.dart';
-import '../../../../providers/providers.dart';
 import '../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -48,6 +45,7 @@ class ResultTarrajeoScreen extends ConsumerWidget {
               ref,
               label: 'Guardar',
               icon: Icons.add_box_rounded,
+              heroTag: 'savee_button_coating',
               onPressed: () {
                 context.pushNamed('save-tarrajeo');
               },
@@ -58,6 +56,7 @@ class ResultTarrajeoScreen extends ConsumerWidget {
               ref,
               label: 'Compartir',
               icon: Icons.share_rounded,
+              heroTag: 'share_button_coating',
               onPressed: () => _showOptionsDialog(context, ref),
             ),
           ],
@@ -81,7 +80,14 @@ class ResultTarrajeoScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, WidgetRef ref, {required String label, required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildActionButton(
+      BuildContext context,
+      WidgetRef ref, {
+        required String label,
+        required IconData icon,
+        required Object heroTag,
+        required VoidCallback onPressed
+      }) {
     return FloatingActionButton.extended(
       label: Text(label),
       icon: Icon(icon),
@@ -99,9 +105,9 @@ class ResultTarrajeoScreen extends ConsumerWidget {
               icon: Icons.picture_as_pdf,
               text: 'PDF',
               onTap: () async {
-                final pdfFile = await generatePdfPiso(ref);
+                final pdfFile = await generatePdfTarrajeo(ref);
                 final xFile = XFile(pdfFile.path);
-                Share.shareXFiles([xFile], text: 'Resultados del metrado.');
+                Share.shareXFiles([xFile], text: 'Resultados del metrado de tarrajeo.');
               },
             ),
             DialogOption(
@@ -117,33 +123,22 @@ class ResultTarrajeoScreen extends ConsumerWidget {
     );
   }
 
-  void _showToast(BuildContext context) {
-    final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(
-      SnackBar(
-        content: const Text('Se guardó exitosamente'),
-        action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
-      ),
-    );
-  }
-
   String _shareContent(WidgetRef ref) {
-    final listaPisos = ref.watch(tarrajeoResultProvider);
-
-    String cantidadPiedraChancadaToString = cantidadPiedraChancada(listaPisos).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(listaPisos).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(listaPisos).ceilToDouble().toString();
+    final listaTarrajeo = ref.watch(tarrajeoResultProvider);
+    if (listaTarrajeo.isEmpty) return 'Error: No hay datos disponibles.';
 
     String datosMetrado = 'DATOS METRADO';
     String listaMateriales = 'LISTA DE MATERIALES';
+    final datosShare = ref.watch(datosShareTarrajeoProvider);
 
-    if (listaPisos.isNotEmpty) {
-      final datosLadrillo = ref.watch(datosShareTarrajeoProvider);
-      final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadArenaToString m3 \n*Cemento: $cantidadCementoToString bls \n${listaPisos.first.tipo == 'contrapiso' ? '*Piedra chancada: $cantidadPiedraChancadaToString m3' : ''}';
-      return shareText;
-    } else {
-      return 'Error';
-    }
+    String cantidadArenaToString = calcularCantidadArena(listaTarrajeo).toStringAsFixed(2);
+    String cantidadCementoToString = calcularCantidadCemento(listaTarrajeo).ceilToDouble().toString();
+    String cantidadAguaToString = calcularCantidadAgua(listaTarrajeo).toStringAsFixed(2);
+
+    return '$datosMetrado\n$datosShare\n-------------\n$listaMateriales\n'
+        '*Arena fina: $cantidadArenaToString m3\n'
+        '*Cemento: $cantidadCementoToString bls\n'
+        '*Agua: $cantidadAguaToString m3';
   }
 }
 
@@ -152,9 +147,7 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-    final listaPisos = ref.watch(tarrajeoResultProvider);
-    print(listaPisos);
+    final listaTarrajeo = ref.watch(tarrajeoResultProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
@@ -162,91 +155,24 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
         children: [
           const SizedBox(height: 10,),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 6,),
-          const Text('Resumen del metrado', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryMetraShop),),
           const SizedBox(height: 10,),
-          if (listaPisos.isNotEmpty) ...[
+          if (listaTarrajeo.isNotEmpty) ...[
             _buildSummaryCard(
               context,
               'Datos del Metrado',
-              const _PisosContainer(),
+              const _TarrajeoContainer(),
             ),
             const SizedBox(height: 20),
             _buildSummaryCard(
               context,
               'Lista de Materiales',
-              _buildMaterialList(
-                cantidadPruebaLadToString: cantidadPiedraChancada(listaPisos)
-                    .toStringAsFixed(2),
-                cantidadPruebaAreToString: cantidadArenaGruesa(listaPisos)
-                    .toStringAsFixed(2),
-                cantidadPruebaCemToString: cantidadCementoPisos(listaPisos)
-                    .ceilToDouble()
-                    .toString(),
-                lista: listaPisos,
-              ),
+              _buildMaterialList(context, listaTarrajeo),
             ),
           ],
-          /*Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: AppColors.orange,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              icon: const Icon(Icons.search_rounded),
-              label: const Text(
-                "Buscar Ferreterías",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                context.goNamed('mapa');
-              },
-            ),
-          ),*/
           const SizedBox(height: 200,)
         ],
       ),
     );
-
-    /*String cantidadPiedraChancadaToString = cantidadPiedraChancada(listaPisos).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(listaPisos).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(listaPisos).ceilToDouble().toString();
-
-    return Column(
-      children: [
-        const Expanded(
-          child: _PisosContainer(),
-        ),
-        MaterialButton(
-          onPressed: () {
-            ref.watch(cantidadArenaPisosProvider);
-            ref.watch(cantidadCementoPisosProvider);
-            ref.watch(cantidadPiedraChancadaProvider);
-
-            if (listaPisos.first.tipo == 'contrapiso') {
-              ref.read(cantidadArenaPisosProvider.notifier).arena(cantidadArenaToString);
-              ref.read(cantidadCementoPisosProvider.notifier).cemento(cantidadCementoToString);
-            } else {
-              ref.read(cantidadArenaPisosProvider.notifier).arena(cantidadArenaToString);
-              ref.read(cantidadCementoPisosProvider.notifier).cemento(cantidadCementoToString);
-              ref.read(cantidadPiedraChancadaProvider.notifier).piedra(cantidadPiedraChancadaToString);
-            }
-            context.goNamed('pisos-pdf');
-          },
-          color: AppColors.orange,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          height: 50,
-          minWidth: 200,
-          child: const Text("Generar PDF",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)
-          ),
-        ),
-        const SizedBox(height: 20,)
-      ],
-    );*/
   }
 
   Widget _buildSummaryCard(BuildContext context, String title, Widget content) {
@@ -281,30 +207,27 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
     );
   }
 
-  Widget _buildMaterialList({
-    required String cantidadPruebaLadToString,
-    required String cantidadPruebaAreToString,
-    required String cantidadPruebaCemToString,
-    required List<Tarrajeo> lista,
-  }) {
+  Widget _buildMaterialList(BuildContext context, List<Tarrajeo> tarrajeos) {
+    if (tarrajeos.isEmpty) return const SizedBox.shrink();
+
+    final List<TableRow> rows = [
+      _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
+      _buildMaterialRow('Cemento', 'bls', calcularCantidadCemento(tarrajeos).ceil().toString()),
+      _buildMaterialRow('Arena fina', 'm³', calcularCantidadArena(tarrajeos).toStringAsFixed(2)),
+      _buildMaterialRow('Agua', 'm³', calcularCantidadAgua(tarrajeos).toStringAsFixed(2)),
+    ];
+
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2), // Ancho para la descripción
         1: FlexColumnWidth(1), // Ancho para la unidad
         2: FlexColumnWidth(2), // Ancho para la cantidad
       },
-      children: [
-        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-        _buildMaterialRow('Cemento', 'm2', cantidadPruebaCemToString),
-        _buildMaterialRow('Arena gruesa', 'm3 / Bls.', cantidadPruebaAreToString),
-        if (lista.first.tipo != 'contrapiso')
-          _buildMaterialRow('Piedra chancada', 'Und', cantidadPruebaLadToString),
-      ],
+      children: rows,
     );
   }
 
-  TableRow _buildMaterialRow(String description, String unit, String amount,
-      {bool isHeader = false}) {
+  TableRow _buildMaterialRow(String description, String unit, String amount, {bool isHeader = false}) {
     final textStyle = TextStyle(
       fontSize: isHeader ? 14 : 12,
       fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
@@ -338,34 +261,33 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
   }
 }
 
-class _PisosContainer extends ConsumerWidget {
-  const _PisosContainer();
+class _TarrajeoContainer extends ConsumerWidget {
+  const _TarrajeoContainer();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(tarrajeoResultProvider);
-    print(results);
-    return _buildPisosContainer(context, results);
+    return _buildTarrajeoContainer(context, results);
   }
 
-  Widget _buildPisosContainer(BuildContext context, List<Tarrajeo> results) {
+  Widget _buildTarrajeoContainer(BuildContext context, List<Tarrajeo> results) {
     double calcularVolumen(Tarrajeo tarrajeo) {
       if (tarrajeo.area != null && tarrajeo.area!.isNotEmpty) {
         final espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
         final area = double.tryParse(tarrajeo.area!) ?? 0.0;
-        return area * espesor; // Si es área
+        return area * (espesor / 100); // Convertir espesor de cm a m
       } else {
         final espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
-        final largo = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
+        final longitud = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
         final ancho = double.tryParse(tarrajeo.ancho ?? '') ?? 0.0;
-        return largo * ancho * espesor; // Si es largo y altura
+        return longitud * ancho * (espesor / 100); // Convertir espesor de cm a m
       }
     }
 
     double calcularSumaTotalDeVolumenes(List<Tarrajeo> results) {
       double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularVolumen(results[i]);
+      for (final tarrajeo in results) {
+        sumaTotal += calcularVolumen(tarrajeo);
       }
       return sumaTotal;
     }
@@ -421,7 +343,7 @@ class _PisosContainer extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    'm3',
+                    'm³',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                   ),
                 ),
@@ -448,7 +370,7 @@ class _PisosContainer extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'm3',
+                  'm³',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -464,44 +386,17 @@ class _PisosContainer extends ConsumerWidget {
         ],
       ),
     );
-
-    /*String cantidadPiedraChancadaToString = cantidadPiedraChancada(results).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(results).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(results).ceilToDouble().toString();
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        children: [
-          const Text('Datos del Metrado', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          const CommonContentResults(descripcion: '', unidad: 'UNIDAD', cantidad: 'CANTIDAD', sizeText: 16, weightText: FontWeight.w500),
-          ListView.builder(
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return CommonContentResults(descripcion: results[index].description, unidad: 'm3', cantidad: volume(index).toString(), sizeText: 14, weightText: FontWeight.normal);
-            },
-            itemCount: results.length,
-          ),
-          const SizedBox(height: 20,),
-          const Text('Lista de Materiales', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          const CommonContentResults(descripcion: '', unidad: 'UNIDAD', cantidad: 'CANTIDAD', sizeText: 16, weightText: FontWeight.w500),
-          CommonContentResults(descripcion: 'ARENA GRUESA', unidad: 'm3', cantidad: cantidadArenaToString, sizeText: 14, weightText: FontWeight.normal),
-          CommonContentResults(descripcion: 'CEMENTO', unidad: 'bls', cantidad: cantidadCementoToString, sizeText: 14, weightText: FontWeight.normal),
-          Visibility(
-            visible: results.first.tipo != 'contrapiso',
-              child: CommonContentResults(descripcion: 'PIEDRA CHANCADA', unidad: 'm3', cantidad: cantidadPiedraChancadaToString, sizeText: 14, weightText: FontWeight.normal)
-          ),
-        ],
-      ),
-    );*/
   }
 }
 
-Future<File> generatePdfPiso(WidgetRef ref) async {
+Future<File> generatePdfTarrajeo(WidgetRef ref) async {
   final pdf = pw.Document();
   final listaTarrajeo = ref.watch(tarrajeoResultProvider);
+  if (listaTarrajeo.isEmpty) {
+    throw Exception("No hay datos disponibles para generar el PDF");
+  }
 
-  String title = 'Resultados de Piso';
+  String title = 'Resultados de Tarrajeo';
 
   pdf.addPage(
     pw.Page(
@@ -511,14 +406,9 @@ Future<File> generatePdfPiso(WidgetRef ref) async {
           children: [
             pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 20),
-            if (listaTarrajeo.first.tipo != 'contrapiso') ...[
-              pw.Text('Piedra Chancada: ${cantidadPiedraChancada(listaTarrajeo).toStringAsFixed(2)} m3'),
-              pw.Text('Arena: ${cantidadArenaGruesa(listaTarrajeo).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${cantidadCementoPisos(listaTarrajeo).ceilToDouble()} bls'),
-            ] else ...[
-              pw.Text('Arena: ${cantidadArenaGruesa(listaTarrajeo).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${cantidadCementoPisos(listaTarrajeo).ceilToDouble()} bls'),
-            ],
+            pw.Text('Cemento: ${calcularCantidadCemento(listaTarrajeo).ceil()} bls'),
+            pw.Text('Arena fina: ${calcularCantidadArena(listaTarrajeo).toStringAsFixed(2)} m³'),
+            pw.Text('Agua: ${calcularCantidadAgua(listaTarrajeo).toStringAsFixed(2)} m³'),
           ],
         ),
       ),
@@ -526,81 +416,104 @@ Future<File> generatePdfPiso(WidgetRef ref) async {
   );
 
   final output = await getTemporaryDirectory();
-  final file = File('${output.path}/resultados.pdf');
+  final file = File('${output.path}/resultados_tarrajeo.pdf');
   await file.writeAsBytes(await pdf.save());
   return file;
 }
 
-double obtenerAreaPisos(Tarrajeo tarrajeo) {
+// Función auxiliar para obtener el área
+double obtenerAreaTarrajeo(Tarrajeo tarrajeo) {
   if (tarrajeo.area != null && tarrajeo.area!.isNotEmpty) {
     return double.tryParse(tarrajeo.area!) ?? 0.0; // Usar área si está disponible
   } else {
-    double largo = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
+    double longitud = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
     double ancho = double.tryParse(tarrajeo.ancho ?? '') ?? 0.0;
-    return largo * ancho; // Calcular área usando largo y altura
+    return longitud * ancho; // Calcular área usando longitud y ancho
   }
 }
 
-double calcularCantidadPiedraChancada(String tipoPiso, double espesor, double area){
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 0.72 * 0.05;
-    default:
-      return espesor * area * 0.72 * 0.05;
-  }
+// Función para calcular el volumen
+double calcularVolumenTarrajeo(Tarrajeo tarrajeo) {
+  double area = obtenerAreaTarrajeo(tarrajeo);
+  double espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
+  return area * (espesor / 100); // Convertir espesor de cm a m
 }
 
-double calcularCantidadArenaGruesa(String tipoPiso, double espesor, double area) {
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 0.72 * 0.05;
-    case 'contrapiso':
-      return espesor * area * 1 * 0.05;
-    default:
-      return espesor * area * 1 * 0.05;
+// CÁLCULOS PARA TARRAJEO
+double calcularCantidadCemento(List<Tarrajeo> tarrajeos) {
+  double totalCemento = 0.0;
+  for (var tarrajeo in tarrajeos) {
+    double volumen = calcularVolumenTarrajeo(tarrajeo);
+    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    // Proporción del mortero
+    String proporcionStr = tarrajeo.proporcionMortero;
+    int proporcion = int.tryParse(proporcionStr) ?? 4;
+
+    // Factor de cemento según proporción (bolsas/m³)
+    double factorCemento;
+    switch (proporcion) {
+      case 4: factorCemento = 8.50; break; // Aproximadamente 8.5 bolsas por m³ para 1:4
+      case 5: factorCemento = 7.40; break; // Aproximadamente 7.4 bolsas por m³ para 1:5
+      default: factorCemento = 8.50;      // Usar 1:4 como valor predeterminado
+    }
+
+    // Cantidad de cemento con desperdicio
+    totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
   }
+
+  return totalCemento;
 }
 
-double calcularCantidadCementoPisos(String tipoPiso, double espesor, double area) {
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 7.06 * 0.05;
-    case 'contrapiso':
-      return espesor * area * 7.4 * 0.05;
-    default:
-      return espesor * area * 7.4 * 0.05;
+double calcularCantidadArena(List<Tarrajeo> tarrajeos) {
+  double totalArena = 0.0;
+  for (var tarrajeo in tarrajeos) {
+    double volumen = calcularVolumenTarrajeo(tarrajeo);
+    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    // Proporción del mortero
+    String proporcionStr = tarrajeo.proporcionMortero;
+    int proporcion = int.tryParse(proporcionStr) ?? 4;
+
+    // Factor de arena según proporción (m³/m³)
+    double factorArena;
+    switch (proporcion) {
+      case 4: factorArena = 1.05; break; // Aproximadamente 1.05 m³ de arena por m³ de mortero para 1:4
+      case 5: factorArena = 1.16; break; // Aproximadamente 1.16 m³ de arena por m³ de mortero para 1:5
+      default: factorArena = 1.05;      // Usar 1:4 como valor predeterminado
+    }
+
+    // Cantidad de arena con desperdicio
+    totalArena += volumen * factorArena * (1 + factorDesperdicio);
   }
+
+  return totalArena;
 }
 
-double cantidadPiedraChancada(List<Tarrajeo> results) {
-  double sumaDePiedras = 0.0;
-  for (Tarrajeo tarrajeo in results) {
-    double area = obtenerAreaPisos(tarrajeo);
-    double espesor = double.tryParse(tarrajeo.espesor ?? '') ?? 0.0;
+double calcularCantidadAgua(List<Tarrajeo> tarrajeos) {
+  double totalAgua = 0.0;
+  for (var tarrajeo in tarrajeos) {
+    double volumen = calcularVolumenTarrajeo(tarrajeo);
+    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
 
-    sumaDePiedras += calcularCantidadPiedraChancada(tarrajeo.tipo, espesor, area);
+    // Proporción del mortero
+    String proporcionStr = tarrajeo.proporcionMortero;
+    int proporcion = int.tryParse(proporcionStr) ?? 4;
+
+    // Factor de agua en m³ por m³ de mortero
+    double factorAgua;
+    switch (proporcion) {
+      case 4: factorAgua = 0.27; break; // Aproximadamente 270 litros (0.27 m³) por m³ de mortero para 1:4
+      case 5: factorAgua = 0.24; break; // Aproximadamente 240 litros (0.24 m³) por m³ de mortero para 1:5
+      default: factorAgua = 0.27;      // Usar 1:4 como valor predeterminado
+    }
+
+    // Cantidad de agua con desperdicio
+    totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
   }
-  return sumaDePiedras;
-}
 
-double cantidadArenaGruesa(List<Tarrajeo> results) {
-  double sumaDeArena = 0.0;
-  for (Tarrajeo tarrajeo in results) {
-    double area = obtenerAreaPisos(tarrajeo);
-    double espesor = double.tryParse(tarrajeo.espesor ?? '') ?? 0.0;
-
-    sumaDeArena += calcularCantidadArenaGruesa(tarrajeo.tipo, espesor, area);
-  }
-  return sumaDeArena;
-}
-
-double cantidadCementoPisos(List<Tarrajeo> results) {
-  double sumaDeCemento = 0.0;
-  for (Tarrajeo tarrajeo in results) {
-    double area = obtenerAreaPisos(tarrajeo);
-    double espesor = double.tryParse(tarrajeo.espesor ?? '') ?? 0.0;
-
-    sumaDeCemento += calcularCantidadCementoPisos(tarrajeo.tipo, espesor, area);
-  }
-  return sumaDeCemento;
+  return totalAgua;
 }

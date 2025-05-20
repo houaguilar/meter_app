@@ -25,7 +25,7 @@ class UserProfileModel extends UserProfile {
       city: map['city'] ?? '',
       province: map['province'] ?? '',
       district: map['district'] ?? '',
-      profileImageUrl: map['profile_image_url'] ?? '',
+      profileImageUrl: map['profile_image_url'],
     );
   }
 
@@ -69,6 +69,22 @@ class UserProfileModel extends UserProfile {
       province: province ?? this.province,
       district: district ?? this.district,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+    );
+  }
+
+  // Convert from domain entity to data model
+  factory UserProfileModel.fromDomain(UserProfile profile) {
+    return UserProfileModel(
+      id: profile.id,
+      name: profile.name,
+      phone: profile.phone,
+      email: profile.email,
+      employment: profile.employment,
+      nationality: profile.nationality,
+      city: profile.city,
+      province: profile.province,
+      district: profile.district,
+      profileImageUrl: profile.profileImageUrl,
     );
   }
 }

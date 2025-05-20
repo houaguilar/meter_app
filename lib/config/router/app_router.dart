@@ -19,6 +19,10 @@ import 'package:meter_app/presentation/views/views.dart';
 
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/screens/auth/init/metra_shop_screen.dart';
+import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
+import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
+import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
+import '../../presentation/screens/home/losas/resultado/resultado_losas.dart';
 import '../../presentation/screens/home/muro/bloqueta/datos_bloqueta/datos_b.dart';
 import '../../presentation/screens/home/pisos/datos/datos_p.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
@@ -48,6 +52,11 @@ class AppRouter {
       final isLoggingIn = state.matchedLocation == '/metrashop' ||
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
+      final isLoading = authState is AuthLoading;
+
+      if (isLoading) {
+        return null;
+      }
 
       if (!isAuthenticated && !isLoggingIn) {
         return '/metrashop';
@@ -234,6 +243,36 @@ class AppRouter {
                     path: 'tarrajeo-muro',
                     name: 'tarrajeo-muro',
                     builder: (context, state) => const DatosTarrajeoScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'tarrajeo_results',
+                        name: 'tarrajeo_results',
+                        builder: (context, state) => const ResultTarrajeoScreen(),
+                        routes: [
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'map-screen-tarrajeo',
+                              name: 'map-screen-tarrajeo',
+                              builder: (context, state) => const MapScreen()
+                          ),
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'save-tarrajeo',
+                              name: 'save-tarrajeo',
+                              builder: (context, state) => const SaveResultScreen(),
+                              routes: [
+                                GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'new-project-tarrajeo',
+                                  name: 'new-project-tarrajeo',
+                                  builder: (context, state) => const NewProjectScreen(),
+                                ),
+                              ]
+                          ),
+                        ],
+                      ),
+                    ]
                   ),
                   GoRoute(
                     parentNavigatorKey: _rootNavigator,
@@ -246,34 +285,6 @@ class AppRouter {
                     path: 'tarrajeo-solaqueo',
                     name: 'tarrajeo-solaqueo',
                     builder: (context, state) => const DatosTarrajeoScreen(),
-                  ),
-                  GoRoute(
-                    parentNavigatorKey: _rootNavigator,
-                    path: 'tarrajeo_results',
-                    name: 'tarrajeo_results',
-                    builder: (context, state) => const ResultTarrajeoScreen(),
-                    routes: [
-                      GoRoute(
-                          parentNavigatorKey: _rootNavigator,
-                          path: 'map-screen-tarrajeo',
-                          name: 'map-screen-tarrajeo',
-                          builder: (context, state) => const MapScreen()
-                      ),
-                      GoRoute(
-                          parentNavigatorKey: _rootNavigator,
-                          path: 'save-tarrajeo',
-                          name: 'save-tarrajeo',
-                          builder: (context, state) => const SaveResultScreen(),
-                          routes: [
-                            GoRoute(
-                              parentNavigatorKey: _rootNavigator,
-                              path: 'new-project-tarrajeo',
-                              name: 'new-project-tarrajeo',
-                              builder: (context, state) => const NewProjectScreen(),
-                            ),
-                          ]
-                      ),
-                    ],
                   ),
                 ],
               ),
@@ -345,25 +356,79 @@ class AppRouter {
                     routes: [
                       GoRoute(
                         parentNavigatorKey: _rootNavigator,
-                        path: 'losas-macizas',
-                        name: 'losas-macizas',
-                        builder: (context, state) => const DatosLosasMacizasScreen(),
+                        path: 'losas-aligeradas-results',
+                        name: 'losas-aligeradas-results',
+                        builder: (context, state) => const ResultLosasScreen(),
                         routes: [
                           GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'map-screen-losas',
+                              name: 'map-screen-losas',
+                              builder: (context, state) => const MapScreen()
+                          ),
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'save-losas',
+                              name: 'save-losas',
+                              builder: (context, state) => const SaveResultScreen(),
+                              routes: [
+                                GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'new-project-losas',
+                                  name: 'new-project-losas',
+                                  builder: (context, state) => const NewProjectScreen(),
+                                ),
+                              ]
+                          ),
+                          GoRoute(
                             parentNavigatorKey: _rootNavigator,
-                            path: 'losas-vigas',
-                            name: 'losas-vigas',
-                            builder: (context, state) => const DatosVigasScreen(),
-                            routes: [
-                              GoRoute(
-                                parentNavigatorKey: _rootNavigator,
-                                path: 'losas-escaleras',
-                                name: 'losas-escaleras',
-                                builder: (context, state) => const DatosEscalerasScreen(),
-                              ),
-                            ],
+                            path: 'losas-pdf',
+                            name: 'losas-pdf',
+                            builder: (context, state) => const PreviewPisosScreen(),
                           ),
                         ],
+                      )
+                    ],
+                  ),
+                ],
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'structural-elements',
+                name: 'structural-elements',
+                builder: (context, state) => const StructuralElementScreen(),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'structural-element-datos',
+                    name: 'structural-element-datos',
+                    builder: (context, state) => const DatosStructuralElementsScreen(),
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'structural-element-results',
+                    name: 'structural-element-results',
+                    builder: (context, state) => const ResultStructuralElementsScreen(),
+                    routes: [
+                      GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'map-screen-structural',
+                          name: 'map-screen-structural',
+                          builder: (context, state) => const MapScreen()
+                      ),
+                      GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'save-structural-element',
+                          name: 'save-structural-element',
+                          builder: (context, state) => const SaveResultScreen(),
+                          routes: [
+                            GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'new-project-structural',
+                              name: 'new-project-structural',
+                              builder: (context, state) => const NewProjectScreen(),
+                            ),
+                          ]
                       ),
                     ],
                   ),

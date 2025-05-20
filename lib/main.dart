@@ -23,7 +23,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
  // await Firebase.initializeApp();
   await initDependencies();
-  
   runApp(const ProviderScope(child: MyApp()));
 }
 

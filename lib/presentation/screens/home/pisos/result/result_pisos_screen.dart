@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -9,7 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/constants/colors.dart';
-import '../../../../../data/models/models.dart';
+import '../../../../../domain/entities/entities.dart';
 import '../../../../assets/icons.dart';
 import '../../../../providers/providers.dart';
 import '../../../../widgets/widgets.dart';
@@ -46,8 +45,9 @@ class ResultPisosScreen extends ConsumerWidget {
               ref,
               label: 'Guardar',
               icon: Icons.add_box_rounded,
+              heroTag: 'save_button_floor',
               onPressed: () {
-                  context.pushNamed('save-piso');
+                context.pushNamed('save-piso');
               },
             ),
             const SizedBox(width: 8),
@@ -56,6 +56,7 @@ class ResultPisosScreen extends ConsumerWidget {
               ref,
               label: 'Compartir',
               icon: Icons.share_rounded,
+              heroTag: 'share_button_floor',
               onPressed: () => _showOptionsDialog(context, ref),
             ),
           ],
@@ -63,7 +64,7 @@ class ResultPisosScreen extends ConsumerWidget {
         const SizedBox(height: 10),
         ElevatedButton.icon(
           onPressed: () {
-              context.pushNamed('map-screen-piso');
+            context.pushNamed('map-screen-piso');
           },
           icon: const Icon(Icons.search_rounded),
           label: const Text('Buscar proveedores'),
@@ -79,7 +80,14 @@ class ResultPisosScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, WidgetRef ref, {required String label, required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildActionButton(
+      BuildContext context,
+      WidgetRef ref, {
+        required String label,
+        required IconData icon,
+        required Object heroTag,
+        required VoidCallback onPressed
+      }) {
     return FloatingActionButton.extended(
       label: Text(label),
       icon: Icon(icon),
@@ -115,32 +123,37 @@ class ResultPisosScreen extends ConsumerWidget {
     );
   }
 
-  void _showToast(BuildContext context) {
-    final scaffold = ScaffoldMessenger.of(context);
-    scaffold.showSnackBar(
-      SnackBar(
-        content: const Text('Se guardó exitosamente'),
-        action: SnackBarAction(label: 'UNDO', onPressed: scaffold.hideCurrentSnackBar),
-      ),
-    );
-  }
-
   String _shareContent(WidgetRef ref) {
     final listaPisos = ref.watch(pisosResultProvider);
+    if (listaPisos.isEmpty) return 'Error: No hay datos disponibles.';
 
-    String cantidadPiedraChancadaToString = cantidadPiedraChancada(listaPisos).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(listaPisos).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(listaPisos).ceilToDouble().toString();
-
+    final tipoPiso = listaPisos.first.tipo;
     String datosMetrado = 'DATOS METRADO';
     String listaMateriales = 'LISTA DE MATERIALES';
+    final datosShare = ref.watch(datosSharePisosProvider);
 
-    if (listaPisos.isNotEmpty) {
-      final datosLadrillo = ref.watch(datosSharePisosProvider);
-      final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadArenaToString m3 \n*Cemento: $cantidadCementoToString bls \n${listaPisos.first.tipo == 'contrapiso' ? '*Piedra chancada: $cantidadPiedraChancadaToString m3' : ''}';
-      return shareText;
+    if (tipoPiso == 'contrapiso') {
+      // Cálculos para contrapiso
+      String cantidadArenaToString = calcularCantidadArenaGruesa(listaPisos).toStringAsFixed(2);
+      String cantidadCementoToString = calcularCantidadCementoPisos(listaPisos).ceilToDouble().toString();
+      String cantidadAguaToString = calcularCantidadAguaPisos(listaPisos).toStringAsFixed(2);
+
+      return '$datosMetrado\n$datosShare\n-------------\n$listaMateriales\n'
+          '*Arena gruesa: $cantidadArenaToString m3\n'
+          '*Cemento: $cantidadCementoToString bls\n'
+          '*Agua: $cantidadAguaToString m3';
     } else {
-      return 'Error';
+      // Cálculos para falso piso
+      String cantidadArenaToString = calcularCantidadArenaGruesa(listaPisos).toStringAsFixed(2);
+      String cantidadCementoToString = calcularCantidadCementoPisos(listaPisos).ceilToDouble().toString();
+      String cantidadPiedraToString = calcularCantidadPiedraChancada(listaPisos).toStringAsFixed(2);
+      String cantidadAguaToString = calcularCantidadAguaPisos(listaPisos).toStringAsFixed(2);
+
+      return '$datosMetrado\n$datosShare\n-------------\n$listaMateriales\n'
+          '*Arena gruesa: $cantidadArenaToString m3\n'
+          '*Cemento: $cantidadCementoToString bls\n'
+          '*Piedra chancada: $cantidadPiedraToString m3\n'
+          '*Agua: $cantidadAguaToString m3';
     }
   }
 }
@@ -150,9 +163,7 @@ class _ResultPisosScreenView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     final listaPisos = ref.watch(pisosResultProvider);
-    print(listaPisos);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
@@ -160,8 +171,6 @@ class _ResultPisosScreenView extends ConsumerWidget {
         children: [
           const SizedBox(height: 10,),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 6,),
-          const Text('Resumen del metrado', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryMetraShop),),
           const SizedBox(height: 10,),
           if (listaPisos.isNotEmpty) ...[
             _buildSummaryCard(
@@ -173,78 +182,13 @@ class _ResultPisosScreenView extends ConsumerWidget {
             _buildSummaryCard(
               context,
               'Lista de Materiales',
-              _buildMaterialList(
-                cantidadPruebaLadToString: cantidadPiedraChancada(listaPisos)
-                    .toStringAsFixed(2),
-                cantidadPruebaAreToString: cantidadArenaGruesa(listaPisos)
-                    .toStringAsFixed(2),
-                cantidadPruebaCemToString: cantidadCementoPisos(listaPisos)
-                    .ceilToDouble()
-                    .toString(),
-                lista: listaPisos,
-              ),
+              _buildMaterialList(context, listaPisos),
             ),
           ],
-          /*Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: AppColors.orange,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              icon: const Icon(Icons.search_rounded),
-              label: const Text(
-                "Buscar Ferreterías",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                context.goNamed('mapa');
-              },
-            ),
-          ),*/
           const SizedBox(height: 200,)
         ],
       ),
     );
-
-    /*String cantidadPiedraChancadaToString = cantidadPiedraChancada(listaPisos).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(listaPisos).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(listaPisos).ceilToDouble().toString();
-
-    return Column(
-      children: [
-        const Expanded(
-          child: _PisosContainer(),
-        ),
-        MaterialButton(
-          onPressed: () {
-            ref.watch(cantidadArenaPisosProvider);
-            ref.watch(cantidadCementoPisosProvider);
-            ref.watch(cantidadPiedraChancadaProvider);
-
-            if (listaPisos.first.tipo == 'contrapiso') {
-              ref.read(cantidadArenaPisosProvider.notifier).arena(cantidadArenaToString);
-              ref.read(cantidadCementoPisosProvider.notifier).cemento(cantidadCementoToString);
-            } else {
-              ref.read(cantidadArenaPisosProvider.notifier).arena(cantidadArenaToString);
-              ref.read(cantidadCementoPisosProvider.notifier).cemento(cantidadCementoToString);
-              ref.read(cantidadPiedraChancadaProvider.notifier).piedra(cantidadPiedraChancadaToString);
-            }
-            context.goNamed('pisos-pdf');
-          },
-          color: AppColors.orange,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          height: 50,
-          minWidth: 200,
-          child: const Text("Generar PDF",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)
-          ),
-        ),
-        const SizedBox(height: 20,)
-      ],
-    );*/
   }
 
   Widget _buildSummaryCard(BuildContext context, String title, Widget content) {
@@ -279,30 +223,33 @@ class _ResultPisosScreenView extends ConsumerWidget {
     );
   }
 
-  Widget _buildMaterialList({
-    required String cantidadPruebaLadToString,
-    required String cantidadPruebaAreToString,
-    required String cantidadPruebaCemToString,
-    required List<Piso> lista,
-  }) {
+  Widget _buildMaterialList(BuildContext context, List<Piso> pisos) {
+    if (pisos.isEmpty) return const SizedBox.shrink();
+
+    final tipoPiso = pisos.first.tipo;
+    final List<TableRow> rows = [
+      _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
+      _buildMaterialRow('Cemento', 'bls', calcularCantidadCementoPisos(pisos).ceil().toString()),
+      _buildMaterialRow('Arena gruesa', 'm³', calcularCantidadArenaGruesa(pisos).toStringAsFixed(2)),
+      _buildMaterialRow('Agua', 'm³', calcularCantidadAguaPisos(pisos).toStringAsFixed(2)),
+    ];
+
+    // Sólo mostrar piedra chancada para falso piso
+    if (tipoPiso == 'falso') {
+      rows.add(_buildMaterialRow('Piedra chancada', 'm³', calcularCantidadPiedraChancada(pisos).toStringAsFixed(2)));
+    }
+
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2), // Ancho para la descripción
         1: FlexColumnWidth(1), // Ancho para la unidad
         2: FlexColumnWidth(2), // Ancho para la cantidad
       },
-      children: [
-        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-        _buildMaterialRow('Cemento', 'm2', cantidadPruebaCemToString),
-        _buildMaterialRow('Arena gruesa', 'm3 / Bls.', cantidadPruebaAreToString),
-        if (lista.first.tipo != 'contrapiso')
-          _buildMaterialRow('Piedra chancada', 'Und', cantidadPruebaLadToString),
-      ],
+      children: rows,
     );
   }
 
-  TableRow _buildMaterialRow(String description, String unit, String amount,
-      {bool isHeader = false}) {
+  TableRow _buildMaterialRow(String description, String unit, String amount, {bool isHeader = false}) {
     final textStyle = TextStyle(
       fontSize: isHeader ? 14 : 12,
       fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
@@ -342,7 +289,6 @@ class _PisosContainer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(pisosResultProvider);
-    print(results);
     return _buildPisosContainer(context, results);
   }
 
@@ -351,19 +297,19 @@ class _PisosContainer extends ConsumerWidget {
       if (piso.area != null && piso.area!.isNotEmpty) {
         final espesor = double.tryParse(piso.espesor) ?? 0.0;
         final area = double.tryParse(piso.area!) ?? 0.0;
-        return area * espesor; // Si es área
+        return area * (espesor / 100); // Convertir espesor de cm a m
       } else {
         final espesor = double.tryParse(piso.espesor) ?? 0.0;
         final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
         final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-        return largo * ancho * espesor; // Si es largo y altura
+        return largo * ancho * (espesor / 100); // Convertir espesor de cm a m
       }
     }
 
     double calcularSumaTotalDeVolumenes(List<Piso> results) {
       double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularVolumen(results[i]);
+      for (final piso in results) {
+        sumaTotal += calcularVolumen(piso);
       }
       return sumaTotal;
     }
@@ -419,7 +365,7 @@ class _PisosContainer extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    'm3',
+                    'm³',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                   ),
                 ),
@@ -446,7 +392,7 @@ class _PisosContainer extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'm3',
+                  'm³',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -462,44 +408,18 @@ class _PisosContainer extends ConsumerWidget {
         ],
       ),
     );
-
-    /*String cantidadPiedraChancadaToString = cantidadPiedraChancada(results).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArenaGruesa(results).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCementoPisos(results).ceilToDouble().toString();
-
-    return Container(
-      padding: const EdgeInsets.all(15),
-      child: Column(
-        children: [
-          const Text('Datos del Metrado', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          const CommonContentResults(descripcion: '', unidad: 'UNIDAD', cantidad: 'CANTIDAD', sizeText: 16, weightText: FontWeight.w500),
-          ListView.builder(
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return CommonContentResults(descripcion: results[index].description, unidad: 'm3', cantidad: volume(index).toString(), sizeText: 14, weightText: FontWeight.normal);
-            },
-            itemCount: results.length,
-          ),
-          const SizedBox(height: 20,),
-          const Text('Lista de Materiales', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),),
-          const CommonContentResults(descripcion: '', unidad: 'UNIDAD', cantidad: 'CANTIDAD', sizeText: 16, weightText: FontWeight.w500),
-          CommonContentResults(descripcion: 'ARENA GRUESA', unidad: 'm3', cantidad: cantidadArenaToString, sizeText: 14, weightText: FontWeight.normal),
-          CommonContentResults(descripcion: 'CEMENTO', unidad: 'bls', cantidad: cantidadCementoToString, sizeText: 14, weightText: FontWeight.normal),
-          Visibility(
-            visible: results.first.tipo != 'contrapiso',
-              child: CommonContentResults(descripcion: 'PIEDRA CHANCADA', unidad: 'm3', cantidad: cantidadPiedraChancadaToString, sizeText: 14, weightText: FontWeight.normal)
-          ),
-        ],
-      ),
-    );*/
   }
 }
 
 Future<File> generatePdfPiso(WidgetRef ref) async {
   final pdf = pw.Document();
   final listaPiso = ref.watch(pisosResultProvider);
+  if (listaPiso.isEmpty) {
+    throw Exception("No hay datos disponibles para generar el PDF");
+  }
 
-  String title = 'Resultados de Piso';
+  final tipoPiso = listaPiso.first.tipo;
+  String title = tipoPiso == 'contrapiso' ? 'Resultados de Contrapiso' : 'Resultados de Falso Piso';
 
   pdf.addPage(
     pw.Page(
@@ -509,14 +429,11 @@ Future<File> generatePdfPiso(WidgetRef ref) async {
           children: [
             pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 20),
-            if (listaPiso.first.tipo != 'contrapiso') ...[
-              pw.Text('Piedra Chancada: ${cantidadPiedraChancada(listaPiso).toStringAsFixed(2)} m3'),
-              pw.Text('Arena: ${cantidadArenaGruesa(listaPiso).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${cantidadCementoPisos(listaPiso).ceilToDouble()} bls'),
-            ] else ...[
-              pw.Text('Arena: ${cantidadArenaGruesa(listaPiso).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${cantidadCementoPisos(listaPiso).ceilToDouble()} bls'),
-            ],
+            pw.Text('Cemento: ${calcularCantidadCementoPisos(listaPiso).ceil()} bls'),
+            pw.Text('Arena gruesa: ${calcularCantidadArenaGruesa(listaPiso).toStringAsFixed(2)} m³'),
+            pw.Text('Agua: ${calcularCantidadAguaPisos(listaPiso).toStringAsFixed(2)} m³'),
+            if (tipoPiso == 'falso')
+              pw.Text('Piedra chancada: ${calcularCantidadPiedraChancada(listaPiso).toStringAsFixed(2)} m³'),
           ],
         ),
       ),
@@ -524,81 +441,269 @@ Future<File> generatePdfPiso(WidgetRef ref) async {
   );
 
   final output = await getTemporaryDirectory();
-  final file = File('${output.path}/resultados.pdf');
+  final file = File('${output.path}/resultados_piso.pdf');
   await file.writeAsBytes(await pdf.save());
   return file;
 }
 
+// Función auxiliar para obtener el área
 double obtenerAreaPisos(Piso piso) {
   if (piso.area != null && piso.area!.isNotEmpty) {
     return double.tryParse(piso.area!) ?? 0.0; // Usar área si está disponible
   } else {
     double largo = double.tryParse(piso.largo ?? '') ?? 0.0;
     double ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-    return largo * ancho; // Calcular área usando largo y altura
+    return largo * ancho; // Calcular área usando largo y ancho
   }
 }
 
-double calcularCantidadPiedraChancada(String tipoPiso, double espesor, double area){
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 0.72 * 0.05;
-    default:
-      return 0;
-  }
-}
-
-double calcularCantidadArenaGruesa(String tipoPiso, double espesor, double area) {
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 0.72 * 0.05;
-    case 'contrapiso':
-      return espesor * area * 1 * 0.05;
-    default:
-      return 0;
-  }
-}
-
-double calcularCantidadCementoPisos(String tipoPiso, double espesor, double area) {
-  switch (tipoPiso) {
-    case 'falso':
-      return espesor * area * 7.06 * 0.05;
-    case 'contrapiso':
-      return espesor * area * 7.4 * 0.05;
-    default:
-      return 0;
-  }
-}
-
-double cantidadPiedraChancada(List<Piso> results) {
-  double sumaDePiedras = 0.0;
-  for (Piso piso in results) {
+// CÁLCULOS PARA CONTRAPISO
+double calcularCantidadCementoPisosContrapiso(List<Piso> pisos) {
+  double totalCemento = 0.0;
+  for (var piso in pisos) {
     double area = obtenerAreaPisos(piso);
-    double espesor = double.tryParse(piso.espesor ?? '') ?? 0.0;
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
 
-    sumaDePiedras += calcularCantidadPiedraChancada(piso.tipo, espesor, area);
+    // Proporción del mortero (por defecto 1:5)
+    String proporcionStr = piso.proporcionMortero ?? '5';
+    proporcionStr = proporcionStr.replaceAll("1 : ", "");
+    int proporcion = int.tryParse(proporcionStr) ?? 5;
+
+    // Factor de cemento según proporción (bolsas/m³)
+    double factorCemento;
+    switch (proporcion) {
+      case 4: factorCemento = 7.0; break;
+      case 5: factorCemento = 6.0; break;
+      default: factorCemento = 6.0; // 1:5 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de cemento con desperdicio
+    totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
   }
-  return sumaDePiedras;
+
+  return totalCemento;
 }
 
-double cantidadArenaGruesa(List<Piso> results) {
-  double sumaDeArena = 0.0;
-  for (Piso piso in results) {
+double calcularCantidadArenaGruesaContrapiso(List<Piso> pisos) {
+  double totalArena = 0.0;
+  for (var piso in pisos) {
     double area = obtenerAreaPisos(piso);
-    double espesor = double.tryParse(piso.espesor ?? '') ?? 0.0;
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
 
-    sumaDeArena += calcularCantidadArenaGruesa(piso.tipo, espesor, area);
+    // Proporción del mortero (por defecto 1:5)
+    String proporcionStr = piso.proporcionMortero ?? '5';
+    proporcionStr = proporcionStr.replaceAll("1 : ", "");
+    int proporcion = int.tryParse(proporcionStr) ?? 5;
+
+    // Factor de arena según proporción (m³/m³)
+    double factorArena;
+    switch (proporcion) {
+      case 4: factorArena = 1.10; break;
+      case 5: factorArena = 1.20; break;
+      default: factorArena = 1.20; // 1:5 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de arena con desperdicio
+    totalArena += volumen * factorArena * (1 + factorDesperdicio);
   }
-  return sumaDeArena;
+
+  return totalArena;
 }
 
-double cantidadCementoPisos(List<Piso> results) {
-  double sumaDeCemento = 0.0;
-  for (Piso piso in results) {
+double calcularCantidadAguaContrapiso(List<Piso> pisos) {
+  double totalAgua = 0.0;
+  for (var piso in pisos) {
     double area = obtenerAreaPisos(piso);
-    double espesor = double.tryParse(piso.espesor ?? '') ?? 0.0;
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
 
-    sumaDeCemento += calcularCantidadCementoPisos(piso.tipo, espesor, area);
+    // Proporción del mortero (por defecto 1:5)
+    String proporcionStr = piso.proporcionMortero ?? '5';
+    proporcionStr = proporcionStr.replaceAll("1 : ", "");
+    int proporcion = int.tryParse(proporcionStr) ?? 5;
+
+    // Factor de agua según proporción (m³/m³)
+    double factorAgua;
+    switch (proporcion) {
+      case 4: factorAgua = 0.18; break;
+      case 5: factorAgua = 0.17; break;
+      default: factorAgua = 0.17; // 1:5 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de agua con desperdicio
+    totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
   }
-  return sumaDeCemento;
+
+  return totalAgua;
+}
+
+// CÁLCULOS PARA FALSO PISO
+double calcularCantidadCementoPisosFalso(List<Piso> pisos) {
+  double totalCemento = 0.0;
+  for (var piso in pisos) {
+    double area = obtenerAreaPisos(piso);
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    String resistencia = piso.resistencia ?? 'fc140';
+    double factorCemento;
+
+    // Factores de cemento según resistencia (bolsas/m³)
+    switch (resistencia) {
+      case 'fc100': factorCemento = 5.0; break;
+      case 'fc140': factorCemento = 7.0; break;
+      case 'fc175': factorCemento = 8.0; break;
+      case 'fc210': factorCemento = 9.0; break;
+      default: factorCemento = 7.0; // fc140 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de cemento con desperdicio
+    totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
+  }
+
+  return totalCemento;
+}
+
+double calcularCantidadArenaGruesaFalso(List<Piso> pisos) {
+  double totalArena = 0.0;
+  for (var piso in pisos) {
+    double area = obtenerAreaPisos(piso);
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    String resistencia = piso.resistencia ?? 'fc140';
+    double factorArena;
+
+    // Factores de arena según resistencia (m³/m³)
+    switch (resistencia) {
+      case 'fc100': factorArena = 0.55; break;
+      case 'fc140': factorArena = 0.50; break;
+      case 'fc175': factorArena = 0.45; break;
+      case 'fc210': factorArena = 0.40; break;
+      default: factorArena = 0.50; // fc140 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de arena con desperdicio
+    totalArena += volumen * factorArena * (1 + factorDesperdicio);
+  }
+
+  return totalArena;
+}
+
+double calcularCantidadPiedraChancadaFalso(List<Piso> pisos) {
+  double totalPiedra = 0.0;
+  for (var piso in pisos) {
+    double area = obtenerAreaPisos(piso);
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    String resistencia = piso.resistencia ?? 'fc140';
+    double factorPiedra;
+
+    // Factores de piedra según resistencia (m³/m³)
+    switch (resistencia) {
+      case 'fc100': factorPiedra = 0.75; break;
+      case 'fc140': factorPiedra = 0.70; break;
+      case 'fc175': factorPiedra = 0.65; break;
+      case 'fc210': factorPiedra = 0.60; break;
+      default: factorPiedra = 0.70; // fc140 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de piedra con desperdicio
+    totalPiedra += volumen * factorPiedra * (1 + factorDesperdicio);
+  }
+
+  return totalPiedra;
+}
+
+double calcularCantidadAguaFalso(List<Piso> pisos) {
+  double totalAgua = 0.0;
+  for (var piso in pisos) {
+    double area = obtenerAreaPisos(piso);
+    double espesor = double.tryParse(piso.espesor) ?? 0.0;
+    double factorDesperdicio = double.tryParse(piso.factorDesperdicio) ?? 5.0;
+    factorDesperdicio = factorDesperdicio / 100.0;
+
+    String resistencia = piso.resistencia ?? 'fc140';
+    double factorAgua;
+
+    // Factores de agua según resistencia (m³/m³)
+    switch (resistencia) {
+      case 'fc100': factorAgua = 0.185; break;
+      case 'fc140': factorAgua = 0.180; break;
+      case 'fc175': factorAgua = 0.175; break;
+      case 'fc210': factorAgua = 0.170; break;
+      default: factorAgua = 0.180; // fc140 por defecto
+    }
+
+    // Volumen = área * espesor(metros)
+    double volumen = area * (espesor / 100); // convertir espesor de cm a m
+
+    // Cantidad de agua con desperdicio
+    totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
+  }
+
+  return totalAgua;
+}
+
+// FUNCIONES GENERALES QUE DECIDEN QUÉ TIPO DE CÁLCULO USAR
+double calcularCantidadCementoPisos(List<Piso> pisos) {
+  if (pisos.isEmpty) return 0.0;
+
+  if (pisos.first.tipo == 'contrapiso') {
+    return calcularCantidadCementoPisosContrapiso(pisos);
+  } else { // falso piso
+    return calcularCantidadCementoPisosFalso(pisos);
+  }
+}
+
+double calcularCantidadArenaGruesa(List<Piso> pisos) {
+  if (pisos.isEmpty) return 0.0;
+
+  if (pisos.first.tipo == 'contrapiso') {
+    return calcularCantidadArenaGruesaContrapiso(pisos);
+  } else { // falso piso
+    return calcularCantidadArenaGruesaFalso(pisos);
+  }
+}
+
+double calcularCantidadPiedraChancada(List<Piso> pisos) {
+  if (pisos.isEmpty || pisos.first.tipo != 'falso') return 0.0;
+  return calcularCantidadPiedraChancadaFalso(pisos);
+}
+
+double calcularCantidadAguaPisos(List<Piso> pisos) {
+  if (pisos.isEmpty) return 0.0;
+
+  if (pisos.first.tipo == 'contrapiso') {
+    return calcularCantidadAguaContrapiso(pisos);
+  } else { // falso piso
+    return calcularCantidadAguaFalso(pisos);
+  }
 }

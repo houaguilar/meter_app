@@ -1,4 +1,3 @@
-
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 
@@ -6,7 +5,6 @@ part 'tarrajeo.g.dart';
 
 @collection
 class Tarrajeo {
-
   Id id = Isar.autoIncrement;
 
   @Index()
@@ -18,8 +16,7 @@ class Tarrajeo {
   final String description;
   final String tipo;
   final String factorDesperdicio;
-  final String cementoDosage;
-  final String arenaDosage;
+  final String proporcionMortero; // "4" o "5" (para 1:4 o 1:5)
   final String espesor;
   final String? longitud;
   final String? ancho;
@@ -30,8 +27,7 @@ class Tarrajeo {
     required this.description,
     required this.tipo,
     required this.factorDesperdicio,
-    required this.cementoDosage,
-    required this.arenaDosage,
+    required this.proporcionMortero,
     required this.espesor,
     this.longitud,
     this.ancho,
@@ -43,8 +39,7 @@ class Tarrajeo {
     String? description,
     String? tipo,
     String? factorDesperdicio,
-    String? cementoDosage,
-    String? arenaDosage,
+    String? proporcionMortero,
     String? espesor,
     String? longitud,
     String? ancho,
@@ -54,8 +49,7 @@ class Tarrajeo {
     description: description ?? this.description,
     tipo: tipo ?? this.tipo,
     factorDesperdicio: factorDesperdicio ?? this.factorDesperdicio,
-    cementoDosage: cementoDosage ?? this.cementoDosage,
-    arenaDosage: arenaDosage ?? this.arenaDosage,
+    proporcionMortero: proporcionMortero ?? this.proporcionMortero,
     espesor: espesor ?? this.espesor,
     longitud: longitud ?? this.longitud,
     ancho: ancho ?? this.ancho,

@@ -4,54 +4,54 @@ import 'package:meter_app/config/constants/colors.dart';
 class WavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint();
+    final paint = Paint()
+      ..color = AppColors.blueMetraShop.withOpacity(0.3)
+      ..style = PaintingStyle.fill;
 
-    // Dibuja el fondo oscuro
-    paint.color = AppColors.white; // Fondo color oscuro
-    canvas.drawRect(Rect.fromLTRB(0, 0, size.width, size.height), paint);
+    final path = Path();
 
-    // Dibuja la primera curva (color azul oscuro)
-    final path1 = Path();
-    path1.lineTo(0, size.height * 0.75);
-    path1.quadraticBezierTo(
-      size.width * 0.05,
-      size.height * 0.77,
-      size.width * 0.25,
-      size.height * 0.4,
+    // Primera onda
+    path.moveTo(0, size.height * 0.7);
+    path.quadraticBezierTo(
+        size.width * 0.25,
+        size.height * 0.5,
+        size.width * 0.5,
+        size.height * 0.6
     );
-   /* path1.quadraticBezierTo(
-      size.width * 0.75,
-      size.height * 0.6,
-      size.width,
-      size.height * 0.5,
-    );*/
-    path1.lineTo(size.width * 0.25, 0);
-    path1.close();
+    path.quadraticBezierTo(
+        size.width * 0.75,
+        size.height * 0.7,
+        size.width,
+        size.height * 0.6
+    );
+    path.lineTo(size.width, size.height);
+    path.lineTo(0, size.height);
+    path.close();
 
-    paint.color = const Color(0xFF043353); // Color azul oscuro
-    canvas.drawPath(path1, paint);
+    canvas.drawPath(path, paint);
 
-    // Dibuja la segunda curva (color amarillo)
-    /*final path2 = Path();
-    path2.moveTo(0, size.height * 0.75);
+    // Segunda onda (más pequeña)
+    final path2 = Path();
+    paint.color = AppColors.blueMetraShop.withOpacity(0.2);
+
+    path2.moveTo(0, size.height * 0.8);
     path2.quadraticBezierTo(
-      size.width * 0.25,
-      size.height * 0.65,
-      size.width * 0.5,
-      size.height * 0.75,
+        size.width * 0.2,
+        size.height * 0.65,
+        size.width * 0.4,
+        size.height * 0.8
     );
     path2.quadraticBezierTo(
-      size.width * 0.75,
-      size.height * 0.85,
-      size.width,
-      size.height * 0.75,
+        size.width * 0.6,
+        size.height * 0.95,
+        size.width,
+        size.height * 0.8
     );
     path2.lineTo(size.width, size.height);
     path2.lineTo(0, size.height);
     path2.close();
 
-    paint.color = AppColors.white; // Color amarillo
-    canvas.drawPath(path2, paint);*/
+    canvas.drawPath(path2, paint);
   }
 
   @override

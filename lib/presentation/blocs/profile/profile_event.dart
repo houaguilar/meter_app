@@ -5,6 +5,8 @@ sealed class ProfileEvent {}
 
 class LoadProfile extends ProfileEvent {}
 
+class RetryLoadProfile extends ProfileEvent {}
+
 class UpdateProfile extends ProfileEvent {
   final String? name;
   final String? phone;
@@ -31,7 +33,19 @@ class UpdateProfile extends ProfileEvent {
 class SubmitProfile extends ProfileEvent {}
 
 class UpdateProfileImageEvent extends ProfileEvent {
-  final String filePath; // Ruta del archivo local seleccionado por el usuario.
+  final String filePath;
 
   UpdateProfileImageEvent(this.filePath);
+}
+
+class ChangePasswordEvent extends ProfileEvent {
+  final String currentPassword;
+  final String newPassword;
+  final String confirmPassword;
+
+  ChangePasswordEvent({
+    required this.currentPassword,
+    required this.newPassword,
+    required this.confirmPassword,
+  });
 }

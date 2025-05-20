@@ -70,11 +70,6 @@ class HomeView extends StatelessWidget {
                     TextButton(
                       onPressed: () {
                         showMeasurementsSheet(context, items);
-                        /*showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (context) => MeasurementItemsBottomSheet(items: items),
-                        );*/
                       },
                       child: const Text('Ver más', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),),
                     ),

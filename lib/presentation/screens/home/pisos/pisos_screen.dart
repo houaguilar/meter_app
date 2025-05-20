@@ -72,9 +72,6 @@ class _PisosView extends ConsumerWidget {
                     if (floor.id == '1') {
                       ref.read(tipoPisoProvider.notifier).selectPiso('falso');
                       context.pushNamed('falso-piso');
-                    } else if (floor.id == '2') {
-                      ref.read(tipoPisoProvider.notifier).selectPiso('porcelanato');
-                      context.pushNamed('porcelanato');
                     } else {
                       ref.read(tipoPisoProvider.notifier).selectPiso('contrapiso');
                       context.pushNamed('contrapiso');

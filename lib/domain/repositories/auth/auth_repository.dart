@@ -29,6 +29,8 @@ abstract interface class AuthRepository {
 
   Future<Either<Failure, void>> updateProfileImage(String userId, String filePath);
 
+  Future<Either<Failure, void>> changePassword(String currentPassword, String newPassword);
+
   Future<Either<Failure, void>> logout();
 
 }

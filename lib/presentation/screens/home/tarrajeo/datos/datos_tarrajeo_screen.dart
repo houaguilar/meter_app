@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_dosage_field.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
@@ -29,26 +28,24 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
   late final SharedPreferencesHelper sharedPreferencesHelper;
 
   // TextControllers y formKey para campos base de proyecto
-  final TextEditingController factorController = TextEditingController();
+  final TextEditingController factorController = TextEditingController(text: '5');
   final TextEditingController descriptionAreaController = TextEditingController();
   final TextEditingController descriptionMedidasController = TextEditingController();
   final TextEditingController areaTextController = TextEditingController();
   final TextEditingController lengthTextController = TextEditingController();
   final TextEditingController heightTextController = TextEditingController();
-  final TextEditingController cementoProporcionController = TextEditingController();
-  final TextEditingController arenaProporcionController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
-  bool showAsentadoError = false;
+  bool showEspesorError = false;
+  bool showProporcionError = false;
 
-  late String ladrillo;
+  late String tarrajeo;
   String espesor = "";
   late String factor;
-  String dosage = '';
+  String proporcionMortero = '';
 
-  String? selectedValueTarrajeo;
   String? selectedValueEspesor;
-  String? selectedValueDosage;
+  String? selectedValueProporcion;
 
   // Usamos listas de mapas para manejar dinámicamente los campos adicionales
   List<Map<String, TextEditingController>> areaFields = [];
@@ -75,7 +72,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
 
   @override
   void dispose() {
-    //   _tabController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -101,7 +98,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
   @override
   Widget build(BuildContext context) {
     ref.watch(tipoTarrajeoProvider);
-    final tipoLadrillo = ref.watch(tipoTarrajeoProvider);
+    final tipoTarrajeo = ref.watch(tipoTarrajeoProvider);
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBarWidget(titleAppBar: 'Medición', isVisibleTutorial: true, showTutorial: showTutorial,),
@@ -122,9 +119,9 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                         padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
                         child: Column(
                           children: [
-                            _buildTypeSelection(tipoLadrillo),
+                            _buildEspesorSelection(),
                             _buildProjectFields(),
-                            _buildTypeDosageSelection(tipoLadrillo),
+                            _buildProporcionSelection(),
                           ],
                         ),
                       ),
@@ -134,7 +131,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                 ),
               ),
             ),
-            _buildResultButton(tipoLadrillo),
+            _buildResultButton(tipoTarrajeo),
             const SizedBox(height: 45),
           ],
         ),
@@ -149,7 +146,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
       children: [
         const SizedBox(height: 15,),
         Container(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
@@ -162,41 +159,33 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
             hintText: '',
           ),
         ),
-        SizedBox(height: 15,),
-
-        /*     CustomNameTextField(
-          controller: projectNameController,
-          label: 'Nombre del proyecto',
-          hintText: 'Ingresa un nombre (Ej. Cocina)',
-          validator: _validateProjectName,
-          isVisible: true,
-          onPressed: () {showTutorial();},
-          icon: Icons.help_rounded,
-          color: AppColors.blueMetraShop,
-        ),
-        CustomNameTextField(
-          controller: descriptionController,
-          label: 'Descripción',
-          hintText: 'Ingresa una descripción (Ej. Muro 1)',
-          validator: _validateProjectName,
-        ),*/
+        const SizedBox(height: 15,),
       ],
     );
   }
 
-  Widget _buildTypeSelection(String tipoLadrillo) {
-    final List<String> asentadosKingkong = ["1 cm", "1.5 cm", "2 cm"];
-    final List<String> asentadosPandereta = ["1 cm", "1.5 cm", "2 cm"];
+  Widget _buildEspesorSelection() {
+    final List<String> espesoresTarrajeo = ["1.0 cm", "1.5 cm", "2.0 cm"];
+
     return contentChoiceChips(
-        'asentado',
-        'Tipo de asentado',
-        tipoLadrillo == 'Kingkong' ? asentadosKingkong : asentadosPandereta
+        'espesor',
+        'Espesor:',
+        espesoresTarrajeo
+    );
+  }
+
+  Widget _buildProporcionSelection() {
+    final List<String> proporciones = ["1 : 4", "1 : 5", "1 : 6"];
+    return contentChoiceChips(
+        'proporcion',
+        'Proporción:',
+        proporciones
     );
   }
 
   Widget contentChoiceChips(String type, String description, List<String> typeList) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
@@ -221,16 +210,23 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Wrap(
                     runAlignment: WrapAlignment.spaceEvenly,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 10,
                     children: typeList.map((typeValue) {
-                      bool isSelected = type == 'ladrillo'
-                          ? selectedValueTarrajeo == typeValue
-                          : selectedValueEspesor == typeValue;
+                      bool isSelected = false;
+
+                      switch(type) {
+                        case 'espesor':
+                          isSelected = selectedValueEspesor == typeValue;
+                          break;
+                        case 'proporcion':
+                          isSelected = selectedValueProporcion == typeValue;
+                          break;
+                      }
+
                       return ChoiceChip(
                         label: Text(typeValue),
                         selected: isSelected,
@@ -238,24 +234,23 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                           if (selected) {
                             setState(() {
                               switch (type) {
-                                case 'ladrillo':
-                                  selectedValueTarrajeo = typeValue;
-                                  ladrillo = selectedValueTarrajeo!;
-                                  selectedValueEspesor = null; // Reinicia el asentado
-                                  break;
-                                case 'asentado':
+                                case 'espesor':
                                   selectedValueEspesor = typeValue;
                                   espesor = selectedValueEspesor!;
+                                  break;
+                                case 'proporcion':
+                                  selectedValueProporcion = typeValue;
+                                  proporcionMortero = selectedValueProporcion!;
                                   break;
                               }
                             });
                           }
                         },
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6), // Define el radio de borde
+                          borderRadius: BorderRadius.circular(6),
                           side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5), // Color del borde
-                            width: 1.0, // Grosor del borde
+                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
+                            width: 1.0,
                           ),
                         ),
                         checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
@@ -265,97 +260,9 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                             color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
                       );
                     }).toList(),
-
                   ),
-                  if (type == 'asentado' && selectedValueEspesor == null)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Campo requerido',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    )
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypeDosageSelection(String tipoLadrillo) {
-    final List<String> asentadosKingkong = ["1 : 4", "1 : 5"];
-    return contentDosageChoiceChips(
-        'asentado',
-        'Dosificación:',
-        asentadosKingkong
-    );
-  }
-
-  Widget contentDosageChoiceChips(String type, String description, List<String> typeList) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                description,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
-              ),
-            ),
-            const SizedBox(height: 10,),
-            Container(
-              margin: const EdgeInsets.only(right: 15),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Wrap(
-                    runAlignment: WrapAlignment.spaceEvenly,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 10,
-                    children: typeList.map((typeValue) {
-                      bool isSelected = selectedValueDosage == typeValue;
-                      return ChoiceChip(
-                        label: Text(typeValue),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              selectedValueDosage = typeValue;
-                              dosage = selectedValueDosage!;
-                            });
-                          }
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6), // Define el radio de borde
-                          side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5), // Color del borde
-                            width: 1.0, // Grosor del borde
-                          ),
-                        ),
-                        checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
-                        selectedColor: AppColors.blueMetraShop,
-                        backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
-                        labelStyle: TextStyle(
-                            color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
-                      );
-                    }).toList(),
-
-                  ),
-                  if (showAsentadoError && type == 'asentado' && selectedValueDosage == null)
+                  if ((type == 'espesor' && showEspesorError && selectedValueEspesor == null) ||
+                      (type == 'proporcion' && showProporcionError && selectedValueProporcion == null))
                     const Padding(
                       padding: EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -419,17 +326,16 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
               color: Colors.grey.shade100,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
-
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomNameTextField(
                       controller: descriptionAreaController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Muro 1)',
+                      hintText: 'Ingresa una descripción (Ej. Tarrajeo 1)',
                       validator: _validateProjectName,
                     ),
                     const SizedBox(height: 8,),
@@ -438,7 +344,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop, // Ajustar según el diseño
+                        color: AppColors.primaryMetraShop,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -494,7 +400,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                     CustomNameTextField(
                       controller: descriptionMedidasController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Muro 1)',
+                      hintText: 'Ingresa una descripción (Ej. Tarrajeo 1)',
                       validator: _validateProjectName,
                     ),
                     const Text(
@@ -512,7 +418,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                           child: CustomMeasureTextField(
                             controller: lengthTextController,
                             validator: _validateProjectName,
-                            labelText: 'Largo(metros)',
+                            labelText: 'Longitud(metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -521,7 +427,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                           child: CustomMeasureTextField(
                             controller: heightTextController,
                             validator: _validateProjectName,
-                            labelText: 'Altura(metros)',
+                            labelText: 'Ancho(metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -552,7 +458,6 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
     );
   }
 
-  // Este método construye el campo dinámico con un botón de eliminar
   Widget _buildDynamicField(Map<String, TextEditingController> field, VoidCallback onRemove) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -570,7 +475,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
               controller: field['description']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Muro ...)',
+              hintText: 'Ingresa una descripción (Ej. Tarrajeo ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -597,7 +502,6 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
     );
   }
 
-  // Similar para las medidas
   Widget _buildDynamicMeasureField(Map<String, TextEditingController> field, VoidCallback onRemove) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -615,7 +519,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
               controller: field['descriptionMeasure']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Muro ...)',
+              hintText: 'Ingresa una descripción (Ej. Tarrajeo ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -637,7 +541,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                   child: CustomMeasureTextField(
                     controller: field['lengthMeasure']!,
                     validator: _validateProjectName,
-                    labelText: 'Largo(metros)',
+                    labelText: 'Longitud(metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -646,7 +550,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
                   child: CustomMeasureTextField(
                     controller: field['heightMeasure']!,
                     validator: _validateProjectName,
-                    labelText: 'Altura(metros)',
+                    labelText: 'Ancho(metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -683,75 +587,82 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
     });
   }
 
-  // Función para procesar el resultado y almacenar datos en LadrilloResultProvider
-  Widget _buildResultButton(String tipoLadrillo) {
+  Widget _buildResultButton(String tipoTarrajeo) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomElevatedButton(
         label: 'Resultado',
         onPressed: () {
+          // Validar selecciones
           setState(() {
-            showAsentadoError = selectedValueEspesor == null; // Muestra error si `asentado` no está seleccionado
+            showEspesorError = selectedValueEspesor == null;
+            showProporcionError = selectedValueProporcion == null;
           });
 
-          if (formKey.currentState?.validate() == true && selectedValueEspesor != null) {
+          // Verificar todos los campos requeridos
+          bool camposValidos = formKey.currentState?.validate() == true &&
+              selectedValueEspesor != null &&
+              selectedValueProporcion != null;
+
+          if (camposValidos) {
             var datosTarrajeo = ref.read(tarrajeoResultProvider.notifier);
             var espesorValor = espesor.replaceAll(" cm", "");
 
-            ladrillo = tipoLadrillo;
-            var dosageSelection = dosage.replaceAll("1 : ", "");
+            // Eliminamos "1 : " de la proporción, si existe
+            var proporcionValor = proporcionMortero.replaceAll("1 : ", "");
 
             if (_currentIndex == 0) {
               datosTarrajeo.createTarrajeo(
-                ladrillo,
+                tipoTarrajeo,
                 descriptionAreaController.text,
                 factorController.text,
-                dosageSelection,
-                dosageSelection,
+                proporcionValor,
                 espesorValor,
                 area: areaTextController.text,
               );
+
               for (var field in areaFields) {
                 datosTarrajeo.createTarrajeo(
-                  ladrillo ?? "Default",
+                  tipoTarrajeo,
                   field['description']!.text,
                   factorController.text,
-                  dosageSelection,
-                  dosageSelection,
+                  proporcionValor,
                   espesorValor,
                   area: field['measure']!.text,
                 );
               }
             } else {
               datosTarrajeo.createTarrajeo(
-                ladrillo,
+                tipoTarrajeo,
                 descriptionMedidasController.text,
                 factorController.text,
-                dosageSelection,
-                dosageSelection,
+                proporcionValor,
                 espesorValor,
                 longitud: lengthTextController.text,
                 ancho: heightTextController.text,
               );
+
               for (var field in measureFields) {
                 datosTarrajeo.createTarrajeo(
-                  ladrillo ?? "Default",
+                  tipoTarrajeo,
                   field['descriptionMeasure']!.text,
                   factorController.text,
-                  dosageSelection,
-                  dosageSelection,
+                  proporcionValor,
                   espesorValor,
                   longitud: field['lengthMeasure']!.text,
                   ancho: field['heightMeasure']!.text,
                 );
               }
             }
-            print('datosLadrillo:');
-            print(datosTarrajeo);
+            final pisosCreados = ref.read(tarrajeoResultProvider);
+            print("CREADOS: Número de pisos antes de navegar: ${pisosCreados.length}");
             print(ref.watch(tarrajeoResultProvider));
-
-            // Navegamos a la siguiente pantalla de resultados, donde se mostrarán los datos
+            // Navegar a resultados
             context.pushNamed('tarrajeo_results');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
+            );
           }
         },
       ),

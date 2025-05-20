@@ -55,11 +55,10 @@ class TarrajeoScreen extends ConsumerWidget {
                 child: CoatingCard(
                   coating: coating,
                   onTap: () {
-                //    context.pushNamed('ladrillo');
                     if (coating.id == '1') {
                       context.pushNamed('tarrajeo-muro');
                     } else {
-                      context.pushNamed('tarrajeo-cielorraso');
+    //                  context.pushNamed('tarrajeo-cielorraso');
                     }
                   },
                 ),

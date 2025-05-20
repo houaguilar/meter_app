@@ -19,6 +19,8 @@ class Piso {
   final String description;
   final String factorDesperdicio;
   final String espesor;
+  final String? resistencia;
+  final String? proporcionMortero;
   final String? largo;
   final String? ancho;
   final String? area;
@@ -29,6 +31,8 @@ class Piso {
     required this.description,
     required this.factorDesperdicio,
     required this.espesor,
+    this.resistencia,
+    this.proporcionMortero,
     this.largo,
     this.ancho,
     this.area
@@ -40,6 +44,8 @@ class Piso {
     String? description,
     String? factorDesperdicio,
     String? espesor,
+    String? resistencia,
+    String? proporcionMortero,
     String? largo,
     String? ancho,
     String? area,
@@ -49,6 +55,8 @@ class Piso {
     description: description ?? this.description,
     factorDesperdicio: factorDesperdicio ?? this.factorDesperdicio,
     espesor: espesor ?? this.espesor,
+    resistencia: resistencia ?? this.resistencia,
+    proporcionMortero: proporcionMortero ?? this.proporcionMortero,
     largo: largo ?? this.largo,
     ancho: ancho ?? this.ancho,
     area: area ?? this.area,

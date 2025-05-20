@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_dosage_field.dart';
+import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
@@ -275,7 +275,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
   }
 
   Widget _buildTypeDosageSelection(String tipoLadrillo) {
-    final List<String> asentadosKingkong = ["1 : 3", "1 : 4", "1 : 5", "1 : 6"];
+    final List<String> asentadosKingkong = ["1 : 4", "1 : 5"];
     return contentDosageChoiceChips(
         'asentado',
         'Dosificación:',
@@ -676,7 +676,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomElevatedButton(
         label: 'Resultado',
-        onPressed: () {
+        onPressed: () async {
           setState(() {
             showAsentadoError = selectedValueAsentado == null; // Muestra error si `asentado` no está seleccionado
           });
@@ -732,8 +732,11 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
             final ladrillosCreados = ref.read(ladrilloResultProvider);
             print("CREADOS: Número de ladrillos antes de navegar: ${ladrillosCreados.length}");
             print(ref.watch(ladrilloResultProvider));
-
             context.pushNamed('ladrillo_results');
+            context.showCalculationLoader(
+              message: 'Calculando materiales',
+              description: 'Procesando datos...',
+            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
