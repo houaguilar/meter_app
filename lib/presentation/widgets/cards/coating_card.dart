@@ -39,21 +39,6 @@ class CoatingCard extends StatelessWidget {
             ),
           ),
         ),
-        TextButton(
-          onPressed: () {
-            _showCoatingDetails(context, coating);
-          },
-          child: const Text(
-            'Ver información',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppColors.blueMetraShop,
-              decoration: TextDecoration.underline,
-              decorationColor: AppColors.blueMetraShop,
-            ),
-          ),
-        ),
       ],
     );
   }

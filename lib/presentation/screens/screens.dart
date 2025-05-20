@@ -15,16 +15,12 @@ export 'home/tarrajeo/tarrajeo_screen.dart';
 
 //Pisos
 export 'home/pisos/pisos_screen.dart';
-export 'home/pisos/datos/datos_piso_screen.dart';
 export 'home/pisos/result/result_pisos_screen.dart';
 export 'home/pisos/pdf/preview_pisos_screen.dart';
 
 //Losas
 export 'home/losas/losas_screen.dart';
 export 'home/losas/datos/datos_losas_aligeradas_screen.dart';
-export 'home/losas/datos/datos_losas_macizas_screen.dart';
-export 'home/losas/datos/datos_vigas_screen.dart';
-export 'home/losas/datos/datos_escaleras_screen.dart';
 
 //Lista
 export 'projects/projects_screen.dart';

@@ -31,9 +31,15 @@ class MeasurementRepositoryImpl implements MeasurementRepository {
       ),
       Measurement(
         imageAsset: AppImages.concretoImg,
-        title: 'Concreto',
-        description: 'Ingresa los datos y revisa los resultados para el concreto.',
+        title: 'Losas \naligeradas',
+        description: 'Ingresa los datos y revisa los resultados para las losas.',
         location: 'losas',
+      ),
+      Measurement(
+        imageAsset: AppImages.concretoImg,
+        title: 'Elementos \nestructurales',
+        description: 'Ingresa los datos y revisa los resultados para los elementos estructurales.',
+        location: 'structural-elements',
       ),
     ];
   }

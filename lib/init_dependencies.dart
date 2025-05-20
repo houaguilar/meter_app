@@ -65,6 +65,7 @@ import 'domain/repositories/home/inicio/measurement_repository.dart';
 import 'domain/repositories/map/place_repository.dart';
 import 'domain/repositories/projects/metrados/metrados_local_repository.dart';
 import 'domain/repositories/projects/metrados/result/result_local_repository.dart';
+import 'domain/usecases/auth/change_password.dart';
 import 'domain/usecases/home/inicio/get_articles_usecase.dart';
 import 'domain/usecases/home/inicio/get_measurement_items.dart';
 import 'domain/usecases/map/get_place_details.dart';
@@ -85,7 +86,6 @@ final serviceLocator = GetIt.instance;
 
 Future<void> initDependencies() async {
   print('Inicializando dependencias...');
-
   // Initialize SharedPreferences
   final sharedPreferences = await SharedPreferences.getInstance();
   serviceLocator.registerLazySingleton<SharedPreferences>(() => sharedPreferences);
@@ -218,6 +218,9 @@ Future<void> _initAuth() async {
 void _initProfile() {
   print('Inicializando perfil...');
 
+  serviceLocator.registerFactory(
+        () => ChangePassword(serviceLocator<AuthRepository>()),
+  );
   // UseCases
   serviceLocator
     ..registerFactory(
@@ -236,7 +239,8 @@ void _initProfile() {
       getUserProfile: serviceLocator<GetUserProfile>(),
       updateUserProfile: serviceLocator<UpdateUserProfile>(),
       updateProfileImage: serviceLocator<UpdateProfileImage>(),
-    ),
+          changePassword: serviceLocator<ChangePassword>(),
+        ),
   );
 }
 

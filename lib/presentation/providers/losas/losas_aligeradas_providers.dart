@@ -1,99 +1,248 @@
-
+// lib/presentation/providers/losa_aligerada/losa_aligerada_providers.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../../../config/constants/constants.dart';
-import '../../../data/models/models.dart';
+import '../../../config/constants/constant.dart';
+import '../../../domain/entities/entities.dart';
+import '../../../domain/entities/home/losas/losas.dart';
+import '../../../domain/services/losa_aligerada_service.dart';
 
 part 'losas_aligeradas_providers.g.dart';
 
 @riverpod
-class LosaAigeradaResult extends _$LosaAigeradaResult {
+class AlturaLosaAligerada extends _$AlturaLosaAligerada {
+  @override
+  String build() => '';
+
+  void seleccionarAltura(String altura) {
+    state = altura;
+  }
+}
+
+@riverpod
+class MaterialAligerado extends _$MaterialAligerado {
+  @override
+  String build() => '';
+
+  void seleccionarMaterial(String material) {
+    state = material;
+  }
+}
+
+@riverpod
+class ResistenciaConcreto extends _$ResistenciaConcreto {
+  @override
+  String build() => '';
+
+  void seleccionarResistencia(String resistencia) {
+    state = resistencia;
+  }
+}
+
+@riverpod
+class LosaAligeradaResult extends _$LosaAligeradaResult {
+  final LosaAligeradaService _losaAligeradaService = LosaAligeradaService();
 
   @override
-  List<LosaAligeradaModel> build() => [];
+  List<LosaAligerada> build() => [];
 
   void createLosaAligerada(
       String description,
-      String largo,
-      String ancho,
-      String peralte
-      ) {
-    state = [
-      ...state, LosaAligeradaModel(id: uuid.v4(), description: description, largo: largo, ancho: ancho, peralte: peralte)
-    ];
+      String altura,
+      String materialAligerado,
+      String resistenciaConcreto,
+      String desperdicioLadrillo,
+      String desperdicioConcreto, {
+        String? largo,
+        String? ancho,
+        String? area,
+      }) {
+    final newLosaAligerada = LosaAligerada(
+      idLosaAligerada: uuid.v4(),
+      description: description,
+      altura: altura,
+      materialAligerado: materialAligerado,
+      resistenciaConcreto: resistenciaConcreto,
+      desperdicioLadrillo: desperdicioLadrillo,
+      desperdicioConcreto: desperdicioConcreto,
+      largo: largo,
+      ancho: ancho,
+      area: area,
+    );
+
+    if (!_losaAligeradaService.esValido(newLosaAligerada)) {
+      throw Exception("La losa aligerada debe tener largo y ancho o área definida.");
+    }
+
+    state = [...state, newLosaAligerada];
   }
 
   void clearList() {
-    state.clear();
+    state = [];
   }
 }
 
 @riverpod
-class AddLosaAligerada1 extends _$AddLosaAligerada1 {
-  @override
-  bool build() => true;
+List<double> areaLosaAligerada(AreaLosaAligeradaRef ref) {
+  final losaAligeradaService = LosaAligeradaService();
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
 
-  void toggleAddLosaAligerada() {
-    state = !state;
-  }
+  return losasAligeradas
+      .map((losa) => losaAligeradaService.calcularArea(losa) ?? 0.0)
+      .toList();
 }
 
 @riverpod
-class AddLosaAligerada2 extends _$AddLosaAligerada2 {
-  @override
-  bool build() => true;
-
-  void toggleAddLosaAligerada() {
-    state = !state;
-  }
+List<String> descriptionLosaAligerada(DescriptionLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  return losasAligeradas.map((e) => e.description).toList();
 }
 
 @riverpod
-class AddLosaAligerada3 extends _$AddLosaAligerada3 {
-  @override
-  bool build() => true;
+String datosShareLosaAligerada(DatosShareLosaAligeradaRef ref) {
+  final description = ref.watch(descriptionLosaAligeradaProvider);
+  final area = ref.watch(areaLosaAligeradaProvider);
 
-  void toggleAddLosaAligerada() {
-    state = !state;
+  String datos = "";
+  if (description.length == area.length) {
+    for (int i = 0; i < description.length; i++) {
+      datos += "* ${description[i]}: ${area[i]} m2\n";
+    }
+    if (datos.length > 2) {
+      datos = datos.substring(0, datos.length - 2);
+    }
   }
+  return datos;
+}
+
+// Providers para calcular las cantidades de materiales
+@riverpod
+double cantidadLadrillosLosaAligerada(CantidadLadrillosLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularLadrillos(losa);
+  }
+  return total;
 }
 
 @riverpod
-class AddLosaAligerada4 extends _$AddLosaAligerada4 {
-  @override
-  bool build() => true;
+double cantidadConcretoLosaAligerada(CantidadConcretoLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
 
-  void toggleAddLosaAligerada() {
-    state = !state;
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularConcreto(losa);
   }
+  return total;
 }
 
 @riverpod
-class AddLosaAligerada5 extends _$AddLosaAligerada5 {
-  @override
-  bool build() => true;
+double cantidadAceroLosaAligerada(CantidadAceroLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
 
-  void toggleAddLosaAligerada() {
-    state = !state;
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularAcero(losa);
   }
+  return total;
 }
 
 @riverpod
-class AddLosaAligerada6 extends _$AddLosaAligerada6 {
-  @override
-  bool build() => true;
+double cantidadMaderaLosaAligerada(CantidadMaderaLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
 
-  void toggleAddLosaAligerada() {
-    state = !state;
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularMadera(losa);
   }
+  return total;
 }
 
 @riverpod
-class AddLosaAligerada7 extends _$AddLosaAligerada7 {
-  @override
-  bool build() => true;
+double cantidadArenaGruesaLosaAligerada(CantidadArenaGruesaLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
 
-  void toggleAddLosaAligerada() {
-    state = !state;
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularArenaGruesa(losa);
   }
+  return total;
+}
+
+@riverpod
+double cantidadPiedraChancadaLosaAligerada(CantidadPiedraChancadaLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularPiedraChancada(losa);
+  }
+  return total;
+}
+
+@riverpod
+double cantidadCementoLosaAligerada(CantidadCementoLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularCemento(losa);
+  }
+  return total;
+}
+
+@riverpod
+double cantidadAguaLosaAligerada(CantidadAguaLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularAgua(losa);
+  }
+  return total;
+}
+
+@riverpod
+double cantidadAlambre8LosaAligerada(CantidadAlambre8LosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularAlambre8(losa);
+  }
+  return total;
+}
+
+@riverpod
+double cantidadAlambre16LosaAligerada(CantidadAlambre16LosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularAlambre16(losa);
+  }
+  return total;
+}
+
+@riverpod
+double cantidadClavosLosaAligerada(CantidadClavosLosaAligeradaRef ref) {
+  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+  final losaAligeradaService = LosaAligeradaService();
+
+  double total = 0.0;
+  for (var losa in losasAligeradas) {
+    total += losaAligeradaService.calcularClavos(losa);
+  }
+  return total;
 }

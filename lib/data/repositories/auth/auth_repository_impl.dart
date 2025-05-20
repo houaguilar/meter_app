@@ -174,6 +174,19 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<Either<Failure, void>> changePassword(String currentPassword, String newPassword) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.changePassword(currentPassword, newPassword);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> logout() async {
     try {
       if (!await (connectionChecker.isConnected)) {

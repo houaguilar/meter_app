@@ -3,6 +3,7 @@ import 'package:meta/meta.dart';
 
 import '../../../config/usecase/usecase.dart';
 import '../../../domain/entities/auth/user_profile.dart';
+import '../../../domain/usecases/auth/change_password.dart';
 import '../../../domain/usecases/auth/update_profile_image.dart';
 import '../../../domain/usecases/use_cases.dart';
 
@@ -14,23 +15,27 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   final GetUserProfile _getUserProfile;
   final UpdateUserProfile _updateUserProfile;
   final UpdateProfileImage _updateUserProfileImage;
+  final ChangePassword _changePassword;
   UserProfile? _cachedProfile;
 
   ProfileBloc({
     required GetUserProfile getUserProfile,
     required UpdateUserProfile updateUserProfile,
     required UpdateProfileImage updateProfileImage,
+    required ChangePassword changePassword,
   })  : _getUserProfile = getUserProfile,
         _updateUserProfile = updateUserProfile,
         _updateUserProfileImage = updateProfileImage,
-        super(ProfileInitial()) {
+        _changePassword = changePassword,
+      super(ProfileInitial()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
     on<SubmitProfile>(_onSubmitProfile);
     on<UpdateProfileImageEvent>(_onUpdateProfileImage);
+    on<ChangePasswordEvent>(_onChangePassword);
   }
 
-  void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
+  /*void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
     // Si ya tenemos el perfil en caché, no hacemos la petición nuevamente
     if (_cachedProfile != null) {
       emit(ProfileLoaded(userProfile: _cachedProfile!));
@@ -39,11 +44,23 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
     // Si no hay datos en caché, hacemos la solicitud al backend
     emit(ProfileLoading());
+    _retryCount = 0;
+    await _loadProfileData(emit);
+  }*/
+  void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
+    // If we already have the profile in cache, don't make the request again
+    if (_cachedProfile != null) {
+      emit(ProfileLoaded(userProfile: _cachedProfile!));
+      return;
+    }
+
+    // If no cached data, make the request to backend
+    emit(ProfileLoading());
     final result = await _getUserProfile(NoParams());
     result.fold(
           (failure) => emit(ProfileError(failure.message)),
           (profile) {
-        _cachedProfile = profile; // Guardamos el perfil en caché
+        _cachedProfile = profile; // Cache the profile
         emit(ProfileLoaded(userProfile: profile));
       },
     );
@@ -78,9 +95,15 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       result.fold(
             (failure) => emit(ProfileError(failure.message)),
             (_) {
-              _cachedProfile = loadedState.userProfile;
-              emit(ProfileSuccess());
-            },
+          _cachedProfile = loadedState.userProfile;
+          emit(ProfileSuccess());
+          // Emitir un ProfileLoaded después para mostrar la UI actualizada
+          Future.delayed(Duration(milliseconds: 300), () {
+            if (!isClosed) {
+              emit(ProfileLoaded(userProfile: _cachedProfile!));
+            }
+          });
+        },
       );
     }
   }
@@ -89,10 +112,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (state is ProfileLoaded) {
       final loadedState = state as ProfileLoaded;
 
-      emit(ProfileLoading()); // Mostrar loader mientras se procesa la imagen
+      emit(ProfileLoading()); // Show loader while processing the image
 
       try {
-        // Llama al caso de uso para subir la imagen y obtener la URL pública
+        // Call use case to upload the image and get the public URL
         final result = await _updateUserProfileImage(
           UpdateProfileImageParams(
             userId: loadedState.userProfile.id,
@@ -100,41 +123,70 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           ),
         );
 
-        // Verifica si el manejador sigue activo antes de llamar a emit
-        if (emit.isDone) return;
-
-        await result.fold(
+        result.fold(
               (failure) async {
-            if (!emit.isDone) emit(ProfileError(failure.message));
+            emit(ProfileError(failure.message));
           },
               (imageUrl) async {
-            // Actualizar el perfil con la nueva URL
+            // Update the profile with the new URL
             final updatedProfile = loadedState.userProfile.copyWith(profileImageUrl: imageUrl);
 
-            // Usar el caso de uso para guardar los datos en la base de datos
+            // Use the use case to save the data in the database
             final updateResult = await _updateUserProfile(
               UpdateUserProfileParams(profile: updatedProfile),
             );
 
-            if (emit.isDone) return;
-
-            await updateResult.fold(
+            updateResult.fold(
                   (failure) async {
-                if (!emit.isDone) emit(ProfileError(failure.message));
+                emit(ProfileError(failure.message));
               },
                   (_) {
-                if (!emit.isDone) {
-                  _cachedProfile = updatedProfile; // Actualizar el caché local
-                  emit(ProfileLoaded(userProfile: updatedProfile));
-                }
+                _cachedProfile = updatedProfile; // Update the local cache
+                emit(ProfileLoaded(userProfile: updatedProfile));
               },
             );
           },
         );
       } catch (e) {
-        if (!emit.isDone) emit(ProfileError('Error al actualizar la imagen de perfil.'));
+        emit(ProfileError('Error al actualizar la imagen de perfil.'));
       }
     }
   }
 
+  void _onChangePassword(ChangePasswordEvent event, Emitter<ProfileState> emit) async {
+    emit(PasswordChangeLoading());
+
+    // Validate passwords match client-side first
+    if (event.newPassword != event.confirmPassword) {
+      emit(PasswordChangeError('Las contraseñas no coinciden'));
+      // Return to loaded state after error
+      if (_cachedProfile != null) {
+        emit(ProfileLoaded(userProfile: _cachedProfile!));
+      }
+      return;
+    }
+
+    final result = await _changePassword(ChangePasswordParams(
+      currentPassword: event.currentPassword,
+      newPassword: event.newPassword,
+      confirmPassword: event.confirmPassword,
+    ));
+
+    result.fold(
+          (failure) {
+        emit(PasswordChangeError(failure.message));
+        // Return to loaded state after error
+        if (_cachedProfile != null) {
+          emit(ProfileLoaded(userProfile: _cachedProfile!));
+        }
+      },
+          (_) {
+        emit(PasswordChangeSuccess());
+        // Return to loaded state after success
+        if (_cachedProfile != null) {
+          emit(ProfileLoaded(userProfile: _cachedProfile!));
+        }
+      },
+    );
+  }
 }

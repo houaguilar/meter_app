@@ -19,25 +19,32 @@ class _MetraShopScreenState extends State<MetraShopScreen> {
   @override
   void initState() {
     super.initState();
+    // Verificamos si el usuario está autenticado
     context.read<AuthBloc>().add(AuthIsUserLoggedIn());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthLoading) {
-            return const Loader();
-          } else if (state is AuthSuccess) {
+      body: BlocListener<AuthBloc, AuthState>(
+        listener: (context, state) {
+          if (state is AuthSuccess) {
+            // Si el usuario está autenticado, navegamos a la pantalla de bienvenida
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.goNamed('welcome');
             });
-            return Container();
-          } else {
-            return const BuildMetraShopUI();
           }
         },
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            if (state is AuthLoading) {
+              return const Loader();
+            } else {
+              // En cualquier otro caso (AuthInitial, AuthFailure), mostramos la UI de inicio
+              return const BuildMetraShopUI();
+            }
+          },
+        ),
       ),
     );
   }

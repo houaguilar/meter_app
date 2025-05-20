@@ -1,298 +1,689 @@
-
+// lib/presentation/screens/home/losas/datos_losas_aligeradas_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
+import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
+import '../../../../../config/constants/colors.dart';
+import '../../../../../data/local/shared_preferences_helper.dart';
+
+import '../../../../../init_dependencies.dart';
 import '../../../../providers/providers.dart';
+import '../../../../widgets/fields/custom_name_text_field.dart';
 import '../../../../widgets/widgets.dart';
+import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosLosasAligeradasScreen extends ConsumerStatefulWidget {
   const DatosLosasAligeradasScreen({super.key});
+  static const String route = 'datos-losas-aligeradas';
 
   @override
   ConsumerState<DatosLosasAligeradasScreen> createState() => _DatosLosasAligeradasScreenState();
 }
 
-class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligeradasScreen> {
+class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligeradasScreen> with TickerProviderStateMixin {
+  late TabController _tabController;
+  int _currentIndex = 0;
 
-  late String losas;
+  late final SharedPreferencesHelper sharedPreferencesHelper;
 
-  // GlobalKey
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada1 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada1 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada1 = GlobalKey<FormState>();
+  // TextControllers para los campos de entrada
+  final TextEditingController desperdicioLadrilloController = TextEditingController(text: '5');
+  final TextEditingController desperdicioConcretoController = TextEditingController(text: '5');
+  final TextEditingController descriptionAreaController = TextEditingController();
+  final TextEditingController descriptionMedidasController = TextEditingController();
+  final TextEditingController areaTextController = TextEditingController();
+  final TextEditingController largoTextController = TextEditingController();
+  final TextEditingController anchoTextController = TextEditingController();
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada2 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada2 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada2 = GlobalKey<FormState>();
+  final formKey = GlobalKey<FormState>();
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada3 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada3 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada3 = GlobalKey<FormState>();
+  // Variables para almacenar las selecciones del usuario
+  bool showSelectionError = false;
+  String? selectedValueAltura;
+  String? selectedValueMaterial;
+  String? selectedValueResistencia;
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada4 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada4 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada4 = GlobalKey<FormState>();
+  // Listas de campos dinámicos
+  List<Map<String, TextEditingController>> areaFields = [];
+  List<Map<String, TextEditingController>> measureFields = [];
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada5 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada5 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada5 = GlobalKey<FormState>();
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        _currentIndex = _tabController.index;
+      });
+    });
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada6 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada6 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada6 = GlobalKey<FormState>();
+    // Cargamos la configuración de SharedPreferences si es necesario
+    sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!sharedPreferencesHelper.isTutorialShown()) {
+        showTutorial();
+      }
+    });
+  }
 
-  final GlobalKey<FormState> _formKeyDescriptionLosaAligerada7 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyLargoLosaAligerada7 = GlobalKey<FormState>();
-  final GlobalKey<FormState> _formKeyAnchoLosaAligerada7 = GlobalKey<FormState>();
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
-  //textEditingControllers
-  final TextEditingController _descriptionLosaAligerada1Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada1Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada1Controller =  TextEditingController();
+  void showTutorial() {
+    showDialog(
+      context: context,
+      builder: (context) => TutorialOverlay(
+        onSkip: () {
+          sharedPreferencesHelper.setTutorialShown(true);
+          context.pop();
+        },
+      ),
+    );
+  }
 
-  final TextEditingController _descriptionLosaAligerada2Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada2Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada2Controller =  TextEditingController();
+  String? _validateStringRequired(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+    return null;
+  }
 
-  final TextEditingController _descriptionLosaAligerada3Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada3Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada3Controller =  TextEditingController();
-
-  final TextEditingController _descriptionLosaAligerada4Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada4Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada4Controller =  TextEditingController();
-
-  final TextEditingController _descriptionLosaAligerada5Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada5Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada5Controller =  TextEditingController();
-
-  final TextEditingController _descriptionLosaAligerada6Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada6Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada6Controller =  TextEditingController();
-
-  final TextEditingController _descriptionLosaAligerada7Controller =  TextEditingController();
-  final TextEditingController _largoLosaAligerada7Controller =  TextEditingController();
-  final TextEditingController _anchoLosaAligerada7Controller =  TextEditingController();
+  String? _validateNumeric(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+    if (double.tryParse(value) == null) {
+      return 'Por favor ingresa un número válido';
+    }
+    if (double.parse(value) < 0) {
+      return 'El valor debe ser mayor o igual a 0';
+    }
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
-
-    final currentFilter = ref.watch(todoCurrentFilterProvider);
-    ref.watch(losaAigeradaResultProvider);
-    final addLosaAligerada1 = ref.watch(addLosaAligerada1Provider);
-    final addLosaAligerada2 = ref.watch(addLosaAligerada2Provider);
-    final addLosaAligerada3 = ref.watch(addLosaAligerada3Provider);
-    final addLosaAligerada4 = ref.watch(addLosaAligerada4Provider);
-    final addLosaAligerada5 = ref.watch(addLosaAligerada5Provider);
-    final addLosaAligerada6 = ref.watch(addLosaAligerada6Provider);
-    final addLosaAligerada7 = ref.watch(addLosaAligerada7Provider);
-
-    return GestureDetector(
-      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        appBar: AppBarWidget(titleAppBar: 'Losa Aligerada',),
-        body: Column(
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      appBar: AppBarWidget(titleAppBar: 'Losa Aligerada', isVisibleTutorial: true, showTutorial: showTutorial),
+      body: GestureDetector(
+        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+        child: Column(
           children: [
             Expanded(
               child: SingleChildScrollView(
+                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                 scrollDirection: Axis.vertical,
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
+                        child: Column(
+                          children: [
+                            _buildAlturaSelection(),
+                            _buildMaterialSelection(),
+                            _buildResistenciaSelection(),
+                            _buildProjectFields(),
+                          ],
+                        ),
+                      ),
+                      _buildTabs(context),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            _buildResultButton(),
+            const SizedBox(height: 45),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProjectFields() {
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+        const SizedBox(height: 15),
+    Container(
+    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+    decoration: BoxDecoration(
+    color: Colors.grey.shade100,
+    borderRadius: BorderRadius.circular(8),
+    border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: Column(
+    children: [
+    CustomFactorTextField(
+    controller: desperdicioLadrilloController,
+    label: 'Desperdicio Ladrillo (%)',
+    validator: _validateNumeric,
+    hintText: '',
+    ),
+    CustomFactorTextField(
+      // lib/presentation/screens/home/losas/datos_losas_aligeradas_screen.dart (continued)
+      controller: desperdicioConcretoController,
+      label: 'Desperdicio Concreto (%)',
+      validator: _validateNumeric,
+      hintText: '',
+    ),
+    ],
+    ),
+    ),
+          const SizedBox(height: 15),
+        ],
+    );
+  }
+
+  Widget _buildAlturaSelection() {
+    final List<String> alturas = ["17 cm", "20 cm", "25 cm"];
+    return _buildChoiceChips(
+        'altura',
+        'Altura de Losa Aligerada:',
+        alturas
+    );
+  }
+
+  Widget _buildMaterialSelection() {
+    final List<String> materiales = ["Ladrillo Hueco", "Bovedillas"];
+    return _buildChoiceChips(
+        'material',
+        'Material de Aligerado:',
+        materiales
+    );
+  }
+
+  Widget _buildResistenciaSelection() {
+    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²",  "210 kg/cm²", "245 kg/cm²", "280 kg/cm²"];
+    return _buildChoiceChips(
+        'resistencia',
+        'Resistencia de Concreto:',
+        resistencias
+    );
+  }
+
+  Widget _buildChoiceChips(String type, String description, List<String> items) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      margin: EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            description,
+            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: items.map((value) {
+              bool isSelected = false;
+              switch (type) {
+                case 'altura':
+                  isSelected = selectedValueAltura == value;
+                  break;
+                case 'material':
+                  isSelected = selectedValueMaterial == value;
+                  break;
+                case 'resistencia':
+                  isSelected = selectedValueResistencia == value;
+                  break;
+              }
+
+              return ChoiceChip(
+                label: Text(value),
+                selected: isSelected,
+                onSelected: (selected) {
+                  if (selected) {
+                    setState(() {
+                      switch (type) {
+                        case 'altura':
+                          selectedValueAltura = value;
+                          break;
+                        case 'material':
+                          selectedValueMaterial = value;
+                          break;
+                        case 'resistencia':
+                          selectedValueResistencia = value;
+                          break;
+                      }
+                    });
+                  }
+                },
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
+                    width: 1.0,
+                  ),
+                ),
+                checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
+                selectedColor: AppColors.blueMetraShop,
+                backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
+                labelStyle: TextStyle(
+                    color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
+              );
+            }).toList(),
+          ),
+          if (showSelectionError && ((type == 'altura' && selectedValueAltura == null) ||
+              (type == 'material' && selectedValueMaterial == null) ||
+              (type == 'resistencia' && selectedValueResistencia == null)))
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Campo requerido',
+                style: TextStyle(color: Colors.red),
+              ),
+            )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabs(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: const Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),),
+        ),
+        const SizedBox(height: 10),
+        TabBar(
+          controller: _tabController,
+          labelColor: AppColors.primaryMetraShop,
+          unselectedLabelColor: AppColors.primaryMetraShop.withOpacity(0.5),
+          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          indicatorColor: AppColors.indicatorTabBarColor,
+          tabs: const [
+            Tab(text: 'Área'),
+            Tab(text: 'Medidas'),
+          ],
+        ),
+        SizedBox(
+          height: 600,
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildAreaTab(),
+              _buildMeasureTab(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAreaTab() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              elevation: 2,
+              color: Colors.grey.shade100,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(
-                      child: Container(
-                        padding: const EdgeInsets.all(15),
-                        child: const Text('Complete los siguientes campos: ',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                        ),
+                    CustomNameTextField(
+                      controller: descriptionAreaController,
+                      label: 'Descripción',
+                      hintText: 'Ingresa una descripción (Ej. Losa Dormitorio)',
+                      validator: _validateStringRequired,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Datos',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryMetraShop,
                       ),
                     ),
-                    Container(
-                      margin: const EdgeInsets.all(15),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Peralte:', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),),
-                          SegmentedButton(
-                              segments: const [
-                                ButtonSegment(value: FilterType.all, icon: Text('17')),
-                                ButtonSegment(value: FilterType.completed, icon: Text('20')),
-                                ButtonSegment(value: FilterType.pending, icon: Text('25')),
-                              ],
-                              selected: <FilterType>{currentFilter},
-                            onSelectionChanged: (value) {
-                                ref.read(todoCurrentFilterProvider.notifier).changeCurrentFilter(value.first);
-                            },
-                          )
-                        ],
-                      ),
+                    const SizedBox(height: 8),
+                    CustomMeasureTextField(
+                      controller: areaTextController,
+                      validator: _validateStringRequired,
+                      labelText: 'Area(m²)',
+                      keyboardType: TextInputType.number,
                     ),
-                    Container(
-                        alignment: AlignmentDirectional.center,
-                        padding: const EdgeInsets.all(10),
-                        child: const Text("Losa 1", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),)
-                    ),
-                    SizedBox(
-                      child: CommonTextFormField(
-                        formKey: _formKeyDescriptionLosaAligerada1, description: 'Descripción' ,controller: _descriptionLosaAligerada1Controller, hintText: 'ej. Paño 1', isKeyboardText: true,),),
-                    SizedBox(
-                      child: CommonTextFormField(
-                        formKey: _formKeyLargoLosaAligerada1, description: 'Largo' ,controller: _largoLosaAligerada1Controller, hintText: 'metros',),),
-                    SizedBox(
-                      child: CommonTextFormField(
-                        formKey: _formKeyAnchoLosaAligerada1, description: 'Ancho' ,controller: _anchoLosaAligerada1Controller, hintText: 'metros',),),
-                    Visibility(
-                      visible: addLosaAligerada1,
-                      child: Container(
-                        alignment: AlignmentDirectional.center,
-                        child: SizedBox(
-                            height: 50,
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                ref.read(addLosaAligerada1Provider.notifier).toggleAddLosaAligerada();
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text("Añadir Losa"),
-                              style: ElevatedButton.styleFrom(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)
-                                  )
-                              ),                          )
-                        ),
-                      ),
-                    ),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada2, formKey2: _formKeyLargoLosaAligerada2, formKey3: _formKeyAnchoLosaAligerada2, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada1, titleMaterial: 'Losa 2', firstTextController: _descriptionLosaAligerada2Controller, secondTextController: _largoLosaAligerada2Controller, thirdTextController: _anchoLosaAligerada2Controller, firstHintText: 'ej. Paño 2', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada2, pressed: () => ref.read(addLosaAligerada2Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada1Provider.notifier).toggleAddLosaAligerada();},),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada3, formKey2: _formKeyLargoLosaAligerada3, formKey3: _formKeyAnchoLosaAligerada3, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada2, titleMaterial: 'Losa 3', firstTextController: _descriptionLosaAligerada3Controller, secondTextController: _largoLosaAligerada3Controller, thirdTextController: _anchoLosaAligerada3Controller, firstHintText: 'ej. Paño 3', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada3, pressed: () => ref.read(addLosaAligerada3Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada2Provider.notifier).toggleAddLosaAligerada();},),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada4, formKey2: _formKeyLargoLosaAligerada4, formKey3: _formKeyAnchoLosaAligerada4, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada3, titleMaterial: 'Losa 4', firstTextController: _descriptionLosaAligerada4Controller, secondTextController: _largoLosaAligerada4Controller, thirdTextController: _anchoLosaAligerada4Controller, firstHintText: 'ej. Paño 4', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada4, pressed: () => ref.read(addLosaAligerada4Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada3Provider.notifier).toggleAddLosaAligerada();},),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada5, formKey2: _formKeyLargoLosaAligerada5, formKey3: _formKeyAnchoLosaAligerada5, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada4, titleMaterial: 'Losa 5', firstTextController: _descriptionLosaAligerada5Controller, secondTextController: _largoLosaAligerada5Controller, thirdTextController: _anchoLosaAligerada5Controller, firstHintText: 'ej. Paño 5', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada5, pressed: () => ref.read(addLosaAligerada5Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada4Provider.notifier).toggleAddLosaAligerada();},),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada6, formKey2: _formKeyLargoLosaAligerada6, formKey3: _formKeyAnchoLosaAligerada6, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada5, titleMaterial: 'Losa 6', firstTextController: _descriptionLosaAligerada6Controller, secondTextController: _largoLosaAligerada6Controller, thirdTextController: _anchoLosaAligerada6Controller, firstHintText: 'ej. Paño 6', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada6, pressed: () => ref.read(addLosaAligerada6Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada5Provider.notifier).toggleAddLosaAligerada();},),
-                    CustomAddThreeFields(formKey1: _formKeyDescriptionLosaAligerada7, formKey2: _formKeyLargoLosaAligerada7, formKey3: _formKeyAnchoLosaAligerada7, firstNameTextController: 'Descripción', secondNameTextController: 'Largo', thirdNameTextController: 'Ancho', visibility: addLosaAligerada6, titleMaterial: 'Losa 7', firstTextController: _descriptionLosaAligerada7Controller, secondTextController: _largoLosaAligerada7Controller, thirdTextController: _anchoLosaAligerada7Controller, firstHintText: 'ej. Paño 7', secondHintText: 'metros', thirdHintText: 'metros', buttonVisibility: addLosaAligerada7, pressed: () => ref.read(addLosaAligerada7Provider.notifier).toggleAddLosaAligerada(), nameAddMaterial: 'Agregar Losa', pressedCancel: () { ref.read(addLosaAligerada6Provider.notifier).toggleAddLosaAligerada();},),
-                    const SizedBox(height: 20,)
                   ],
                 ),
               ),
             ),
-            MaterialButton(
-              onPressed: () {
-                final FormState formDescription1 = _formKeyDescriptionLosaAligerada1.currentState!;
-                final FormState formLargo1 = _formKeyLargoLosaAligerada1.currentState!;
-                final FormState formAncho1 = _formKeyAnchoLosaAligerada1.currentState!;
-
-                var datosLosaAligerada = ref.read(losaAigeradaResultProvider.notifier);
-
-                if (formDescription1.validate() && formLargo1.validate() && formAncho1.validate()) {
-                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                  if (addLosaAligerada1) {
-                    context.pushNamed('losas-macizas');
-                  } else {
-                    ref.read(losaAigeradaResultProvider.notifier).clearList();
-                    final FormState formDescription2 = _formKeyDescriptionLosaAligerada2.currentState!;
-                    final FormState formLargo2 = _formKeyLargoLosaAligerada2.currentState!;
-                    final FormState formAncho2 = _formKeyAnchoLosaAligerada2.currentState!;
-
-                    if (formDescription2.validate() && formLargo2.validate() && formAncho2.validate()) {
-                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                      if (addLosaAligerada2) {
-                        context.pushNamed('losas-macizas');
-                      } else {
-                        ref.read(losaAigeradaResultProvider.notifier).clearList();
-                        final FormState formDescription3 = _formKeyDescriptionLosaAligerada3.currentState!;
-                        final FormState formLargo3 = _formKeyLargoLosaAligerada3.currentState!;
-                        final FormState formAncho3 = _formKeyAnchoLosaAligerada3.currentState!;
-
-                        if (formDescription3.validate() && formLargo3.validate() && formAncho3.validate()) {
-                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada3Controller.text, _largoLosaAligerada3Controller.text, _anchoLosaAligerada3Controller.text, '17');
-                          if (addLosaAligerada3) {
-                            context.pushNamed('losas-macizas');
-                          } else {
-                            ref.read(losaAigeradaResultProvider.notifier).clearList();
-                            final FormState formDescription4 = _formKeyDescriptionLosaAligerada4.currentState!;
-                            final FormState formLargo4 = _formKeyLargoLosaAligerada4.currentState!;
-                            final FormState formAncho4 = _formKeyAnchoLosaAligerada4.currentState!;
-                            if (formDescription4.validate() && formLargo4.validate() && formAncho4.validate()) {
-                              datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                              datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                              datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada3Controller.text, _largoLosaAligerada3Controller.text, _anchoLosaAligerada3Controller.text, '17');
-                              datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada4Controller.text, _largoLosaAligerada4Controller.text, _anchoLosaAligerada4Controller.text, '17');
-                              if (addLosaAligerada4) {
-                                context.pushNamed('losas-macizas');
-                              } else {
-                                ref.read(losaAigeradaResultProvider.notifier).clearList();
-                                final FormState formDescription5 = _formKeyDescriptionLosaAligerada5.currentState!;
-                                final FormState formLargo5 = _formKeyLargoLosaAligerada5.currentState!;
-                                final FormState formAncho5 = _formKeyAnchoLosaAligerada5.currentState!;
-                                if (formDescription5.validate() && formLargo5.validate() && formAncho5.validate()) {
-                                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada3Controller.text, _largoLosaAligerada3Controller.text, _anchoLosaAligerada3Controller.text, '17');
-                                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada4Controller.text, _largoLosaAligerada4Controller.text, _anchoLosaAligerada4Controller.text, '17');
-                                  datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada5Controller.text, _largoLosaAligerada5Controller.text, _anchoLosaAligerada5Controller.text, '17');
-                                  if (addLosaAligerada5) {
-                                    context.pushNamed('losas-macizas');
-                                  } else {
-                                    ref.read(losaAigeradaResultProvider.notifier).clearList();
-                                    final FormState formDescription6 = _formKeyDescriptionLosaAligerada6.currentState!;
-                                    final FormState formLargo6 = _formKeyLargoLosaAligerada6.currentState!;
-                                    final FormState formAncho6 = _formKeyAnchoLosaAligerada6.currentState!;
-                                    if (formDescription6.validate() && formLargo6.validate() && formAncho6.validate()) {
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada3Controller.text, _largoLosaAligerada3Controller.text, _anchoLosaAligerada3Controller.text, '17');
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada4Controller.text, _largoLosaAligerada4Controller.text, _anchoLosaAligerada4Controller.text, '17');
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada5Controller.text, _largoLosaAligerada5Controller.text, _anchoLosaAligerada5Controller.text, '17');
-                                      datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada6Controller.text, _largoLosaAligerada6Controller.text, _anchoLosaAligerada6Controller.text, '17');
-                                      if (addLosaAligerada6) {
-                                        context.pushNamed('losas-macizas');
-                                      } else {
-                                        ref.read(losaAigeradaResultProvider.notifier).clearList();
-                                        final FormState formDescription7 = _formKeyDescriptionLosaAligerada7.currentState!;
-                                        final FormState formLargo7 = _formKeyLargoLosaAligerada7.currentState!;
-                                        final FormState formAncho7 = _formKeyAnchoLosaAligerada7.currentState!;
-                                        if (formDescription7.validate() && formLargo7.validate() && formAncho7.validate()) {
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada1Controller.text, _largoLosaAligerada1Controller.text, _anchoLosaAligerada1Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada2Controller.text, _largoLosaAligerada2Controller.text, _anchoLosaAligerada2Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada3Controller.text, _largoLosaAligerada3Controller.text, _anchoLosaAligerada3Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada4Controller.text, _largoLosaAligerada4Controller.text, _anchoLosaAligerada4Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada5Controller.text, _largoLosaAligerada5Controller.text, _anchoLosaAligerada5Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada6Controller.text, _largoLosaAligerada6Controller.text, _anchoLosaAligerada6Controller.text, '17');
-                                          datosLosaAligerada.createLosaAligerada(_descriptionLosaAligerada7Controller.text, _largoLosaAligerada7Controller.text, _anchoLosaAligerada7Controller.text, '17');
-                                          if (addLosaAligerada7) {
-                                            context.pushNamed('losas-macizas');
-                                          }
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }  else {
-                  null;
-                }
-              },
-              color: const Color(0x00ecf0f1),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              height: 50,
-              minWidth: 200,
-              child: const Text("Metrar",
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold)
-              ),
+            Column(
+              children: [
+                ...areaFields.map((field) => _buildDynamicField(
+                    field,
+                        () => _removeField(areaFields, field)
+                )),
+                Container(
+                  alignment: Alignment.topLeft,
+                  child: CustomTextBlueButton(
+                    onPressed: () => _addField(areaFields),
+                    label:'Agregar nueva medida',
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20,)
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMeasureTab() {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Card(
+              margin: const EdgeInsets.symmetric(vertical: 8),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomNameTextField(
+                      controller: descriptionMedidasController,
+                      label: 'Descripción',
+                      hintText: 'Ingresa una descripción (Ej. Losa Dormitorio)',
+                      validator: _validateStringRequired,
+                    ),
+                    const Text(
+                      'Datos',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryMetraShop,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomMeasureTextField(
+                            controller: largoTextController,
+                            validator: _validateStringRequired,
+                            labelText: 'Largo(metros)',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: CustomMeasureTextField(
+                            controller: anchoTextController,
+                            validator: _validateStringRequired,
+                            labelText: 'Ancho(metros)',
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Column(
+              children: [
+                ...measureFields.map((field) => _buildDynamicMeasureField(
+                    field,
+                        () => _removeField(measureFields, field)
+                )),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: CustomTextBlueButton(
+                    onPressed: () => _addMeasureField(measureFields),
+                    label:'Agregar nueva medida',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicField(Map<String, TextEditingController> field, VoidCallback onRemove) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            CustomNameTextField(
+              controller: field['description']!,
+              label: 'Descripción adicional',
+              validator: _validateStringRequired,
+              hintText: 'Ingresa una descripción (Ej. Losa ...)',
+              onPressed: onRemove,
+              icon: Icons.close,
+              color: AppColors.errorGeneralColor,
+              isVisible: true,
+            ),
+            const Text(
+              'Datos',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryMetraShop,
+              ),
+            ),
+            const SizedBox(height: 8),
+            CustomMeasureTextField(
+              controller: field['measure']!,
+              validator: _validateStringRequired,
+              labelText: 'Area(m²)',
+              keyboardType: TextInputType.number,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDynamicMeasureField(Map<String, TextEditingController> field, VoidCallback onRemove) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            CustomNameTextField(
+              controller: field['descriptionMeasure']!,
+              label: 'Descripción adicional',
+              validator: _validateStringRequired,
+              hintText: 'Ingresa una descripción (Ej. Losa ...)',
+              onPressed: onRemove,
+              icon: Icons.close,
+              color: AppColors.errorGeneralColor,
+              isVisible: true,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Datos',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryMetraShop,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: CustomMeasureTextField(
+                    controller: field['largoMeasure']!,
+                    validator: _validateStringRequired,
+                    labelText: 'Largo(metros)',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: CustomMeasureTextField(
+                    controller: field['anchoMeasure']!,
+                    validator: _validateStringRequired,
+                    labelText: 'Ancho(metros)',
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _addField(List<Map<String, TextEditingController>> fields) {
+    setState(() {
+      fields.add({
+        'description': TextEditingController(),
+        'measure': TextEditingController(),
+      });
+    });
+  }
+
+  void _addMeasureField(List<Map<String, TextEditingController>> fields) {
+    setState(() {
+      fields.add({
+        'descriptionMeasure': TextEditingController(),
+        'largoMeasure': TextEditingController(),
+        'anchoMeasure': TextEditingController(),
+      });
+    });
+  }
+
+  void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
+    setState(() {
+      fields.remove(field);
+    });
+  }
+
+  Widget _buildResultButton() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: CustomElevatedButton(
+        label: 'Resultado',
+        onPressed: () {
+          setState(() {
+            showSelectionError = selectedValueAltura == null ||
+                selectedValueMaterial == null ||
+                selectedValueResistencia == null;
+          });
+
+          if (formKey.currentState?.validate() == true &&
+              selectedValueAltura != null &&
+              selectedValueMaterial != null &&
+              selectedValueResistencia != null) {
+
+            final losaAligeradaResult = ref.read(losaAligeradaResultProvider.notifier);
+
+            if (_currentIndex == 0) {
+              // Pestaña de Área
+              losaAligeradaResult.createLosaAligerada(
+                descriptionAreaController.text,
+                selectedValueAltura!,
+                selectedValueMaterial!,
+                selectedValueResistencia!,
+                desperdicioLadrilloController.text,
+                desperdicioConcretoController.text,
+                area: areaTextController.text,
+              );
+
+              // Agregar campos adicionales
+              for (var field in areaFields) {
+                losaAligeradaResult.createLosaAligerada(
+                  field['description']!.text,
+                  selectedValueAltura!,
+                  selectedValueMaterial!,
+                  selectedValueResistencia!,
+                  desperdicioLadrilloController.text,
+                  desperdicioConcretoController.text,
+                  area: field['measure']!.text,
+                );
+              }
+            } else {
+              // Pestaña de Medidas
+              losaAligeradaResult.createLosaAligerada(
+                descriptionMedidasController.text,
+                selectedValueAltura!,
+                selectedValueMaterial!,
+                selectedValueResistencia!,
+                desperdicioLadrilloController.text,
+                desperdicioConcretoController.text,
+                largo: largoTextController.text,
+                ancho: anchoTextController.text,
+              );
+
+              // Agregar campos adicionales
+              for (var field in measureFields) {
+                losaAligeradaResult.createLosaAligerada(
+                  field['descriptionMeasure']!.text,
+                  selectedValueAltura!,
+                  selectedValueMaterial!,
+                  selectedValueResistencia!,
+                  desperdicioLadrilloController.text,
+                  desperdicioConcretoController.text,
+                  largo: field['largoMeasure']!.text,
+                  ancho: field['anchoMeasure']!.text,
+                );
+              }
+            }
+            final pisosCreados = ref.read(losaAligeradaResultProvider);
+            print("CREADOS: Número de losas antes de navegar: ${pisosCreados.length}");
+            print(ref.watch(losaAligeradaResultProvider));
+            // Navegar a la pantalla de resultados
+            context.pushNamed('losas-aligeradas-results');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
+            );
+          }
+        },
       ),
     );
   }

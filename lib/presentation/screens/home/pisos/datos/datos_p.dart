@@ -28,7 +28,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
   late final SharedPreferencesHelper sharedPreferencesHelper;
 
   // TextControllers y formKey para campos base de proyecto
-  final TextEditingController factorController = TextEditingController();
+  final TextEditingController factorController = TextEditingController(text: '5');
   final TextEditingController descriptionAreaController = TextEditingController();
   final TextEditingController descriptionMedidasController = TextEditingController();
   final TextEditingController areaTextController = TextEditingController();
@@ -36,16 +36,19 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
   final TextEditingController heightTextController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
-  bool showAsentadoError = false;
+  bool showEspesorError = false;
+  bool showResistenciaError = false;
+  bool showProporcionError = false;
 
   late String piso;
   String espesor = "";
   late String factor;
-  String dosage = '';
+  String resistencia = '';
+  String proporcionMortero = '';
 
-  String? selectedValuePiso;
   String? selectedValueEspesor;
-  String? selectedValueDosage;
+  String? selectedValueResistencia;
+  String? selectedValueProporcion;
 
   // Usamos listas de mapas para manejar dinámicamente los campos adicionales
   List<Map<String, TextEditingController>> areaFields = [];
@@ -98,6 +101,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
   @override
   Widget build(BuildContext context) {
     ref.watch(tipoPisoProvider);
+    print(ref.watch(tipoPisoProvider));
     final tipoPiso = ref.watch(tipoPisoProvider);
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -119,9 +123,12 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                         padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
                         child: Column(
                           children: [
-                            _buildTypeSelection(tipoPiso),
+                            _buildEspesorSelection(tipoPiso),
                             _buildProjectFields(),
-                            _buildTypeDosageSelection(tipoPiso),
+                            if (tipoPiso == 'falso')
+                              _buildResistenciaSelection()
+                            else if (tipoPiso == 'contrapiso')
+                              _buildProporcionSelection(),
                           ],
                         ),
                       ),
@@ -146,137 +153,57 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
       children: [
         const SizedBox(height: 15,),
         Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
           child: CustomFactorTextField(
             controller: factorController,
-            label: '(%) Desperdicio',
+            label: 'Desperdicio (%)',
             validator: _validateProjectName,
             hintText: '',
           ),
         ),
         const SizedBox(height: 15,),
-
-        /*     CustomNameTextField(
-          controller: projectNameController,
-          label: 'Nombre del proyecto',
-          hintText: 'Ingresa un nombre (Ej. Cocina)',
-          validator: _validateProjectName,
-          isVisible: true,
-          onPressed: () {showTutorial();},
-          icon: Icons.help_rounded,
-          color: AppColors.blueMetraShop,
-        ),
-        CustomNameTextField(
-          controller: descriptionController,
-          label: 'Descripción',
-          hintText: 'Ingresa una descripción (Ej. Muro 1)',
-          validator: _validateProjectName,
-        ),*/
       ],
     );
   }
 
-  Widget _buildTypeSelection(String tipoPiso) {
-    final List<String> espesorFalsoPiso = ["7 cm", "8 cm", "9 cm", "10 cm"];
-    final List<String> espesorContrapiso = ["4 cm", "5cm", "6 cm"];
+  Widget _buildEspesorSelection(String tipoPiso) {
+    final List<String> espesorFalsoPiso = tipoPiso == 'falso'
+        ? ["8 cm", "9 cm", "10 cm", "11 cm", "12 cm"]
+        : ["4 cm", "5 cm", "6 cm"];
+
     return contentChoiceChips(
-        'asentado',
-        'Espesor',
-        tipoPiso == 'contrapiso' ? espesorFalsoPiso : espesorContrapiso
+        'espesor',
+        'Espesor:',
+        espesorFalsoPiso
+    );
+  }
+
+  Widget _buildResistenciaSelection() {
+    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²",  "210 kg/cm²"];
+    return contentChoiceChips(
+        'resistencia',
+        'Resistencia:',
+        resistencias
+    );
+  }
+
+  Widget _buildProporcionSelection() {
+    final List<String> proporciones = ["1 : 4", "1 : 5", "1 : 6"];
+    return contentChoiceChips(
+        'proporcion',
+        'Proporción:',
+        proporciones
     );
   }
 
   Widget contentChoiceChips(String type, String description, List<String> typeList) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(description, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),),
-          const SizedBox(height: 10,),
-          Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  margin: const EdgeInsets.only(right: 15),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Wrap(
-                        spacing: 10,
-                        children: typeList.map((typeValue) {
-                          bool isSelected = type == 'contrapiso'
-                              ? selectedValuePiso == typeValue
-                              : selectedValueEspesor == typeValue;
-                          return ChoiceChip(
-                            label: Text(typeValue),
-                            selected: isSelected,
-                            onSelected: (selected) {
-                              if (selected) {
-                                setState(() {
-                                  switch (type) {
-                                    case 'contrapiso':
-                                      selectedValuePiso = typeValue;
-                                      piso = selectedValuePiso!;
-                                      selectedValueEspesor = null; // Reinicia el asentado
-                                      break;
-                                    case 'asentado':
-                                      selectedValueEspesor = typeValue;
-                                      espesor = selectedValueEspesor!;
-                                      break;
-                                  }
-                                });
-                              }
-                            },
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6), // Define el radio de borde
-                              side: BorderSide(
-                                color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5), // Color del borde
-                                width: 1.0, // Grosor del borde
-                              ),
-                            ),
-                            checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
-                            selectedColor: AppColors.blueMetraShop,
-                            backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
-                            labelStyle: TextStyle(
-                                color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
-                          );
-                        }).toList(),
-                      ),
-                      if (showAsentadoError && type == 'asentado' && selectedValueEspesor == null)
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            'Campo requerido',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        )
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTypeDosageSelection(String tipoLadrillo) {
-    final List<String> asentadosKingkong = ["1 : 4", "1 : 5"];
-    return contentDosageChoiceChips(
-        'asentado',
-        'Dosificación:',
-        asentadosKingkong
-    );
-  }
-
-  Widget contentDosageChoiceChips(String type, String description, List<String> typeList) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
@@ -308,15 +235,40 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     crossAxisAlignment: WrapCrossAlignment.center,
                     spacing: 10,
                     children: typeList.map((typeValue) {
-                      bool isSelected = selectedValueDosage == typeValue;
+                      bool isSelected = false;
+
+                      switch(type) {
+                        case 'espesor':
+                          isSelected = selectedValueEspesor == typeValue;
+                          break;
+                        case 'resistencia':
+                          isSelected = selectedValueResistencia == typeValue;
+                          break;
+                        case 'proporcion':
+                          isSelected = selectedValueProporcion == typeValue;
+                          break;
+                      }
+
                       return ChoiceChip(
                         label: Text(typeValue),
                         selected: isSelected,
                         onSelected: (selected) {
                           if (selected) {
                             setState(() {
-                              selectedValueDosage = typeValue;
-                              dosage = selectedValueDosage!;
+                              switch (type) {
+                                case 'espesor':
+                                  selectedValueEspesor = typeValue;
+                                  espesor = selectedValueEspesor!;
+                                  break;
+                                case 'resistencia':
+                                  selectedValueResistencia = typeValue;
+                                  resistencia = selectedValueResistencia!;
+                                  break;
+                                case 'proporcion':
+                                  selectedValueProporcion = typeValue;
+                                  proporcionMortero = selectedValueProporcion!;
+                                  break;
+                              }
                             });
                           }
                         },
@@ -334,9 +286,10 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                             color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
                       );
                     }).toList(),
-
                   ),
-                  if (showAsentadoError && type == 'asentado' && selectedValueDosage == null)
+                  if ((type == 'espesor' && showEspesorError && selectedValueEspesor == null) ||
+                      (type == 'resistencia' && showResistenciaError && selectedValueResistencia == null) ||
+                      (type == 'proporcion' && showProporcionError && selectedValueProporcion == null))
                     const Padding(
                       padding: EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -397,6 +350,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
             Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 2,
+              color: Colors.grey.shade100,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
@@ -408,7 +362,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     CustomNameTextField(
                       controller: descriptionAreaController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Muro 1)',
+                      hintText: 'Ingresa una descripción (Ej. Piso 1)',
                       validator: _validateProjectName,
                     ),
                     const SizedBox(height: 8,),
@@ -473,7 +427,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     CustomNameTextField(
                       controller: descriptionMedidasController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Muro 1)',
+                      hintText: 'Ingresa una descripción (Ej. Piso 1)',
                       validator: _validateProjectName,
                     ),
                     const Text(
@@ -491,7 +445,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                           child: CustomMeasureTextField(
                             controller: lengthTextController,
                             validator: _validateProjectName,
-                            labelText: 'Longitud(metros)',
+                            labelText: 'Largo(metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -549,7 +503,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
               controller: field['description']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Muro ...)',
+              hintText: 'Ingresa una descripción (Ej. Piso ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -594,7 +548,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
               controller: field['descriptionMeasure']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Muro ...)',
+              hintText: 'Ingresa una descripción (Ej. Piso ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -616,7 +570,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                   child: CustomMeasureTextField(
                     controller: field['lengthMeasure']!,
                     validator: _validateProjectName,
-                    labelText: 'Longitud(metros)',
+                    labelText: 'Largo(metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -662,69 +616,99 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
     });
   }
 
-  // Función para procesar el resultado y almacenar datos en LadrilloResultProvider
+  // Función para procesar el resultado y almacenar datos en PisosResultProvider
   Widget _buildResultButton(String tipoPiso) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomElevatedButton(
         label: 'Resultado',
         onPressed: () {
-
+          // Validar selecciones
           setState(() {
-            showAsentadoError = selectedValueEspesor == null; // Muestra error si `asentado` no está seleccionado
+            showEspesorError = selectedValueEspesor == null;
+            // Solo validar resistencia si es falso piso
+            if (tipoPiso == 'falso') {
+              showResistenciaError = selectedValueResistencia == null;
+            }
+            // Solo validar proporción si es contrapiso
+            if (tipoPiso == 'contrapiso') {
+              showProporcionError = selectedValueProporcion == null;
+            }
           });
 
-          if (formKey.currentState?.validate() == true && selectedValueEspesor != null) {
-            var dosageSelection = dosage.replaceAll("1 : ", "");
+          // Verificar todos los campos requeridos
+          bool camposValidos = formKey.currentState?.validate() == true && selectedValueEspesor != null;
+          if (tipoPiso == 'falso') {
+            camposValidos = camposValidos && selectedValueResistencia != null;
+          }
+          if (tipoPiso == 'contrapiso') {
+            camposValidos = camposValidos && selectedValueProporcion != null;
+          }
 
+          if (camposValidos) {
             var datosPiso = ref.read(pisosResultProvider.notifier);
             var espesorValor = espesor.replaceAll(" cm", "");
 
-            piso = tipoPiso;
+            // Eliminamos "1 : " de la proporción, si existe
+            var proporcionValor = proporcionMortero.replaceAll("1 : ", "");
 
             if (_currentIndex == 0) {
               datosPiso.createPisos(
-                piso,
+                tipoPiso,
                 descriptionAreaController.text,
                 factorController.text,
                 espesorValor,
+                resistencia: tipoPiso == 'falso' ? resistencia : null,
+                proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
                 area: areaTextController.text,
               );
+
               for (var field in areaFields) {
                 datosPiso.createPisos(
-                  piso ?? "Default",
+                  tipoPiso,
                   field['description']!.text,
                   factorController.text,
-                  espesorValor ?? "Soga",
+                  espesorValor,
+                  resistencia: tipoPiso == 'falso' ? resistencia : null,
+                  proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
                   area: field['measure']!.text,
                 );
               }
             } else {
               datosPiso.createPisos(
-                piso,
+                tipoPiso,
                 descriptionMedidasController.text,
                 factorController.text,
                 espesorValor,
+                resistencia: tipoPiso == 'falso' ? resistencia : null,
+                proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
                 largo: lengthTextController.text,
                 ancho: heightTextController.text,
               );
+
               for (var field in measureFields) {
                 datosPiso.createPisos(
-                  piso ?? "Default",
+                  tipoPiso,
                   field['descriptionMeasure']!.text,
                   factorController.text,
-                  espesorValor ?? "Soga",
+                  espesorValor,
+                  resistencia: tipoPiso == 'falso' ? resistencia : null,
+                  proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
                   largo: field['lengthMeasure']!.text,
                   ancho: field['heightMeasure']!.text,
                 );
               }
             }
-            print('datosLadrillo:');
-            print(datosPiso);
+            final pisosCreados = ref.read(pisosResultProvider);
+            print("CREADOS: Número de pisos antes de navegar: ${pisosCreados.length}");
             print(ref.watch(pisosResultProvider));
 
-            // Navegamos a la siguiente pantalla de resultados, donde se mostrarán los datos
+            // Navegar a resultados
             context.pushNamed('pisos_results');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
+            );
           }
         },
       ),

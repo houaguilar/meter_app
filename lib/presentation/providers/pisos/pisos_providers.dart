@@ -58,6 +58,8 @@ class PisosResult extends _$PisosResult {
       String description,
       String factor,
       String espesor, {
+        String? resistencia,
+        String? proporcionMortero,
         String? largo,
         String? ancho,
         String? area,
@@ -68,6 +70,8 @@ class PisosResult extends _$PisosResult {
       tipo: tipo,
       factorDesperdicio: factor,
       espesor: espesor,
+      resistencia: resistencia,
+      proporcionMortero: proporcionMortero,
       largo: largo,
       ancho: ancho,
       area: area,
@@ -114,74 +118,4 @@ String datosSharePisos(DatosSharePisosRef ref) {
     datos = datos.substring(0,datos.length -2);
   }
   return datos;
-}
-
-@riverpod
-class AddPiso1 extends _$AddPiso1 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso2 extends _$AddPiso2 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso3 extends _$AddPiso3 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso4 extends _$AddPiso4 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso5 extends _$AddPiso5 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso6 extends _$AddPiso6 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
-}
-
-@riverpod
-class AddPiso7 extends _$AddPiso7 {
-  @override
-  bool build() => true;
-
-  void toggleAddPiso() {
-    state = !state;
-  }
 }

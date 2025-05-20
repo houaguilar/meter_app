@@ -2,18 +2,19 @@
 import '../entities.dart';
 
 class UserProfile {
-  late String id;
-  late String name;
-  late String phone;
-  late String email;
-  late String employment;
-  late String nationality;
-  late String city;
-  late String province;
-  late String district;
-  late String? profileImageUrl;
+  final String id;
+  final String name;
+  final String phone;
+  final String email;
+  final String employment;
+  final String nationality;
+  final String city;
+  final String province;
+  final String district;
+  final String? profileImageUrl;
 
-  UserProfile({
+  // Make all fields final to ensure immutability
+  const UserProfile({
     required this.id,
     required this.name,
     required this.phone,
@@ -23,7 +24,7 @@ class UserProfile {
     this.city = '',
     this.province = '',
     this.district = '',
-    this.profileImageUrl = '',
+    this.profileImageUrl,
   });
 
   factory UserProfile.fromUser(User user, Map<String, dynamic> additionalData) {
@@ -37,8 +38,13 @@ class UserProfile {
       city: additionalData['city'] ?? '',
       province: additionalData['province'] ?? '',
       district: additionalData['district'] ?? '',
-      profileImageUrl: additionalData['profile_image_url'] ?? '',
+      profileImageUrl: additionalData['profile_image_url'],
     );
+  }
+
+  // Add validation method to improve security
+  bool get isValid {
+    return id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
   }
 
   Map<String, dynamic> toJson() {
@@ -66,7 +72,7 @@ class UserProfile {
     String? city,
     String? province,
     String? district,
-    String? profileImageUrl
+    String? profileImageUrl,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -81,4 +87,34 @@ class UserProfile {
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
     );
   }
+
+  // Add equality operator for easy comparison
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+          other is UserProfile &&
+              runtimeType == other.runtimeType &&
+              id == other.id &&
+              name == other.name &&
+              phone == other.phone &&
+              email == other.email &&
+              employment == other.employment &&
+              nationality == other.nationality &&
+              city == other.city &&
+              province == other.province &&
+              district == other.district &&
+              profileImageUrl == other.profileImageUrl;
+
+  @override
+  int get hashCode =>
+      id.hashCode ^
+      name.hashCode ^
+      phone.hashCode ^
+      email.hashCode ^
+      employment.hashCode ^
+      nationality.hashCode ^
+      city.hashCode ^
+      province.hashCode ^
+      district.hashCode ^
+      (profileImageUrl?.hashCode ?? 0);
 }

@@ -35,21 +35,6 @@ class WallMaterialCard extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(
-            onPressed: () {
-              _showMaterialDetails(context, material);
-            },
-            child: const Text(
-              'Ver información',
-              style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.blueMetraShop,
-                decoration: TextDecoration.underline,
-                decorationColor: AppColors.blueMetraShop,
-              ),
-            ),
-          ),
         ],
       ),
     );

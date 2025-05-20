@@ -91,39 +91,3 @@ void showMeasurementsSheet(BuildContext context, List<Measurement> items) {
     builder: (context) => MeasurementItemsBottomSheet(items: items),
   );
 }
-
-/*class MeasurementItemsBottomSheet extends StatelessWidget {
-  final List<Measurement> items;
-
-  const MeasurementItemsBottomSheet({super.key, required this.items});
-
-  @override
-  Widget build(BuildContext context) {
-    return DraggableScrollableSheet(
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16.0)),
-          ),
-          child: ListView.builder(
-            controller: scrollController,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return MeasurementItemCard(
-                title: item.title,
-                description: item.description,
-                imageAsset: item.imageAsset,
-                onTap: () {
-                  context.pushNamed(item.location);
-                },
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}*/

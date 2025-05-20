@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/constants/colors.dart';
+import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -19,6 +20,13 @@ class ResultLadrilloScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(Duration(seconds: 2), () {
+          context.hideLoader();
+      });
+    });
+
     return WillPopScope(
       onWillPop: () async {
         ref.read(ladrilloResultProvider.notifier).clearList();
@@ -46,6 +54,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
               ref,
               label: 'Guardar',
               icon: Icons.add_box_rounded,
+              heroTag: 'save_button_wall',
               onPressed: () {
                 final listaLadrillo = ref.watch(ladrilloResultProvider);
                 final listaBloqueta = ref.watch(bloquetaResultProvider);
@@ -62,6 +71,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
               ref,
               label: 'Compartir',
               icon: Icons.share_rounded,
+              heroTag: 'share_button_wall',
               onPressed: () => _showOptionsDialog(context, ref),
             ),
           ],
@@ -91,7 +101,14 @@ class ResultLadrilloScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionButton(BuildContext context, WidgetRef ref, {required String label, required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildActionButton(
+      BuildContext context,
+      WidgetRef ref, {
+        required String label,
+        required IconData icon,
+        required Object heroTag,
+        required VoidCallback onPressed
+      }) {
     return FloatingActionButton.extended(
       label: Text(label),
       icon: Icon(icon),
@@ -170,8 +187,6 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
         children: [
           const SizedBox(height: 10,),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 6,),
-          const Text('Resumen del metrado', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: AppColors.primaryMetraShop),),
           const SizedBox(height: 10,),
           if (listaLadrillo.isNotEmpty || listaBloqueta.isNotEmpty) ...[
             _buildSummaryCard(

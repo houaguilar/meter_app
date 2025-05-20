@@ -60,6 +60,13 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('User is null!');
       }
 
+      // Crear un perfil para el usuario recién registrado
+      await _createInitialUserProfile(
+        userId: response.user!.id,
+        name: name,
+        email: email,
+      );
+
       return UserModel(
         id: response.user!.id,
         name: name,
@@ -73,38 +80,87 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  // Método para crear el perfil inicial del usuario
+  Future<void> _createInitialUserProfile({
+    required String userId,
+    required String name,
+    required String email,
+  }) async {
+    try {
+      // Verificar si ya existe un perfil para este usuario
+      final existingProfiles = await supabaseClient
+          .from('profiles')
+          .select()
+          .eq('id', userId);
+
+      if (existingProfiles.isEmpty) {
+        // Crear un nuevo perfil si no existe
+        await supabaseClient.from('profiles').insert({
+          'id': userId,
+          'name': name,
+          'email': email,
+          'phone': '',
+          'employment': '',
+          'nationality': '',
+          'city': '',
+          'province': '',
+          'district': '',
+          'profileImageUrl': '',
+          'created_at': DateTime.now().toIso8601String(),
+        });
+      }
+    } catch (e) {
+      print('Error al crear perfil inicial: $e');
+      // No lanzamos excepción para no interrumpir el flujo de registro
+    }
+  }
+
   @override
   Future<UserModel?> signInWithGoogle() async {
-
     const webClientId = '194976078807-jn7jhikh5s84tjhplur8j3onsosimpah.apps.googleusercontent.com';
-
     const iosClientId = '194976078807-6oevpfa8e61mtprl13akdf332rf48edd.apps.googleusercontent.com';
 
     final GoogleSignIn googleSignIn = GoogleSignIn(
       clientId: iosClientId,
       serverClientId: webClientId,
     );
-    final googleUser = await googleSignIn.signIn();
-    final googleAuth = await googleUser!.authentication;
-    final accessToken = googleAuth.accessToken;
-    final idToken = googleAuth.idToken;
 
-    final response = await supabaseClient.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken!,
-      accessToken: accessToken,
+    try {
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        return null;
+      }
 
-    );
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
 
-    if (response.user == null) {
+      final response = await supabaseClient.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken!,
+        accessToken: accessToken,
+      );
+
+      if (response.user == null) {
+        return null;
+      }
+
+      // Crear un perfil para el usuario si es su primera vez
+      await _createInitialUserProfile(
+        userId: response.user!.id,
+        name: response.user!.userMetadata?['name'] ?? response.user!.email ?? '',
+        email: response.user!.email ?? '',
+      );
+
+      return UserModel(
+        id: response.user!.id,
+        name: response.user!.userMetadata?['name'] ?? '',
+        email: response.user!.email ?? '',
+      );
+    } catch (e) {
+      print('Error en signInWithGoogle: $e');
       return null;
     }
-
-    return UserModel(
-      id: response.user!.id,
-      name: response.user!.userMetadata?['name'] ?? '',
-      email: response.user!.email ?? '',
-    );
   }
 
   @override
@@ -115,13 +171,36 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'id',
           currentUserSession!.user.id,
         );
-        return UserModel.fromJson(userData.first).copyWith(
-          email: currentUserSession!.user.email,
-        );
+
+        if (userData != null && userData.isNotEmpty) {
+          return UserModel.fromJson(userData.first).copyWith(
+            email: currentUserSession!.user.email,
+          );
+        } else {
+          // Si no hay datos de perfil pero hay sesión, intentamos crear el perfil
+          await _createInitialUserProfile(
+            userId: currentUserSession!.user.id,
+            name: currentUserSession!.user.userMetadata?['name'] ?? '',
+            email: currentUserSession!.user.email ?? '',
+          );
+
+          // Volvemos a intentar obtener el perfil
+          final newUserData = await supabaseClient.from('profiles').select().eq(
+            'id',
+            currentUserSession!.user.id,
+          );
+
+          if (newUserData != null && newUserData.isNotEmpty) {
+            return UserModel.fromJson(newUserData.first).copyWith(
+              email: currentUserSession!.user.email,
+            );
+          }
+        }
       }
 
       return null;
     } catch (e) {
+      print('Error en getCurrentUserData: $e');
       throw ServerException(e.toString());
     }
   }
@@ -133,10 +212,28 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .from('profiles')
           .select()
           .eq('id', userId)
-          .single();
+          .maybeSingle();
 
-      if (response.isEmpty) {
-        throw const ServerException('El perfil del usuario no existe.');
+      if (response == null) {
+        // Si no existe el perfil, intentamos crearlo
+        await _createInitialUserProfile(
+          userId: userId,
+          name: currentUserSession?.user.userMetadata?['name'] ?? '',
+          email: currentUserSession?.user.email ?? '',
+        );
+
+        // Volvemos a intentar obtener el perfil
+        final newResponse = await supabaseClient
+            .from('profiles')
+            .select()
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (newResponse == null) {
+          throw const ServerException('El perfil del usuario no existe.');
+        }
+
+        return UserProfileModel.fromJson(newResponse);
       }
 
       return UserProfileModel.fromJson(response);
@@ -211,7 +308,29 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     }
   }
 
+  @override
+  Future<void> changePassword(String currentPassword, String newPassword) async {
+    try {
+      // Validate user is logged in
+      final session = supabaseClient.auth.currentSession;
+      if (session == null) {
+        throw const ServerException('User not logged in!');
+      }
 
+      // Change password with Supabase
+      await supabaseClient.auth.updateUser(
+        UserAttributes(
+          password: newPassword,
+        ),
+        // Some providers may require re-authentication with current password
+        // This depends on your Supabase setup
+      );
+    } on AuthException catch (e) {
+      throw ServerException(e.message);
+    } catch (e) {
+      throw ServerException(e.toString());
+    }
+  }
 
   @override
   Future<void> logout() async {

@@ -22,5 +22,6 @@ abstract interface class AuthRemoteDataSource {
   Future<void> updateUserProfileData(UserProfile userProfile);
   Future<void> updateProfileImage(String userId, String filePath);
   Future<String> uploadProfileImage(String filePath, String userId);
+  Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> logout();
 }

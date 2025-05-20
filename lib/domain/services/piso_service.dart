@@ -7,9 +7,20 @@ class PisoService {
     }
     if (piso.largo != null && piso.ancho != null) {
       final largo = double.tryParse(piso.largo!);
-      final altura = double.tryParse(piso.ancho!);
-      if (largo != null && altura != null) {
-        return largo * altura;
+      final ancho = double.tryParse(piso.ancho!);
+      if (largo != null && ancho != null) {
+        return largo * ancho;
+      }
+    }
+    return null;
+  }
+
+  double? calcularVolumen(Piso piso) {
+    final area = calcularArea(piso);
+    if (area != null) {
+      final espesor = double.tryParse(piso.espesor);
+      if (espesor != null) {
+        return area * (espesor / 100);
       }
     }
     return null;

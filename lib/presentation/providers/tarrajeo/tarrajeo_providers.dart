@@ -55,11 +55,10 @@ class TarrajeoResult extends _$TarrajeoResult {
   List<Tarrajeo> build() => [];
 
   void createTarrajeo(
-      String tipo,
       String description,
+      String tipo,
       String factor,
-      String cementoDosage,
-      String arenaDosage,
+      String proporcionMortero,
       String espesor, {
         String? longitud,
         String? ancho,
@@ -70,8 +69,7 @@ class TarrajeoResult extends _$TarrajeoResult {
       description: description,
       tipo: tipo,
       factorDesperdicio: factor,
-      cementoDosage: cementoDosage,
-      arenaDosage: arenaDosage,
+      proporcionMortero: proporcionMortero,
       espesor: espesor,
       longitud: longitud,
       ancho: ancho,
