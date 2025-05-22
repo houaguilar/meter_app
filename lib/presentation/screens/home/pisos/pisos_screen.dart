@@ -5,7 +5,7 @@ import 'package:meter_app/domain/entities/home/piso/floor.dart';
 import 'package:meter_app/presentation/providers/home/piso/floor_providers.dart';
 import 'package:meter_app/presentation/widgets/cards/floor_card.dart';
 
-import '../../../../config/constants/constants.dart';
+import '../../../../config/theme/theme.dart';
 import '../../../providers/providers.dart';
 import '../../../widgets/widgets.dart';
 

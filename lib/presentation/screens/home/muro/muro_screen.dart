@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/domain/entities/home/muro/wall_material.dart';
 import 'package:meter_app/presentation/widgets/cards/wall_material_card.dart';
 
+import '../../../../config/theme/theme.dart';
 import '../../../providers/home/muro/wall_material_providers.dart';
 import '../../../providers/providers.dart';
 import '../../../widgets/widgets.dart';

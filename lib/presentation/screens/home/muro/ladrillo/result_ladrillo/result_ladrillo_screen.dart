@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/models/models.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../widgets/widgets.dart';

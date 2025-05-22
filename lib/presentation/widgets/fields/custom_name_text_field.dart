@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class CustomNameTextField extends StatelessWidget {
   final TextEditingController controller;

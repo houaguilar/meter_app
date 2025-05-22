@@ -5,13 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
 import 'package:meter_app/presentation/screens/mapa/widgets/providers_list.dart';
 import 'package:meter_app/presentation/styles/button_styles.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../widgets/widgets.dart';

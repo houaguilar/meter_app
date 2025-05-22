@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+
+import '../../../../config/theme/theme.dart';
 
 class ProfileInformationTab extends StatefulWidget {
   const ProfileInformationTab({super.key});

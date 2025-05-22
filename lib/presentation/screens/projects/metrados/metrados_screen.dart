@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:animations/animations.dart';
-import 'package:meter_app/config/constants/constants.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/projects/metrado/metrado.dart';
 import '../../../blocs/projects/metrados/metrados_bloc.dart';
-import '../result/results_screen.dart';
+import '../result/result_screen.dart';
 
 class MetradosScreen extends StatefulWidget {
   final int projectId;
@@ -22,6 +22,10 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
   final GlobalKey<RefreshIndicatorState> _refreshKey = GlobalKey<RefreshIndicatorState>();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  // Set para controlar los metrados seleccionados
+  final Set<int> _selectedMetrados = {};
+  bool _selectionMode = false;
 
   @override
   void initState() {
@@ -66,21 +70,92 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
     return Future.value();
   }
 
+  // Método para activar/desactivar el modo de selección
+  void _toggleSelectionMode() {
+    setState(() {
+      _selectionMode = !_selectionMode;
+      if (!_selectionMode) {
+        _selectedMetrados.clear();
+      }
+    });
+  }
+
+  // Método para seleccionar/deseleccionar un metrado
+  void _toggleMetradoSelection(int metradoId) {
+    setState(() {
+      if (_selectedMetrados.contains(metradoId)) {
+        _selectedMetrados.remove(metradoId);
+        if (_selectedMetrados.isEmpty) {
+          _selectionMode = false;
+        }
+      } else {
+        _selectedMetrados.add(metradoId);
+      }
+    });
+  }
+
+  // Método para eliminar metrados seleccionados
+  void _deleteSelectedMetrados() async {
+    final confirmed = await _showDeleteSelectedConfirmationDialog();
+    if (confirmed == true) {
+      // Eliminar los metrados seleccionados
+      for (var metradoId in _selectedMetrados.toList()) {
+        final metradosList = (context.read<MetradosBloc>().state as MetradoSuccess).metrados;
+        final metrado = metradosList.firstWhere((m) => m.id == metradoId);
+        context.read<MetradosBloc>().add(DeleteMetradoEvent(metrado: metrado));
+      }
+      // Salir del modo selección
+      setState(() {
+        _selectionMode = false;
+        _selectedMetrados.clear();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        title: Text(
-          'Proyecto - ${widget.projectName}',
-          style: const TextStyle(
-            color: AppColors.white,
-            fontWeight: FontWeight.bold,
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.white),
+          onPressed: () => context.pop(),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Metrados',
+              style: TextStyle(
+                color: AppColors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              'Proyecto: ${widget.projectName}',
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+              ),
+            ),
+          ],
         ),
         backgroundColor: AppColors.primaryMetraShop,
         elevation: 0,
         actions: [
+          if (_selectionMode)
+            IconButton(
+              icon: const Icon(Icons.delete, color: AppColors.white),
+              tooltip: 'Eliminar seleccionados',
+              onPressed: _selectedMetrados.isNotEmpty ? _deleteSelectedMetrados : null,
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.select_all, color: AppColors.white),
+              tooltip: 'Seleccionar metrados',
+              onPressed: () => _toggleSelectionMode(),
+            ),
           IconButton(
             icon: const Icon(Icons.help_outline, color: AppColors.white),
             tooltip: 'Ayuda',
@@ -131,13 +206,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddMetradoDialog(),
-        backgroundColor: AppColors.blueMetraShop,
-        tooltip: 'Agregar metrado',
-        heroTag: 'addMetrado',
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      // Ya no incluimos el FloatingActionButton para agregar metrados
     );
   }
 
@@ -189,8 +258,9 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
             ],
           ),
           const SizedBox(height: 12),
+          // Texto modificado para reflejar que no se pueden agregar metrados aquí
           const Text(
-            'Metrados registrados para este proyecto. Agrega nuevos metrados con el botón "+".',
+            'Metrados registrados para este proyecto. Seleccione para ver detalles o use el modo selección.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -200,13 +270,27 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
           BlocBuilder<MetradosBloc, MetradosState>(
             builder: (context, state) {
               if (state is MetradoSuccess) {
-                return Text(
-                  'Total: ${state.metrados.length} metrados',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total: ${state.metrados.length} metrados',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    if (_selectionMode)
+                      Text(
+                        'Seleccionados: ${_selectedMetrados.length}',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                  ],
                 );
               }
               return const Text(
@@ -306,25 +390,11 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
             ),
             const SizedBox(height: 12),
             Text(
-              'Presiona el botón "+" para agregar un nuevo metrado a este proyecto.',
+              'Los metrados se agregarán desde otro flujo de la aplicación.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _showAddMetradoDialog(),
-              icon: const Icon(Icons.add),
-              label: const Text('Agregar metrado'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
             ),
           ],
@@ -436,7 +506,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
       onRefresh: _handleRefresh,
       child: ListView.builder(
         controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 80), // Add bottom padding for FAB
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: filteredMetrados.length,
         itemBuilder: (context, index) {
@@ -474,97 +544,111 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
   }
 
   Widget _buildMetradoCard(Metrado metrado) {
-    return Dismissible(
-      key: Key(metrado.id.toString()),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.red[400],
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 24),
-        child: const Icon(
-          Icons.delete_outline,
-          color: Colors.white,
-          size: 28,
-        ),
+    // Indicar si el metrado está seleccionado
+    final bool isSelected = _selectedMetrados.contains(metrado.id);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: isSelected ? 4 : 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: isSelected
+            ? const BorderSide(color: AppColors.blueMetraShop, width: 2)
+            : BorderSide.none,
       ),
-      confirmDismiss: (direction) => _showDeleteConfirmationDialog(metrado),
-      onDismissed: (direction) {
-        context.read<MetradosBloc>().add(DeleteMetradoEvent(metrado: metrado));
-      },
-      child: Card(
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: OpenContainer(
-          closedElevation: 0,
-          closedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          closedColor: Colors.white,
-          transitionType: ContainerTransitionType.fade,
-          transitionDuration: const Duration(milliseconds: 400),
-          closedBuilder: (context, openContainer) => ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.yellowMetraShop.withAlpha((0.2 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(
-                Icons.receipt_long,
-                color: AppColors.yellowMetraShop,
-                size: 24,
-              ),
-            ),
-            title: Text(
-              metrado.name,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryMetraShop,
-              ),
-            ),
-            subtitle: Text(
-              'ID: ${metrado.id} • Toca para ver resultados',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(
-                    Icons.edit_outlined,
-                    color: AppColors.blueMetraShop,
+      child: InkWell(
+        onTap: _selectionMode
+            ? () => _toggleMetradoSelection(metrado.id)
+            : () => _navigateToResults(metrado),
+        onLongPress: () {
+          if (!_selectionMode) {
+            _toggleSelectionMode();
+            _toggleMetradoSelection(metrado.id);
+          }
+        },
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            children: [
+              // Checkbox o indicador de selección
+              if (_selectionMode)
+                Checkbox(
+                  value: isSelected,
+                  onChanged: (_) => _toggleMetradoSelection(metrado.id),
+                  activeColor: AppColors.blueMetraShop,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                  onPressed: () => _showEditMetradoDialog(metrado),
                 ),
-                Icon(
+
+              // Icono del metrado
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.yellowMetraShop.withAlpha((0.2 * 255).round()),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.receipt_long,
+                  color: AppColors.yellowMetraShop,
+                  size: 24,
+                ),
+              ),
+
+              const SizedBox(width: 16),
+
+              // Información del metrado
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      metrado.name,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primaryMetraShop,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'ID: ${metrado.id} • ${_selectionMode ? "Toca para seleccionar" : "Toca para ver resultados"}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Icono de navegación
+              if (!_selectionMode)
+                const Icon(
                   Icons.chevron_right,
-                  color: Colors.grey[400],
+                  color: Colors.grey,
                 ),
-              ],
-            ),
-            onTap: openContainer,
-          ),
-          openBuilder: (context, closeContainer) => ResultsScreen(
-            metradoId: metrado.id.toString(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Future<bool?> _showDeleteConfirmationDialog(Metrado metrado) {
+  void _navigateToResults(Metrado metrado) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ResultScreen(
+          metradoId: metrado.id.toString(),
+        ),
+      ),
+    );
+  }
+
+  Future<bool?> _showDeleteSelectedConfirmationDialog() {
+    final count = _selectedMetrados.length;
+
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -581,7 +665,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
             ),
             const SizedBox(height: 16),
             const Text(
-              'Eliminar metrado',
+              'Eliminar metrados',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
               ),
@@ -589,7 +673,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
           ],
         ),
         content: Text(
-          '¿Estás seguro de eliminar "${metrado.name}"?\n\nEsta acción no se puede deshacer y eliminará todos los resultados asociados.',
+          '¿Estás seguro de eliminar $count ${count == 1 ? "metrado seleccionado" : "metrados seleccionados"}?\n\nEsta acción no se puede deshacer y eliminará todos los resultados asociados.',
           textAlign: TextAlign.center,
         ),
         actionsPadding: const EdgeInsets.all(16),
@@ -625,179 +709,6 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
     );
   }
 
-  void _showAddMetradoDialog() {
-    final TextEditingController controller = TextEditingController();
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          'Nuevo metrado',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryMetraShop,
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Ingresa un nombre para este metrado.',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Nombre del metrado',
-                  prefixIcon: const Icon(Icons.edit_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'El nombre es requerido';
-                  }
-                  return null;
-                },
-                textCapitalization: TextCapitalization.sentences,
-                autofocus: true,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-            ),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() == true) {
-                final name = controller.text.trim();
-                context.read<MetradosBloc>().add(
-                  CreateMetradoEvent(
-                    name: name,
-                    projectId: widget.projectId,
-                  ),
-                );
-                Navigator.of(context).pop();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueMetraShop,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Guardar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditMetradoDialog(Metrado metrado) {
-    final TextEditingController controller = TextEditingController(text: metrado.name);
-    final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text(
-          'Editar metrado',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primaryMetraShop,
-          ),
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Actualiza el nombre del metrado "${metrado.name}".',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: controller,
-                decoration: InputDecoration(
-                  labelText: 'Nombre del metrado',
-                  prefixIcon: const Icon(Icons.edit_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'El nombre es requerido';
-                  }
-                  return null;
-                },
-                textCapitalization: TextCapitalization.sentences,
-                autofocus: true,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-            ),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              if (formKey.currentState?.validate() == true) {
-                final newName = controller.text.trim();
-                if (newName != metrado.name) {
-                  context.read<MetradosBloc>().add(
-                    EditMetradoEvent(
-                      metrado: metrado.copyWith(name: newName),
-                    ),
-                  );
-                }
-                Navigator.of(context).pop();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.blueMetraShop,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Actualizar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _showHelpDialog() {
     showDialog(
       context: context,
@@ -811,27 +722,27 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHelpItem(
-              icon: Icons.add_circle_outline,
-              title: 'Agregar metrado',
-              description: 'Presiona el botón "+" para agregar un nuevo metrado a este proyecto.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              icon: Icons.edit_outlined,
-              title: 'Editar metrado',
-              description: 'Presiona el ícono de edición para modificar el nombre del metrado.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              icon: Icons.swipe_left_outlined,
-              title: 'Eliminar metrado',
-              description: 'Desliza un metrado hacia la izquierda para eliminarlo.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
               icon: Icons.touch_app_outlined,
               title: 'Ver resultados',
               description: 'Toca un metrado para ver sus resultados asociados.',
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.select_all,
+              title: 'Modo selección',
+              description: 'Pulsa el botón de selección o mantén presionado un metrado para activar el modo selección.',
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.delete_outline,
+              title: 'Eliminar metrados',
+              description: 'En modo selección, selecciona los metrados y pulsa el icono de eliminar para borrarlos.',
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.search,
+              title: 'Buscar metrados',
+              description: 'Usa el campo de búsqueda para filtrar los metrados por nombre.',
             ),
           ],
         ),

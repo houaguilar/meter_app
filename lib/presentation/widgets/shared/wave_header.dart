@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../../config/constants/colors.dart';
+import '../../../config/theme/theme.dart';
 import '../../painters/wave_painter.dart';
 
 class WaveHeader extends StatelessWidget {

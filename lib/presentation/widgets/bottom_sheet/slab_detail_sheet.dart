@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meter_app/domain/entities/home/losas/slab.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class SlabDetailSheet extends StatelessWidget {
   final Slab slab;

@@ -1,3 +1,4 @@
+/*
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -48,6 +49,7 @@ class AppColors {
   static const Color blueMetraShop = Color(0xFF0D34FF);
   static const Color yellowMetraShop = Color(0xFFF5C845);
   static const Color white = Color(0xFFFFFFFF);
+  static const Color white70 = Color(0xB3FFFFFF);
   static const Color errorGeneralColor = Color(0xFFDA1E28);
   static const Color greyTextColor = Color(0xFF697077);
   static const Color greyFieldColor = Color(0xFFF2F4F8);
@@ -65,4 +67,4 @@ class AppColors {
 
   static const Color borderTextFormFieldColor = Color(0xFFC1C7CD);
 
-}
+}*/

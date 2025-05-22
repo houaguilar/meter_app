@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class CoatingDetailSheet extends StatelessWidget {
   final Coating coating;

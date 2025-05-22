@@ -1,11 +1,9 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/coating_detail_sheet.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class CoatingCard extends StatelessWidget {
   final Coating coating;

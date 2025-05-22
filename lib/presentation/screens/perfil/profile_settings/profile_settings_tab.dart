@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+
+import '../../../../config/theme/theme.dart';
 
 class ProfileSettingsTab extends StatefulWidget {
   const ProfileSettingsTab({super.key});
@@ -199,9 +200,9 @@ class _ProfileSettingsTabState extends State<ProfileSettingsTab> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.blue.shade100),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
+        children: [
           Text(
             'Tu contraseña debe:',
             style: TextStyle(

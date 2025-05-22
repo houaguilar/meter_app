@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/colors.dart';
 
+import '../../../../config/theme/theme.dart';
 import '../../../assets/images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../../../widgets/widgets.dart';

@@ -5,7 +5,7 @@ import 'package:meter_app/domain/entities/home/losas/slab.dart';
 import 'package:meter_app/presentation/providers/home/losa/slab_providers.dart';
 import 'package:meter_app/presentation/widgets/cards/slab_card.dart';
 
-import '../../../../config/constants/constants.dart';
+import '../../../../config/theme/theme.dart';
 import '../../../widgets/widgets.dart';
 
 class LosasScreen extends StatelessWidget {
