@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 import '../../../domain/entities/home/estructuras/structural_element.dart';
 import '../bottom_sheet/structural_element_detail_sheet.dart';
 

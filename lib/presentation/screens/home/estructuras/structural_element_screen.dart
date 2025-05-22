@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/constants.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
 
+import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../providers/home/estructuras/structural_element_providers.dart';
 import '../../../widgets/cards/structural_element_card.dart';

@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../config/constants/colors.dart';
+import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../../../domain/services/structural_element_service.dart';

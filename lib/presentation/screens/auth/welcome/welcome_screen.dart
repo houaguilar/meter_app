@@ -7,7 +7,7 @@ import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:meter_app/presentation/widgets/buttons/custom_icon_elevated_button.dart';
 import 'package:meter_app/presentation/widgets/shared/wave_header.dart';
 
-import '../../../../config/constants/constants.dart';
+import '../../../../config/theme/theme.dart';
 import '../../../assets/images.dart';
 import '../../../widgets/widgets.dart';
 

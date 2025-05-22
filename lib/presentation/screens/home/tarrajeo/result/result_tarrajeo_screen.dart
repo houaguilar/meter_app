@@ -8,7 +8,7 @@ import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dar
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../config/constants/colors.dart';
+import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/entities.dart';
 import '../../../../assets/icons.dart';
 import '../../../../widgets/widgets.dart';

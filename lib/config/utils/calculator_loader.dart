@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:meter_app/config/constants/constants.dart';
+import '../theme/theme.dart';
 
 /// Un loader de pantalla completa con un icono SVG que puede mostrarse por encima de cualquier contenido
 class CalculationLoader extends StatefulWidget {

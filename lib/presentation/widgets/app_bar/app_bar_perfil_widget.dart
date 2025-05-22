@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class AppBarPerfilWidget extends StatelessWidget implements PreferredSizeWidget {
   const AppBarPerfilWidget({

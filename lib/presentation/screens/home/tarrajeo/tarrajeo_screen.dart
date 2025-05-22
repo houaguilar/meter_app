@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/constants.dart';
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
 import 'package:meter_app/presentation/providers/home/tarrajeo/coating_providers.dart';
 import 'package:meter_app/presentation/widgets/cards/coating_card.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
+
+import '../../../../config/theme/theme.dart';
 
 
 class TarrajeoScreen extends ConsumerWidget {

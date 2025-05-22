@@ -5,6 +5,7 @@ import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 
 import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class AppBarArticlesWidget extends StatelessWidget implements PreferredSizeWidget {
   const AppBarArticlesWidget({

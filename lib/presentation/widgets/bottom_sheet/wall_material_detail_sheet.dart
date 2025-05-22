@@ -1,8 +1,7 @@
-
-
 import 'package:flutter/material.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/domain/entities/home/muro/wall_material.dart';
+
+import '../../../config/theme/theme.dart';
 
 class WallMaterialDetailSheet extends StatelessWidget {
   final WallMaterial material;

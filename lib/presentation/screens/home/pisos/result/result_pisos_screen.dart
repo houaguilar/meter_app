@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../config/constants/colors.dart';
+import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/entities.dart';
 import '../../../../assets/icons.dart';
 import '../../../../providers/providers.dart';

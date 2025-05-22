@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/losas/result_losas_screen.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -8,7 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../config/constants/constants.dart';
+import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/home/losas/losas.dart';
 import '../../../../assets/icons.dart';
 import '../../../../providers/providers.dart';

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:meter_app/config/constants/colors.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 
-
+import '../../../config/theme/theme.dart';
 
 class InfoBox extends StatelessWidget {
   final String message;

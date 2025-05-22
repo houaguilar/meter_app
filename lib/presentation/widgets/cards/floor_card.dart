@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meter_app/domain/entities/home/piso/floor.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/floor_detail_sheet.dart';
 
-import '../../../config/constants/constants.dart';
+import '../../../config/theme/theme.dart';
 
 class FloorCard extends StatelessWidget {
   final Floor floor;

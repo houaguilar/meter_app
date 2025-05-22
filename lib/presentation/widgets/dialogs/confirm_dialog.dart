@@ -1,9 +1,7 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:meter_app/config/constants/constants.dart';
 
+import '../../../config/theme/theme.dart';
 import '../../assets/icons.dart';
 
 class ConfirmDialog {

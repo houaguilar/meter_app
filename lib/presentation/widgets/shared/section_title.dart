@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:meter_app/config/constants/colors.dart';
+
+import '../../../config/theme/theme.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;

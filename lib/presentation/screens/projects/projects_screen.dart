@@ -3,12 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:animations/animations.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/constants/constants.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
-import 'metrados/metrados_screen.dart';
+import '../../../config/theme/theme.dart';
 import 'new_project/new_project_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {
@@ -22,6 +21,10 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
   late AnimationController _animationController;
   final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey = GlobalKey<RefreshIndicatorState>();
 
+  // Nuevos controladores para la búsqueda
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -32,12 +35,24 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+
+    // Agregar listener para la búsqueda
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
     super.dispose();
+  }
+
+  // Método para manejar cambios en la búsqueda
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
   }
 
   void _loadProjects() {
@@ -77,9 +92,6 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Search Bar (Optional for future implementation)
-            // _buildSearchBar(),
-
             // Status Message Area
             BlocBuilder<ProjectsBloc, ProjectsState>(
               builder: (context, state) {
@@ -89,6 +101,9 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
                 return const SizedBox.shrink();
               },
             ),
+
+            // Buscador de proyectos (nuevo)
+            _buildSearchBar(),
 
             // Project List
             Expanded(
@@ -139,6 +154,44 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
     );
   }
 
+  // Nuevo widget para el buscador
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+      child: TextField(
+        controller: _searchController,
+        decoration: InputDecoration(
+          hintText: 'Buscar proyectos...',
+          prefixIcon: const Icon(Icons.search, color: Colors.grey),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+            icon: const Icon(Icons.clear, color: Colors.grey),
+            onPressed: () {
+              _searchController.clear();
+            },
+          )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey.shade300),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: AppColors.blueMetraShop),
+          ),
+        ),
+        style: const TextStyle(fontSize: 16),
+      ),
+    );
+  }
+
   Widget _buildLoadingContent() {
     return Center(
       child: Column(
@@ -166,6 +219,48 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
       return _buildEmptyState();
     }
 
+    // Filtrar proyectos por búsqueda
+    final filteredProjects = _searchQuery.isEmpty
+        ? state.projects
+        : state.projects.where((project) =>
+        project.name.toLowerCase().contains(_searchQuery)).toList();
+
+    // Mostrar mensaje si no hay resultados para la búsqueda
+    if (filteredProjects.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.search_off,
+              size: 60,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No se encontraron proyectos que coincidan con "$_searchQuery"',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: () {
+                _searchController.clear();
+              },
+              icon: const Icon(Icons.clear),
+              label: const Text('Limpiar búsqueda'),
+              style: TextButton.styleFrom(
+                foregroundColor: AppColors.blueMetraShop,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return RefreshIndicator(
       key: _refreshIndicatorKey,
       color: AppColors.blueMetraShop,
@@ -173,17 +268,17 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 100), // Add padding for FAB
-        itemCount: state.projects.length,
+        itemCount: filteredProjects.length,
         separatorBuilder: (context, index) => const Divider(height: 1),
         itemBuilder: (context, index) {
-          final project = state.projects[index];
+          final project = filteredProjects[index];
 
           // Create staggered animation for list items
           final Animation<double> animation = CurvedAnimation(
             parent: _animationController,
             curve: Interval(
-              index / state.projects.length,
-              (index + 1) / state.projects.length,
+              index / filteredProjects.length,
+              (index + 1) / filteredProjects.length,
               curve: Curves.easeInOut,
             ),
           );
@@ -235,59 +330,69 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
           side: BorderSide(color: Colors.grey.shade300, width: 1),
         ),
         margin: const EdgeInsets.symmetric(vertical: 6),
-        child: OpenContainer(
-          closedElevation: 0,
-          closedShape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          closedColor: Colors.transparent,
-          transitionType: ContainerTransitionType.fade,
-          transitionDuration: const Duration(milliseconds: 400),
-          closedBuilder: (context, openContainer) => ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.yellowMetraShop.withAlpha((0.2 * 255).round()),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SvgPicture.asset(
-                AppIcons.archiveProjectIcon,
-                width: 24,
-                height: 24,
-              ),
-            ),
-            title: Text(
-              project.name,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppColors.primaryMetraShop,
-              ),
-            ),
-            subtitle: Text(
-              'Toca para ver detalles',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
+        child: InkWell(
+          onTap: () {
+            context.pushNamed(
+              'metrados',
+              pathParameters: {
+                'projectId': project.id.toString(),
+                'projectName': project.name,
+              },
+            );
+          },
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            child: Row(
               children: [
-                IconButton(
-                  icon: const Icon(Icons.edit, color: AppColors.blueMetraShop),
-                  tooltip: 'Editar proyecto',
-                  onPressed: () => _showEditProjectBottomSheet(context, project),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.yellowMetraShop.withAlpha((0.2 * 255).round()),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SvgPicture.asset(
+                    AppIcons.archiveProjectIcon,
+                    width: 24,
+                    height: 24,
+                  ),
                 ),
-                Icon(Icons.chevron_right, color: Colors.grey[400]),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        project.name,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primaryMetraShop,
+                        ),
+                      ),
+                      Text(
+                        'Toca para ver metrados',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: AppColors.blueMetraShop),
+                      tooltip: 'Editar proyecto',
+                      onPressed: () => _showEditProjectBottomSheet(context, project),
+                    ),
+                    Icon(Icons.chevron_right, color: Colors.grey[400]),
+                  ],
+                ),
               ],
             ),
-            onTap: openContainer,
-          ),
-          openBuilder: (context, _) => MetradosScreen(
-            projectId: project.id,
-            projectName: project.name,
           ),
         ),
       ),
@@ -577,7 +682,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
             const SizedBox(height: 16),
             _buildHelpItem(
               icon: Icons.touch_app_outlined,
-              title: 'Ver detalles',
+              title: 'Ver metrados',
               description: 'Toca un proyecto para ver sus metrados asociados.',
             ),
             const SizedBox(height: 16),
@@ -591,6 +696,12 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
               icon: Icons.swipe_left_outlined,
               title: 'Eliminar proyecto',
               description: 'Desliza un proyecto hacia la izquierda para eliminarlo.',
+            ),
+            const SizedBox(height: 16),
+            _buildHelpItem(
+              icon: Icons.search,
+              title: 'Buscar proyectos',
+              description: 'Usa el campo de búsqueda para filtrar proyectos por nombre.',
             ),
           ],
         ),

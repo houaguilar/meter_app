@@ -116,7 +116,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         title: 'METRASHOP',
         debugShowCheckedModeBanner: false,
         routerConfig: appRouter,
-        theme: AppTheme().getTheme(),
+        theme: AppTheme.light,
       ),
     );
   }

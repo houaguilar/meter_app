@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../constants/colors.dart';
+import '../theme/theme.dart';
 
 class Loader extends StatefulWidget {
   const Loader({super.key});

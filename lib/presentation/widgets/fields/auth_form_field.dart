@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:meter_app/config/constants/colors.dart';
+
+import '../../../config/theme/theme.dart';
 
 class AuthFormField extends StatefulWidget {
   final String? labelText;
