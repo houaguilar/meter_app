@@ -88,16 +88,6 @@ class AppTheme {
       ),
     ),
 
-    // Cards
-    cardTheme: CardTheme(
-      color: AppColors.white,
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      margin: const EdgeInsets.all(8),
-    ),
-
     // Input fields
     inputDecorationTheme: InputDecorationTheme(
       filled: true,

@@ -110,7 +110,6 @@ Future<void> initDependencies() async {
   final isar = await Isar.open([
     ProjectSchema,
     MetradoSchema,
-    BloquetaSchema,
     PisoSchema,
     LadrilloSchema,
   ],

@@ -23,9 +23,9 @@ import '../../presentation/screens/home/estructuras/data/datos_structural_elemen
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
 import '../../presentation/screens/home/losas/resultado/resultado_losas.dart';
-import '../../presentation/screens/home/muro/bloqueta/datos_bloqueta/datos_b.dart';
 import '../../presentation/screens/home/pisos/datos/datos_p.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
+import '../../presentation/screens/perfil/info/profile_info_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
 import '../../presentation/screens/projects/result/result_screen.dart';
@@ -140,14 +140,8 @@ class AppRouter {
                 parentNavigatorKey: _rootNavigator,
                 path: 'muro',
                 name: 'muro',
-                builder: (context, state) => const MuroScreen(),
+                builder: (context, state) => const WallScreen(),
                 routes: [
-                  GoRoute(
-                    parentNavigatorKey: _rootNavigator,
-                    path: 'ladrillo',
-                    name: 'ladrillo',
-                    builder: (context, state) => const LadrilloScreen(),
-                    routes: [
                           GoRoute(
                             parentNavigatorKey: _rootNavigator,
                             path: 'ladrillo1',
@@ -184,52 +178,6 @@ class AppRouter {
                               ),
                             ],
                           ),
-                    ],
-                  ),
-                  GoRoute(
-                    parentNavigatorKey: _rootNavigator,
-                    path: 'bloqueta',
-                    name: 'bloqueta',
-                    builder: (context, state) => const BloquetaScreen(),
-                    routes: [
-                      GoRoute(
-                        parentNavigatorKey: _rootNavigator,
-                        path: 'bloqueta1',
-                        name: 'bloqueta1',
-                        builder: (context, state) => const DatosBloquetaScreens(),
-                        routes: [
-                          GoRoute(
-                            parentNavigatorKey: _rootNavigator,
-                            path: 'bloqueta-results',
-                            name: 'bloqueta_results',
-                            builder: (context, state) => const ResultLadrilloScreen(),
-                            routes: [
-                              GoRoute(
-                                  parentNavigatorKey: _rootNavigator,
-                                  path: 'map-screen-1',
-                                  name: 'map-screen-1',
-                                  builder: (context, state) => const MapScreen()
-                              ),
-                              GoRoute(
-                                parentNavigatorKey: _rootNavigator,
-                                path: 'save-bloqueta',
-                                name: 'save-bloqueta',
-                                builder: (context, state) => const SaveResultScreen(),
-                                routes: [
-                                  GoRoute(
-                                    parentNavigatorKey: _rootNavigator,
-                                    path: 'new-project-bloqueta',
-                                    name: 'new-project-bloqueta',
-                                    builder: (context, state) => const NewProjectScreen(),
-                                  ),
-                                ]
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                 ],
               ),
               GoRoute(
@@ -493,6 +441,12 @@ class AppRouter {
             name: 'perfil',
             builder: (context, state) => const PerfilScreen(),
             routes: [
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'profile-info',
+                name: 'profile-info',
+                builder: (context, state) => const ProfileInfoScreen(),
+              ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,
                 path: 'resultados',

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/providers/bloqueta/bloqueta_providers.dart';
 import 'package:meter_app/presentation/providers/ladrillo/ladrillo_providers.dart';
 import 'package:meter_app/presentation/providers/pisos/pisos_providers.dart';
 
@@ -32,7 +31,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   Widget build(BuildContext context) {
 
     final listaLadrillo = ref.watch(ladrilloResultProvider);
-    final listaBloqueta = ref.watch(bloquetaResultProvider);
     final listaPiso = ref.watch(pisosResultProvider);
     return Scaffold(
       appBar: AppBar(
@@ -94,10 +92,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
                         if (value == 'add_project') {
                           if (listaLadrillo.isNotEmpty) {
                             context.pushNamed('new-project-ladrillo').then((_) {
-                              context.read<ProjectsBloc>().add(LoadProjectsEvent());
-                            });
-                          } else if (listaBloqueta.isNotEmpty) {
-                            context.pushNamed('new-project-bloqueta').then((_) {
                               context.read<ProjectsBloc>().add(LoadProjectsEvent());
                             });
                           } else if (listaPiso.isNotEmpty) {
@@ -188,9 +182,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
   List<dynamic> _getAllResults() {
     final ladrillos = ref.watch(ladrilloResultProvider);
-    final bloquetas = ref.watch(bloquetaResultProvider);
     final pisos = ref.watch(pisosResultProvider);
-    return [...ladrillos, ...bloquetas, ...pisos];
+    return [...ladrillos, ...pisos];
   }
 
   @override
