@@ -30,7 +30,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
     return WillPopScope(
       onWillPop: () async {
         ref.read(ladrilloResultProvider.notifier).clearList();
-        ref.read(bloquetaResultProvider.notifier).clearList();
+   //     ref.read(bloquetaResultProvider.notifier).clearList();
         return true;
       },
       child: Scaffold(
@@ -57,7 +57,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
               heroTag: 'save_button_wall',
               onPressed: () {
                 final listaLadrillo = ref.watch(ladrilloResultProvider);
-                final listaBloqueta = ref.watch(bloquetaResultProvider);
+           //     final listaBloqueta = ref.watch(bloquetaResultProvider);
                 if (listaLadrillo.isNotEmpty) {
                   context.pushNamed('save-ladrillo');
                 } else {
@@ -80,7 +80,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
         ElevatedButton.icon(
           onPressed: () {
             final listaLadrillo = ref.watch(ladrilloResultProvider);
-            final listaBloqueta = ref.watch(bloquetaResultProvider);
+   //         final listaBloqueta = ref.watch(bloquetaResultProvider);
             if (listaLadrillo.isNotEmpty) {
               context.pushNamed('map-screen-2');
             } else {
@@ -146,15 +146,15 @@ class ResultLadrilloScreen extends ConsumerWidget {
 
   String _shareContent(WidgetRef ref) {
     final listaLadrillo = ref.watch(ladrilloResultProvider);
-    final listaBloqueta = ref.watch(bloquetaResultProvider);
+  //  final listaBloqueta = ref.watch(bloquetaResultProvider);
 
     String cantidadPruebaLadToString = calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(2);
     String cantidadPruebaAreToString = calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2);
     String cantidadPruebaCemToString = calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble().toString();
 
-    String cantidadBloquetasToString = cantidadBloquetas(listaBloqueta).toStringAsFixed(2);
-    String cantidadArenaToString = cantidadArena(listaBloqueta).toStringAsFixed(2);
-    String cantidadCementoToString = cantidadCemento(listaBloqueta).ceilToDouble().toString();
+ //   String cantidadBloquetasToString = cantidadBloquetas(listaBloqueta).toStringAsFixed(2);
+ //   String cantidadArenaToString = cantidadArena(listaBloqueta).toStringAsFixed(2);
+ //   String cantidadCementoToString = cantidadCemento(listaBloqueta).ceilToDouble().toString();
 
     String datosMetrado = 'DATOS METRADO';
     String listaMateriales = 'LISTA DE MATERIALES';
@@ -163,10 +163,10 @@ class ResultLadrilloScreen extends ConsumerWidget {
       final datosLadrillo = ref.watch(datosShareLadrilloProvider);
       final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadPruebaAreToString m3 \n*Cemento: $cantidadPruebaCemToString bls \n*Ladrillo: $cantidadPruebaLadToString und';
       return shareText;
-    } else if (listaBloqueta.isNotEmpty) {
+/*    } else if (listaBloqueta.isNotEmpty) {
       final datosBloqueta = ref.watch(datosShareBloquetaProvider);
       final shareText = '$datosMetrado \n$datosBloqueta \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadArenaToString m3 \n*Cemento: $cantidadCementoToString bls \n*Bloqueta: $cantidadBloquetasToString und';
-      return shareText;
+      return shareText;*/
     } else {
       return 'Error';
     }
@@ -179,7 +179,7 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listaLadrillo = ref.watch(ladrilloResultProvider);
-    final listaBloqueta = ref.watch(bloquetaResultProvider);
+ //   final listaBloqueta = ref.watch(bloquetaResultProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
@@ -188,13 +188,16 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
           const SizedBox(height: 10,),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
           const SizedBox(height: 10,),
-          if (listaLadrillo.isNotEmpty || listaBloqueta.isNotEmpty) ...[
+          if (
+          listaLadrillo.isNotEmpty
+      //        || listaBloqueta.isNotEmpty
+          ) ...[
             _buildSummaryCard(
               context,
               'Datos del Metrado',
               listaLadrillo.isNotEmpty
                   ? const _LadrilloContainer()
-                  : const _BloquetaContainer(),
+                  : const _LadrilloContainer(),
             ),
             const SizedBox(height: 20),
             _buildSummaryCard(
@@ -340,6 +343,7 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
   }
 }
 
+/*
 class _BloquetaContainer extends ConsumerWidget {
   const _BloquetaContainer();
 
@@ -469,6 +473,7 @@ class _BloquetaContainer extends ConsumerWidget {
 
 
 }
+*/
 
 class _LadrilloContainer extends ConsumerWidget {
   const _LadrilloContainer();
@@ -601,7 +606,7 @@ class _LadrilloContainer extends ConsumerWidget {
 Future<File> generatePdf(WidgetRef ref) async {
   final pdf = pw.Document();
   final listaLadrillo = ref.watch(ladrilloResultProvider);
-  final listaBloqueta = ref.watch(bloquetaResultProvider);
+//  final listaBloqueta = ref.watch(bloquetaResultProvider);
 
   String title = listaLadrillo.isNotEmpty ? 'Resultados de Ladrillo' : 'Resultados de Bloqueta';
 
@@ -617,11 +622,12 @@ Future<File> generatePdf(WidgetRef ref) async {
               pw.Text('Ladrillos: ${calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(2)}'),
               pw.Text('Arena: ${calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2)} m3'),
               pw.Text('Cemento: ${calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble()} bls'),
-            ] else if (listaBloqueta.isNotEmpty) ...[
+            ]
+            /*else if (listaBloqueta.isNotEmpty) ...[
               pw.Text('Bloquetas: ${cantidadBloquetas(listaBloqueta).toStringAsFixed(2)}'),
               pw.Text('Arena: ${cantidadArena(listaBloqueta).toStringAsFixed(2)} m3'),
               pw.Text('Cemento: ${cantidadCemento(listaBloqueta).ceilToDouble()} bls'),
-            ],
+            ],*/
           ],
         ),
       ),
@@ -948,45 +954,5 @@ double calcularCantidadCemento(String tipoBloqueta, double area) {
       return area * 0.0901;
     default:
       return 0;
-  }
-}
-
-double cantidadBloquetas(List<Bloqueta> results) {
-  double sumaDeBloquetas = 0.0;
-  for (Bloqueta bloqueta in results) {
-    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
-
-    sumaDeBloquetas += calcularCantidadBloquetas(bloqueta.tipoBloqueta, area);
-  }
-  return sumaDeBloquetas;
-}
-
-double cantidadArena(List<Bloqueta> results) {
-  double sumaDeArena = 0.0;
-  for (Bloqueta bloqueta in results) {
-    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
-
-    sumaDeArena += calcularCantidadArena(bloqueta.tipoBloqueta, area);
-  }
-  return sumaDeArena;
-}
-
-double cantidadCemento(List<Bloqueta> results) {
-  double sumaDeCemento = 0.0;
-  for (Bloqueta bloqueta in results) {
-    double area = obtenerAreaBloqueta(bloqueta); // Obtener el área (ya sea ingresada o calculada)
-
-    sumaDeCemento += calcularCantidadCemento(bloqueta.tipoBloqueta, area);
-  }
-  return sumaDeCemento;
-}
-
-double obtenerAreaBloqueta(Bloqueta bloqueta) {
-  if (bloqueta.area != null && bloqueta.area!.isNotEmpty) {
-    return double.tryParse(bloqueta.area!) ?? 0.0; // Usar área si está disponible
-  } else {
-    double largo = double.tryParse(bloqueta.largo ?? '') ?? 0.0;
-    double altura = double.tryParse(bloqueta.altura ?? '') ?? 0.0;
-    return largo * altura; // Calcular área usando largo y altura
   }
 }

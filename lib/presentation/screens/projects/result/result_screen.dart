@@ -78,7 +78,7 @@ class _LoadingIndicator extends StatelessWidget {
             'Cargando resultados guardados...',
             style: TextStyle(
               fontSize: 16,
-              color: AppColors.primaryMetraShop,
+              color: AppColors.primary,
             ),
           ),
         ],
@@ -273,7 +273,6 @@ class _ResultTypeHeader extends StatelessWidget {
 
     final firstResult = results.first;
     if (firstResult is Ladrillo) return "Cálculo de Ladrillo";
-    if (firstResult is Bloqueta) return "Cálculo de Bloqueta";
     if (firstResult is Piso) return "Cálculo de Piso";
     if (firstResult is LosaAligerada) return "Cálculo de Losa Aligerada";
     if (firstResult is Tarrajeo) return "Cálculo de Tarrajeo";
@@ -288,7 +287,6 @@ class _ResultTypeHeader extends StatelessWidget {
 
     final firstResult = results.first;
     if (firstResult is Ladrillo) return Icons.grid_view;
-    if (firstResult is Bloqueta) return Icons.view_module;
     if (firstResult is Piso) return Icons.grid_on;
     if (firstResult is LosaAligerada) return Icons.layers;
     if (firstResult is Tarrajeo) return Icons.brush;
@@ -303,7 +301,6 @@ class _ResultTypeHeader extends StatelessWidget {
 
     final firstResult = results.first;
     if (firstResult is Ladrillo) return Colors.brown;
-    if (firstResult is Bloqueta) return Colors.indigo;
     if (firstResult is Piso) return Colors.teal;
     if (firstResult is LosaAligerada) return Colors.deepPurple;
     if (firstResult is Tarrajeo) return Colors.amber.shade700;
@@ -380,7 +377,7 @@ class _MetradoDetailsCard extends StatelessWidget {
     // Determine the type of content
     final firstResult = results.first;
 
-    if (firstResult is Ladrillo || firstResult is Bloqueta) {
+    if (firstResult is Ladrillo) {
       return _buildAreaTable();
     } else if (firstResult is Piso) {
       return _buildVolumeTable();
@@ -588,7 +585,6 @@ class _MetradoDetailsCard extends StatelessWidget {
 
   String _getDescription(dynamic result) {
     if (result is Ladrillo) return result.description;
-    if (result is Bloqueta) return result.description;
     if (result is Piso) return result.description;
     if (result is LosaAligerada) return result.description;
     if (result is Tarrajeo) return result.description;
@@ -599,14 +595,6 @@ class _MetradoDetailsCard extends StatelessWidget {
 
   double _calculateArea(dynamic result) {
     if (result is Ladrillo) {
-      if (result.area != null && result.area!.isNotEmpty) {
-        return double.tryParse(result.area!) ?? 0.0;
-      } else {
-        final largo = double.tryParse(result.largo ?? '') ?? 0.0;
-        final altura = double.tryParse(result.altura ?? '') ?? 0.0;
-        return largo * altura;
-      }
-    } else if (result is Bloqueta) {
       if (result.area != null && result.area!.isNotEmpty) {
         return double.tryParse(result.area!) ?? 0.0;
       } else {
@@ -1008,7 +996,6 @@ Calculado con la app MetraShop.
 
     final firstResult = results.first;
     if (firstResult is Ladrillo) return "Cálculo de Ladrillo";
-    if (firstResult is Bloqueta) return "Cálculo de Bloqueta";
     if (firstResult is Piso) return "Cálculo de Piso";
     if (firstResult is LosaAligerada) return "Cálculo de Losa Aligerada";
     if (firstResult is Tarrajeo) return "Cálculo de Tarrajeo";
@@ -1056,7 +1043,6 @@ Calculado con la app MetraShop.
 
   String _getDescription(dynamic result) {
     if (result is Ladrillo) return result.description;
-    if (result is Bloqueta) return result.description;
     if (result is Piso) return result.description;
     if (result is LosaAligerada) return result.description;
     if (result is Tarrajeo) return result.description;
@@ -1090,7 +1076,7 @@ Calculado con la app MetraShop.
   }
 
   double _calculateArea(dynamic result) {
-    if (result is Ladrillo || result is Bloqueta) {
+    if (result is Ladrillo) {
       if ((result as dynamic).area != null && (result as dynamic).area!.isNotEmpty) {
         return double.tryParse((result as dynamic).area!) ?? 0.0;
       } else {
@@ -1405,7 +1391,6 @@ String _getResultType(List<dynamic> results) {
 
   final firstResult = results.first;
   if (firstResult is Ladrillo) return "Resultados del Cálculo de Ladrillo";
-  if (firstResult is Bloqueta) return "Resultados del Cálculo de Bloqueta";
   if (firstResult is Piso) return "Resultados del Cálculo de Piso";
   if (firstResult is LosaAligerada) return "Resultados del Cálculo de Losa Aligerada";
   if (firstResult is Tarrajeo) return "Resultados del Cálculo de Tarrajeo";
@@ -1426,7 +1411,6 @@ String _generateId() {
 
 String _getResultDescription(dynamic result) {
   if (result is Ladrillo) return result.description;
-  if (result is Bloqueta) return result.description;
   if (result is Piso) return result.description;
   if (result is LosaAligerada) return result.description;
   if (result is Tarrajeo) return result.description;
@@ -1436,7 +1420,7 @@ String _getResultDescription(dynamic result) {
 }
 
 double _calculateResultArea(dynamic result) {
-  if (result is Ladrillo || result is Bloqueta) {
+  if (result is Ladrillo) {
     if ((result as dynamic).area != null && (result as dynamic).area!.isNotEmpty) {
       return double.tryParse((result as dynamic).area!) ?? 0.0;
     } else {
@@ -1512,8 +1496,6 @@ class MaterialsCalculator {
 
     if (firstResult is Ladrillo) {
       return _calculateLadrilloMaterials();
-    } else if (firstResult is Bloqueta) {
-      return _calculateBloquetaMaterials();
     } else if (firstResult is Piso) {
       return _calculatePisoMaterials();
     } else if (firstResult is LosaAligerada) {
@@ -1610,77 +1592,6 @@ class MaterialsCalculator {
         description: 'Agua',
         unit: 'm³',
         quantity: totalAgua.toStringAsFixed(2),
-      ),
-    ];
-  }
-
-  List<Material> _calculateBloquetaMaterials() {
-    double totalCemento = 0.0;
-    double totalArena = 0.0;
-    double totalBloquetas = 0.0;
-
-    for (var bloqueta in results as List<Bloqueta>) {
-      // Area calculation
-      double area;
-      if (bloqueta.area != null && bloqueta.area!.isNotEmpty) {
-        area = double.tryParse(bloqueta.area!) ?? 0.0;
-      } else {
-        final largo = double.tryParse(bloqueta.largo ?? '') ?? 0.0;
-        final altura = double.tryParse(bloqueta.altura ?? '') ?? 0.0;
-        area = largo * altura;
-      }
-
-      // Factors based on bloqueta type
-      double factorBloquetas;
-      double factorCemento;
-      double factorArena;
-
-      switch (bloqueta.tipoBloqueta) {
-        case 'P7':
-          factorBloquetas = 12.5;
-          factorCemento = 0.12;
-          factorArena = 0.018;
-          break;
-        case 'P10':
-          factorBloquetas = 12.5;
-          factorCemento = 0.15;
-          factorArena = 0.022;
-          break;
-        case 'P12':
-          factorBloquetas = 12.5;
-          factorCemento = 0.18;
-          factorArena = 0.025;
-          break;
-        default:
-          factorBloquetas = 12.5;
-          factorCemento = 0.15;
-          factorArena = 0.022;
-      }
-
-      // Apply desperdicio factor
-      double factorDesperdicio = (double.tryParse(bloqueta.factorDesperdicio) ?? 5.0) / 100.0 + 1.0;
-
-      // Calculate materials
-      totalBloquetas += area * factorBloquetas * factorDesperdicio;
-      totalCemento += area * factorCemento * factorDesperdicio;
-      totalArena += area * factorArena * factorDesperdicio;
-    }
-
-    return [
-      Material(
-        description: 'Cemento',
-        unit: 'bls',
-        quantity: totalCemento.ceil().toString(),
-      ),
-      Material(
-        description: 'Arena gruesa',
-        unit: 'm³',
-        quantity: totalArena.toStringAsFixed(2),
-      ),
-      Material(
-        description: 'Bloqueta',
-        unit: 'und',
-        quantity: totalBloquetas.ceil().toString(),
       ),
     ];
   }

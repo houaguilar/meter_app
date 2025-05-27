@@ -19,145 +19,72 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView>
-    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
+    with AutomaticKeepAliveClientMixin {
 
-  /// Mantiene el estado activo para optimizar rendimiento
   @override
   bool get wantKeepAlive => true;
 
-  /// Controla si la vista está montada para evitar errores de setState
-  bool _isMounted = true;
-
-  /// Cache local de items de medición para optimizar rendimiento
   List<Measurement>? _cachedMeasurements;
-
-  /// Indica si es la primera carga para manejar estados iniciales
-  bool _isFirstLoad = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeView();
-  }
-
-  @override
-  void dispose() {
-    _isMounted = false;
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  /// Inicializa la vista y sus dependencias
-  void _initializeView() {
-    WidgetsBinding.instance.addObserver(this);
-
-    // Cargar datos inicial de forma segura
+    // Inicializar después del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_isMounted) {
-        _loadMeasurementItems();
+      if (mounted && !_isInitialized) {
+        _initializeData();
       }
     });
-
-    _logViewInitialization();
   }
 
-  /// Carga los elementos de medición de forma segura
-  void _loadMeasurementItems() {
-    try {
-      if (_isMounted && context.mounted) {
-        context.read<MeasurementBloc>().add(LoadMeasurementItems());
-      }
-    } catch (e) {
-      _handleLoadError(e);
-    }
-  }
+  void _initializeData() {
+    _isInitialized = true;
+    final bloc = context.read<MeasurementBloc>();
 
-  /// Maneja errores durante la carga de datos
-  void _handleLoadError(dynamic error) {
-    assert(() {
-      debugPrint('Error cargando mediciones: $error');
-      return true;
-    }());
-
-    if (_isMounted && context.mounted) {
-      _showErrorSnackBar('Error al cargar las mediciones. Inténtalo de nuevo.');
-    }
-  }
-
-  /// Muestra un snackbar de error de forma segura
-  void _showErrorSnackBar(String message) {
-    if (!_isMounted || !context.mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.errorGeneralColor,
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Reintentar',
-          textColor: AppColors.white,
-          onPressed: _loadMeasurementItems,
-        ),
-      ),
-    );
-  }
-
-  /// Log de inicialización (solo en modo debug)
-  void _logViewInitialization() {
-    assert(() {
-      debugPrint('HomeView inicializada correctamente');
-      return true;
-    }());
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-
-    if (state == AppLifecycleState.resumed && _isMounted) {
-      // Refrescar datos cuando la app vuelve a primer plano
-      _refreshDataIfNeeded();
-    }
-  }
-
-  /// Refresca datos si es necesario
-  void _refreshDataIfNeeded() {
-    // Solo refrescar si han pasado más de 5 minutos desde la última carga
-    // o si no hay datos en cache
-    if (_cachedMeasurements == null || _isFirstLoad) {
-      _loadMeasurementItems();
-      _isFirstLoad = false;
+    // Solo cargar si no hay datos
+    if (bloc.state is! MeasurementLoaded) {
+      bloc.add(LoadMeasurementItems());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Requerido para AutomaticKeepAliveClientMixin
+    super.build(context);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: _buildAppBar(),
-      body: _buildBody(),
+      body: BlocConsumer<MeasurementBloc, MeasurementState>(
+        listener: (context, state) {
+          if (state is MeasurementLoaded) {
+            _cachedMeasurements = state.items;
+          }
+        },
+        builder: (context, state) {
+          // No usar AnimatedSwitcher aquí para evitar problemas
+          if (state is MeasurementLoading && _cachedMeasurements == null) {
+            return _buildLoadingState();
+          } else if (state is MeasurementError && _cachedMeasurements == null) {
+            return _buildErrorState(state.message);
+          } else {
+            // Usar datos en cache o del estado actual
+            final items = state is MeasurementLoaded
+                ? state.items
+                : _cachedMeasurements ?? [];
+            return _buildLoadedState(items);
+          }
+        },
+      ),
     );
   }
 
-  /// Construye la app bar personalizada
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       backgroundColor: AppColors.primaryMetraShop,
       elevation: 0,
       centerTitle: true,
-      title: _buildAppBarTitle(),
-      // Configuración de accesibilidad
-      toolbarHeight: kToolbarHeight,
-    );
-  }
-
-  /// Construye el título de la app bar
-  Widget _buildAppBarTitle() {
-    return Semantics(
-      label: 'METRASHOP - Aplicación de mediciones',
-      child: RichText(
+      title: RichText(
         text: const TextSpan(
           style: TextStyle(
             fontSize: 24,
@@ -178,71 +105,14 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
-  /// Construye el cuerpo principal de la vista
-  Widget _buildBody() {
-    return BlocConsumer<MeasurementBloc, MeasurementState>(
-      listener: _handleBlocStateChanges,
-      builder: _buildBlocContent,
-    );
-  }
-
-  /// Maneja cambios de estado del bloc
-  void _handleBlocStateChanges(BuildContext context, MeasurementState state) {
-    if (state is MeasurementError && _isMounted) {
-      _showErrorSnackBar(state.message);
-    }
-
-    // Actualizar cache cuando se cargan datos exitosamente
-    if (state is MeasurementLoaded) {
-      _cachedMeasurements = state.items;
-    }
-  }
-
-  /// Construye el contenido basado en el estado del bloc
-  Widget _buildBlocContent(BuildContext context, MeasurementState state) {
-    return switch (state) {
-      MeasurementLoading() => _buildLoadingState(),
-      MeasurementLoaded() => _buildLoadedState(state.items),
-      MeasurementError() => _buildErrorState(state.message),
-      _ => _buildInitialState(),
-    };
-  }
-
-  /// Estado de carga
   Widget _buildLoadingState() {
     return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.blueMetraShop),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Cargando mediciones...',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-        ],
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(AppColors.blueMetraShop),
       ),
     );
   }
 
-  /// Estado con datos cargados
-  Widget _buildLoadedState(List<Measurement> items) {
-    return RefreshIndicator(
-      color: AppColors.blueMetraShop,
-      onRefresh: _handlePullToRefresh,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: _buildMainContent(items),
-      ),
-    );
-  }
-
-  /// Estado de error
   Widget _buildErrorState(String message) {
     return Center(
       child: Padding(
@@ -275,7 +145,9 @@ class _HomeViewState extends State<HomeView>
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: _loadMeasurementItems,
+              onPressed: () {
+                context.read<MeasurementBloc>().add(LoadMeasurementItems());
+              },
               icon: const Icon(Icons.refresh),
               label: const Text('Reintentar'),
               style: ElevatedButton.styleFrom(
@@ -289,141 +161,111 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
-  /// Estado inicial (fallback)
-  Widget _buildInitialState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'No se encontraron mediciones',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadMeasurementItems,
-            child: const Text('Cargar contenido'),
-          ),
-        ],
+  Widget _buildLoadedState(List<Measurement> items) {
+    return RefreshIndicator(
+      color: AppColors.blueMetraShop,
+      onRefresh: _handleRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 35),
+            _buildMeasurementsSection(items),
+            const SizedBox(height: 28),
+            _buildInterestSection(),
+            const SizedBox(height: 32),
+            _buildKnowledgeSection(),
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }
 
-  /// Construye el contenido principal cuando hay datos
-  Widget _buildMainContent(List<Measurement> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 35),
-        _buildMeasurementsSection(items),
-        _buildInterestSection(),
-        _buildKnowledgeSection(),
-        const SizedBox(height: 40),
-      ],
-    );
-  }
-
-  /// Sección de mediciones
   Widget _buildMeasurementsSection(List<Measurement> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildSectionTitle('¿Qué medición deseas hacer?'),
         const SizedBox(height: 20),
-        _buildMeasurementsList(items),
-        _buildViewMoreButton(items),
+        if (items.isNotEmpty) ...[
+          MeasurementSection(items: items.take(3).toList()),
+          if (items.length > 3)
+            Center(
+              child: TextButton(
+                onPressed: () => showMeasurementsSheet(context, items),
+                child: const Text(
+                  'Ver más',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+        ] else
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: AppColors.neutral100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: Text(
+                'No hay mediciones disponibles',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
 
-  /// Lista de mediciones (primeras 3)
-  Widget _buildMeasurementsList(List<Measurement> items) {
-    final displayItems = items.take(3).toList();
-
-    return MeasurementSection(items: displayItems);
-  }
-
-  /// Botón "Ver más"
-  Widget _buildViewMoreButton(List<Measurement> items) {
-    if (items.length <= 3) return const SizedBox.shrink();
-
-    return Center(
-      child: TextButton(
-        onPressed: () => _showAllMeasurements(items),
-        child: const Text(
-          'Ver más',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// Sección "Te puede interesar"
   Widget _buildInterestSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 28),
         _buildSectionTitle('Te puede interesar'),
         const SizedBox(height: 20),
-        _buildInterestCards(),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => context.pushNamed('home-to-provider'),
+                  child: const ShortcutCard(
+                    title: 'Proveedores',
+                    imageAssetPath: AppImages.proveedoresHomeCardImg,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => context.pushNamed('home-to-test'),
+                  child: const ShortcutCard(
+                    title: 'Materiales',
+                    imageAssetPath: AppImages.materialesHomeCardImg,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  /// Cards de interés
-  Widget _buildInterestCards() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildProviderCard(),
-          ),
-          const SizedBox(width: 20),
-          Expanded(
-            child: _buildMaterialsCard(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Card de proveedores
-  Widget _buildProviderCard() {
-    return GestureDetector(
-      onTap: () => _navigateToProviders(),
-      child: const ShortcutCard(
-        title: 'Proveedores',
-        imageAssetPath: AppImages.proveedoresHomeCardImg,
-      ),
-    );
-  }
-
-  /// Card de materiales
-  Widget _buildMaterialsCard() {
-    return GestureDetector(
-      onTap: () => _navigateToMaterials(),
-      child: const ShortcutCard(
-        title: 'Materiales',
-        imageAssetPath: AppImages.materialesHomeCardImg,
-      ),
-    );
-  }
-
-  /// Sección de conocimientos
   Widget _buildKnowledgeSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 32),
         _buildSectionTitle('Expande tus conocimientos'),
         const SizedBox(height: 20),
         const CarouselCardsArticles(),
@@ -431,7 +273,6 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
-  /// Construye títulos de sección consistentes
   Widget _buildSectionTitle(String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -446,64 +287,8 @@ class _HomeViewState extends State<HomeView>
     );
   }
 
-  /// Maneja pull-to-refresh
-  Future<void> _handlePullToRefresh() async {
-    try {
-      if (_isMounted && context.mounted) {
-        context.read<MeasurementBloc>().add(LoadMeasurementItems());
-        // Simular delay mínimo para UX
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-    } catch (e) {
-      _handleLoadError(e);
-    }
-  }
-
-  /// Muestra todas las mediciones en bottom sheet
-  void _showAllMeasurements(List<Measurement> items) {
-    try {
-      if (_isMounted && context.mounted) {
-        showMeasurementsSheet(context, items);
-      }
-    } catch (e) {
-      assert(() {
-        debugPrint('Error mostrando measurements sheet: $e');
-        return true;
-      }());
-    }
-  }
-
-  /// Navega a proveedores de forma segura
-  void _navigateToProviders() {
-    try {
-      if (_isMounted && context.mounted) {
-        context.pushNamed('home-to-provider');
-      }
-    } catch (e) {
-      _handleNavigationError('proveedores', e);
-    }
-  }
-
-  /// Navega a materiales de forma segura
-  void _navigateToMaterials() {
-    try {
-      if (_isMounted && context.mounted) {
-        context.pushNamed('home-to-test');
-      }
-    } catch (e) {
-      _handleNavigationError('materiales', e);
-    }
-  }
-
-  /// Maneja errores de navegación
-  void _handleNavigationError(String destination, dynamic error) {
-    assert(() {
-      debugPrint('Error navegando a $destination: $error');
-      return true;
-    }());
-
-    if (_isMounted && context.mounted) {
-      _showErrorSnackBar('Error al navegar a $destination');
-    }
+  Future<void> _handleRefresh() async {
+    context.read<MeasurementBloc>().add(LoadMeasurementItems());
+    await Future.delayed(const Duration(milliseconds: 500));
   }
 }

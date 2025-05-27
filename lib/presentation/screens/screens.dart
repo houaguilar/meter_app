@@ -2,9 +2,7 @@
 export 'home/home_screen.dart';
 
 //Muro
-export 'home/muro/muro_screen.dart';
-export 'home/muro/ladrillo/ladrillo_screen.dart';
-export 'home/muro/bloqueta/bloqueta_screen.dart';
+export 'home/muro/wall_screen.dart';
 export 'home/muro/ladrillo/result_ladrillo/result_ladrillo_screen.dart';
 export 'home/muro/ladrillo/pdf_muro/preview_screen.dart';
 

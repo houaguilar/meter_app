@@ -23,10 +23,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
             result.metradoId = int.parse(metradoId);
             await isar.ladrillos.put(result);
             await result.metrado.save();
-          } else if (result is Bloqueta) {
-            result.metradoId = int.parse(metradoId);
-            await isar.bloquetas.put(result);
-            await result.metrado.save();
           } else if (result is Piso) {
             result.metradoId = int.parse(metradoId);
             await isar.pisos.put(result);
@@ -40,8 +36,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
   @override
   Future<List<dynamic>> loadResults(String metradoId) async {
     final ladrillos = await isarService.ladrillos.filter().metradoIdEqualTo(int.parse(metradoId)).findAll();
-    final bloquetas = await isarService.bloquetas.filter().metradoIdEqualTo(int.parse(metradoId)).findAll();
     final pisos = await isarService.pisos.filter().metradoIdEqualTo(int.parse(metradoId)).findAll();
-    return [...ladrillos, ...bloquetas, ...pisos];
+    return [...ladrillos, ...pisos];
   }
 }

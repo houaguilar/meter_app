@@ -19,9 +19,6 @@ class Metrado {
   final IsarLinks<Ladrillo> ladrilloLink = IsarLinks<Ladrillo>();
 
   @Backlink(to: 'metrado')
-  final IsarLinks<Bloqueta> bloquetaLink = IsarLinks<Bloqueta>();
-
-  @Backlink(to: 'metrado')
   final IsarLinks<Piso> pisoLink = IsarLinks<Piso>();
 
   Metrado({

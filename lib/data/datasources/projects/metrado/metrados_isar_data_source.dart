@@ -50,15 +50,10 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
     await isar.writeTxn(() async {
 
       final ladrillosToDelete = await isarService.ladrillos.filter().metradoIdEqualTo(metrado.id).findAll();
-      final bloquetasToDelete = await isarService.bloquetas.filter().metradoIdEqualTo(metrado.id).findAll();
       final pisosToDelete = await isarService.pisos.filter().metradoIdEqualTo(metrado.id).findAll();
 
       for (var result in ladrillosToDelete) {
         await isar.ladrillos.delete(result.id);
-      }
-
-      for (var result in bloquetasToDelete) {
-        await isar.bloquetas.delete(result.id);
       }
 
       for (var result in pisosToDelete) {

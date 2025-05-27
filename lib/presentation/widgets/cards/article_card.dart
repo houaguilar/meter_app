@@ -42,7 +42,7 @@ class ArticleCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(10.0),
               color: Colors.black.withOpacity(0.5),
             ),
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.end,
