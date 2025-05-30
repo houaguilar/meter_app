@@ -14,7 +14,6 @@ import '../../../../../widgets/fields/custom_name_text_field.dart';
 import '../../../../../widgets/widgets.dart';
 import '../tutorial/tutorial_ladrillo_screen.dart';
 
-
 class DatosLadrilloScreens extends ConsumerStatefulWidget {
   const DatosLadrilloScreens({super.key});
   static const String route = 'detail';
@@ -29,7 +28,9 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
 
   late final SharedPreferencesHelper sharedPreferencesHelper;
 
+  // Controladores de texto
   final TextEditingController factorController = TextEditingController(text: '5');
+  final TextEditingController factorMorteroController = TextEditingController(text: '10'); // NUEVO
   final TextEditingController descriptionAreaController = TextEditingController();
   final TextEditingController descriptionMedidasController = TextEditingController();
   final TextEditingController areaTextController = TextEditingController();
@@ -61,6 +62,10 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
       });
     });
 
+    // Inicializar controladores con valores por defecto
+    factorController.text = '5';           // 5% desperdicio ladrillo
+    factorMorteroController.text = '10';   // 10% desperdicio mortero
+
     sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!sharedPreferencesHelper.isTutorialShown()) {
@@ -71,7 +76,26 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
 
   @override
   void dispose() {
-    //   _tabController.dispose();
+    _tabController.dispose();
+    factorController.dispose();
+    factorMorteroController.dispose();
+    descriptionAreaController.dispose();
+    descriptionMedidasController.dispose();
+    areaTextController.dispose();
+    lengthTextController.dispose();
+    heightTextController.dispose();
+
+    // Dispose de campos dinámicos
+    for (var field in areaFields) {
+      field['description']?.dispose();
+      field['measure']?.dispose();
+    }
+    for (var field in measureFields) {
+      field['descriptionMeasure']?.dispose();
+      field['lengthMeasure']?.dispose();
+      field['heightMeasure']?.dispose();
+    }
+
     super.dispose();
   }
 
@@ -104,6 +128,23 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
     if (double.parse(value) < 0) {
       return 'El valor debe ser mayor o igual a 0';
     }
+    return null;
+  }
+
+  String? _validatePercentage(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+
+    final numero = double.tryParse(value);
+    if (numero == null) {
+      return 'Debe ser un número válido';
+    }
+
+    if (numero < 0 || numero > 100) {
+      return 'Debe estar entre 0% y 100%';
+    }
+
     return null;
   }
 
@@ -155,22 +196,33 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 15,),
+        const SizedBox(height: 15),
         Container(
-          padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.grey.shade300),
           ),
-          child: CustomFactorTextField(
-            controller: factorController,
-            label: 'Desperdicio (%)',
-            validator: _validateStringRequired,
-            hintText: '',
+          child: Column(
+            children: [
+              CustomFactorTextField(
+                controller: factorController,
+                label: 'Desperdicio Ladrillo (%)',
+                validator: _validatePercentage,
+                hintText: '5',
+              ),
+              const SizedBox(height: 15),
+              CustomFactorTextField(
+                controller: factorMorteroController,
+                label: 'Desperdicio Mortero (%)',
+                validator: _validatePercentage,
+                hintText: '10',
+              ),
+            ],
           ),
         ),
-        SizedBox(height: 15,),
+        const SizedBox(height: 15),
       ],
     );
   }
@@ -187,7 +239,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
 
   Widget contentChoiceChips(String type, String description, List<String> typeList) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
@@ -205,14 +257,13 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
               ),
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(height: 10),
             Container(
               margin: const EdgeInsets.only(right: 15),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Wrap(
                     runAlignment: WrapAlignment.spaceEvenly,
@@ -256,7 +307,6 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                             color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
                       );
                     }).toList(),
-
                   ),
                   if (showAsentadoError && type == 'asentado' && selectedValueAsentado == null)
                     const Padding(
@@ -276,17 +326,17 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
   }
 
   Widget _buildTypeDosageSelection(String tipoLadrillo) {
-    final List<String> asentadosKingkong = ["1 : 4", "1 : 5"];
+    final List<String> dosificaciones = ["1 : 4", "1 : 5"];
     return contentDosageChoiceChips(
-        'asentado',
+        'mortero',
         'Dosificación:',
-        asentadosKingkong
+        dosificaciones
     );
   }
 
   Widget contentDosageChoiceChips(String type, String description, List<String> typeList) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
@@ -304,14 +354,13 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                 style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
               ),
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(height: 10),
             Container(
               margin: const EdgeInsets.only(right: 15),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Wrap(
                     runAlignment: WrapAlignment.spaceEvenly,
@@ -331,10 +380,10 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                           }
                         },
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6), // Define el radio de borde
+                          borderRadius: BorderRadius.circular(6),
                           side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5), // Color del borde
-                            width: 1.0, // Grosor del borde
+                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
+                            width: 1.0,
                           ),
                         ),
                         checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
@@ -344,9 +393,8 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                             color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
                       );
                     }).toList(),
-
                   ),
-                  if (showAsentadoError && type == 'asentado' && selectedValueMortero == null)
+                  if (showAsentadoError && type == 'mortero' && selectedValueMortero == null)
                     const Padding(
                       padding: EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -369,9 +417,9 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: const Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),),
+          child: const Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop)),
         ),
-        const SizedBox(height: 10,),
+        const SizedBox(height: 10),
         TabBar(
           controller: _tabController,
           labelColor: AppColors.primaryMetraShop,
@@ -384,7 +432,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
           ],
         ),
         SizedBox(
-          height: 600, // Puedes ajustar esta altura según sea necesario
+          height: 600,
           child: TabBarView(
             controller: _tabController,
             children: [
@@ -403,17 +451,16 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: [
-            const SizedBox(height: 12,),
+            const SizedBox(height: 12),
             Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 2,
               color: Colors.grey.shade100,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
-
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -423,20 +470,20 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                       hintText: 'Ingresa una descripción (Ej. Muro 1)',
                       validator: _validateStringRequired,
                     ),
-                    const SizedBox(height: 8,),
+                    const SizedBox(height: 8),
                     const Text(
                       'Datos',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop, // Ajustar según el diseño
+                        color: AppColors.primaryMetraShop,
                       ),
                     ),
                     const SizedBox(height: 8),
                     CustomMeasureTextField(
                       controller: areaTextController,
-                      validator: _validateStringRequired,
-                      labelText: 'Area(m²)',
+                      validator: _validateNumeric,
+                      labelText: 'Área(m²)',
                       keyboardType: TextInputType.number,
                     ),
                   ],
@@ -470,10 +517,11 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           children: [
-            const SizedBox(height: 12,),
+            const SizedBox(height: 12),
             Card(
               margin: const EdgeInsets.symmetric(vertical: 8),
               elevation: 2,
+              color: Colors.grey.shade100,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.0),
               ),
@@ -502,16 +550,16 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                         Expanded(
                           child: CustomMeasureTextField(
                             controller: lengthTextController,
-                            validator: _validateStringRequired,
+                            validator: _validateNumeric,
                             labelText: 'Largo(metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
-                        const SizedBox(width: 10,),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: CustomMeasureTextField(
                             controller: heightTextController,
-                            validator: _validateStringRequired,
+                            validator: _validateNumeric,
                             labelText: 'Altura(metros)',
                             keyboardType: TextInputType.number,
                           ),
@@ -547,6 +595,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
+      color: Colors.grey.shade100,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -577,8 +626,8 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
             const SizedBox(height: 8),
             CustomMeasureTextField(
               controller: field['measure']!,
-              validator: _validateStringRequired,
-              labelText: 'Area(m²)',
+              validator: _validateNumeric,
+              labelText: 'Área(m²)',
               keyboardType: TextInputType.number,
             ),
           ],
@@ -591,6 +640,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       elevation: 2,
+      color: Colors.grey.shade100,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8.0),
       ),
@@ -610,7 +660,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
               color: AppColors.errorGeneralColor,
               isVisible: true,
             ),
-            const SizedBox(height: 10,),
+            const SizedBox(height: 10),
             const Text(
               'Datos',
               style: TextStyle(
@@ -625,16 +675,16 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
                 Expanded(
                   child: CustomMeasureTextField(
                     controller: field['lengthMeasure']!,
-                    validator: _validateStringRequired,
+                    validator: _validateNumeric,
                     labelText: 'Largo(metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
-                const SizedBox(width: 10,),
+                const SizedBox(width: 10),
                 Expanded(
                   child: CustomMeasureTextField(
                     controller: field['heightMeasure']!,
-                    validator: _validateStringRequired,
+                    validator: _validateNumeric,
                     labelText: 'Altura(metros)',
                     keyboardType: TextInputType.number,
                   ),
@@ -668,6 +718,8 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
 
   void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
     setState(() {
+      // Dispose de los controladores antes de remover
+      field.values.forEach((controller) => controller.dispose());
       fields.remove(field);
     });
   }
@@ -679,71 +731,139 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreens> with
         label: 'Resultado',
         onPressed: () async {
           setState(() {
-            showAsentadoError = selectedValueAsentado == null; // Muestra error si `asentado` no está seleccionado
+            showAsentadoError = selectedValueAsentado == null || selectedValueMortero == null;
           });
 
-          if (formKey.currentState?.validate() == true && selectedValueAsentado != null) {
-            var datosLadrillo = ref.read(ladrilloResultProvider.notifier);
+          if (formKey.currentState?.validate() == true &&
+              selectedValueAsentado != null &&
+              selectedValueMortero != null) {
+            try {
+              var datosLadrillo = ref.read(ladrilloResultProvider.notifier);
 
-            ladrillo = tipoLadrillo;
+              // Validar que los valores de desperdicio estén en rangos válidos
+              final desperdicioLadrillo = double.tryParse(factorController.text) ?? 5.0;
+              final desperdicioMortero = double.tryParse(factorMorteroController.text) ?? 10.0;
 
-            var dosageSelection = proporcionMortero.replaceAll("1 : ", "");
-
-            if (_currentIndex == 0) {
-              datosLadrillo.createLadrillo(
-                descriptionAreaController.text,
-                ladrillo,
-                factorController.text,
-                dosageSelection,
-                asentado,
-                area: areaTextController.text,
-              );
-              for (var field in areaFields) {
-                datosLadrillo.createLadrillo(
-                  field['description']!.text,
-                  ladrillo ?? "Default",
-                  factorController.text,
-                  dosageSelection,
-                  asentado ?? "Soga",
-                  area: field['measure']!.text,
+              if (desperdicioLadrillo < 0 || desperdicioLadrillo > 100) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('El desperdicio de ladrillo debe estar entre 0% y 100%')),
                 );
+                return;
               }
-            } else {
-              datosLadrillo.createLadrillo(
-                descriptionMedidasController.text,
-                ladrillo,
-                factorController.text,
-                dosageSelection,
-                asentado,
-                largo: lengthTextController.text,
-                altura: heightTextController.text,
-              );
-              for (var field in measureFields) {
-                datosLadrillo.createLadrillo(
-                  field['descriptionMeasure']!.text,
-                  ladrillo ?? "Default",
-                  factorController.text,
-                  dosageSelection,
-                  asentado ?? "Soga",
-                  largo: field['lengthMeasure']!.text,
-                  altura: field['heightMeasure']!.text,
+
+              if (desperdicioMortero < 0 || desperdicioMortero > 100) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('El desperdicio de mortero debe estar entre 0% y 100%')),
                 );
+                return;
               }
+
+              ladrillo = tipoLadrillo;
+              var dosageSelection = proporcionMortero.replaceAll("1 : ", "");
+
+              // Limpiar lista anterior
+              datosLadrillo.clearList();
+
+              if (_currentIndex == 0) {
+                // Validar campos del tab Área
+                if (descriptionAreaController.text.isEmpty || areaTextController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor completa la descripción y el área')),
+                  );
+                  return;
+                }
+
+                // Crear ladrillo principal con ambos factores de desperdicio
+                datosLadrillo.createLadrillo(
+                  descriptionAreaController.text,
+                  ladrillo,
+                  factorController.text,           // Factor desperdicio ladrillo
+                  factorMorteroController.text,    // Factor desperdicio mortero
+                  dosageSelection,
+                  asentado,
+                  area: areaTextController.text,
+                );
+
+                // Agregar campos adicionales de área
+                for (var field in areaFields) {
+                  if (field['description']!.text.isNotEmpty && field['measure']!.text.isNotEmpty) {
+                    datosLadrillo.createLadrillo(
+                      field['description']!.text,
+                      ladrillo,
+                      factorController.text,           // Factor desperdicio ladrillo
+                      factorMorteroController.text,    // Factor desperdicio mortero
+                      dosageSelection,
+                      asentado,
+                      area: field['measure']!.text,
+                    );
+                  }
+                }
+              } else {
+                // Validar campos del tab Medidas
+                if (descriptionMedidasController.text.isEmpty ||
+                    lengthTextController.text.isEmpty ||
+                    heightTextController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor completa la descripción, largo y altura')),
+                  );
+                  return;
+                }
+
+                // Crear ladrillo principal con ambos factores de desperdicio
+                datosLadrillo.createLadrillo(
+                  descriptionMedidasController.text,
+                  ladrillo,
+                  factorController.text,           // Factor desperdicio ladrillo
+                  factorMorteroController.text,    // Factor desperdicio mortero
+                  dosageSelection,
+                  asentado,
+                  largo: lengthTextController.text,
+                  altura: heightTextController.text,
+                );
+
+                // Agregar campos adicionales de medidas
+                for (var field in measureFields) {
+                  if (field['descriptionMeasure']!.text.isNotEmpty &&
+                      field['lengthMeasure']!.text.isNotEmpty &&
+                      field['heightMeasure']!.text.isNotEmpty) {
+                    datosLadrillo.createLadrillo(
+                      field['descriptionMeasure']!.text,
+                      ladrillo,
+                      factorController.text,           // Factor desperdicio ladrillo
+                      factorMorteroController.text,    // Factor desperdicio mortero
+                      dosageSelection,
+                      asentado,
+                      largo: field['lengthMeasure']!.text,
+                      altura: field['heightMeasure']!.text,
+                    );
+                  }
+                }
+              }
+
+              final ladrillosCreados = ref.read(ladrilloResultProvider);
+              print("CREADOS: Número de ladrillos antes de navegar: ${ladrillosCreados.length}");
+              print("Factores aplicados - Ladrillo: $desperdicioLadrillo%, Mortero: $desperdicioMortero%");
+              print(ref.watch(ladrilloResultProvider));
+              context.pushNamed('ladrillo_results');
+
+              // Mostrar loader y navegar
+              context.showCalculationLoader(
+                message: 'Calculando materiales',
+                description: 'Aplicando fórmulas actualizadas...',
+              );
+
+            } catch (e) {
+              print("Error al procesar datos: $e");
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Error al procesar los datos: ${e.toString()}')),
+              );
             }
-            final ladrillosCreados = ref.read(ladrilloResultProvider);
-            print("CREADOS: Número de ladrillos antes de navegar: ${ladrillosCreados.length}");
-            print(ref.watch(ladrilloResultProvider));
-            context.pushNamed('ladrillo_results');
-            context.showCalculationLoader(
-              message: 'Calculando materiales',
-              description: 'Procesando datos...',
-            );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
             );
           }
-          print(proporcionMortero);
+          print("Proporción mortero: $proporcionMortero");
         },
       ),
     );

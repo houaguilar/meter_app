@@ -116,11 +116,6 @@ class FeatureDisabledDialog extends StatelessWidget {
           ),
           const SizedBox(height: 20),
 
-          // Información adicional según el tipo de material
-          _buildMaterialInfo(),
-
-          const SizedBox(height: 16),
-
           // Mensaje de desarrollo
           Container(
             padding: const EdgeInsets.all(16),

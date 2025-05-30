@@ -17,6 +17,8 @@ import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
 
+import '../../data/local/shared_preferences_helper.dart';
+import '../../init_dependencies.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/screens/auth/init/metra_shop_screen.dart';
 import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
@@ -46,13 +48,18 @@ class AppRouter {
    /* observers: [
       AnalyticsRouteObserver(analyticsRepository),
     ],*/
+    debugLogDiagnostics: false,
     redirect: (context, state) {
       final authState = authBloc.state;
       final isAuthenticated = authState is AuthSuccess;
-      final isLoggingIn = state.matchedLocation == '/metrashop' ||
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
+      final currentLocation = state.matchedLocation;
+      final isLoggingIn = currentLocation == '/metrashop' ||
+          currentLocation == '/login' ||
+          currentLocation == '/register';
       final isLoading = authState is AuthLoading;
+
+      final sharedPrefs = serviceLocator<SharedPreferencesHelper>();
+      final isFirstTime = sharedPrefs.isFirstTimeUser();
 
       if (isLoading) {
         return null;
@@ -64,6 +71,10 @@ class AppRouter {
 
       if (isAuthenticated && isLoggingIn) {
         return '/welcome';
+      }
+
+      if (currentLocation == '/welcome' && !isFirstTime) {
+        return '/home';
       }
 
       return null;
@@ -106,23 +117,6 @@ class AppRouter {
                   path: 'home-to-provider',
                   name: 'home-to-provider',
                   builder: (context, state) => const MapScreen()
-              ),
-              GoRoute(
-                  parentNavigatorKey: _rootNavigator,
-                  path: 'home-to-test',
-                  name: 'home-to-test',
-                  builder: (context, state) => MaterialListScreen(),
-                routes: [
-                  GoRoute(
-                      parentNavigatorKey: _rootNavigator,
-                      path: 'testpdf',
-                      name: 'testpdf',
-                      builder: (context, state) {
-                        final pdfFile = state.extra as File;
-                        return PreviewScreen(pdfFile: pdfFile);
-                      }
-                  ),
-                ]
               ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,
@@ -280,12 +274,6 @@ class AppRouter {
                           ),
                         ]
                       ),
-                      GoRoute(
-                        parentNavigatorKey: _rootNavigator,
-                        path: 'pisos-pdf',
-                        name: 'pisos-pdf',
-                        builder: (context, state) => const PreviewPisosScreen(),
-                      ),
                     ],
                   ),
                 ],
@@ -327,12 +315,6 @@ class AppRouter {
                                   builder: (context, state) => const NewProjectScreen(),
                                 ),
                               ]
-                          ),
-                          GoRoute(
-                            parentNavigatorKey: _rootNavigator,
-                            path: 'losas-pdf',
-                            name: 'losas-pdf',
-                            builder: (context, state) => const PreviewPisosScreen(),
                           ),
                         ],
                       )

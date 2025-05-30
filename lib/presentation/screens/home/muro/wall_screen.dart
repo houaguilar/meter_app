@@ -1,14 +1,15 @@
-// lib/presentation/screens/home/muro/wall_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/widgets/cards/wall_material_card_improved.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/muro/wall_material.dart';
 import '../../../providers/home/muro/wall_material_providers_improved.dart';
 import '../../../providers/providers.dart';
-import '../../../widgets/dialogs/feature_disabled_dialog.dart';
+import '../../../widgets/cards/generic_item_card.dart';
+import '../../../widgets/config/generic_module_config.dart';
+import '../../../widgets/dialogs/unified_feature_disabled_dialog.dart';
+import '../../../widgets/shared/responsive_grid_builder.dart';
 import '../../../widgets/widgets.dart';
 
 class WallScreen extends ConsumerStatefulWidget {
@@ -17,22 +18,17 @@ class WallScreen extends ConsumerStatefulWidget {
   static const String routeName = 'muro';
 
   @override
-  ConsumerState<WallScreen> createState() => _MuroScreenState();
+  ConsumerState<WallScreen> createState() => _WallScreenState();
 }
 
-class _MuroScreenState extends ConsumerState<WallScreen>
+class _WallScreenState extends ConsumerState<WallScreen>
     with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin {
 
-  /// Mantiene el estado activo para optimizar rendimiento
   @override
   bool get wantKeepAlive => true;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-
-  // Estados para manejo de errores y loading
-  bool _hasError = false;
-  String? _errorMessage;
 
   @override
   void initState() {
@@ -48,7 +44,7 @@ class _MuroScreenState extends ConsumerState<WallScreen>
 
   void _initializeAnimations() {
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: GenericModuleConfig.longAnimation,
       vsync: this,
     );
 
@@ -65,280 +61,133 @@ class _MuroScreenState extends ConsumerState<WallScreen>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // Required for AutomaticKeepAliveClientMixin
+    super.build(context);
 
     return Scaffold(
       appBar: AppBarWidget(titleAppBar: 'Tipos de Muro'),
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: _buildBody(),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: _buildBody(),
+        ),
       ),
     );
   }
 
   Widget _buildBody() {
-    final materialsAsync = ref.watch(wallMaterialsProvider);
-
-    return materialsAsync.when(
-      data: (materials) => _buildMaterialContent(materials),
-      loading: () => _buildLoadingState(),
-      error: (error, stack) => _buildErrorState(error.toString()),
-    );
-  }
-
-  Widget _buildMaterialContent(List<WallMaterial> materials) {
-    if (materials.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return FadeTransition(
-      opacity: _fadeAnimation,
-      child: Column(
-        children: [
-          _buildHeader(),
-          Expanded(
-            child: _buildMaterialGrid(materials),
-          ),
-        ],
-      ),
+    return WallMaterialGridBuilder<WallMaterial>(
+      asyncValue: ref.watch(wallMaterialsProvider),
+      itemBuilder: _buildMaterialCard,
+      onRetry: () => ref.invalidate(wallMaterialsProvider),
+      header: _buildHeader(),
     );
   }
 
   Widget _buildHeader() {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(_getResponsivePadding()),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Selecciona el tipo de material',
-            style: _getHeaderTextStyle(),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Elige el material que utilizarás para tu proyecto',
-            style: _getSubtitleTextStyle(),
-          ),
-        ],
-      ),
+    return ResponsiveHeader(
+      title: 'Selecciona el tipo de material',
+      subtitle: 'Elige el material que utilizarás para tu proyecto',
+      headerSize: HeaderSize.h2,
+      titleColor: AppColors.textPrimary,
+      subtitleColor: AppColors.textSecondary,
     );
   }
 
-  Widget _buildMaterialGrid(List<WallMaterial> materials) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final crossAxisCount = _calculateCrossAxisCount(screenWidth);
-    final padding = _getResponsivePadding();
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: padding),
-      child: GridView.builder(
-        physics: const BouncingScrollPhysics(),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: _getChildAspectRatio(screenWidth),
-          crossAxisSpacing: _getGridSpacing(screenWidth),
-          mainAxisSpacing: _getGridSpacing(screenWidth),
-        ),
-        itemCount: materials.length,
-        itemBuilder: (context, index) {
-          final material = materials[index];
-          return _buildAnimatedMaterialCard(material, index);
-        },
-      ),
+  Widget _buildMaterialCard(WallMaterial material, int index) {
+    return WallMaterialCard(
+      wallMaterial: material,
+      onTap: () => _handleMaterialSelection(material),
+      enabled: true,
     );
   }
 
-  Widget _buildAnimatedMaterialCard(WallMaterial material, int index) {
-    return TweenAnimationBuilder<double>(
-      duration: Duration(milliseconds: 300 + (index * 100)),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: 0.5 + (value * 0.5),
-          child: Opacity(
-            opacity: value,
-            child: WallMaterialCardImproved(
-              material: material,
-              onTap: () => _handleMaterialSelection(material),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Cargando materiales...',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(String error) {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(_getResponsivePadding()),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error al cargar materiales',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Ha ocurrido un problema. Inténtalo de nuevo.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () {
-                ref.invalidate(wallMaterialsProvider);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.all(_getResponsivePadding()),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.construction,
-              size: 64,
-              color: AppColors.neutral400,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No hay materiales disponibles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Los materiales aparecerán aquí cuando estén disponibles.',
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textTertiary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Maneja la selección de materiales con validación de disponibilidad
+  /// Maneja la selección de materiales con validación y navegación
   void _handleMaterialSelection(WallMaterial material) {
     try {
-      // Validar entrada
+      // Validar material
       if (!_isValidMaterial(material)) {
         _showErrorMessage('Material no válido');
         return;
       }
 
-      // Limpiar selecciones previas
+      // Actualizar selección
       ref.read(selectedMaterialProvider.notifier).state = material;
 
-      switch (material.id) {
-        case '1': // Pandereta 1
-          _navigateToLadrillo('Pandereta1');
-          break;
-        case '2': // Pandereta 2
-          _navigateToLadrillo('Pandereta2');
-          break;
-        case '3': // King Kong 18H
-          _navigateToLadrillo('Kingkong1');
-          break;
-        case '4': // King Kong 30%
-          _navigateToLadrillo('Kingkong2');
-          break;
-        case '5': // Tabicón - No disponible
-          _showFeatureDisabledDialog('Tabicón');
-          break;
-        case '6': // Bloque P14 - No disponible
-        case '7': // Bloque P10 - No disponible
-        case '8': // Bloque P7 - No disponible
-          _showFeatureDisabledDialog('Bloquetas');
-          break;
-        default:
-          _showErrorMessage('Material no reconocido');
-          _logError('Material ID no reconocido: ${material.id}');
+      // Determinar navegación basada en disponibilidad
+      if (_isMaterialAvailable(material.id)) {
+        _navigateToAvailableMaterial(material);
+      } else {
+        _showMaterialNotAvailable(material);
       }
     } catch (e, stackTrace) {
       _handleSelectionError(e, stackTrace);
     }
   }
 
-  /// Navega a la pantalla de datos de ladrillo
-  void _navigateToLadrillo(String tipoLadrillo) {
+  /// Navega a material disponible
+  void _navigateToAvailableMaterial(WallMaterial material) {
     try {
-      ref.read(tipoLadrilloProvider.notifier).selectLadrillo(tipoLadrillo);
+      final materialType = _getMaterialType(material.id);
+      ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
       context.pushNamed('ladrillo1');
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);
     }
   }
 
-  /// Muestra dialog para funciones no disponibles
-  void _showFeatureDisabledDialog(String materialType) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) => FeatureDisabledDialog(
-        title: '$materialType no disponible',
-        message: 'Esta funcionalidad está en desarrollo y estará disponible próximamente.',
-        materialType: materialType,
-      ),
+  /// Muestra dialog para material no disponible
+  void _showMaterialNotAvailable(WallMaterial material) {
+    showWallMaterialNotAvailable(
+      context,
+      materialName: material.name,
+      customMessage: _getUnavailableMessage(material),
+      onContactSupport: () => _contactSupport(),
     );
+  }
+
+  /// Determina si un material está disponible
+  bool _isMaterialAvailable(String materialId) {
+    const availableIds = ['1', '2', '3', '4']; // Panderetas y King Kong
+    return availableIds.contains(materialId);
+  }
+
+  /// Obtiene el tipo de material para el provider
+  String _getMaterialType(String materialId) {
+    switch (materialId) {
+      case '1':
+        return 'Pandereta1';
+      case '2':
+        return 'Pandereta2';
+      case '3':
+        return 'Kingkong1';
+      case '4':
+        return 'Kingkong2';
+      default:
+        return 'Pandereta1';
+    }
+  }
+
+  /// Obtiene mensaje personalizado para material no disponible
+  String _getUnavailableMessage(WallMaterial material) {
+    switch (material.id) {
+      case '5': // Tabicón
+        return 'El cálculo para Tabicón requiere algoritmos especializados que estamos desarrollando.';
+      case '6':
+      case '7':
+      case '8': // Bloquetas
+        return 'Los cálculos para Bloquetas necesitan validaciones adicionales de ingeniería.';
+      default:
+        return 'Este material está en desarrollo y estará disponible próximamente.';
+    }
   }
 
   /// Validaciones de seguridad
   bool _isValidMaterial(WallMaterial? material) {
     return material != null &&
         material.id.isNotEmpty &&
-        material.name.isNotEmpty;
+        material.name.isNotEmpty &&
+        material.image.isNotEmpty;
   }
 
   /// Manejo de errores de selección
@@ -359,77 +208,269 @@ class _MuroScreenState extends ConsumerState<WallScreen>
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: AppColors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 3),
         action: SnackBarAction(
           label: 'Cerrar',
           textColor: AppColors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
     );
   }
 
+  /// Contactar soporte técnico
+  void _contactSupport() {
+    // Implementar lógica de contacto
+    _showErrorMessage('Funcionalidad de soporte próximamente disponible');
+  }
+
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
-    // Solo en modo debug
     assert(() {
-      debugPrint('❌ MuroScreen Error: $message');
+      debugPrint('❌ WallScreen Error: $message');
       if (stackTrace != null) {
         debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
   }
+}
 
-  // Métodos para responsive design
-  double _getResponsivePadding() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    if (screenWidth < 600) return 16.0;
-    if (screenWidth < 1200) return 24.0;
-    return 32.0;
+/// Extensión específica para WallMaterial que proporciona información para la UI
+extension WallMaterialUI on WallMaterial {
+  /// Determina si el material está disponible
+  bool get isAvailable {
+    const availableIds = ['1', '2', '3', '4'];
+    return availableIds.contains(id);
   }
 
-  int _calculateCrossAxisCount(double screenWidth) {
-    if (screenWidth < 600) return 2;  // Móviles
-    if (screenWidth < 840) return 3;  // Móviles grandes
-    if (screenWidth < 1200) return 4; // Tablets
-    return 5; // Desktop
+  /// Obtiene el color asociado al material
+  Color get primaryColor {
+    if (isAvailable) {
+      return AppColors.success;
+    } else {
+      return AppColors.warning;
+    }
   }
 
-  double _getChildAspectRatio(double screenWidth) {
-    if (screenWidth < 600) return 0.8;  // Móviles - más cuadradas
-    return 0.7; // Otros dispositivos
+  /// Obtiene la categoría del material
+  WallMaterialCategory get category {
+    switch (id) {
+      case '1':
+      case '2':
+        return WallMaterialCategory.pandereta;
+      case '3':
+      case '4':
+        return WallMaterialCategory.kingKong;
+      case '5':
+        return WallMaterialCategory.tabicon;
+      case '6':
+      case '7':
+      case '8':
+        return WallMaterialCategory.bloqueta;
+      default:
+        return WallMaterialCategory.unknown;
+    }
   }
 
-  double _getGridSpacing(double screenWidth) {
-    if (screenWidth < 600) return 12.0;
-    if (screenWidth < 1200) return 16.0;
-    return 20.0;
+  /// Obtiene el estado de disponibilidad como texto
+  String get availabilityStatus {
+    return isAvailable ? 'Disponible' : 'Próximamente';
   }
 
-  TextStyle _getHeaderTextStyle() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final fontSize = screenWidth < 600 ? 18.0 : 20.0;
-
-    return TextStyle(
-      fontSize: fontSize,
-      fontWeight: FontWeight.w900,
-      color: AppColors.textPrimary,
+  /// Obtiene información detallada del material
+  WallMaterialInfo get detailedInfo {
+    return WallMaterialInfo(
+      id: id,
+      name: name,
+      category: category,
+      isAvailable: isAvailable,
+      primaryColor: primaryColor,
+      description: _getDetailedDescription(),
+      technicalSpecs: _getTechnicalSpecs(),
     );
   }
 
-  TextStyle _getSubtitleTextStyle() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final fontSize = screenWidth < 600 ? 14.0 : 16.0;
+  String _getDetailedDescription() {
+    switch (category) {
+      case WallMaterialCategory.pandereta:
+        return 'Ladrillos huecos ideales para muros no portantes y divisiones.';
+      case WallMaterialCategory.kingKong:
+        return 'Ladrillos resistentes para muros portantes y estructurales.';
+      case WallMaterialCategory.tabicon:
+        return 'Bloques grandes para construcción rápida y eficiente.';
+      case WallMaterialCategory.bloqueta:
+        return 'Bloques de concreto para muros de carga y cerramientos.';
+      case WallMaterialCategory.unknown:
+        return 'Material de construcción especializado.';
+    }
+  }
 
-    return TextStyle(
-      fontSize: fontSize,
-      color: AppColors.textSecondary,
+  List<String> _getTechnicalSpecs() {
+    final lines = details.split('\n');
+    return lines
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => line.replaceAll('·', '').trim())
+        .where((line) => line.isNotEmpty)
+        .toList();
+  }
+}
+
+/// Enum para categorías de materiales de muro
+enum WallMaterialCategory {
+  pandereta,
+  kingKong,
+  tabicon,
+  bloqueta,
+  unknown;
+
+  String get displayName {
+    switch (this) {
+      case WallMaterialCategory.pandereta:
+        return 'Pandereta';
+      case WallMaterialCategory.kingKong:
+        return 'King Kong';
+      case WallMaterialCategory.tabicon:
+        return 'Tabicón';
+      case WallMaterialCategory.bloqueta:
+        return 'Bloqueta';
+      case WallMaterialCategory.unknown:
+        return 'Desconocido';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case WallMaterialCategory.pandereta:
+        return Icons.crop_portrait;
+      case WallMaterialCategory.kingKong:
+        return Icons.crop_square;
+      case WallMaterialCategory.tabicon:
+        return Icons.view_module;
+      case WallMaterialCategory.bloqueta:
+        return Icons.grid_view;
+      case WallMaterialCategory.unknown:
+        return Icons.help_outline;
+    }
+  }
+}
+
+/// Clase de información detallada del material
+class WallMaterialInfo {
+  final String id;
+  final String name;
+  final WallMaterialCategory category;
+  final bool isAvailable;
+  final Color primaryColor;
+  final String description;
+  final List<String> technicalSpecs;
+
+  const WallMaterialInfo({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.isAvailable,
+    required this.primaryColor,
+    required this.description,
+    required this.technicalSpecs,
+  });
+
+  /// Convierte a JSON para logging o debugging
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'category': category.displayName,
+      'isAvailable': isAvailable,
+      'description': description,
+      'technicalSpecs': technicalSpecs,
+    };
+  }
+}
+
+/// Widget de ejemplo para mostrar información del material seleccionado
+class SelectedMaterialInfo extends ConsumerWidget {
+  const SelectedMaterialInfo({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedMaterial = ref.watch(selectedMaterialProvider);
+
+    if (selectedMaterial == null) {
+      return const SizedBox.shrink();
+    }
+
+    final info = selectedMaterial.detailedInfo;
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                info.category.icon,
+                color: info.primaryColor,
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Material seleccionado: ${info.name}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: info.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  info.isAvailable ? 'Disponible' : 'Próximamente',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: info.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            info.description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
