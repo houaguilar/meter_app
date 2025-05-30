@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/theme/theme.dart';
 
-class WavePainter extends CustomPainter {
+class WavePainters extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()

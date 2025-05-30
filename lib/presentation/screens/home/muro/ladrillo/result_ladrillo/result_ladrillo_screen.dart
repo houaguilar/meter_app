@@ -23,14 +23,13 @@ class ResultLadrilloScreen extends ConsumerWidget {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(Duration(seconds: 2), () {
-          context.hideLoader();
+        context.hideLoader();
       });
     });
 
     return WillPopScope(
       onWillPop: () async {
         ref.read(ladrilloResultProvider.notifier).clearList();
-   //     ref.read(bloquetaResultProvider.notifier).clearList();
         return true;
       },
       child: Scaffold(
@@ -57,11 +56,12 @@ class ResultLadrilloScreen extends ConsumerWidget {
               heroTag: 'save_button_wall',
               onPressed: () {
                 final listaLadrillo = ref.watch(ladrilloResultProvider);
-           //     final listaBloqueta = ref.watch(bloquetaResultProvider);
                 if (listaLadrillo.isNotEmpty) {
                   context.pushNamed('save-ladrillo');
                 } else {
-                  context.pushNamed('save-bloqueta');
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('No hay datos para guardar')),
+                  );
                 }
               },
             ),
@@ -80,11 +80,12 @@ class ResultLadrilloScreen extends ConsumerWidget {
         ElevatedButton.icon(
           onPressed: () {
             final listaLadrillo = ref.watch(ladrilloResultProvider);
-   //         final listaBloqueta = ref.watch(bloquetaResultProvider);
             if (listaLadrillo.isNotEmpty) {
               context.pushNamed('map-screen-2');
             } else {
-              context.pushNamed('map-screen-1');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No hay datos de ladrillos')),
+              );
             }
           },
           icon: const Icon(Icons.search_rounded),
@@ -113,6 +114,7 @@ class ResultLadrilloScreen extends ConsumerWidget {
       label: Text(label),
       icon: Icon(icon),
       onPressed: onPressed,
+      heroTag: heroTag,
     );
   }
 
@@ -126,15 +128,23 @@ class ResultLadrilloScreen extends ConsumerWidget {
               icon: Icons.picture_as_pdf,
               text: 'PDF',
               onTap: () async {
-                final pdfFile = await generatePdf(ref);
-                final xFile = XFile(pdfFile.path);
-                Share.shareXFiles([xFile], text: 'Resultados del metrado.');
+                try {
+                  Navigator.of(context).pop(); // Cerrar dialog
+                  final pdfFile = await generatePdfNuevo(ref);
+                  final xFile = XFile(pdfFile.path);
+                  Share.shareXFiles([xFile], text: 'Resultados del metrado de ladrillos.');
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al generar PDF: $e')),
+                  );
+                }
               },
             ),
             DialogOption(
               icon: Icons.text_fields,
               text: 'TEXTO',
               onTap: () async {
+                Navigator.of(context).pop(); // Cerrar dialog
                 await Share.share(_shareContent(ref));
               },
             ),
@@ -146,30 +156,28 @@ class ResultLadrilloScreen extends ConsumerWidget {
 
   String _shareContent(WidgetRef ref) {
     final listaLadrillo = ref.watch(ladrilloResultProvider);
-  //  final listaBloqueta = ref.watch(bloquetaResultProvider);
 
-    String cantidadPruebaLadToString = calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(2);
-    String cantidadPruebaAreToString = calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2);
-    String cantidadPruebaCemToString = calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble().toString();
+    if (listaLadrillo.isEmpty) {
+      return 'Error: No hay datos de ladrillos';
+    }
 
- //   String cantidadBloquetasToString = cantidadBloquetas(listaBloqueta).toStringAsFixed(2);
- //   String cantidadArenaToString = cantidadArena(listaBloqueta).toStringAsFixed(2);
- //   String cantidadCementoToString = cantidadCemento(listaBloqueta).ceilToDouble().toString();
+    String cantidadPruebaLadToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo).toStringAsFixed(0);
+    String cantidadPruebaAreToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva).toStringAsFixed(2);
+    String cantidadPruebaCemToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo).ceilToDouble().toString();
+    String cantidadPruebaAguaToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva).toStringAsFixed(2);
+
+    // Obtener factores de desperdicio del primer ladrillo (todos deberían tener los mismos)
+    final primerLadrillo = listaLadrillo.first;
+    final desperdicioLadrillo = double.tryParse(primerLadrillo.factorDesperdicio) ?? 5.0;
+    final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0;
 
     String datosMetrado = 'DATOS METRADO';
     String listaMateriales = 'LISTA DE MATERIALES';
 
-    if (listaLadrillo.isNotEmpty) {
-      final datosLadrillo = ref.watch(datosShareLadrilloProvider);
-      final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadPruebaAreToString m3 \n*Cemento: $cantidadPruebaCemToString bls \n*Ladrillo: $cantidadPruebaLadToString und';
-      return shareText;
-/*    } else if (listaBloqueta.isNotEmpty) {
-      final datosBloqueta = ref.watch(datosShareBloquetaProvider);
-      final shareText = '$datosMetrado \n$datosBloqueta \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadArenaToString m3 \n*Cemento: $cantidadCementoToString bls \n*Bloqueta: $cantidadBloquetasToString und';
-      return shareText;*/
-    } else {
-      return 'Error';
-    }
+    final datosLadrillo = ref.watch(datosShareLadrilloProvider);
+    final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadPruebaAreToString m³ \n*Cemento: $cantidadPruebaCemToString bls \n*Agua: $cantidadPruebaAguaToString m³ \n*Ladrillo: $cantidadPruebaLadToString und \n\n*Desperdicio Ladrillo: ${desperdicioLadrillo.toStringAsFixed(1)}% \n*Desperdicio Mortero: ${desperdicioMortero.toStringAsFixed(1)}%';
+
+    return shareText;
   }
 }
 
@@ -179,53 +187,58 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listaLadrillo = ref.watch(ladrilloResultProvider);
- //   final listaBloqueta = ref.watch(bloquetaResultProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
       child: Column(
         children: [
-          const SizedBox(height: 10,),
+          const SizedBox(height: 10),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 10,),
-          if (
-          listaLadrillo.isNotEmpty
-      //        || listaBloqueta.isNotEmpty
-          ) ...[
+          const SizedBox(height: 10),
+          if (listaLadrillo.isNotEmpty) ...[
             _buildSummaryCard(
               context,
               'Datos del Metrado',
-              listaLadrillo.isNotEmpty
-                  ? const _LadrilloContainer()
-                  : const _LadrilloContainer(),
+              const _LadrilloContainer(),
             ),
             const SizedBox(height: 20),
             _buildSummaryCard(
               context,
               'Lista de Materiales',
-              listaLadrillo.isNotEmpty
-                  ? _buildMaterialList(ref)
-                  : _buildMaterialList(ref),
+              _buildMaterialList(ref),
+            ),
+          ] else ...[
+            Container(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 64,
+                    color: Colors.orange[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No hay datos de ladrillos',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Regresa y completa los datos para ver los resultados',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
-          /*Center(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white, backgroundColor: AppColors.orange,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-              ),
-              icon: const Icon(Icons.search_rounded),
-              label: const Text(
-                "Buscar Ferreterías",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              onPressed: () {
-                context.goNamed('mapa');
-              },
-            ),
-          ),*/
-          const SizedBox(height: 200,)
+          const SizedBox(height: 200),
         ],
       ),
     );
@@ -249,9 +262,11 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
             ),
             child: Text(
               title,
-              style: const TextStyle(fontSize: 16,
+              style: const TextStyle(
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.primaryMetraShop),
+                  color: AppColors.primaryMetraShop
+              ),
             ),
           ),
           Padding(
@@ -266,11 +281,15 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
   Widget _buildMaterialList(WidgetRef ref) {
     final listaLadrillo = ref.watch(ladrilloResultProvider);
 
+    if (listaLadrillo.isEmpty) {
+      return const Text('No hay datos de ladrillos para calcular');
+    }
+
     // Calcular cantidades totales usando las funciones actualizadas
-    final cantidadLadrillos = calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(0);
-    final cantidadArenaTotal = calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2);
-    final cantidadCementoTotal = calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble().toString();
-    final cantidadAguaTotal = calcularCantidadMaterial(listaLadrillo, calcularAgua).toStringAsFixed(2);
+    final cantidadLadrillos = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo).toStringAsFixed(0);
+    final cantidadArenaTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva).toStringAsFixed(2);
+    final cantidadCementoTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo).ceilToDouble().toString();
+    final cantidadAguaTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva).toStringAsFixed(2);
 
     return Table(
       columnWidths: const {
@@ -281,32 +300,12 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
       children: [
         _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
         _buildMaterialRow('Cemento', 'Bls', cantidadCementoTotal),
-        _buildMaterialRow('Arena gruesa', 'm3', cantidadArenaTotal),
-        _buildMaterialRow('Agua', 'm3', cantidadAguaTotal),
+        _buildMaterialRow('Arena gruesa', 'm³', cantidadArenaTotal),
+        _buildMaterialRow('Agua', 'm³', cantidadAguaTotal),
         _buildMaterialRow('Ladrillo', 'Und', cantidadLadrillos),
       ],
     );
   }
-
-  /*Widget _buildMaterialList({
-    required String cantidadPruebaLadToString,
-    required String cantidadPruebaAreToString,
-    required String cantidadPruebaCemToString,
-  }) {
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2), // Ancho para la descripción
-        1: FlexColumnWidth(1), // Ancho para la unidad
-        2: FlexColumnWidth(2), // Ancho para la cantidad
-      },
-      children: [
-        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-        _buildMaterialRow('Cemento', 'Bls', cantidadPruebaCemToString),
-        _buildMaterialRow('Arena fina', 'm3', cantidadPruebaAreToString),
-        _buildMaterialRow('Ladrillo', 'Und', cantidadPruebaLadToString),
-      ],
-    );
-  }*/
 
   TableRow _buildMaterialRow(String description, String unit, String amount,
       {bool isHeader = false}) {
@@ -343,138 +342,6 @@ class _ResultLadrilloScreenView extends ConsumerWidget {
   }
 }
 
-/*
-class _BloquetaContainer extends ConsumerWidget {
-  const _BloquetaContainer();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final results = ref.watch(bloquetaResultProvider);
-
-    return _buildBloquetaContainer(context, results);
-  }
-
-  Widget _buildBloquetaContainer(BuildContext context, List<Bloqueta> results) {
-
-    double calcularArea(Bloqueta bloqueta) {
-      if (bloqueta.area != null && bloqueta.area!.isNotEmpty) {
-        return double.tryParse(bloqueta.area!) ?? 0.0; // Si es área
-      } else {
-        final largo = double.tryParse(bloqueta.largo ?? '') ?? 0.0;
-        final altura = double.tryParse(bloqueta.altura ?? '') ?? 0.0;
-        return largo * altura; // Si es largo y altura
-      }
-    }
-
-    double calcularSumaTotalDeAreas(List<Bloqueta> results) {
-      double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularArea(results[i]);
-      }
-      return sumaTotal;
-    }
-
-    double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
-
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
-          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
-          2: FlexColumnWidth(2), // Ancho fijo para la tercera columna
-        },
-        children: [
-          // Encabezados de tabla
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Descripción',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Und.',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Área',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Filas de datos
-          for (var result in results)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    result.description,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'm2',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    calcularArea(result).toStringAsFixed(2),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ],
-            ),
-          // Fila del total
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey[300]),
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Total:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'm2',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  sumaTotalDeAreas.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-
-}
-*/
-
 class _LadrilloContainer extends ConsumerWidget {
   const _LadrilloContainer();
 
@@ -486,6 +353,10 @@ class _LadrilloContainer extends ConsumerWidget {
   }
 
   Widget _buildLadrilloContainer(BuildContext context, List<Ladrillo> results) {
+    if (results.isEmpty) {
+      return const Text('No hay datos de ladrillos');
+    }
+
     double calcularArea(Ladrillo ladrillo) {
       if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
         return double.tryParse(ladrillo.area!) ?? 0.0; // Si es área
@@ -556,7 +427,7 @@ class _LadrilloContainer extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    'm2',
+                    'm²',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                   ),
                 ),
@@ -583,7 +454,7 @@ class _LadrilloContainer extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'm2',
+                  'm²',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -602,43 +473,28 @@ class _LadrilloContainer extends ConsumerWidget {
   }
 }
 
+// ============================================================================
+// FUNCIONES DE CÁLCULO ACTUALIZADAS BASADAS EN EL EXCEL
+// ============================================================================
 
-Future<File> generatePdf(WidgetRef ref) async {
-  final pdf = pw.Document();
-  final listaLadrillo = ref.watch(ladrilloResultProvider);
-//  final listaBloqueta = ref.watch(bloquetaResultProvider);
+// Datos de tipos de ladrillos con sus dimensiones (en cm)
+Map<String, Map<String, double>> get tiposLadrillo => {
+  'Pandereta': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+  'Pandereta1': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+  'Pandereta2': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+  'Kingkong': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+  'Kingkong1': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+  'Kingkong2': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+  'Común': {'largo': 24.0, 'ancho': 12.0, 'alto': 8.0},
+};
 
-  String title = listaLadrillo.isNotEmpty ? 'Resultados de Ladrillo' : 'Resultados de Bloqueta';
-
-  pdf.addPage(
-    pw.Page(
-      build: (context) => pw.Center(
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 20),
-            if (listaLadrillo.isNotEmpty) ...[
-              pw.Text('Ladrillos: ${calcularCantidadMaterial(listaLadrillo, calcularLadrillos).toStringAsFixed(2)}'),
-              pw.Text('Arena: ${calcularCantidadMaterial(listaLadrillo, calcularArena).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${calcularCantidadMaterial(listaLadrillo, calcularCemento).ceilToDouble()} bls'),
-            ]
-            /*else if (listaBloqueta.isNotEmpty) ...[
-              pw.Text('Bloquetas: ${cantidadBloquetas(listaBloqueta).toStringAsFixed(2)}'),
-              pw.Text('Arena: ${cantidadArena(listaBloqueta).toStringAsFixed(2)} m3'),
-              pw.Text('Cemento: ${cantidadCemento(listaBloqueta).ceilToDouble()} bls'),
-            ],*/
-          ],
-        ),
-      ),
-    ),
-  );
-
-  final output = await getTemporaryDirectory();
-  final file = File('${output.path}/resultados.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file;
-}
+// Proporciones de mortero con sus factores
+Map<String, Map<String, double>> get proporcionesMortero => {
+  '3': {'cemento': 454.0, 'arena': 1.1, 'agua': 250.0},
+  '4': {'cemento': 364.0, 'arena': 1.16, 'agua': 240.0},
+  '5': {'cemento': 302.0, 'arena': 1.2, 'agua': 240.0},
+  '6': {'cemento': 261.0, 'arena': 1.2, 'agua': 235.0},
+};
 
 // Función para obtener el área de un muro
 double obtenerAreaLadrillo(Ladrillo ladrillo) {
@@ -651,308 +507,271 @@ double obtenerAreaLadrillo(Ladrillo ladrillo) {
   }
 }
 
-// Función para calcular la cantidad de material basado en una función específica
-double calcularCantidadMaterial(List<Ladrillo> results, double Function(Ladrillo) calcular) {
-  return results.fold(0.0, (suma, ladrillo) => suma + calcular(ladrillo));
+// Función para calcular cantidad total de material
+double calcularCantidadMaterialNuevo(List<Ladrillo> ladrillos, double Function(Ladrillo) calcularFuncion) {
+  return ladrillos.fold(0.0, (suma, ladrillo) => suma + calcularFuncion(ladrillo));
 }
 
-// FUNCIÓN ACTUALIZADA: Calcular ladrillos según el Excel analizado
-double calcularLadrillos(Ladrillo ladrillo) {
+// Función principal para calcular ladrillos actualizada
+double calcularLadrillosNuevo(Ladrillo ladrillo) {
   double area = obtenerAreaLadrillo(ladrillo);
-  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
+  double factorDesperdicioLadrillo = (double.tryParse(ladrillo.factorDesperdicio) ?? 5.0) / 100;
 
-  // Ancho de juntas estándar (1.5 cm)
-  const juntaHorizontal = 0.015; // metros
-  const juntaVertical = 0.015; // metros
+  String tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
+  Map<String, double>? dimensiones = tiposLadrillo[tipoLadrilloKey];
 
-  // Calcular la cantidad de ladrillos según el tipo y forma de asentado
+  if (dimensiones == null) {
+    // Usar Pandereta por defecto
+    dimensiones = tiposLadrillo['Pandereta']!;
+  }
+
+  double largo = dimensiones['largo']!;
+  double ancho = dimensiones['ancho']!;
+  double alto = dimensiones['alto']!;
+
+  // Cálculo de ladrillos por m² según forma de asentado
   double ladrillosPorM2;
 
-  switch (ladrillo.tipoLadrillo) {
-    case 'Kingkong':
-    // Dimensiones King Kong: 24 x 13 x 9 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        // Longitud: 24cm, Altura: 9cm
-        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        // Longitud: 13cm, Altura: 9cm
-        ladrillosPorM2 = 1 / ((0.13 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else { // canto
-        // Longitud: 24cm, Altura: 13cm
-        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.13 + juntaHorizontal));
-      }
-      break;
-
-    case 'Pandereta':
-    // Dimensiones Pandereta: 23 x 12 x 9 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        // Longitud: 23cm, Altura: 9cm
-        ladrillosPorM2 = 1 / ((0.23 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        // Longitud: 12cm, Altura: 9cm
-        ladrillosPorM2 = 1 / ((0.12 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else { // canto
-        // Longitud: 23cm, Altura: 12cm
-        ladrillosPorM2 = 1 / ((0.23 + juntaVertical) * (0.12 + juntaHorizontal));
-      }
-      break;
-
-    case 'Artesanal':
-    // Dimensiones Artesanal: 22 x 12.5 x 7.5 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        // Longitud: 22cm, Altura: 7.5cm
-        ladrillosPorM2 = 1 / ((0.22 + juntaVertical) * (0.075 + juntaHorizontal));
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        // Longitud: 12.5cm, Altura: 7.5cm
-        ladrillosPorM2 = 1 / ((0.125 + juntaVertical) * (0.075 + juntaHorizontal));
-      } else { // canto
-        // Longitud: 22cm, Altura: 12.5cm
-        ladrillosPorM2 = 1 / ((0.22 + juntaVertical) * (0.125 + juntaHorizontal));
-      }
-      break;
-
-    default:
-    // Usar valores de King Kong por defecto
-      if (ladrillo.tipoAsentado == 'soga') {
-        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        ladrillosPorM2 = 1 / ((0.13 + juntaVertical) * (0.09 + juntaHorizontal));
-      } else { // canto
-        ladrillosPorM2 = 1 / ((0.24 + juntaVertical) * (0.13 + juntaHorizontal));
-      }
+  if (ladrillo.tipoAsentado == 'soga') {
+    // Usar largo y alto, considerando juntas de 1.5 cm
+    ladrillosPorM2 = 1 / ((((largo + 1.5) / 100) * ((alto + 1.5) / 100)));
+  } else if (ladrillo.tipoAsentado == 'cabeza') {
+    // Usar ancho y alto, considerando juntas de 1.5 cm
+    ladrillosPorM2 = 1 / ((((ancho + 1.5) / 100) * ((alto + 1.5) / 100)));
+  } else { // canto
+    // Usar largo y ancho, considerando juntas de 1.5 cm
+    ladrillosPorM2 = 1 / ((((largo + 1.5) / 100) * ((ancho + 1.5) / 100)));
   }
 
-  // Aplicar factor de desperdicio y multiplicar por área
-  return ladrillosPorM2 * (1 + factorDesperdicio) * area;
+  // Aplicar factor de desperdicio de ladrillo
+  double ladrillosPorM2ConDesperdicio = ladrillosPorM2 * (1 + factorDesperdicioLadrillo);
+
+  return ladrillosPorM2ConDesperdicio * area;
 }
 
-// Función auxiliar para calcular el volumen de mortero por muro
-double calcularVolumenMortero(Ladrillo ladrillo) {
+// Función para calcular el volumen de mortero
+double calcularVolumenMorteroNuevo(Ladrillo ladrillo) {
   double area = obtenerAreaLadrillo(ladrillo);
 
-  // Determinar espesor de muro según tipo de ladrillo y tipo de asentado
-  double espesor = 0.0;
+  String tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
+  Map<String, double>? dimensiones = tiposLadrillo[tipoLadrilloKey];
 
-  switch (ladrillo.tipoLadrillo) {
-    case 'Kingkong':
-    // Dimensiones King Kong: 24 x 13 x 9 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        espesor = 0.13; // ancho
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        espesor = 0.24; // largo
-      } else { // canto
-        espesor = 0.09; // alto
-      }
-      break;
+  if (dimensiones == null) {
+    dimensiones = tiposLadrillo['Pandereta']!;
+  }
 
-    case 'Pandereta':
-    // Dimensiones Pandereta: 23 x 12 x 9 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        espesor = 0.12; // ancho
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        espesor = 0.23; // largo
-      } else { // canto
-        espesor = 0.09; // alto
-      }
-      break;
+  double largo = dimensiones['largo']! / 100; // convertir a metros
+  double ancho = dimensiones['ancho']! / 100; // convertir a metros
+  double alto = dimensiones['alto']! / 100; // convertir a metros
 
-    case 'Artesanal':
-    // Dimensiones Artesanal: 22 x 12.5 x 7.5 cm
-      if (ladrillo.tipoAsentado == 'soga') {
-        espesor = 0.125; // ancho
-      } else if (ladrillo.tipoAsentado == 'cabeza') {
-        espesor = 0.22; // largo
-      } else { // canto
-        espesor = 0.075; // alto
-      }
-      break;
+  // Calcular ladrillos por m² sin desperdicio para el cálculo de volumen
+  double ladrillosPorM2Sin;
+  if (ladrillo.tipoAsentado == 'soga') {
+    ladrillosPorM2Sin = 1 / ((((dimensiones['largo']! + 1.5) / 100) * ((dimensiones['alto']! + 1.5) / 100)));
+  } else if (ladrillo.tipoAsentado == 'cabeza') {
+    ladrillosPorM2Sin = 1 / ((((dimensiones['ancho']! + 1.5) / 100) * ((dimensiones['alto']! + 1.5) / 100)));
+  } else { // canto
+    ladrillosPorM2Sin = 1 / ((((dimensiones['largo']! + 1.5) / 100) * ((dimensiones['ancho']! + 1.5) / 100)));
+  }
 
+  // Volumen del ladrillo individual
+  double volumenLadrillo = largo * ancho * alto;
+
+  // Espesor del muro según el tipo de asentado
+  double espesorMuro;
+  if (ladrillo.tipoAsentado == 'soga') {
+    espesorMuro = ancho; // ancho del ladrillo
+  } else if (ladrillo.tipoAsentado == 'cabeza') {
+    espesorMuro = largo; // largo del ladrillo
+  } else { // canto
+    espesorMuro = alto; // alto del ladrillo
+  }
+
+  // Volumen de mortero por m² = Volumen bruto - Volumen ocupado por ladrillos
+  double morteroM3PorM2 = (1.0 * 1.0 * espesorMuro) - (ladrillosPorM2Sin * volumenLadrillo);
+
+  return morteroM3PorM2 * area;
+}
+
+// Función para calcular cemento
+double calcularCementoNuevo(Ladrillo ladrillo) {
+  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
+
+  // Obtener factor de desperdicio de mortero directamente del ladrillo
+  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
+
+  String proporcionStr = ladrillo.proporcionMortero;
+  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
+
+  if (datosProporcion == null) {
+    // Usar 1:4 por defecto
+    datosProporcion = proporcionesMortero['4']!;
+  }
+
+  // Factor cemento (bolsas por m³ de mortero)
+  double factorCemento = datosProporcion['cemento']! / 42.5; // 42.5 kg por bolsa
+
+  // Cálculo de cemento sin desperdicio
+  double cementoSinDesperdicio = factorCemento * volumenMortero;
+
+  // Aplicar factor de desperdicio de mortero
+  return cementoSinDesperdicio * (1 + factorDesperdicioMortero);
+}
+
+// Función para calcular arena
+double calcularArenaNueva(Ladrillo ladrillo) {
+  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
+
+  // Obtener factor de desperdicio de mortero directamente del ladrillo
+  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
+
+  String proporcionStr = ladrillo.proporcionMortero;
+  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
+
+  if (datosProporcion == null) {
+    // Usar 1:4 por defecto
+    datosProporcion = proporcionesMortero['4']!;
+  }
+
+  // Cálculo de arena sin desperdicio
+  double arenaSinDesperdicio = datosProporcion['arena']! * volumenMortero;
+
+  // Aplicar factor de desperdicio de mortero
+  return arenaSinDesperdicio * (1 + factorDesperdicioMortero);
+}
+
+// Función para calcular agua
+double calcularAguaNueva(Ladrillo ladrillo) {
+  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
+
+  // Obtener factor de desperdicio de mortero directamente del ladrillo
+  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
+
+  String proporcionStr = ladrillo.proporcionMortero;
+  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
+
+  if (datosProporcion == null) {
+    // Usar 1:4 por defecto
+    datosProporcion = proporcionesMortero['4']!;
+  }
+
+  // Cálculo de agua basado en la fórmula del Excel
+  // Factor cemento para calcular el agua correctamente
+  double factorCemento = datosProporcion['cemento']! / 42.5;
+  double aguaSinDesperdicio = ((factorCemento * (42.5 * 0.8)) / 1000) * volumenMortero;
+
+  // Aplicar factor de desperdicio de mortero
+  return aguaSinDesperdicio * (1 + factorDesperdicioMortero);
+}
+
+// Función auxiliar para normalizar el tipo de ladrillo
+String _normalizarTipoLadrillo(String tipo) {
+  switch (tipo.toLowerCase()) {
+    case 'pandereta':
+    case 'pandereta1':
+    case 'pandereta2':
+      return 'Pandereta';
+    case 'kingkong':
+    case 'kingkong1':
+    case 'kingkong2':
+    case 'king kong':
+      return 'Kingkong';
+    case 'común':
+    case 'comun':
+      return 'Común';
     default:
-    // Usar valores por defecto (King Kong soga)
-      espesor = 0.13;
-  }
-
-  // Calcular volumen bruto del muro (m³)
-  double volumenBruto = area * espesor;
-
-  // Calcular volumen ocupado por ladrillos
-  double volumenLadrillo;
-
-  switch (ladrillo.tipoLadrillo) {
-    case 'Kingkong':
-      volumenLadrillo = 0.24 * 0.13 * 0.09; // largo * ancho * alto
-      break;
-    case 'Pandereta':
-      volumenLadrillo = 0.23 * 0.12 * 0.09; // largo * ancho * alto
-      break;
-    case 'Artesanal':
-      volumenLadrillo = 0.22 * 0.125 * 0.075; // largo * ancho * alto
-      break;
-    default:
-      volumenLadrillo = 0.24 * 0.13 * 0.09; // Usar King Kong por defecto
-  }
-
-  // Sin considerar el factor de desperdicio para número base de ladrillos
-  double ladrillosSinDesperdicio = calcularLadrillos(ladrillo) / (1 + (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100);
-
-  // Volumen ocupado por los ladrillos
-  double volumenLadrillos = ladrillosSinDesperdicio * volumenLadrillo;
-
-  // Volumen de mortero = Volumen bruto - Volumen ladrillos
-  return volumenBruto - volumenLadrillos;
-}
-
-// FUNCIÓN ACTUALIZADA: Calcular cemento según Excel analizado
-double calcularCemento(Ladrillo ladrillo) {
-  // Obtener volumen de mortero para el muro
-  double volumenMortero = calcularVolumenMortero(ladrillo);
-
-  // Factor de desperdicio
-  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
-
-  // Cantidad de cemento según proporción de mortero
-  double cementoPorM3; // Bolsas por m³ de mortero
-
-  switch (ladrillo.proporcionMortero) {
-    case '3': // 1:3
-      cementoPorM3 = 454 / 42.5; // 454 kg / 42.5 kg por bolsa
-      break;
-    case '4': // 1:4
-      cementoPorM3 = 364 / 42.5; // 364 kg / 42.5 kg por bolsa
-      break;
-    case '5': // 1:5
-      cementoPorM3 = 302 / 42.5; // 302 kg / 42.5 kg por bolsa
-      break;
-    case '6': // 1:6
-      cementoPorM3 = 261 / 42.5; // 261 kg / 42.5 kg por bolsa
-      break;
-    default:  // Usar 1:4 por defecto
-      cementoPorM3 = 364 / 42.5;
-  }
-
-  // Calcular cantidad de cemento para el volumen de mortero
-  double cemento = cementoPorM3 * volumenMortero;
-
-  // Aplicar factor de desperdicio
-  return cemento * (1 + factorDesperdicio);
-}
-
-// FUNCIÓN ACTUALIZADA: Calcular arena según Excel analizado
-double calcularArena(Ladrillo ladrillo) {
-  // Obtener volumen de mortero para el muro
-  double volumenMortero = calcularVolumenMortero(ladrillo);
-
-  // Factor de desperdicio
-  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
-
-  // Cantidad de arena según proporción de mortero
-  double arenaPorM3; // m³ de arena por m³ de mortero
-
-  switch (ladrillo.proporcionMortero) {
-    case '3': // 1:3
-      arenaPorM3 = 1.10;
-      break;
-    case '4': // 1:4
-      arenaPorM3 = 1.16;
-      break;
-    case '5': // 1:5
-      arenaPorM3 = 1.20;
-      break;
-    case '6': // 1:6
-      arenaPorM3 = 1.20;
-      break;
-    default:  // Usar 1:4 por defecto
-      arenaPorM3 = 1.16;
-  }
-
-  // Calcular cantidad de arena para el volumen de mortero
-  double arena = arenaPorM3 * volumenMortero;
-
-  // Aplicar factor de desperdicio
-  return arena * (1 + factorDesperdicio);
-}
-
-// NUEVA FUNCIÓN: Calcular agua según Excel analizado
-double calcularAgua(Ladrillo ladrillo) {
-  // Obtener volumen de mortero para el muro
-  double volumenMortero = calcularVolumenMortero(ladrillo);
-
-  // Factor de desperdicio
-  double factorDesperdicio = (double.tryParse(ladrillo.factorDesperdicio ?? '') ?? 0.0) / 100;
-
-  // Cantidad de agua según proporción de mortero
-  double aguaPorM3; // Litros por m³ de mortero
-
-  switch (ladrillo.proporcionMortero) {
-    case '3': // 1:3
-      aguaPorM3 = 250;
-      break;
-    case '4': // 1:4
-      aguaPorM3 = 240;
-      break;
-    case '5': // 1:5
-      aguaPorM3 = 240;
-      break;
-    case '6': // 1:6
-      aguaPorM3 = 235;
-      break;
-    default:  // Usar 1:4 por defecto
-      aguaPorM3 = 240;
-  }
-
-  // Convertir litros a m³ y calcular para el volumen de mortero
-  double agua = (aguaPorM3 / 1000) * volumenMortero;
-
-  // Aplicar factor de desperdicio
-  return agua * (1 + factorDesperdicio);
-}
-
-double calcularAsentado(String tipoAsentado, double area, double soga, double canto, [double cabeza = 0]) {
-  switch (tipoAsentado) {
-    case 'soga':
-      return area * soga;
-    case 'canto':
-      return area * canto;
-    case 'cabeza':
-      return area * cabeza;
-    default:
-      return 0;
+      return 'Pandereta'; // Por defecto
   }
 }
 
-double calcularCantidadBloquetas(String tipoBloqueta, double area) {
-  switch (tipoBloqueta) {
-    case 'P7':
-    case 'P10':
-    case 'P12':
-      return area * 8 * (1 + 0.07);
-    default:
-      return 0;
-  }
-}
+// Función para generar PDF actualizada
+Future<File> generatePdfNuevo(WidgetRef ref) async {
+  final pdf = pw.Document();
+  final listaLadrillo = ref.watch(ladrilloResultProvider);
 
-double calcularCantidadArena(String tipoBloqueta, double area) {
-  switch (tipoBloqueta) {
-    case 'P7':
-      return area * 0.0059;
-    case 'P10':
-      return area * 0.0085;
-    case 'P12':
-      return area * 0.0102;
-    default:
-      return 0;
+  if (listaLadrillo.isEmpty) {
+    throw Exception('No hay datos de ladrillos para generar PDF');
   }
-}
 
-double calcularCantidadCemento(String tipoBloqueta, double area) {
-  switch (tipoBloqueta) {
-    case 'P7':
-      return area * 0.052;
-    case 'P10':
-      return area * 0.075;
-    case 'P12':
-      return area * 0.0901;
-    default:
-      return 0;
-  }
+  String title = 'Resultados de Muros de Ladrillos';
+
+  // Calcular totales con las nuevas funciones
+  final cantidadLadrillos = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo);
+  final cantidadArena = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva);
+  final cantidadCemento = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo);
+  final cantidadAgua = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva);
+
+  // Obtener factores de desperdicio del primer ladrillo
+  final primerLadrillo = listaLadrillo.first;
+  final desperdicioLadrillo = double.tryParse(primerLadrillo.factorDesperdicio) ?? 5.0;
+  final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0;
+
+  // Calcular área total
+  final areaTotal = listaLadrillo.fold(0.0, (sum, l) => sum + obtenerAreaLadrillo(l));
+
+  pdf.addPage(
+    pw.Page(
+      build: (context) => pw.Center(
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 20),
+
+            // Información del proyecto
+            pw.Text('INFORMACIÓN DEL PROYECTO:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Text('• Tipo de Ladrillo: ${primerLadrillo.tipoLadrillo}'),
+            pw.Text('• Tipo de Asentado: ${primerLadrillo.tipoAsentado}'),
+            pw.Text('• Proporción Mortero: 1:${primerLadrillo.proporcionMortero}'),
+            pw.Text('• Área total: ${areaTotal.toStringAsFixed(2)} m²'),
+            pw.Text('• Total de muros: ${listaLadrillo.length}'),
+            pw.SizedBox(height: 20),
+
+            // Materiales calculados
+            pw.Text('MATERIALES CALCULADOS:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Text('• Ladrillos: ${cantidadLadrillos.toStringAsFixed(0)} unidades'),
+            pw.Text('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³'),
+            pw.Text('• Cemento: ${cantidadCemento.ceilToDouble()} bolsas'),
+            pw.Text('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³'),
+            pw.SizedBox(height: 20),
+
+            // Configuración aplicada
+            pw.Text('CONFIGURACIÓN APLICADA:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            pw.Text('• Desperdicio de Ladrillo: ${desperdicioLadrillo.toStringAsFixed(1)}%'),
+            pw.Text('• Desperdicio de Mortero: ${desperdicioMortero.toStringAsFixed(1)}%'),
+            pw.SizedBox(height: 20),
+
+            // Detalle de muros
+            pw.Text('DETALLE DE MUROS:', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 5),
+            ...listaLadrillo.map((ladrillo) => pw.Text(
+              '• ${ladrillo.description}: ${obtenerAreaLadrillo(ladrillo).toStringAsFixed(2)} m²',
+              style: pw.TextStyle(fontSize: 12),
+            )),
+            pw.SizedBox(height: 20),
+
+            // Información adicional
+            pw.Text('INFORMACIÓN TÉCNICA:', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 5),
+            pw.Text('• Cálculos basados en las fórmulas del Excel "CALCULO DE MATERIALES POR PARTIDAss.xlsx"',
+                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
+            pw.Text('• Incluye juntas de mortero de 1.5 cm horizontales y verticales',
+                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
+            pw.Text('• Factores de desperdicio aplicados de forma independiente',
+                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
+            pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
+                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  final output = await getTemporaryDirectory();
+  final file = File('${output.path}/resultados_ladrillos_${DateTime.now().millisecondsSinceEpoch}.pdf');
+  await file.writeAsBytes(await pdf.save());
+  return file;
 }

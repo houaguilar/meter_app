@@ -4,7 +4,6 @@ export 'home/home_screen.dart';
 //Muro
 export 'home/muro/wall_screen.dart';
 export 'home/muro/ladrillo/result_ladrillo/result_ladrillo_screen.dart';
-export 'home/muro/ladrillo/pdf_muro/preview_screen.dart';
 
 //Columna
 export 'home/tarrajeo/tarrajeo_screen.dart';
@@ -12,7 +11,6 @@ export 'home/tarrajeo/tarrajeo_screen.dart';
 //Pisos
 export 'home/pisos/pisos_screen.dart';
 export 'home/pisos/result/result_pisos_screen.dart';
-export 'home/pisos/pdf/preview_pisos_screen.dart';
 
 //Losas
 export 'home/losas/losas_screen.dart';
