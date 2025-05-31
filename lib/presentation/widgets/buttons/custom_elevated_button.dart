@@ -5,15 +5,19 @@ import '../../styles/button_styles.dart';
 
 class CustomElevatedButton extends StatelessWidget {
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed; // ← Debe tener el ? para ser nullable
 
-  const CustomElevatedButton({super.key, required this.label, required this.onPressed});
+  const CustomElevatedButton({
+    super.key,
+    required this.label,
+    required this.onPressed
+  });
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: CustomButtonStyles.elevatedStyle,
-      onPressed: onPressed,
+      onPressed: onPressed, // Puede ser null
       child: Text(label),
     );
   }

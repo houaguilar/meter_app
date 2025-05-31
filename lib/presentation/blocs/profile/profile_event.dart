@@ -3,7 +3,11 @@ part of 'profile_bloc.dart';
 @immutable
 sealed class ProfileEvent {}
 
-class LoadProfile extends ProfileEvent {}
+class LoadProfile extends ProfileEvent {
+  final bool forceReload;
+
+  LoadProfile({this.forceReload = false});
+}
 
 class RetryLoadProfile extends ProfileEvent {}
 

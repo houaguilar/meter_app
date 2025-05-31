@@ -35,19 +35,10 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     on<ChangePasswordEvent>(_onChangePassword);
   }
 
-  /*void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
-    // Si ya tenemos el perfil en caché, no hacemos la petición nuevamente
-    if (_cachedProfile != null) {
-      emit(ProfileLoaded(userProfile: _cachedProfile!));
-      return;
-    }
-
-    // Si no hay datos en caché, hacemos la solicitud al backend
-    emit(ProfileLoading());
-    _retryCount = 0;
-    await _loadProfileData(emit);
-  }*/
   void _onLoadProfile(LoadProfile event, Emitter<ProfileState> emit) async {
+    if (event.forceReload) {
+      _cachedProfile = null;
+    }
     // If we already have the profile in cache, don't make the request again
     if (_cachedProfile != null) {
       emit(ProfileLoaded(userProfile: _cachedProfile!));
@@ -188,5 +179,16 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         }
       },
     );
+  }
+
+  // Método público para limpiar el perfil
+  void clearProfile() {
+    _cachedProfile = null;
+    emit(ProfileInitial());
+  }
+
+  /// Fuerza la recarga del perfil
+  void forceReload() {
+    add(LoadProfile(forceReload: true));
   }
 }
