@@ -8,7 +8,6 @@ import 'package:meter_app/presentation/screens/articles/article_detail_screen.da
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
-import 'package:meter_app/presentation/screens/home/muro/ladrillo/datos_ladrillo/datos.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/map_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
@@ -25,12 +24,14 @@ import '../../presentation/screens/home/estructuras/data/datos_structural_elemen
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
 import '../../presentation/screens/home/losas/resultado/resultado_losas.dart';
+import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
 import '../../presentation/screens/home/pisos/datos/datos_p.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
 import '../../presentation/screens/perfil/info/profile_info_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
 import '../../presentation/screens/projects/result/result_screen.dart';
+import '../../presentation/screens/projects/result/result_test.dart';
 
 
 final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
@@ -140,7 +141,7 @@ class AppRouter {
                             parentNavigatorKey: _rootNavigator,
                             path: 'ladrillo1',
                             name: 'ladrillo1',
-                            builder: (context, state) => const DatosLadrilloScreens(),
+                            builder: (context, state) => const DatosLadrilloScreen(),
                             routes: [
                               GoRoute(
                                 parentNavigatorKey: _rootNavigator,
@@ -393,7 +394,7 @@ class AppRouter {
                     name: 'results',
                     builder: (context, state) {
                       final String metradoId = state.pathParameters['metradoId']!;
-                      return ResultScreen(metradoId: metradoId);
+                      return ResultScreens(metradoId: metradoId);
                     },
                   ),
                 ],

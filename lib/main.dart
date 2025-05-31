@@ -112,11 +112,29 @@ class _MyAppState extends ConsumerState<MyApp> {
             create: (_) => placeBloc,
         ),
       ],
-      child: MaterialApp.router(
-        title: 'METRASHOP',
-        debugShowCheckedModeBanner: false,
-        routerConfig: appRouter,
-        theme: AppTheme.light,
+      child: MultiBlocListener(
+        listeners: [
+          // Nuevo: Escuchar cambios de autenticación para limpiar perfil
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) {
+              final profileBloc = context.read<ProfileBloc>();
+
+              if (state is AuthInitial) {
+                // Usuario cerró sesión - limpiar perfil
+                profileBloc.clearProfile();
+              } else if (state is AuthSuccess) {
+                // Usuario inició sesión - cargar nuevo perfil
+                profileBloc.add(LoadProfile(forceReload: true));
+              }
+            },
+          ),
+        ],
+        child: MaterialApp.router(
+          title: 'METRASHOP',
+          debugShowCheckedModeBanner: false,
+          routerConfig: appRouter,
+          theme: AppTheme.light,
+        ),
       ),
     );
   }
