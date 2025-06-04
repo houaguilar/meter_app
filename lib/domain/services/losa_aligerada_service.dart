@@ -1,4 +1,3 @@
-
 import '../entities/home/losas/losas.dart';
 
 class LosaAligeradaService {
@@ -17,272 +16,181 @@ class LosaAligeradaService {
   }
 
   bool esValido(LosaAligerada losaAligerada) {
-    return (losaAligerada.largo != null && losaAligerada.ancho != null) || losaAligerada.area != null;
+    return (losaAligerada.largo != null && losaAligerada.ancho != null) ||
+        losaAligerada.area != null;
   }
 
-  // Calculamos la cantidad de ladrillos según la altura de la losa y el área
-  double calcularLadrillos(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-    double desperdicio = double.tryParse(losaAligerada.desperdicioLadrillo) ?? 5.0;
-    double factorDesperdicio = 1 + (desperdicio / 100);
+  // Calcula el volumen de concreto por m² según altura y material
+  double _calcularVolumenConcretoM2(LosaAligerada losaAligerada) {
+    double volumenConcretoM2;
 
-    // Ladrillos por m2 según altura de losa
-    int ladrillosPorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        ladrillosPorM2 = 8;
-        break;
-      case '20 cm':
-        ladrillosPorM2 = 8;
-        break;
-      case '25 cm':
-        ladrillosPorM2 = 7;
-        break;
-      case '30 cm':
-        ladrillosPorM2 = 6;
-        break;
-      default:
-        ladrillosPorM2 = 8; // valor por defecto
+    if (losaAligerada.materialAligerado == "Bovedillas") {
+      switch (losaAligerada.altura) {
+        case '17 cm':
+          volumenConcretoM2 = 0.0616; // m³/m²
+          break;
+        case '20 cm':
+          volumenConcretoM2 = 0.0712; // m³/m²
+          break;
+        case '25 cm':
+          volumenConcretoM2 = 0.085; // m³/m²
+          break;
+        default:
+          volumenConcretoM2 = 0.0616;
+      }
+    } else { // Ladrillo hueco
+      switch (losaAligerada.altura) {
+        case '17 cm':
+          volumenConcretoM2 = 0.08; // m³/m²
+          break;
+        case '20 cm':
+          volumenConcretoM2 = 0.0875; // m³/m²
+          break;
+        case '25 cm':
+          volumenConcretoM2 = 0.1001; // m³/m²
+          break;
+        default:
+          volumenConcretoM2 = 0.08;
+      }
     }
 
-    return area * ladrillosPorM2 * factorDesperdicio;
+    return volumenConcretoM2;
   }
 
-  // Calculamos el concreto en m3
-  double calcularConcreto(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-    double desperdicio = double.tryParse(losaAligerada.desperdicioConcreto) ?? 5.0;
-    double factorDesperdicio = 1 + (desperdicio / 100);
-
-    // Factores de concreto por m2 según altura de losa
-    double concretoPorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        concretoPorM2 = 0.084;
-        break;
-      case '20 cm':
-        concretoPorM2 = 0.089;
-        break;
-      case '25 cm':
-        concretoPorM2 = 0.100;
-        break;
-      case '30 cm':
-        concretoPorM2 = 0.110;
-        break;
-      default:
-        concretoPorM2 = 0.084; // valor por defecto
-    }
-
-    return area * concretoPorM2 * factorDesperdicio;
-  }
-
-  // Calculamos el acero en kg
-  double calcularAcero(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-
-    // Factores de acero por m2 según altura de losa
-    double aceroPorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        aceroPorM2 = 3.00;
-        break;
-      case '20 cm':
-        aceroPorM2 = 4.00;
-        break;
-      case '25 cm':
-        aceroPorM2 = 5.00;
-        break;
-      case '30 cm':
-        aceroPorM2 = 6.00;
-        break;
-      default:
-        aceroPorM2 = 3.00; // valor por defecto
-    }
-
-    return area * aceroPorM2;
-  }
-
-  // Calculamos la madera en p2 (pies cuadrados)
-  double calcularMadera(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-
-    // Factores de madera por m2 según altura de losa
-    double maderaPorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        maderaPorM2 = 5.15;
-        break;
-      case '20 cm':
-        maderaPorM2 = 5.15;
-        break;
-      case '25 cm':
-        maderaPorM2 = 5.70;
-        break;
-      case '30 cm':
-        maderaPorM2 = 6.30;
-        break;
-      default:
-        maderaPorM2 = 5.15; // valor por defecto
-    }
-
-    return area * maderaPorM2;
-  }
-
-  // Calculamos la arena gruesa en m3
-  double calcularArenaGruesa(LosaAligerada losaAligerada) {
-    double volumenConcreto = calcularConcreto(losaAligerada);
-
-    // Cantidad de arena por m3 de concreto según resistencia
-    double factorArena;
-    switch (losaAligerada.resistenciaConcreto) {
-      case '210 kg/cm²':
-        factorArena = 0.56;
-        break;
+  // Obtiene los factores de materiales según la resistencia del concreto
+  Map<String, double> _getFactoresMateriales(String resistenciaConcreto) {
+    switch (resistenciaConcreto) {
       case '175 kg/cm²':
-        factorArena = 0.61;
-        break;
-      default:
-        factorArena = 0.56; // valor por defecto
-    }
-
-    return volumenConcreto * factorArena;
-  }
-
-  // Calculamos la piedra chancada en m3
-  double calcularPiedraChancada(LosaAligerada losaAligerada) {
-    double volumenConcreto = calcularConcreto(losaAligerada);
-
-    // Cantidad de piedra por m3 de concreto según resistencia
-    double factorPiedra;
-    switch (losaAligerada.resistenciaConcreto) {
+        return {
+          'cemento': 8.43, // bolsas por m³
+          'arena': 0.54, // m³ por m³
+          'piedra': 0.55, // m³ por m³
+          'agua': 0.185, // m³ por m³
+        };
       case '210 kg/cm²':
-        factorPiedra = 0.67;
-        break;
-      case '175 kg/cm²':
-        factorPiedra = 0.76;
-        break;
+        return {
+          'cemento': 9.73, // bolsas por m³
+          'arena': 0.52, // m³ por m³
+          'piedra': 0.53, // m³ por m³
+          'agua': 0.186, // m³ por m³
+        };
+      case '280 kg/cm²':
+        return {
+          'cemento': 11.5, // bolsas por m³
+          'arena': 0.5, // m³ por m³
+          'piedra': 0.51, // m³ por m³
+          'agua': 0.187, // m³ por m³
+        };
+      case '140 kg/cm²':
+        return {
+          'cemento': 7.0, // bolsas por m³
+          'arena': 0.55, // m³ por m³
+          'piedra': 0.65, // m³ por m³
+          'agua': 0.18, // m³ por m³
+        };
+      case '245 kg/cm²':
+        return {
+          'cemento': 10.5, // bolsas por m³
+          'arena': 0.51, // m³ por m³
+          'piedra': 0.52, // m³ por m³
+          'agua': 0.186, // m³ por m³
+        };
       default:
-        factorPiedra = 0.67; // valor por defecto
+        return {
+          'cemento': 7.0,
+          'arena': 0.55,
+          'piedra': 0.65,
+          'agua': 0.18,
+        };
     }
-
-    return volumenConcreto * factorPiedra;
   }
 
   // Calculamos el cemento en bolsas
   double calcularCemento(LosaAligerada losaAligerada) {
-    double volumenConcreto = calcularConcreto(losaAligerada);
+    double area = calcularArea(losaAligerada) ?? 0.0;
+    double volumenConcretoM2 = _calcularVolumenConcretoM2(losaAligerada);
+    double volumenConcretoTotal = volumenConcretoM2 * area;
 
-    // Bolsas de cemento por m3 de concreto según resistencia
-    double factorCemento;
-    switch (losaAligerada.resistenciaConcreto) {
-      case '210 kg/cm²':
-        factorCemento = 8.43;
-        break;
-      case '175 kg/cm²':
-        factorCemento = 7.01;
-        break;
-      default:
-        factorCemento = 8.43; // valor por defecto
-    }
+    // Factor de desperdicio de concreto
+    double desperdicioConcreto = double.tryParse(
+        losaAligerada.desperdicioConcreto) ?? 5.0;
+    double factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
-    return volumenConcreto * factorCemento;
+    // Factores según resistencia
+    Map<String, double> factores = _getFactoresMateriales(
+        losaAligerada.resistenciaConcreto);
+    double factorCemento = factores['cemento']!;
+
+    return volumenConcretoTotal * factorCemento * factorDesperdicio;
   }
 
-  // Calculamos el agua en litros
+  // Calculamos la arena gruesa en m³
+  double calcularArenaGruesa(LosaAligerada losaAligerada) {
+    double area = calcularArea(losaAligerada) ?? 0.0;
+    double volumenConcretoM2 = _calcularVolumenConcretoM2(losaAligerada);
+    double volumenConcretoTotal = volumenConcretoM2 * area;
+
+    // Factor de desperdicio de concreto
+    double desperdicioConcreto = double.tryParse(
+        losaAligerada.desperdicioConcreto) ?? 5.0;
+    double factorDesperdicio = 1 + (desperdicioConcreto / 100);
+
+    // Factores según resistencia
+    Map<String, double> factores = _getFactoresMateriales(
+        losaAligerada.resistenciaConcreto);
+    double factorArena = factores['arena']!;
+
+    return volumenConcretoTotal * factorArena * factorDesperdicio;
+  }
+
+  // Calculamos la piedra chancada en m³
+  double calcularPiedraChancada(LosaAligerada losaAligerada) {
+    double area = calcularArea(losaAligerada) ?? 0.0;
+    double volumenConcretoM2 = _calcularVolumenConcretoM2(losaAligerada);
+    double volumenConcretoTotal = volumenConcretoM2 * area;
+
+    // Factor de desperdicio de concreto
+    double desperdicioConcreto = double.tryParse(
+        losaAligerada.desperdicioConcreto) ?? 5.0;
+    double factorDesperdicio = 1 + (desperdicioConcreto / 100);
+
+    // Factores según resistencia
+    Map<String, double> factores = _getFactoresMateriales(
+        losaAligerada.resistenciaConcreto);
+    double factorPiedra = factores['piedra']!;
+
+    return volumenConcretoTotal * factorPiedra * factorDesperdicio;
+  }
+
+  // Calculamos el agua en m³
   double calcularAgua(LosaAligerada losaAligerada) {
-    double volumenConcreto = calcularConcreto(losaAligerada);
+    double area = calcularArea(losaAligerada) ?? 0.0;
+    double volumenConcretoM2 = _calcularVolumenConcretoM2(losaAligerada);
+    double volumenConcretoTotal = volumenConcretoM2 * area;
 
-    // Litros de agua por m3 de concreto según resistencia
-    double factorAgua;
-    switch (losaAligerada.resistenciaConcreto) {
-      case '210 kg/cm²':
-        factorAgua = 186;
-        break;
-      case '175 kg/cm²':
-        factorAgua = 181;
-        break;
-      default:
-        factorAgua = 186; // valor por defecto
-    }
+    // Factor de desperdicio de concreto
+    double desperdicioConcreto = double.tryParse(
+        losaAligerada.desperdicioConcreto) ?? 5.0;
+    double factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
-    return volumenConcreto * factorAgua;
+    // Factores según resistencia
+    Map<String, double> factores = _getFactoresMateriales(
+        losaAligerada.resistenciaConcreto);
+    double factorAgua = factores['agua']!;
+
+    return volumenConcretoTotal * factorAgua * factorDesperdicio;
   }
 
-  // Calculamos la alambre #8 en kg
-  double calcularAlambre8(LosaAligerada losaAligerada) {
+  // Método para obtener el volumen de concreto (útil para mostrar información adicional)
+  double calcularVolumenConcreto(LosaAligerada losaAligerada) {
     double area = calcularArea(losaAligerada) ?? 0.0;
+    double volumenConcretoM2 = _calcularVolumenConcretoM2(losaAligerada);
 
-    // Factores de alambre #8 por m2 según altura de losa
-    double alambrePorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        alambrePorM2 = 0.20;
-        break;
-      case '20 cm':
-        alambrePorM2 = 0.25;
-        break;
-      case '25 cm':
-        alambrePorM2 = 0.30;
-        break;
-      case '30 cm':
-        alambrePorM2 = 0.35;
-        break;
-      default:
-        alambrePorM2 = 0.20; // valor por defecto
-    }
+    // Factor de desperdicio de concreto
+    double desperdicioConcreto = double.tryParse(
+        losaAligerada.desperdicioConcreto) ?? 5.0;
+    double factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
-    return area * alambrePorM2;
-  }
-
-  // Calculamos la alambre #16 en kg
-  double calcularAlambre16(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-
-    // Factores de alambre #16 por m2 según altura de losa
-    double alambrePorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        alambrePorM2 = 0.10;
-        break;
-      case '20 cm':
-        alambrePorM2 = 0.15;
-        break;
-      case '25 cm':
-        alambrePorM2 = 0.25;
-        break;
-      case '30 cm':
-        alambrePorM2 = 0.30;
-        break;
-      default:
-        alambrePorM2 = 0.10; // valor por defecto
-    }
-
-    return area * alambrePorM2;
-  }
-
-  // Calculamos los clavos en kg
-  double calcularClavos(LosaAligerada losaAligerada) {
-    double area = calcularArea(losaAligerada) ?? 0.0;
-
-    // Factores de clavos por m2 según altura de losa
-    double clavosPorM2;
-    switch (losaAligerada.altura) {
-      case '17 cm':
-        clavosPorM2 = 0.15;
-        break;
-      case '20 cm':
-        clavosPorM2 = 0.18;
-        break;
-      case '25 cm':
-        clavosPorM2 = 0.24;
-        break;
-      case '30 cm':
-        clavosPorM2 = 0.26;
-        break;
-      default:
-        clavosPorM2 = 0.15; // valor por defecto
-    }
-
-    return area * clavosPorM2;
+    return volumenConcretoM2 * area * factorDesperdicio;
   }
 }

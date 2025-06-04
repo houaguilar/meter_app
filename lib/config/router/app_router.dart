@@ -8,8 +8,10 @@ import 'package:meter_app/presentation/screens/articles/article_detail_screen.da
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
+import 'package:meter_app/presentation/screens/home/pisos/falso_piso/datos/datos_falso_piso_screen.dart';
+import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/result_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
-import 'package:meter_app/presentation/screens/mapa/map_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
@@ -25,12 +27,12 @@ import '../../presentation/screens/home/estructuras/result/result_structural_ele
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
 import '../../presentation/screens/home/losas/resultado/resultado_losas.dart';
 import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
-import '../../presentation/screens/home/pisos/datos/datos_p.dart';
+import '../../presentation/screens/home/pisos/contrapiso/datos/datos_p.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
+import '../../presentation/screens/mapa/widgets/optimized_place_search_screen.dart';
 import '../../presentation/screens/perfil/info/profile_info_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
-import '../../presentation/screens/projects/result/result_screen.dart';
 import '../../presentation/screens/projects/result/result_test.dart';
 
 
@@ -117,7 +119,7 @@ class AppRouter {
                   parentNavigatorKey: _rootNavigator,
                   path: 'home-to-provider',
                   name: 'home-to-provider',
-                  builder: (context, state) => const MapScreen()
+                  builder: (context, state) => const OptimizedMapScreen(),
               ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,
@@ -153,7 +155,7 @@ class AppRouter {
                                       parentNavigatorKey: _rootNavigator,
                                       path: 'map-screen-2',
                                       name: 'map-screen-2',
-                                      builder: (context, state) => const MapScreen()
+                                      builder: (context, state) => const OptimizedMapScreen(),
                                   ),
                                   GoRoute(
                                     parentNavigatorKey: _rootNavigator,
@@ -197,7 +199,7 @@ class AppRouter {
                               parentNavigatorKey: _rootNavigator,
                               path: 'map-screen-tarrajeo',
                               name: 'map-screen-tarrajeo',
-                              builder: (context, state) => const MapScreen()
+                              builder: (context, state) => const OptimizedMapScreen(),
                           ),
                           GoRoute(
                               parentNavigatorKey: _rootNavigator,
@@ -241,41 +243,73 @@ class AppRouter {
                     parentNavigatorKey: _rootNavigator,
                     path: 'falso-piso',
                     name: 'falso-piso',
-                    builder: (context, state) => const DatosPisosScreens(),
+                    builder: (context, state) => const DatosFalsoPisoScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'falso-pisos-results',
+                        name: 'falso-pisos-results',
+                        builder: (context, state) => const ResultFalsoPisoScreen(),
+                        routes: [
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'falso-piso-map-screen',
+                              name: 'falso-piso-map-screen',
+                              builder: (context, state) => const OptimizedMapScreen(),
+                          ),
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'falso-piso-save',
+                              name: 'falso-piso-save',
+                              builder: (context, state) => const SaveResultScreen(),
+                              routes: [
+                                GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'falso-piso-new-project',
+                                  name: 'falso-piso-new-project',
+                                  builder: (context, state) => const NewProjectScreen(),
+                                ),
+                              ]
+                          ),
+                        ],
+                      ),
+                    ]
                   ),
                   GoRoute(
                     parentNavigatorKey: _rootNavigator,
                     path: 'contrapiso',
                     name: 'contrapiso',
                     builder: (context, state) => const DatosPisosScreens(),
-                  ),
-                  GoRoute(
-                    parentNavigatorKey: _rootNavigator,
-                    path: 'pisos_results',
-                    name: 'pisos_results',
-                    builder: (context, state) => const ResultPisosScreen(),
                     routes: [
                       GoRoute(
-                          parentNavigatorKey: _rootNavigator,
-                          path: 'map-screen-piso',
-                          name: 'map-screen-piso',
-                          builder: (context, state) => const MapScreen()
-                      ),
-                      GoRoute(
                         parentNavigatorKey: _rootNavigator,
-                        path: 'save-piso',
-                        name: 'save-piso',
-                        builder: (context, state) => const SaveResultScreen(),
+                        path: 'contrapiso-result',
+                        name: 'contrapiso-result',
+                        builder: (context, state) => const ResultPisosScreen(),
                         routes: [
                           GoRoute(
-                            parentNavigatorKey: _rootNavigator,
-                            path: 'new-project-piso',
-                            name: 'new-project-piso',
-                            builder: (context, state) => const NewProjectScreen(),
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'contrapiso-map-screen',
+                              name: 'contrapiso-map-screen',
+                              builder: (context, state) => const OptimizedMapScreen(),
                           ),
-                        ]
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'contrapiso-save',
+                              name: 'contrapiso-save',
+                              builder: (context, state) => const SaveResultScreen(),
+                              routes: [
+                                GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'contrapiso-new-project',
+                                  name: 'contrapiso-new-project',
+                                  builder: (context, state) => const NewProjectScreen(),
+                                ),
+                              ]
+                          ),
+                        ],
                       ),
-                    ],
+                    ]
                   ),
                 ],
               ),
@@ -301,7 +335,7 @@ class AppRouter {
                               parentNavigatorKey: _rootNavigator,
                               path: 'map-screen-losas',
                               name: 'map-screen-losas',
-                              builder: (context, state) => const MapScreen()
+                              builder: (context, state) => const OptimizedMapScreen(),
                           ),
                           GoRoute(
                               parentNavigatorKey: _rootNavigator,
@@ -345,7 +379,7 @@ class AppRouter {
                           parentNavigatorKey: _rootNavigator,
                           path: 'map-screen-structural',
                           name: 'map-screen-structural',
-                          builder: (context, state) => const MapScreen()
+                          builder: (context, state) => const OptimizedMapScreen(),
                       ),
                       GoRoute(
                           parentNavigatorKey: _rootNavigator,
@@ -429,12 +463,6 @@ class AppRouter {
                 path: 'profile-info',
                 name: 'profile-info',
                 builder: (context, state) => const ProfileInfoScreen(),
-              ),
-              GoRoute(
-                parentNavigatorKey: _rootNavigator,
-                path: 'resultados',
-                name: 'resultados',
-                builder: (context, state) => const MapScreen(),
               ),
               GoRoute(
                 parentNavigatorKey: _rootNavigator,

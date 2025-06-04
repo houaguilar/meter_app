@@ -8,12 +8,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../domain/entities/home/estructuras/columna/columna.dart';
-import '../../../../../domain/entities/home/estructuras/viga/viga.dart';
-import '../../../../../domain/services/structural_element_service.dart';
 import '../../../../assets/icons.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
-import '../../../../providers/home/estructuras/structural_providers.dart';
 import '../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -105,8 +101,6 @@ class ResultStructuralElementsScreen extends ConsumerWidget {
   }
 
   void _showOptionsDialog(BuildContext context, WidgetRef ref) {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -134,7 +128,6 @@ class ResultStructuralElementsScreen extends ConsumerWidget {
     );
   }
 
-  // lib/presentation/screens/home/structural/result/result_structural_elements_screen.dart (continued)
   String _shareContent(WidgetRef ref) {
     final tipoElemento = ref.watch(tipoStructuralElementProvider);
 
@@ -154,10 +147,10 @@ class ResultStructuralElementsScreen extends ConsumerWidget {
 
       final datosColumna = ref.watch(datosShareColumnaProvider);
 
-      shareText = '$datosMetrado \n$datosColumna \n-------------\n$listaMateriales \n'
-          '*Cemento: $cantidadCemento bls \n'
-          '*Arena gruesa: $cantidadArena m3 \n'
-          '*Piedra chancada: $cantidadPiedra m3 \n'
+      shareText = '$datosMetrado\n$datosColumna\n-------------\n$listaMateriales\n'
+          '*Cemento: $cantidadCemento bls\n'
+          '*Arena gruesa: $cantidadArena m3\n'
+          '*Piedra para concreto: $cantidadPiedra m3\n'
           '*Agua: $cantidadAgua m3';
     } else {
       final listaVigas = ref.watch(vigaResultProvider);
@@ -171,10 +164,10 @@ class ResultStructuralElementsScreen extends ConsumerWidget {
 
       final datosViga = ref.watch(datosShareVigaProvider);
 
-      shareText = '$datosMetrado \n$datosViga \n-------------\n$listaMateriales \n'
-          '*Cemento: $cantidadCemento bls \n'
-          '*Arena gruesa: $cantidadArena m3 \n'
-          '*Piedra chancada: $cantidadPiedra m3 \n'
+      shareText = '$datosMetrado\n$datosViga\n-------------\n$listaMateriales\n'
+          '*Cemento: $cantidadCemento bls\n'
+          '*Arena gruesa: $cantidadArena m3\n'
+          '*Piedra para concreto: $cantidadPiedra m3\n'
           '*Agua: $cantidadAgua m3';
     }
 
@@ -276,9 +269,9 @@ class _ResultStructuralElementsScreenView extends ConsumerWidget {
       children: [
         _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
         _buildMaterialRow('Cemento', 'Bls', cantidadCemento),
-        _buildMaterialRow('Arena gruesa', 'm3', cantidadArena),
-        _buildMaterialRow('Piedra chancada', 'm3', cantidadPiedra),
-        _buildMaterialRow('Agua', 'm3', cantidadAgua),
+        _buildMaterialRow('Arena gruesa', 'm³', cantidadArena),
+        _buildMaterialRow('Piedra para concreto', 'm³', cantidadPiedra),
+        _buildMaterialRow('Agua', 'm³', cantidadAgua),
       ],
     );
   }
@@ -298,9 +291,9 @@ class _ResultStructuralElementsScreenView extends ConsumerWidget {
       children: [
         _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
         _buildMaterialRow('Cemento', 'Bls', cantidadCemento),
-        _buildMaterialRow('Arena gruesa', 'm3', cantidadArena),
-        _buildMaterialRow('Piedra chancada', 'm3', cantidadPiedra),
-        _buildMaterialRow('Agua', 'm3', cantidadAgua),
+        _buildMaterialRow('Arena gruesa', 'm³', cantidadArena),
+        _buildMaterialRow('Piedra para concreto', 'm³', cantidadPiedra),
+        _buildMaterialRow('Agua', 'm³', cantidadAgua),
       ],
     );
   }
@@ -346,118 +339,8 @@ class _ColumnaContainer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(columnaResultProvider);
-    return _buildColumnaContainer(context, results);
-  }
-
-  Widget _buildColumnaContainer(BuildContext context, List<Columna> results) {
-    final structuralElementService = StructuralElementService();
-
-    double calcularVolumen(Columna columna) {
-      return structuralElementService.calcularVolumen(columna) ?? 0.0;
-    }
-
-    double calcularSumaTotalDeVolumenes(List<Columna> results) {
-      double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularVolumen(results[i]);
-      }
-      return sumaTotal;
-    }
-
-    double sumaTotalDeVolumenes = calcularSumaTotalDeVolumenes(results);
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para descripción
-          1: FlexColumnWidth(1), // Ancho fijo para unidad
-          2: FlexColumnWidth(1), // Ancho fijo para volumen
-        },
-        children: [
-          // Encabezados de tabla
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Descripción',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Und.',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Volumen',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Filas de datos
-          for (var result in results)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    result.description,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'm3',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    calcularVolumen(result).toStringAsFixed(2),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ],
-            ),
-          // Fila del total
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey[300]),
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Total:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'm3',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  sumaTotalDeVolumenes.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+    final volumenes = ref.watch(volumenColumnaProvider);
+    return _buildElementContainer(context, results, volumenes, 'Columna');
   }
 }
 
@@ -467,119 +350,100 @@ class _VigaContainer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final results = ref.watch(vigaResultProvider);
-    return _buildVigaContainer(context, results);
+    final volumenes = ref.watch(volumenVigaProvider);
+    return _buildElementContainer(context, results, volumenes, 'Viga');
   }
+}
 
-  Widget _buildVigaContainer(BuildContext context, List<Viga> results) {
-    final structuralElementService = StructuralElementService();
+Widget _buildElementContainer(BuildContext context, List<dynamic> results, List<double> volumenes, String tipo) {
+  // Calcular suma total de volúmenes
+  double sumaTotalDeVolumenes = volumenes.fold(0.0, (sum, volumen) => sum + volumen);
 
-    double calcularVolumen(Viga viga) {
-      return structuralElementService.calcularVolumen(viga) ?? 0.0;
-    }
-
-    double calcularSumaTotalDeVolumenes(List<Viga> results) {
-      double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularVolumen(results[i]);
-      }
-      return sumaTotal;
-    }
-
-    double sumaTotalDeVolumenes = calcularSumaTotalDeVolumenes(results);
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para descripción
-          1: FlexColumnWidth(1), // Ancho fijo para unidad
-          2: FlexColumnWidth(1), // Ancho fijo para volumen
-        },
-        children: [
-          // Encabezados de tabla
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Descripción',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
+  return Padding(
+    padding: const EdgeInsets.all(0.0),
+    child: Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2), // Ancho para descripción
+        1: FlexColumnWidth(1), // Ancho para unidad
+        2: FlexColumnWidth(1), // Ancho para volumen
+      },
+      children: [
+        // Encabezados de tabla
+        const TableRow(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Und.',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Und.',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Volumen',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Filas de datos
-          for (var result in results)
-            TableRow(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    result.description,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'm3',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    calcularVolumen(result).toStringAsFixed(2),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-              ],
             ),
-          // Fila del total
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Volumen',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        // Filas de datos
+        for (int i = 0; i < results.length; i++)
           TableRow(
-            decoration: BoxDecoration(color: Colors.grey[300]),
             children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  'Total:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  results[i].description,
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                 ),
               ),
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'm3',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  'm³',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
-                  sumaTotalDeVolumenes.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  volumenes[i].toStringAsFixed(2),
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                 ),
               ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        // Fila del total
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey[300]),
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Total:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'm³',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                sumaTotalDeVolumenes.toStringAsFixed(2),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
 }
 
 // Implementación para generar PDF
@@ -597,17 +461,26 @@ Future<File> generatePdf(WidgetRef ref) async {
           children: [
             pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 20),
+            pw.Text('Lista de Materiales:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
             if (tipoElemento == 'columna') ...[
-              pw.Text('Cemento: ${ref.watch(cantidadCementoColumnaProvider).ceilToDouble()} bls'),
-              pw.Text('Arena gruesa: ${ref.watch(cantidadArenaColumnaProvider).toStringAsFixed(2)} m3'),
-              pw.Text('Piedra chancada: ${ref.watch(cantidadPiedraColumnaProvider).toStringAsFixed(2)} m3'),
-              pw.Text('Agua: ${ref.watch(cantidadAguaColumnaProvider).toStringAsFixed(2)} m3'),
+              pw.Text('• Cemento: ${ref.watch(cantidadCementoColumnaProvider).ceilToDouble()} bls'),
+              pw.Text('• Arena gruesa: ${ref.watch(cantidadArenaColumnaProvider).toStringAsFixed(2)} m³'),
+              pw.Text('• Piedra para concreto: ${ref.watch(cantidadPiedraColumnaProvider).toStringAsFixed(2)} m³'),
+              pw.Text('• Agua: ${ref.watch(cantidadAguaColumnaProvider).toStringAsFixed(2)} m³'),
             ] else ...[
-              pw.Text('Cemento: ${ref.watch(cantidadCementoVigaProvider).ceilToDouble()} bls'),
-              pw.Text('Arena gruesa: ${ref.watch(cantidadArenaVigaProvider).toStringAsFixed(2)} m3'),
-              pw.Text('Piedra chancada: ${ref.watch(cantidadPiedraVigaProvider).toStringAsFixed(2)} m3'),
-              pw.Text('Agua: ${ref.watch(cantidadAguaVigaProvider).toStringAsFixed(2)} m3'),
+              pw.Text('• Cemento: ${ref.watch(cantidadCementoVigaProvider).ceilToDouble()} bls'),
+              pw.Text('• Arena gruesa: ${ref.watch(cantidadArenaVigaProvider).toStringAsFixed(2)} m³'),
+              pw.Text('• Piedra para concreto: ${ref.watch(cantidadPiedraVigaProvider).toStringAsFixed(2)} m³'),
+              pw.Text('• Agua: ${ref.watch(cantidadAguaVigaProvider).toStringAsFixed(2)} m³'),
             ],
+            pw.SizedBox(height: 20),
+            pw.Text('Datos del Metrado:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            if (tipoElemento == 'columna')
+              pw.Text(ref.watch(datosShareColumnaProvider))
+            else
+              pw.Text(ref.watch(datosShareVigaProvider)),
           ],
         ),
       ),

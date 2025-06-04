@@ -9,9 +9,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../domain/entities/entities.dart';
 import '../../../../assets/icons.dart';
-import '../../../../widgets/widgets.dart';
+import '../../../../widgets/app_bar/app_bar_widget.dart';
+import '../../../../widgets/shared/options_dialog.dart';
+import 'package:pdf/pdf.dart'; // Importa el paquete de colores
 import 'package:pdf/widgets.dart' as pw;
 
 class ResultTarrajeoScreen extends ConsumerWidget {
@@ -25,7 +26,7 @@ class ResultTarrajeoScreen extends ConsumerWidget {
         return true;
       },
       child: Scaffold(
-        appBar: AppBarWidget(titleAppBar: 'Resultado',),
+        appBar: AppBarWidget(titleAppBar: 'Resultado'),
         body: const _ResultTarrajeoScreenView(),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         floatingActionButton: _buildFloatingActionButtons(context, ref),
@@ -34,6 +35,13 @@ class ResultTarrajeoScreen extends ConsumerWidget {
   }
 
   Widget _buildFloatingActionButtons(BuildContext context, WidgetRef ref) {
+    // Validar que hay datos antes de mostrar botones
+    final hayDatos = ref.watch(hayDatosValidosProvider);
+
+    if (!hayDatos) {
+      return const SizedBox.shrink();
+    }
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
@@ -45,7 +53,7 @@ class ResultTarrajeoScreen extends ConsumerWidget {
               ref,
               label: 'Guardar',
               icon: Icons.add_box_rounded,
-              heroTag: 'savee_button_coating',
+              heroTag: 'save_button_coating',
               onPressed: () {
                 context.pushNamed('save-tarrajeo');
               },
@@ -89,6 +97,7 @@ class ResultTarrajeoScreen extends ConsumerWidget {
         required VoidCallback onPressed
       }) {
     return FloatingActionButton.extended(
+      heroTag: heroTag,
       label: Text(label),
       icon: Icon(icon),
       onPressed: onPressed,
@@ -105,40 +114,31 @@ class ResultTarrajeoScreen extends ConsumerWidget {
               icon: Icons.picture_as_pdf,
               text: 'PDF',
               onTap: () async {
-                final pdfFile = await generatePdfTarrajeo(ref);
-                final xFile = XFile(pdfFile.path);
-                Share.shareXFiles([xFile], text: 'Resultados del metrado de tarrajeo.');
+                Navigator.of(context).pop();
+                try {
+                  final pdfFile = await generatePdfTarrajeo(ref);
+                  final xFile = XFile(pdfFile.path);
+                  await Share.shareXFiles([xFile], text: 'Resultados del metrado de tarrajeo.');
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error al generar PDF: $e')),
+                  );
+                }
               },
             ),
             DialogOption(
               icon: Icons.text_fields,
               text: 'TEXTO',
               onTap: () async {
-                await Share.share(_shareContent(ref));
+                Navigator.of(context).pop();
+                final resumen = ref.read(resumenCompletoProvider);
+                await Share.share(resumen);
               },
             ),
           ],
         );
       },
     );
-  }
-
-  String _shareContent(WidgetRef ref) {
-    final listaTarrajeo = ref.watch(tarrajeoResultProvider);
-    if (listaTarrajeo.isEmpty) return 'Error: No hay datos disponibles.';
-
-    String datosMetrado = 'DATOS METRADO';
-    String listaMateriales = 'LISTA DE MATERIALES';
-    final datosShare = ref.watch(datosShareTarrajeoProvider);
-
-    String cantidadArenaToString = calcularCantidadArena(listaTarrajeo).toStringAsFixed(2);
-    String cantidadCementoToString = calcularCantidadCemento(listaTarrajeo).ceilToDouble().toString();
-    String cantidadAguaToString = calcularCantidadAgua(listaTarrajeo).toStringAsFixed(2);
-
-    return '$datosMetrado\n$datosShare\n-------------\n$listaMateriales\n'
-        '*Arena fina: $cantidadArenaToString m3\n'
-        '*Cemento: $cantidadCementoToString bls\n'
-        '*Agua: $cantidadAguaToString m3';
   }
 }
 
@@ -147,29 +147,33 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final listaTarrajeo = ref.watch(tarrajeoResultProvider);
+    final hayDatos = ref.watch(hayDatosValidosProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
       child: Column(
         children: [
-          const SizedBox(height: 10,),
+          const SizedBox(height: 10),
           SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 10,),
-          if (listaTarrajeo.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          if (hayDatos) ...[
             _buildSummaryCard(
               context,
               'Datos del Metrado',
-              const _TarrajeoContainer(),
+              const _TarrajeoMetradoTable(),
             ),
             const SizedBox(height: 20),
             _buildSummaryCard(
               context,
               'Lista de Materiales',
-              _buildMaterialList(context, listaTarrajeo),
+              const _TarrajeoMaterialesList(),
             ),
+            const SizedBox(height: 20),
+            const _EstadisticasCard(),
+          ] else ...[
+            _buildEmptyState(),
           ],
-          const SizedBox(height: 200,)
+          const SizedBox(height: 200),
         ],
       ),
     );
@@ -193,9 +197,11 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
             ),
             child: Text(
               title,
-              style: const TextStyle(fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryMetraShop),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primaryMetraShop,
+              ),
             ),
           ),
           Padding(
@@ -207,181 +213,334 @@ class _ResultTarrajeoScreenView extends ConsumerWidget {
     );
   }
 
-  Widget _buildMaterialList(BuildContext context, List<Tarrajeo> tarrajeos) {
-    if (tarrajeos.isEmpty) return const SizedBox.shrink();
+  Widget _buildEmptyState() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No hay datos de tarrajeo',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Agrega medidas para ver los resultados de materiales',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-    final List<TableRow> rows = [
-      _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-      _buildMaterialRow('Cemento', 'bls', calcularCantidadCemento(tarrajeos).ceil().toString()),
-      _buildMaterialRow('Arena fina', 'm³', calcularCantidadArena(tarrajeos).toStringAsFixed(2)),
-      _buildMaterialRow('Agua', 'm³', calcularCantidadAgua(tarrajeos).toStringAsFixed(2)),
-    ];
+/// Widget para mostrar la tabla de metrados
+class _TarrajeoMetradoTable extends ConsumerWidget {
+  const _TarrajeoMetradoTable();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final metrados = ref.watch(tarrajeoMetradosProvider);
+
+    if (metrados.isEmpty) {
+      return const Text('No hay datos de metrado disponibles');
+    }
+
+    double volumenTotal = metrados.fold(0.0, (sum, m) => sum + m.volumen);
 
     return Table(
       columnWidths: const {
-        0: FlexColumnWidth(2), // Ancho para la descripción
-        1: FlexColumnWidth(1), // Ancho para la unidad
-        2: FlexColumnWidth(2), // Ancho para la cantidad
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1),
       },
-      children: rows,
-    );
-  }
-
-  TableRow _buildMaterialRow(String description, String unit, String amount, {bool isHeader = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-    );
-
-    return TableRow(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            description,
-            style: textStyle,
-          ),
+        // Encabezados
+        const TableRow(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Descripción',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Und.',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Volumen',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            unit,
-            style: textStyle,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            amount,
-            style: textStyle,
-          ),
+        // Datos
+        ...metrados.map((metrado) => TableRow(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                metrado.descripcion,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'm³',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                metrado.volumenFormateado,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        )).toList(),
+        // Total
+        TableRow(
+          decoration: BoxDecoration(color: Colors.grey[300]),
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Total:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'm³',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                volumenTotal.toStringAsFixed(3),
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _TarrajeoContainer extends ConsumerWidget {
-  const _TarrajeoContainer();
+/// Widget para mostrar la lista de materiales
+class _TarrajeoMaterialesList extends ConsumerWidget {
+  const _TarrajeoMaterialesList();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final results = ref.watch(tarrajeoResultProvider);
-    return _buildTarrajeoContainer(context, results);
+    final materiales = ref.watch(tarrajeoMaterialesProvider);
+
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(2),
+      },
+      children: [
+        // Encabezados
+        const TableRow(
+          children: [
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Descripción',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Und.',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text(
+                'Cantidad',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        ),
+        // Materiales
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('Cemento', style: TextStyle(fontSize: 12)),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('bls', style: TextStyle(fontSize: 12)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                materiales.cementoFormateado,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('Arena fina', style: TextStyle(fontSize: 12)),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('m³', style: TextStyle(fontSize: 12)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                materiales.arenaFormateada,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+        TableRow(
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('Agua', style: TextStyle(fontSize: 12)),
+            ),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: Text('m³', style: TextStyle(fontSize: 12)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                materiales.aguaFormateada,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
+}
 
-  Widget _buildTarrajeoContainer(BuildContext context, List<Tarrajeo> results) {
-    double calcularVolumen(Tarrajeo tarrajeo) {
-      if (tarrajeo.area != null && tarrajeo.area!.isNotEmpty) {
-        final espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
-        final area = double.tryParse(tarrajeo.area!) ?? 0.0;
-        return area * (espesor / 100); // Convertir espesor de cm a m
-      } else {
-        final espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
-        final longitud = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
-        final ancho = double.tryParse(tarrajeo.ancho ?? '') ?? 0.0;
-        return longitud * ancho * (espesor / 100); // Convertir espesor de cm a m
-      }
-    }
+/// Widget para mostrar estadísticas adicionales
+class _EstadisticasCard extends ConsumerWidget {
+  const _EstadisticasCard();
 
-    double calcularSumaTotalDeVolumenes(List<Tarrajeo> results) {
-      double sumaTotal = 0.0;
-      for (final tarrajeo in results) {
-        sumaTotal += calcularVolumen(tarrajeo);
-      }
-      return sumaTotal;
-    }
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final estadisticas = ref.watch(estadisticasTarrajeoProvider);
 
-    double sumaTotalDeVolumenes = calcularSumaTotalDeVolumenes(results);
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
-          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
-          2: FlexColumnWidth(1), // Ancho fijo para la tercera columna
-        },
-        children: [
-          // Encabezados de tabla
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Descripción',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Und.',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Volumen',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Filas de datos
-          for (var result in results)
-            TableRow(
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    result.description,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
+                Icon(
+                  Icons.analytics_outlined,
+                  color: AppColors.blueMetraShop,
+                  size: 20,
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'm³',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    calcularVolumen(result).toStringAsFixed(2),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                const SizedBox(width: 8),
+                const Text(
+                  'Resumen del Proyecto',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryMetraShop,
                   ),
                 ),
               ],
             ),
-          // Fila del total
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey[300]),
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Total:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'm³',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  sumaTotalDeVolumenes.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+            const SizedBox(height: 12),
+            _buildEstadisticaRow(
+                'Cantidad de medidas:',
+                '${estadisticas['cantidad_medidas']}'
+            ),
+            _buildEstadisticaRow(
+                'Área total:',
+                '${estadisticas['area_total'].toStringAsFixed(2)} m²'
+            ),
+            _buildEstadisticaRow(
+                'Espesor promedio:',
+                '${estadisticas['espesor_promedio'].toStringAsFixed(1)} cm'
+            ),
+            _buildEstadisticaRow(
+                'Proporción más usada:',
+                '1:${estadisticas['proporcion_mas_usada']}'
+            ),
+            _buildEstadisticaRow(
+                'Volumen total de mortero:',
+                '${estadisticas['volumen_total'].toStringAsFixed(3)} m³'
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEstadisticaRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
         ],
       ),
@@ -391,8 +550,11 @@ class _TarrajeoContainer extends ConsumerWidget {
 
 Future<File> generatePdfTarrajeo(WidgetRef ref) async {
   final pdf = pw.Document();
-  final listaTarrajeo = ref.watch(tarrajeoResultProvider);
-  if (listaTarrajeo.isEmpty) {
+  final materiales = ref.read(tarrajeoMaterialesProvider);
+  final estadisticas = ref.read(estadisticasTarrajeoProvider);
+  final metrados = ref.read(tarrajeoMetradosProvider);
+
+  if (metrados.isEmpty) {
     throw Exception("No hay datos disponibles para generar el PDF");
   }
 
@@ -400,17 +562,132 @@ Future<File> generatePdfTarrajeo(WidgetRef ref) async {
 
   pdf.addPage(
     pw.Page(
-      build: (context) => pw.Center(
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 20),
-            pw.Text('Cemento: ${calcularCantidadCemento(listaTarrajeo).ceil()} bls'),
-            pw.Text('Arena fina: ${calcularCantidadArena(listaTarrajeo).toStringAsFixed(2)} m³'),
-            pw.Text('Agua: ${calcularCantidadAgua(listaTarrajeo).toStringAsFixed(2)} m³'),
-          ],
-        ),
+      build: (context) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          // Título
+          pw.Text(
+              title,
+              style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold
+              )
+          ),
+          pw.SizedBox(height: 20),
+
+          // Lista de materiales
+          pw.Text(
+              'LISTA DE MATERIALES',
+              style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold
+              )
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text('• Cemento: ${materiales.cementoFormateado} bls'),
+          pw.Text('• Arena fina: ${materiales.arenaFormateada} m³'),
+          pw.Text('• Agua: ${materiales.aguaFormateada} m³'),
+          pw.SizedBox(height: 20),
+
+          // Datos del metrado
+          pw.Text(
+              'DATOS DEL METRADO',
+              style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold
+              )
+          ),
+          pw.SizedBox(height: 10),
+
+          // Tabla de metrados
+          pw.Table(
+            border: pw.TableBorder.all(),
+            children: [
+              // Encabezados
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey300,
+                ),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      'Descripción',
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      'Volumen (m³)',
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              // Datos
+              ...metrados.map((metrado) => pw.TableRow(
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(metrado.descripcion),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(metrado.volumenFormateado),
+                  ),
+                ],
+              )).toList(),
+              // Total
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                ),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      'TOTAL:',
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text(
+                      materiales.volumenFormateado,
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+
+          // Resumen del proyecto
+          pw.Text(
+              'RESUMEN DEL PROYECTO',
+              style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold
+              )
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text('• Cantidad de medidas: ${estadisticas['cantidad_medidas']}'),
+          pw.Text('• Área total: ${estadisticas['area_total'].toStringAsFixed(2)} m²'),
+          pw.Text('• Espesor promedio: ${estadisticas['espesor_promedio'].toStringAsFixed(1)} cm'),
+          pw.Text('• Proporción más usada: 1:${estadisticas['proporcion_mas_usada']}'),
+          pw.Text('• Volumen total de mortero: ${materiales.volumenFormateado} m³'),
+
+          pw.SizedBox(height: 30),
+          pw.Text(
+            'Documento generado automáticamente por MetraShop',
+            style: pw.TextStyle(
+              fontSize: 10,
+              color: PdfColors.grey600,
+            ),
+          ),
+        ],
       ),
     ),
   );
@@ -419,101 +696,4 @@ Future<File> generatePdfTarrajeo(WidgetRef ref) async {
   final file = File('${output.path}/resultados_tarrajeo.pdf');
   await file.writeAsBytes(await pdf.save());
   return file;
-}
-
-// Función auxiliar para obtener el área
-double obtenerAreaTarrajeo(Tarrajeo tarrajeo) {
-  if (tarrajeo.area != null && tarrajeo.area!.isNotEmpty) {
-    return double.tryParse(tarrajeo.area!) ?? 0.0; // Usar área si está disponible
-  } else {
-    double longitud = double.tryParse(tarrajeo.longitud ?? '') ?? 0.0;
-    double ancho = double.tryParse(tarrajeo.ancho ?? '') ?? 0.0;
-    return longitud * ancho; // Calcular área usando longitud y ancho
-  }
-}
-
-// Función para calcular el volumen
-double calcularVolumenTarrajeo(Tarrajeo tarrajeo) {
-  double area = obtenerAreaTarrajeo(tarrajeo);
-  double espesor = double.tryParse(tarrajeo.espesor) ?? 0.0;
-  return area * (espesor / 100); // Convertir espesor de cm a m
-}
-
-// CÁLCULOS PARA TARRAJEO
-double calcularCantidadCemento(List<Tarrajeo> tarrajeos) {
-  double totalCemento = 0.0;
-  for (var tarrajeo in tarrajeos) {
-    double volumen = calcularVolumenTarrajeo(tarrajeo);
-    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
-    factorDesperdicio = factorDesperdicio / 100.0;
-
-    // Proporción del mortero
-    String proporcionStr = tarrajeo.proporcionMortero;
-    int proporcion = int.tryParse(proporcionStr) ?? 4;
-
-    // Factor de cemento según proporción (bolsas/m³)
-    double factorCemento;
-    switch (proporcion) {
-      case 4: factorCemento = 8.50; break; // Aproximadamente 8.5 bolsas por m³ para 1:4
-      case 5: factorCemento = 7.40; break; // Aproximadamente 7.4 bolsas por m³ para 1:5
-      default: factorCemento = 8.50;      // Usar 1:4 como valor predeterminado
-    }
-
-    // Cantidad de cemento con desperdicio
-    totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
-  }
-
-  return totalCemento;
-}
-
-double calcularCantidadArena(List<Tarrajeo> tarrajeos) {
-  double totalArena = 0.0;
-  for (var tarrajeo in tarrajeos) {
-    double volumen = calcularVolumenTarrajeo(tarrajeo);
-    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
-    factorDesperdicio = factorDesperdicio / 100.0;
-
-    // Proporción del mortero
-    String proporcionStr = tarrajeo.proporcionMortero;
-    int proporcion = int.tryParse(proporcionStr) ?? 4;
-
-    // Factor de arena según proporción (m³/m³)
-    double factorArena;
-    switch (proporcion) {
-      case 4: factorArena = 1.05; break; // Aproximadamente 1.05 m³ de arena por m³ de mortero para 1:4
-      case 5: factorArena = 1.16; break; // Aproximadamente 1.16 m³ de arena por m³ de mortero para 1:5
-      default: factorArena = 1.05;      // Usar 1:4 como valor predeterminado
-    }
-
-    // Cantidad de arena con desperdicio
-    totalArena += volumen * factorArena * (1 + factorDesperdicio);
-  }
-
-  return totalArena;
-}
-
-double calcularCantidadAgua(List<Tarrajeo> tarrajeos) {
-  double totalAgua = 0.0;
-  for (var tarrajeo in tarrajeos) {
-    double volumen = calcularVolumenTarrajeo(tarrajeo);
-    double factorDesperdicio = double.tryParse(tarrajeo.factorDesperdicio) ?? 5.0;
-    factorDesperdicio = factorDesperdicio / 100.0;
-
-    // Proporción del mortero
-    String proporcionStr = tarrajeo.proporcionMortero;
-    int proporcion = int.tryParse(proporcionStr) ?? 4;
-
-    // Factor de agua en m³ por m³ de mortero
-    double factorAgua;
-    switch (proporcion) {
-      case 4: factorAgua = 0.27; break; // Aproximadamente 270 litros (0.27 m³) por m³ de mortero para 1:4
-      case 5: factorAgua = 0.24; break; // Aproximadamente 240 litros (0.24 m³) por m³ de mortero para 1:5
-      default: factorAgua = 0.27;      // Usar 1:4 como valor predeterminado
-    }
-
-    // Cantidad de agua con desperdicio
-    totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
-  }
-
-  return totalAgua;
 }

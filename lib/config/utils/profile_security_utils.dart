@@ -1,18 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 
-/// Utilidades para seguridad y validación del perfil de usuario
-///
-/// Esta clase proporciona métodos estáticos para validar, sanitizar
-/// y manejar de forma segura los datos del perfil del usuario.
 class ProfileSecurityUtils {
 
   /// Constructor privado para evitar instanciación
   ProfileSecurityUtils._();
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // VALIDACIÓN DE DATOS
-  // ═══════════════════════════════════════════════════════════════════════════
 
   /// Valida un perfil de usuario completo
   static ProfileValidationResult validateProfile(UserProfile profile) {

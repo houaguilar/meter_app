@@ -127,15 +127,11 @@ class ResultLosasScreen extends ConsumerWidget {
   String _shareContent(WidgetRef ref) {
     final losasAligeradas = ref.watch(losaAligeradaResultProvider);
 
-    final cantidadLadrillos = ref.watch(cantidadLadrillosLosaAligeradaProvider).toStringAsFixed(0);
+    // Solo los 4 materiales principales
     final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider).ceilToDouble().toString();
     final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider).toStringAsFixed(2);
     final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAcero = ref.watch(cantidadAceroLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadMadera = ref.watch(cantidadMaderaLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAlambre8 = ref.watch(cantidadAlambre8LosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAlambre16 = ref.watch(cantidadAlambre16LosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadClavos = ref.watch(cantidadClavosLosaAligeradaProvider).toStringAsFixed(2);
+    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider).toStringAsFixed(2);
 
     String datosMetrado = 'DATOS METRADO';
     String listaMateriales = 'LISTA DE MATERIALES';
@@ -143,15 +139,11 @@ class ResultLosasScreen extends ConsumerWidget {
     if (losasAligeradas.isNotEmpty) {
       final datosLosa = ref.watch(datosShareLosaAligeradaProvider);
       final shareText = '$datosMetrado\n$datosLosa\n-------------\n$listaMateriales\n'
-          '* Ladrillos: $cantidadLadrillos und\n'
           '* Cemento: $cantidadCemento bls\n'
-          '* Arena gruesa: $cantidadArena m3\n'
-          '* Piedra chancada: $cantidadPiedra m3\n'
-          '* Acero: $cantidadAcero kg\n'
-          '* Madera: $cantidadMadera p2\n'
-          '* Alambre #8: $cantidadAlambre8 kg\n'
-          '* Alambre #16: $cantidadAlambre16 kg\n'
-          '* Clavos: $cantidadClavos kg';
+          '* Arena gruesa: $cantidadArena m³\n'
+          '* Piedra chancada: $cantidadPiedra m³\n'
+          '* Agua: $cantidadAgua m³\n'
+          '\n* Calculado con fórmulas del Excel CALCULO DE MATERIALES POR PARTIDAss.xlsx';
       return shareText;
     } else {
       return 'Error: No hay datos de losas aligeradas';
@@ -185,6 +177,8 @@ class _ResultLosasScreenView extends ConsumerWidget {
               'Lista de Materiales',
               _buildMaterialList(ref),
             ),
+            const SizedBox(height: 20),
+            _buildInfoCard(context, ref),
           ],
           const SizedBox(height: 200)
         ],
@@ -225,16 +219,11 @@ class _ResultLosasScreenView extends ConsumerWidget {
   }
 
   Widget _buildMaterialList(WidgetRef ref) {
-    final cantidadLadrillos = ref.watch(cantidadLadrillosLosaAligeradaProvider).toStringAsFixed(0);
+    // Solo los 4 materiales principales
     final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider).ceilToDouble().toString();
     final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider).toStringAsFixed(2);
     final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAcero = ref.watch(cantidadAceroLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadMadera = ref.watch(cantidadMaderaLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAlambre8 = ref.watch(cantidadAlambre8LosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAlambre16 = ref.watch(cantidadAlambre16LosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadClavos = ref.watch(cantidadClavosLosaAligeradaProvider).toStringAsFixed(2);
-    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider).toStringAsFixed(0);
+    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider).toStringAsFixed(2);
 
     return Table(
       columnWidths: const {
@@ -244,16 +233,10 @@ class _ResultLosasScreenView extends ConsumerWidget {
       },
       children: [
         _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-        _buildMaterialRow('Ladrillo', 'Und', cantidadLadrillos),
         _buildMaterialRow('Cemento', 'Bls', cantidadCemento),
-        _buildMaterialRow('Arena gruesa', 'm3', cantidadArena),
-        _buildMaterialRow('Piedra chancada', 'm3', cantidadPiedra),
-        _buildMaterialRow('Agua', 'L', cantidadAgua),
-        _buildMaterialRow('Acero', 'Kg', cantidadAcero),
-        _buildMaterialRow('Madera', 'p2', cantidadMadera),
-        _buildMaterialRow('Alambre #8', 'Kg', cantidadAlambre8),
-        _buildMaterialRow('Alambre #16', 'Kg', cantidadAlambre16),
-        _buildMaterialRow('Clavos', 'Kg', cantidadClavos),
+        _buildMaterialRow('Arena gruesa', 'm³', cantidadArena),
+        _buildMaterialRow('Piedra chancada', 'm³', cantidadPiedra),
+        _buildMaterialRow('Agua', 'm³', cantidadAgua),
       ],
     );
   }
@@ -281,6 +264,93 @@ class _ResultLosasScreenView extends ConsumerWidget {
       ],
     );
   }
+
+  Widget _buildInfoCard(BuildContext context, WidgetRef ref) {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider);
+
+    if (losasAligeradas.isEmpty) return const SizedBox.shrink();
+
+    final primeraLosa = losasAligeradas.first;
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.info_outline, color: AppColors.blueMetraShop, size: 20),
+                const SizedBox(width: 8),
+                const Text(
+                  'Información del Cálculo',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryMetraShop,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _buildInfoRow('Altura de losa:', primeraLosa.altura),
+            _buildInfoRow('Material aligerado:', primeraLosa.materialAligerado),
+            _buildInfoRow('Resistencia concreto:', primeraLosa.resistenciaConcreto),
+            _buildInfoRow('Desperdicio concreto:', '${primeraLosa.desperdicioConcreto}%'),
+            _buildInfoRow('Volumen total concreto:', '${volumenConcreto.toStringAsFixed(2)} m³'),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.blueMetraShop.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: const Text(
+                '* Cálculos basados en fórmulas del archivo Excel "CALCULO DE MATERIALES POR PARTIDAss.xlsx"\n* El volumen de concreto se calcula como ~40% del volumen total de la losa',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.primaryMetraShop,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primaryMetraShop,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[700],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _LosaAligeradaContainer extends ConsumerWidget {
@@ -295,15 +365,14 @@ class _LosaAligeradaContainer extends ConsumerWidget {
   Widget _buildLosaAligeradaContainer(BuildContext context, List<LosaAligerada> results) {
     double calcularArea(LosaAligerada losaAligerada) {
       if (losaAligerada.area != null && losaAligerada.area!.isNotEmpty) {
-        return double.tryParse(losaAligerada.area!) ?? 0.0; // Si es área
+        return double.tryParse(losaAligerada.area!) ?? 0.0;
       } else {
         final largo = double.tryParse(losaAligerada.largo ?? '') ?? 0.0;
         final ancho = double.tryParse(losaAligerada.ancho ?? '') ?? 0.0;
-        return largo * ancho; // Si es largo y ancho
+        return largo * ancho;
       }
     }
 
-// lib/presentation/screens/home/losas/result_losas_screen.dart (continued)
     double calcularSumaTotalDeAreas(List<LosaAligerada> results) {
       double sumaTotal = 0.0;
       for (int i = 0; i < results.length; i++) {
@@ -318,9 +387,9 @@ class _LosaAligeradaContainer extends ConsumerWidget {
       padding: const EdgeInsets.all(0.0),
       child: Table(
         columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
-          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
-          2: FlexColumnWidth(1), // Ancho fijo para la tercera columna
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+          2: FlexColumnWidth(1),
         },
         children: [
           // Encabezados de tabla
@@ -363,7 +432,7 @@ class _LosaAligeradaContainer extends ConsumerWidget {
                 const Padding(
                   padding: EdgeInsets.all(8.0),
                   child: Text(
-                    'm2',
+                    'm²',
                     style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                   ),
                 ),
@@ -390,7 +459,7 @@ class _LosaAligeradaContainer extends ConsumerWidget {
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text(
-                  'm2',
+                  'm²',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                 ),
               ),
@@ -413,43 +482,87 @@ Future<File> generatePdfLosa(WidgetRef ref) async {
   final pdf = pw.Document();
   final losasAligeradas = ref.watch(losaAligeradaResultProvider);
 
-  final cantidadLadrillos = ref.watch(cantidadLadrillosLosaAligeradaProvider).toStringAsFixed(0);
+  // Solo los 4 materiales principales
   final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider).ceilToDouble().toString();
   final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider).toStringAsFixed(2);
   final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadAcero = ref.watch(cantidadAceroLosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadMadera = ref.watch(cantidadMaderaLosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadAlambre8 = ref.watch(cantidadAlambre8LosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadAlambre16 = ref.watch(cantidadAlambre16LosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadClavos = ref.watch(cantidadClavosLosaAligeradaProvider).toStringAsFixed(2);
-  final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider).toStringAsFixed(0);
+  final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider).toStringAsFixed(2);
+  final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider).toStringAsFixed(2);
 
   pdf.addPage(
     pw.Page(
-      build: (context) => pw.Center(
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text("Resultados Losa Aligerada", style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 20),
-            pw.Text('Ladrillos: $cantidadLadrillos und'),
-            pw.Text('Cemento: $cantidadCemento bls'),
-            pw.Text('Arena gruesa: $cantidadArena m3'),
-            pw.Text('Piedra chancada: $cantidadPiedra m3'),
-            pw.Text('Agua: $cantidadAgua L'),
-            pw.Text('Acero: $cantidadAcero kg'),
-            pw.Text('Madera: $cantidadMadera p2'),
-            pw.Text('Alambre #8: $cantidadAlambre8 kg'),
-            pw.Text('Alambre #16: $cantidadAlambre16 kg'),
-            pw.Text('Clavos: $cantidadClavos kg'),
+      build: (context) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          // Título
+          pw.Center(
+            child: pw.Text(
+              "Resultados Losa Aligerada",
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
+          ),
+          pw.SizedBox(height: 30),
+
+          // Información del cálculo
+          if (losasAligeradas.isNotEmpty) ...[
+            pw.Text(
+              "INFORMACIÓN DEL CÁLCULO",
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text('• Altura de losa: ${losasAligeradas.first.altura}'),
+            pw.Text('• Material aligerado: ${losasAligeradas.first.materialAligerado}'),
+            pw.Text('• Resistencia concreto: ${losasAligeradas.first.resistenciaConcreto}'),
+            pw.Text('• Desperdicio concreto: ${losasAligeradas.first.desperdicioConcreto}%'),
+            pw.Text('• Volumen total concreto: $volumenConcreto m³'),
+            pw.SizedBox(height: 30),
           ],
-        ),
+
+          // Lista de materiales
+          pw.Text(
+            "LISTA DE MATERIALES",
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Text('• Cemento: $cantidadCemento bls'),
+          pw.Text('• Arena gruesa: $cantidadArena m³'),
+          pw.Text('• Piedra chancada: $cantidadPiedra m³'),
+          pw.Text('• Agua: $cantidadAgua m³'),
+          pw.SizedBox(height: 30),
+
+          // Nota pie de página
+          pw.Text(
+            "NOTAS:",
+            style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 5),
+          pw.Text(
+            "• Cálculos basados en fórmulas del archivo Excel 'CALCULO DE MATERIALES POR PARTIDAss.xlsx'",
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+          pw.Text(
+            "• El volumen de concreto se calcula como aproximadamente 40% del volumen total de la losa",
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+          pw.Text(
+            "• Los desperdicios están incluidos en las cantidades mostradas",
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+
+          pw.Spacer(),
+          pw.Center(
+            child: pw.Text(
+              "Generado por MetraShop - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+              style: const pw.TextStyle(fontSize: 8),
+            ),
+          ),
+        ],
       ),
     ),
   );
 
   final output = await getTemporaryDirectory();
-  final file = File('${output.path}/resultados_losa.pdf');
+  final file = File('${output.path}/resultados_losa_aligerada.pdf');
   await file.writeAsBytes(await pdf.save());
   return file;
 }

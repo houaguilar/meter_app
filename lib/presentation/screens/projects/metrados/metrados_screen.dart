@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/projects/metrado/metrado.dart';
 import '../../../blocs/projects/metrados/metrados_bloc.dart';
-import '../result/result_screen.dart';
 import '../result/result_test.dart';
 
 class MetradosScreen extends StatefulWidget {

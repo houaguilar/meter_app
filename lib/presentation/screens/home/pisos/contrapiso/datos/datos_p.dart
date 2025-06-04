@@ -1,51 +1,50 @@
-// lib/presentation/screens/home/losas/datos_losas_aligeradas_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/presentation/providers/pisos/pisos_providers.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
-import '../../../../../config/theme/theme.dart';
-import '../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../../init_dependencies.dart';
+import '../../../../../../config/theme/theme.dart';
+import '../../../../../widgets/fields/custom_name_text_field.dart';
+import '../../../../../widgets/widgets.dart';
+import '../../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
-import '../../../../../init_dependencies.dart';
-import '../../../../providers/providers.dart';
-import '../../../../widgets/fields/custom_name_text_field.dart';
-import '../../../../widgets/widgets.dart';
-import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
-
-class DatosLosasAligeradasScreen extends ConsumerStatefulWidget {
-  const DatosLosasAligeradasScreen({super.key});
-  static const String route = 'datos-losas-aligeradas';
+class DatosPisosScreens extends ConsumerStatefulWidget {
+  const DatosPisosScreens({super.key});
+  static const String route = 'contrapiso-detail';
 
   @override
-  ConsumerState<DatosLosasAligeradasScreen> createState() => _DatosLosasAligeradasScreenState();
+  ConsumerState<DatosPisosScreens> createState() => _DatosPisosScreenState();
 }
 
-class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligeradasScreen> with TickerProviderStateMixin {
+class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with TickerProviderStateMixin {
   late TabController _tabController;
   int _currentIndex = 0;
 
   late final SharedPreferencesHelper sharedPreferencesHelper;
 
-  // TextControllers para los campos de entrada
-  final TextEditingController desperdicioLadrilloController = TextEditingController(text: '5');
-  final TextEditingController desperdicioConcretoController = TextEditingController(text: '5');
+  // TextControllers para campos base
+  final TextEditingController factorController = TextEditingController(text: '5');
   final TextEditingController descriptionAreaController = TextEditingController();
   final TextEditingController descriptionMedidasController = TextEditingController();
   final TextEditingController areaTextController = TextEditingController();
-  final TextEditingController largoTextController = TextEditingController();
-  final TextEditingController anchoTextController = TextEditingController();
+  final TextEditingController lengthTextController = TextEditingController();
+  final TextEditingController heightTextController = TextEditingController();
 
   final formKey = GlobalKey<FormState>();
+  bool showEspesorError = false;
+  bool showProporcionError = false;
 
-  // Variables para almacenar las selecciones del usuario
-  bool showSelectionError = false;
-  String? selectedValueAltura;
-  String? selectedValueMaterial;
-  String? selectedValueResistencia;
+  String espesor = "";
+  String proporcionMortero = '';
 
-  // Listas de campos dinámicos
+  String? selectedValueEspesor;
+  String? selectedValueProporcion;
+
+  // Listas para campos dinámicos
   List<Map<String, TextEditingController>> areaFields = [];
   List<Map<String, TextEditingController>> measureFields = [];
 
@@ -59,7 +58,6 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
       });
     });
 
-    // Cargamos la configuración de SharedPreferences si es necesario
     sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!sharedPreferencesHelper.isTutorialShown()) {
@@ -71,6 +69,21 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   @override
   void dispose() {
     _tabController.dispose();
+    factorController.dispose();
+    descriptionAreaController.dispose();
+    descriptionMedidasController.dispose();
+    areaTextController.dispose();
+    lengthTextController.dispose();
+    heightTextController.dispose();
+
+    // Dispose dynamic controllers
+    for (var field in areaFields) {
+      field.values.forEach((controller) => controller.dispose());
+    }
+    for (var field in measureFields) {
+      field.values.forEach((controller) => controller.dispose());
+    }
+
     super.dispose();
   }
 
@@ -86,22 +99,9 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     );
   }
 
-  String? _validateStringRequired(String? value) {
+  String? _validateProjectName(String? value) {
     if (value == null || value.isEmpty) {
       return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    if (double.tryParse(value) == null) {
-      return 'Por favor ingresa un número válido';
-    }
-    if (double.parse(value) < 0) {
-      return 'El valor debe ser mayor o igual a 0';
     }
     return null;
   }
@@ -110,7 +110,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBarWidget(titleAppBar: 'Losa Aligerada', isVisibleTutorial: true, showTutorial: showTutorial),
+      appBar: AppBarWidget(titleAppBar: 'Contrapiso - Medición'),
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
@@ -128,9 +128,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                         padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
                         child: Column(
                           children: [
-                            _buildAlturaSelection(),
-                            _buildMaterialSelection(),
-                            _buildResistenciaSelection(),
+                            _buildEspesorSelection(),
+                            _buildProporcionSelection(),
                             _buildProjectFields(),
                           ],
                         ),
@@ -151,146 +150,139 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
 
   Widget _buildProjectFields() {
     return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
         const SizedBox(height: 15),
-    Container(
-    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-    decoration: BoxDecoration(
-    color: Colors.grey.shade100,
-    borderRadius: BorderRadius.circular(8),
-    border: Border.all(color: Colors.grey.shade300),
-    ),
-    child: Column(
-    children: [
-    CustomFactorTextField(
-    controller: desperdicioLadrilloController,
-    label: 'Desperdicio Ladrillo (%)',
-    validator: _validateNumeric,
-    hintText: '',
-    ),
-    CustomFactorTextField(
-      // lib/presentation/screens/home/losas/datos_losas_aligeradas_screen.dart (continued)
-      controller: desperdicioConcretoController,
-      label: 'Desperdicio Concreto (%)',
-      validator: _validateNumeric,
-      hintText: '',
-    ),
-    ],
-    ),
-    ),
-          const SizedBox(height: 15),
-        ],
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.grey.shade300),
+          ),
+          child: CustomFactorTextField(
+            controller: factorController,
+            label: 'Desperdicio (%)',
+            validator: _validateProjectName,
+            hintText: 'Ej: 5',
+          ),
+        ),
+        const SizedBox(height: 15),
+      ],
     );
   }
 
-  Widget _buildAlturaSelection() {
-    final List<String> alturas = ["17 cm", "20 cm", "25 cm"];
-    return _buildChoiceChips(
-        'altura',
-        'Altura de Losa Aligerada:',
-        alturas
+  Widget _buildEspesorSelection() {
+    // Espesores típicos para contrapiso (4-7 cm)
+    const List<String> espesores = ["4 cm", "5 cm", "6 cm", "7 cm"];
+
+    return _contentChoiceChips(
+        'espesor',
+        'Espesor del Contrapiso:',
+        espesores
     );
   }
 
-  Widget _buildMaterialSelection() {
-    final List<String> materiales = ["Ladrillo Hueco", "Bovedillas"];
-    return _buildChoiceChips(
-        'material',
-        'Material de Aligerado:',
-        materiales
+  Widget _buildProporcionSelection() {
+    // Proporciones de mortero más comunes para contrapiso
+    const List<String> proporciones = ["1 : 3", "1 : 4", "1 : 5", "1 : 6"];
+    return _contentChoiceChips(
+        'proporcion',
+        'Proporción Mortero (Cemento:Arena):',
+        proporciones
     );
   }
 
-  Widget _buildResistenciaSelection() {
-    final List<String> resistencias = ["175 kg/cm²",  "210 kg/cm²", "245 kg/cm²"];
-    return _buildChoiceChips(
-        'resistencia',
-        'Resistencia de Concreto:',
-        resistencias
-    );
-  }
-
-  Widget _buildChoiceChips(String type, String description, List<String> items) {
+  Widget _contentChoiceChips(String type, String description, List<String> typeList) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      margin: EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade300),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            description,
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: items.map((value) {
-              bool isSelected = false;
-              switch (type) {
-                case 'altura':
-                  isSelected = selectedValueAltura == value;
-                  break;
-                case 'material':
-                  isSelected = selectedValueMaterial == value;
-                  break;
-                case 'resistencia':
-                  isSelected = selectedValueResistencia == value;
-                  break;
-              }
-
-              return ChoiceChip(
-                label: Text(value),
-                selected: isSelected,
-                onSelected: (selected) {
-                  if (selected) {
-                    setState(() {
-                      switch (type) {
-                        case 'altura':
-                          selectedValueAltura = value;
-                          break;
-                        case 'material':
-                          selectedValueMaterial = value;
-                          break;
-                        case 'resistencia':
-                          selectedValueResistencia = value;
-                          break;
-                      }
-                    });
-                  }
-                },
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
-                    width: 1.0,
-                  ),
-                ),
-                checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
-                selectedColor: AppColors.blueMetraShop,
-                backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
-                labelStyle: TextStyle(
-                    color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
-              );
-            }).toList(),
-          ),
-          if (showSelectionError && ((type == 'altura' && selectedValueAltura == null) ||
-              (type == 'material' && selectedValueMaterial == null) ||
-              (type == 'resistencia' && selectedValueResistencia == null)))
-            const Padding(
-              padding: EdgeInsets.only(top: 8.0),
+      child: Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Align(
+              alignment: Alignment.topLeft,
               child: Text(
-                'Campo requerido',
-                style: TextStyle(color: Colors.red),
+                description,
+                style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 18,
+                    color: AppColors.primaryMetraShop
+                ),
               ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              children: [
+                Wrap(
+                  runAlignment: WrapAlignment.spaceEvenly,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 10,
+                  children: typeList.map((typeValue) {
+                    bool isSelected = false;
+
+                    switch(type) {
+                      case 'espesor':
+                        isSelected = selectedValueEspesor == typeValue;
+                        break;
+                      case 'proporcion':
+                        isSelected = selectedValueProporcion == typeValue;
+                        break;
+                    }
+
+                    return ChoiceChip(
+                      label: Text(typeValue),
+                      selected: isSelected,
+                      onSelected: (selected) {
+                        if (selected) {
+                          setState(() {
+                            switch (type) {
+                              case 'espesor':
+                                selectedValueEspesor = typeValue;
+                                espesor = selectedValueEspesor!;
+                                break;
+                              case 'proporcion':
+                                selectedValueProporcion = typeValue;
+                                proporcionMortero = selectedValueProporcion!;
+                                break;
+                            }
+                          });
+                        }
+                      },
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                        side: BorderSide(
+                          color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
+                          width: 1.0,
+                        ),
+                      ),
+                      checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
+                      selectedColor: AppColors.blueMetraShop,
+                      backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
+                      labelStyle: TextStyle(
+                          color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
+                    );
+                  }).toList(),
+                ),
+                if ((type == 'espesor' && showEspesorError && selectedValueEspesor == null) ||
+                    (type == 'proporcion' && showProporcionError && selectedValueProporcion == null))
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Campo requerido',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  )
+              ],
             )
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -299,9 +291,16 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: const Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            'Metrado',
+            style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
+                color: AppColors.primaryMetraShop
+            ),
+          ),
         ),
         const SizedBox(height: 10),
         TabBar(
@@ -344,15 +343,15 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     CustomNameTextField(
                       controller: descriptionAreaController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Losa Dormitorio)',
-                      validator: _validateStringRequired,
+                      hintText: 'Ingresa una descripción (Ej. Sala)',
+                      validator: _validateProjectName,
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -366,8 +365,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                     const SizedBox(height: 8),
                     CustomMeasureTextField(
                       controller: areaTextController,
-                      validator: _validateStringRequired,
-                      labelText: 'Area(m²)',
+                      validator: _validateProjectName,
+                      labelText: 'Área (m²)',
                       keyboardType: TextInputType.number,
                     ),
                   ],
@@ -416,8 +415,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                     CustomNameTextField(
                       controller: descriptionMedidasController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Losa Dormitorio)',
-                      validator: _validateStringRequired,
+                      hintText: 'Ingresa una descripción (Ej. Sala)',
+                      validator: _validateProjectName,
                     ),
                     const Text(
                       'Datos',
@@ -432,18 +431,18 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                       children: [
                         Expanded(
                           child: CustomMeasureTextField(
-                            controller: largoTextController,
-                            validator: _validateStringRequired,
-                            labelText: 'Largo(metros)',
+                            controller: lengthTextController,
+                            validator: _validateProjectName,
+                            labelText: 'Largo (metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: CustomMeasureTextField(
-                            controller: anchoTextController,
-                            validator: _validateStringRequired,
-                            labelText: 'Ancho(metros)',
+                            controller: heightTextController,
+                            validator: _validateProjectName,
+                            labelText: 'Ancho (metros)',
                             keyboardType: TextInputType.number,
                           ),
                         ),
@@ -490,8 +489,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
             CustomNameTextField(
               controller: field['description']!,
               label: 'Descripción adicional',
-              validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. Losa ...)',
+              validator: _validateProjectName,
+              hintText: 'Ingresa una descripción (Ej. Cocina)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -508,8 +507,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
             const SizedBox(height: 8),
             CustomMeasureTextField(
               controller: field['measure']!,
-              validator: _validateStringRequired,
-              labelText: 'Area(m²)',
+              validator: _validateProjectName,
+              labelText: 'Área (m²)',
               keyboardType: TextInputType.number,
             ),
           ],
@@ -534,8 +533,8 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
             CustomNameTextField(
               controller: field['descriptionMeasure']!,
               label: 'Descripción adicional',
-              validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. Losa ...)',
+              validator: _validateProjectName,
+              hintText: 'Ingresa una descripción (Ej. Cocina)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -555,18 +554,18 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
               children: [
                 Expanded(
                   child: CustomMeasureTextField(
-                    controller: field['largoMeasure']!,
-                    validator: _validateStringRequired,
-                    labelText: 'Largo(metros)',
+                    controller: field['lengthMeasure']!,
+                    validator: _validateProjectName,
+                    labelText: 'Largo (metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: CustomMeasureTextField(
-                    controller: field['anchoMeasure']!,
-                    validator: _validateStringRequired,
-                    labelText: 'Ancho(metros)',
+                    controller: field['heightMeasure']!,
+                    validator: _validateProjectName,
+                    labelText: 'Ancho (metros)',
                     keyboardType: TextInputType.number,
                   ),
                 ),
@@ -591,14 +590,16 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     setState(() {
       fields.add({
         'descriptionMeasure': TextEditingController(),
-        'largoMeasure': TextEditingController(),
-        'anchoMeasure': TextEditingController(),
+        'lengthMeasure': TextEditingController(),
+        'heightMeasure': TextEditingController(),
       });
     });
   }
 
   void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
     setState(() {
+      // Dispose controllers before removing
+      field.values.forEach((controller) => controller.dispose());
       fields.remove(field);
     });
   }
@@ -607,80 +608,86 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomElevatedButton(
-        label: 'Resultado',
+        label: 'Calcular Contrapiso',
         onPressed: () {
+          // Validar selecciones
           setState(() {
-            showSelectionError = selectedValueAltura == null ||
-                selectedValueMaterial == null ||
-                selectedValueResistencia == null;
+            showEspesorError = selectedValueEspesor == null;
+            showProporcionError = selectedValueProporcion == null;
           });
 
-          if (formKey.currentState?.validate() == true &&
-              selectedValueAltura != null &&
-              selectedValueMaterial != null &&
-              selectedValueResistencia != null) {
+          // Verificar todos los campos requeridos
+          bool camposValidos = formKey.currentState?.validate() == true &&
+              selectedValueEspesor != null &&
+              selectedValueProporcion != null;
 
-            final losaAligeradaResult = ref.read(losaAligeradaResultProvider.notifier);
+          if (camposValidos) {
+            var datosPiso = ref.read(pisosResultProvider.notifier);
+
+            // Limpiar lista anterior
+            datosPiso.clearList();
+
+            var espesorValor = espesor.replaceAll(" cm", "");
+            var proporcionValor = proporcionMortero.replaceAll("1 : ", "");
 
             if (_currentIndex == 0) {
-              // Pestaña de Área
-              losaAligeradaResult.createLosaAligerada(
+              // Tab de área
+              datosPiso.createPisos(
+                'contrapiso', // Tipo fijo
                 descriptionAreaController.text,
-                selectedValueAltura!,
-                selectedValueMaterial!,
-                selectedValueResistencia!,
-                desperdicioLadrilloController.text,
-                desperdicioConcretoController.text,
+                factorController.text,
+                espesorValor,
+                proporcionMortero: proporcionValor,
                 area: areaTextController.text,
               );
 
-              // Agregar campos adicionales
               for (var field in areaFields) {
-                losaAligeradaResult.createLosaAligerada(
+                datosPiso.createPisos(
+                  'contrapiso',
                   field['description']!.text,
-                  selectedValueAltura!,
-                  selectedValueMaterial!,
-                  selectedValueResistencia!,
-                  desperdicioLadrilloController.text,
-                  desperdicioConcretoController.text,
+                  factorController.text,
+                  espesorValor,
+                  proporcionMortero: proporcionValor,
                   area: field['measure']!.text,
                 );
               }
             } else {
-              // Pestaña de Medidas
-              losaAligeradaResult.createLosaAligerada(
+              // Tab de medidas
+              datosPiso.createPisos(
+                'contrapiso',
                 descriptionMedidasController.text,
-                selectedValueAltura!,
-                selectedValueMaterial!,
-                selectedValueResistencia!,
-                desperdicioLadrilloController.text,
-                desperdicioConcretoController.text,
-                largo: largoTextController.text,
-                ancho: anchoTextController.text,
+                factorController.text,
+                espesorValor,
+                proporcionMortero: proporcionValor,
+                largo: lengthTextController.text,
+                ancho: heightTextController.text,
               );
 
-              // Agregar campos adicionales
               for (var field in measureFields) {
-                losaAligeradaResult.createLosaAligerada(
+                datosPiso.createPisos(
+                  'contrapiso',
                   field['descriptionMeasure']!.text,
-                  selectedValueAltura!,
-                  selectedValueMaterial!,
-                  selectedValueResistencia!,
-                  desperdicioLadrilloController.text,
-                  desperdicioConcretoController.text,
-                  largo: field['largoMeasure']!.text,
-                  ancho: field['anchoMeasure']!.text,
+                  factorController.text,
+                  espesorValor,
+                  proporcionMortero: proporcionValor,
+                  largo: field['lengthMeasure']!.text,
+                  ancho: field['heightMeasure']!.text,
                 );
               }
             }
-            final pisosCreados = ref.read(losaAligeradaResultProvider);
-            print("CREADOS: Número de losas antes de navegar: ${pisosCreados.length}");
-            print(ref.watch(losaAligeradaResultProvider));
-            // Navegar a la pantalla de resultados
-            context.pushNamed('losas-aligeradas-results');
+
+            final pisosCreados = ref.read(pisosResultProvider);
+            print("CREADOS: Número de contrapisos: ${pisosCreados.length}");
+            print(ref.watch(pisosResultProvider));
+
+            // Navegar a resultados
+            context.pushNamed('contrapiso-result');
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
+              const SnackBar(
+                content: Text('Por favor, completa todos los campos obligatorios'),
+                backgroundColor: AppColors.errorGeneralColor,
+              ),
             );
           }
         },
