@@ -4,9 +4,11 @@ import 'package:meter_app/domain/datasources/projects/projects_local_data_source
 import 'package:meter_app/domain/datasources/projects/projects_remote_data_source.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
 import 'package:uuid/uuid.dart';
+
+import '../../../config/constants/error/exceptions.dart';
 import '../../../config/network/connection_checker.dart';
 import '../../../domain/repositories/projects/projects_repository.dart';
-
+import '../../datasources/projects/projects_isar_data_source.dart';
 
 class ProjectsRepositoryImpl implements ProjectsRepository {
   final ProjectsLocalDataSource projectsLocalDataSource;
@@ -19,260 +21,344 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       this.connectionChecker,
       );
 
-  Future<void> _syncLocalToRemote() async {
-    if (await connectionChecker.isConnected) {
-      try {
-        final userId = projectsRemoteDataSource.getCurrentUserId();
-        final localProjects = await projectsLocalDataSource.loadProjects();
-        final remoteProjects = await projectsRemoteDataSource.loadProjects(userId);
-
-        // Sync local projects to remote
-        for (var localProject in localProjects) {
-          if (!remoteProjects.contains(localProject)) {
-            await projectsRemoteDataSource.saveProject(localProject);
-          }
-        }
-
-        // Delete remote projects that were deleted locally
-        for (var remoteProject in remoteProjects) {
-          if (!localProjects.contains(remoteProject)) {
-            await projectsRemoteDataSource.deleteProject(remoteProject);
-          }
-        }
-      } catch (e) {
-        print('Error syncing projects: $e');
-      }
-    }
-  }
-
   @override
   Future<Either<Failure, void>> saveProject(String name) async {
     try {
-      // Save project locally
-      final newProject = Project(name: name, userId: const Uuid().v4().toString());
-      await projectsLocalDataSource.saveProject(newProject.name);
-    //  await projectsLocalDataSource.saveProject(name);
-  //    await _syncLocalToRemote();
+      // Obtener el usuario actual
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return left(Failure(
+          message: 'Usuario no autenticado',
+          type: FailureType.general,
+        ));
+      }
+
+      // Verificar duplicados en el scope del usuario
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        final hasDuplicate = await isarDataSource.hasProjectWithNameForUser(name, currentUserId);
+
+        if (hasDuplicate) {
+          return left(Failure(
+            message: 'Ya tienes un proyecto con el nombre "$name"',
+            type: FailureType.duplicateName,
+          ));
+        }
+      }
+
+      // Crear proyecto local con el usuario asignado
+      await projectsLocalDataSource.saveProject(name);
+
+      // Obtener el proyecto recién creado para asignarle el usuario
+      final projects = await projectsLocalDataSource.loadProjects();
+      final newProject = projects.firstWhere((p) => p.name == name);
+
+      // Asignar usuario al proyecto
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        await isarDataSource.assignUserToProject(newProject.id, currentUserId);
+      }
+
+      // Intentar sincronizar con remoto si hay conexión
+      await _trySyncToRemote();
+
       return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
     } catch (e) {
-      return Left(Failure(message: e.toString(), type: FailureType.unknown));
+      return Left(Failure(
+        message: 'Error al guardar proyecto: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
   @override
   Future<Either<Failure, List<Project>>> getAllProjects() async {
     try {
-      // Load projects from local source
-      final localProjects = await projectsLocalDataSource.loadProjects();
+      // Obtener el usuario actual
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return left(Failure(
+          message: 'Usuario no autenticado',
+          type: FailureType.general,
+        ));
+      }
 
-      // Attempt to sync with remote source
-   //   await _syncLocalToRemote();
+      // Cargar proyectos filtrados por usuario
+      List<Project> localProjects;
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        localProjects = await isarDataSource.loadProjectsByUser(currentUserId);
+      } else {
+        // Fallback para otras implementaciones
+        final allProjects = await projectsLocalDataSource.loadProjects();
+        localProjects = allProjects.where((p) => p.userId == currentUserId).toList();
+      }
+
+      // Intentar sincronizar con remoto si hay conexión
+      await _trySyncFromRemote(currentUserId);
+
+      // Recargar después de la sincronización
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        localProjects = await isarDataSource.loadProjectsByUser(currentUserId);
+      }
 
       return Right(localProjects);
     } catch (e) {
-      return Left(Failure(message: e.toString(), type: FailureType.unknown));
+      return Left(Failure(
+        message: 'Error al cargar proyectos: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
   @override
   Future<Either<Failure, void>> deleteProject(Project project) async {
     try {
-      // Delete project locally
+      // Verificar que el proyecto pertenezca al usuario actual
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return left(Failure(
+          message: 'Usuario no autenticado',
+          type: FailureType.general,
+        ));
+      }
+
+      if (project.userId != currentUserId) {
+        return left(Failure(
+          message: 'No tienes permisos para eliminar este proyecto',
+          type: FailureType.general,
+        ));
+      }
+
+      // Eliminar localmente
       await projectsLocalDataSource.deleteProject(project);
-  //    await _syncLocalToRemote();
+
+      // Intentar sincronizar con remoto si hay conexión
+      await _trySyncToRemote();
+
       return const Right(null);
     } catch (e) {
-      return Left(Failure(message: e.toString(), type: FailureType.unknown));
+      return Left(Failure(
+        message: 'Error al eliminar proyecto: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
   @override
   Future<Either<Failure, void>> editProject(Project project) async {
     try {
-      // Edit project locally
+      // Verificar que el proyecto pertenezca al usuario actual
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return left(Failure(
+          message: 'Usuario no autenticado',
+          type: FailureType.general,
+        ));
+      }
+
+      if (project.userId != currentUserId) {
+        return left(Failure(
+          message: 'No tienes permisos para editar este proyecto',
+          type: FailureType.general,
+        ));
+      }
+
+      // Verificar duplicados en el scope del usuario
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        final hasDuplicate = await isarDataSource.hasProjectWithNameForUser(
+          project.name,
+          currentUserId,
+          excludeProjectId: project.id,
+        );
+
+        if (hasDuplicate) {
+          return left(Failure(
+            message: 'Ya tienes un proyecto con el nombre "${project.name}"',
+            type: FailureType.duplicateName,
+          ));
+        }
+      }
+
+      // Editar localmente
       await projectsLocalDataSource.editProject(project);
-   //   await _syncLocalToRemote();
+
+      // Intentar sincronizar con remoto si hay conexión
+      await _trySyncToRemote();
+
       return const Right(null);
+    } on Failure catch (failure) {
+      return Left(failure);
     } catch (e) {
-      return Left(Failure(message: e.toString(), type: FailureType.unknown));
+      return Left(Failure(
+        message: 'Error al editar proyecto: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
-  /*@override
-  Future<Either<Failure, List<Project>>> getAllProjects() async {
+  /// Busca proyectos del usuario actual
+  Future<Either<Failure, List<Project>>> searchProjects(String query) async {
     try {
-      final localProjectsResult = await projectsLocalDataSource.loadProjects();
-      final localProjects = localProjectsResult;
-      if (!await connectionChecker.isConnected) {
-        return right(localProjects);
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return left(Failure(
+          message: 'Usuario no autenticado',
+          type: FailureType.general,
+        ));
       }
-      final userId = projectsRemoteDataSource.getCurrentUserId();
-      final remoteProjectsResult = await projectsRemoteDataSource.loadProjects(userId);
-      final remoteProjects = remoteProjectsResult;
 
-//      await _syncProjects(remoteProjects);
-      final updatedLocalProjects = await projectsLocalDataSource.loadProjects();
-      return right(remoteProjects);
-    } on ServerException catch (e) {
-      print('repo get first');
-      return left(Failure(message: e.message));
-    } catch (e) {
-      print('repo get second');
-      return left(Failure(message: 'Error get project: ${e.toString()}'));
-    }
-
-    *//*if (await connectionChecker.isConnected) {
-      try {
-        final userId = projectsRemoteDataSource.getCurrentUserId();
-        final remoteProjects = await projectsRemoteDataSource.loadProjects(userId);
-    //    await _syncProjects(remoteProjects);
-        return right(remoteProjects);
-      } catch (e) {
-        return left(Failure(message: 'Error loading projects from remote: $e'));
-      }
-    } else {
-      try {
-        final localProjects = await projectsLocalDataSource.loadProjects();
-        return right(localProjects);
-      } catch (e) {
-        return left(Failure(message: 'Error loading projects from local: $e'));
-      }
-    }*//*
-  }
-
-  Future<void> _syncProjects(List<Project> remoteProjects) async {
-    *//*final localProjects = await projectsLocalDataSource.loadProjects();
-    for (final remoteProject in remoteProjects) {
-      final existingProject = localProjects.firstWhereOrNull(
-            (project) => project.uuid == remoteProject.uuid,
-      );
-
-      if (existingProject == null) {
-        await projectsLocalDataSource.saveProject(remoteProject.name);
+      List<Project> projects;
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        projects = await isarDataSource.searchProjects(query, currentUserId);
       } else {
-        await projectsLocalDataSource.editProject(remoteProject);
-      }*//*
-
-
-    for (final remoteProject in remoteProjects) {
-      final localProjects = await projectsLocalDataSource.loadProjects();
-      final existingProject = localProjects.firstWhere(
-            (project) => project.uuid == remoteProject.uuid,
-        orElse: () => Project(name: '', userId: '', uuid: ''),
-      );
-
-      if (existingProject.name.isEmpty) {
-        await projectsLocalDataSource.saveProject(remoteProject.name);
-      } else {
-        await projectsLocalDataSource.editProject(remoteProject);
+        // Fallback
+        final allProjects = await projectsLocalDataSource.loadProjects();
+        projects = allProjects
+            .where((p) => p.userId == currentUserId)
+            .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
+            .toList();
       }
+
+      return Right(projects);
+    } catch (e) {
+      return Left(Failure(
+        message: 'Error al buscar proyectos: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
+  /// Obtiene estadísticas de un proyecto
+  Future<Either<Failure, Map<String, dynamic>>> getProjectStatistics(int projectId) async {
+    try {
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        final stats = await isarDataSource.getProjectStatistics(projectId);
+        return Right(stats);
+      }
 
-  @override
-  Future<Either<Failure, void>> saveProject(String name) async {
-    *//*try {
-      final newProject = Project(name: name, uuid: const Uuid().v4().toString());
-      await projectsLocalDataSource.saveProject(newProject.name);
+      return Right({
+        'metrados': 0,
+        'totalResults': 0,
+        'hasData': false,
+      });
+    } catch (e) {
+      return Left(Failure(
+        message: 'Error al obtener estadísticas: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
+    }
+  }
 
+  // Métodos privados de sincronización
+
+  /// Obtiene el ID del usuario actual
+  Future<String?> _getCurrentUserId() async {
+    try {
+      return projectsRemoteDataSource.getCurrentUserId();
+    } catch (e) {
+      // Si no puede obtener el usuario, retorna null
+      return null;
+    }
+  }
+
+  /// Intenta sincronizar hacia el servidor remoto
+  Future<void> _trySyncToRemote() async {
+    try {
       if (!await connectionChecker.isConnected) {
-        return right(null);
+        return; // Sin conexión, no sincronizar
       }
 
-      final userId = projectsRemoteDataSource.getCurrentUserId();
-      final remoteProject = newProject.copyWith(userId: userId);
-      await projectsRemoteDataSource.saveProject(remoteProject);
-      return right(null);
-    } on ServerException catch (e) {
-      print('repo save first');
-      return left(Failure(message: e.message));
+      final currentUserId = await _getCurrentUserId();
+      if (currentUserId == null) {
+        return; // Sin usuario, no sincronizar
+      }
+
+      // Obtener proyectos locales del usuario
+      List<Project> localProjects;
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        localProjects = await isarDataSource.loadProjectsByUser(currentUserId);
+      } else {
+        final allProjects = await projectsLocalDataSource.loadProjects();
+        localProjects = allProjects.where((p) => p.userId == currentUserId).toList();
+      }
+
+      // Obtener proyectos remotos del usuario
+      final remoteProjects = await projectsRemoteDataSource.loadProjects(currentUserId);
+
+      // Sincronizar proyectos locales hacia remoto
+      for (var localProject in localProjects) {
+        final existsRemotely = remoteProjects.any((remote) =>
+        remote.uuid == localProject.uuid || remote.name == localProject.name);
+
+        if (!existsRemotely) {
+          await projectsRemoteDataSource.saveProject(localProject);
+        }
+      }
+
+      // Eliminar remotos que no existen localmente
+      for (var remoteProject in remoteProjects) {
+        final existsLocally = localProjects.any((local) =>
+        local.uuid == remoteProject.uuid || local.name == remoteProject.name);
+
+        if (!existsLocally) {
+          await projectsRemoteDataSource.deleteProject(remoteProject);
+        }
+      }
     } catch (e) {
-      print('repo save second');
-      return left(Failure(message: 'Error saving project: ${e.toString()}'));
-    }*//*
-
-    if (await connectionChecker.isConnected) {
-      try {
-        final userId = projectsRemoteDataSource.getCurrentUserId();
-        final newProject = Project(name: name, userId: userId);
-        await projectsRemoteDataSource.saveProject(newProject);
-  //      await projectsLocalDataSource.saveProject(name);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error saving project: $e'));
-      }
-    } else {
-      try {
-        await projectsLocalDataSource.saveProject(name);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error saving project locally: $e'));
-      }
+      // Ignorar errores de sincronización - no deben afectar la operación principal
+      print('Error en sincronización hacia remoto: $e');
     }
   }
 
-  @override
-  Future<Either<Failure, void>> deleteProject(Project project) async {
-    *//*try {
-      await projectsLocalDataSource.deleteProject(project);
-      if (await connectionChecker.isConnected) {
-        await projectsRemoteDataSource.deleteProject(project);
+  /// Intenta sincronizar desde el servidor remoto
+  Future<void> _trySyncFromRemote(String userId) async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return; // Sin conexión, no sincronizar
       }
-      return right(null);
-    } on ServerException catch (e) {
-      return left(Failure(message: e.message));
-    } catch (e) {
-      return left(Failure(message: 'Error deleting project: ${e.toString()}'));
-    }*//*
 
-    if (await connectionChecker.isConnected) {
-      try {
-        await projectsRemoteDataSource.deleteProject(project);
- //       await projectsLocalDataSource.deleteProject(project);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error deleting project: $e'));
+      // Obtener proyectos remotos
+      final remoteProjects = await projectsRemoteDataSource.loadProjects(userId);
+
+      // Obtener proyectos locales del usuario
+      List<Project> localProjects;
+      if (projectsLocalDataSource is ProjectsIsarDataSource) {
+        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+        localProjects = await isarDataSource.loadProjectsByUser(userId);
+      } else {
+        final allProjects = await projectsLocalDataSource.loadProjects();
+        localProjects = allProjects.where((p) => p.userId == userId).toList();
       }
-    } else {
-      try {
-        await projectsLocalDataSource.deleteProject(project);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error deleting project locally: $e'));
+
+      // Sincronizar proyectos remotos hacia local
+      for (var remoteProject in remoteProjects) {
+        final existsLocally = localProjects.any((local) =>
+        local.uuid == remoteProject.uuid || local.name == remoteProject.name);
+
+        if (!existsLocally) {
+          // Crear proyecto local y asignar usuario
+          await projectsLocalDataSource.saveProject(remoteProject.name);
+
+          // Asignar usuario si es posible
+          if (projectsLocalDataSource is ProjectsIsarDataSource) {
+            final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+            final projects = await projectsLocalDataSource.loadProjects();
+            final newProject = projects.firstWhere((p) => p.name == remoteProject.name);
+            await isarDataSource.assignUserToProject(newProject.id, userId);
+          }
+        }
       }
+    } catch (e) {
+      // Ignorar errores de sincronización
+      print('Error en sincronización desde remoto: $e');
     }
   }
-
-  @override
-  Future<Either<Failure, void>> editProject(Project project) async {
-    *//*try {
-      await projectsLocalDataSource.editProject(project);
-      if (await connectionChecker.isConnected) {
-        await projectsRemoteDataSource.editProject(project);
-      }
-      return right(null);
-    } on ServerException catch (e) {
-      return left(Failure(message: e.message));
-    } catch (e) {
-      return left(Failure(message: 'Error deleting project: ${e.toString()}'));
-    }*//*
-
-    if (await connectionChecker.isConnected) {
-      try {
-        await projectsRemoteDataSource.editProject(project);
- //       await projectsLocalDataSource.editProject(project);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error editing project: $e'));
-      }
-    } else {
-      try {
-        await projectsLocalDataSource.editProject(project);
-        return right(null);
-      } catch (e) {
-        return left(Failure(message: 'Error editing project locally: $e'));
-      }
-    }
-  }*/
 }

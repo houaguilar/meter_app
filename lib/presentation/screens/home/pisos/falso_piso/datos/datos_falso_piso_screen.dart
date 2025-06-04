@@ -1,26 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/providers/pisos/pisos_providers.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
 import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
+import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';
 import '../../../../../../init_dependencies.dart';
-import '../../../../../config/theme/theme.dart';
-import '../../../../widgets/fields/custom_name_text_field.dart';
-import '../../../../widgets/widgets.dart';
-import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
+import '../../../../../providers/pisos/falso_piso_providers.dart';
+import '../../../../../widgets/fields/custom_name_text_field.dart';
+import '../../../../../widgets/widgets.dart';
+import '../../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
-class DatosPisosScreens extends ConsumerStatefulWidget {
-  const DatosPisosScreens({super.key});
-  static const String route = 'detail';
+
+class DatosFalsoPisoScreen extends ConsumerStatefulWidget {
+  const DatosFalsoPisoScreen({super.key});
+  static const String route = 'datos-falso-piso';
 
   @override
-  ConsumerState<DatosPisosScreens> createState() => _DatosPisosScreenState();
+  ConsumerState<DatosFalsoPisoScreen> createState() => _DatosFalsoPisoScreenState();
 }
 
-class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with TickerProviderStateMixin {
+class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen> with TickerProviderStateMixin {
   late TabController _tabController;
   int _currentIndex = 0;
 
@@ -37,17 +38,12 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
   final formKey = GlobalKey<FormState>();
   bool showEspesorError = false;
   bool showResistenciaError = false;
-  bool showProporcionError = false;
 
-  late String piso;
   String espesor = "";
-  late String factor;
   String resistencia = '';
-  String proporcionMortero = '';
 
   String? selectedValueEspesor;
   String? selectedValueResistencia;
-  String? selectedValueProporcion;
 
   // Usamos listas de mapas para manejar dinámicamente los campos adicionales
   List<Map<String, TextEditingController>> areaFields = [];
@@ -74,7 +70,24 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
 
   @override
   void dispose() {
-    //   _tabController.dispose();
+    _tabController.dispose();
+    // Liberar controladores dinámicos
+    for (var field in areaFields) {
+      field['description']?.dispose();
+      field['measure']?.dispose();
+    }
+    for (var field in measureFields) {
+      field['descriptionMeasure']?.dispose();
+      field['lengthMeasure']?.dispose();
+      field['heightMeasure']?.dispose();
+    }
+    // Liberar controladores principales
+    factorController.dispose();
+    descriptionAreaController.dispose();
+    descriptionMedidasController.dispose();
+    areaTextController.dispose();
+    lengthTextController.dispose();
+    heightTextController.dispose();
     super.dispose();
   }
 
@@ -99,12 +112,9 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(tipoPisoProvider);
-    print(ref.watch(tipoPisoProvider));
-    final tipoPiso = ref.watch(tipoPisoProvider);
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBarWidget(titleAppBar: 'Medición',),
+      appBar: AppBarWidget(titleAppBar: 'Falso Piso',),
       body: GestureDetector(
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
@@ -122,12 +132,9 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                         padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
                         child: Column(
                           children: [
-                            _buildEspesorSelection(tipoPiso),
+                            _buildEspesorSelection(),
                             _buildProjectFields(),
-                            if (tipoPiso == 'falso')
-                              _buildResistenciaSelection()
-                            else if (tipoPiso == 'contrapiso')
-                              _buildProporcionSelection(),
+                            _buildResistenciaSelection(),
                           ],
                         ),
                       ),
@@ -137,7 +144,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                 ),
               ),
             ),
-            _buildResultButton(tipoPiso),
+            _buildResultButton(),
             const SizedBox(height: 45),
           ],
         ),
@@ -170,33 +177,22 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
     );
   }
 
-  Widget _buildEspesorSelection(String tipoPiso) {
-    final List<String> espesorFalsoPiso = tipoPiso == 'falso'
-        ? ["8 cm", "9 cm", "10 cm", "11 cm", "12 cm"]
-        : ["4 cm", "5 cm", "6 cm"];
+  Widget _buildEspesorSelection() {
+    final List<String> espesoresFalsoPiso = ["8 cm", "9 cm", "10 cm", "11 cm", "12 cm"];
 
     return contentChoiceChips(
         'espesor',
         'Espesor:',
-        espesorFalsoPiso
+        espesoresFalsoPiso
     );
   }
 
   Widget _buildResistenciaSelection() {
-    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²",  "210 kg/cm²"];
+    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²", "210 kg/cm²"];
     return contentChoiceChips(
         'resistencia',
         'Resistencia:',
         resistencias
-    );
-  }
-
-  Widget _buildProporcionSelection() {
-    final List<String> proporciones = ["1 : 4", "1 : 5", "1 : 6"];
-    return contentChoiceChips(
-        'proporcion',
-        'Proporción:',
-        proporciones
     );
   }
 
@@ -227,7 +223,6 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Column(
-                //mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Wrap(
                     runAlignment: WrapAlignment.spaceEvenly,
@@ -242,9 +237,6 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                           break;
                         case 'resistencia':
                           isSelected = selectedValueResistencia == typeValue;
-                          break;
-                        case 'proporcion':
-                          isSelected = selectedValueProporcion == typeValue;
                           break;
                       }
 
@@ -263,19 +255,15 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                                   selectedValueResistencia = typeValue;
                                   resistencia = selectedValueResistencia!;
                                   break;
-                                case 'proporcion':
-                                  selectedValueProporcion = typeValue;
-                                  proporcionMortero = selectedValueProporcion!;
-                                  break;
                               }
                             });
                           }
                         },
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6), // Define el radio de borde
+                          borderRadius: BorderRadius.circular(6),
                           side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5), // Color del borde
-                            width: 1.0, // Grosor del borde
+                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
+                            width: 1.0,
                           ),
                         ),
                         checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
@@ -287,8 +275,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     }).toList(),
                   ),
                   if ((type == 'espesor' && showEspesorError && selectedValueEspesor == null) ||
-                      (type == 'resistencia' && showResistenciaError && selectedValueResistencia == null) ||
-                      (type == 'proporcion' && showProporcionError && selectedValueProporcion == null))
+                      (type == 'resistencia' && showResistenciaError && selectedValueResistencia == null))
                     const Padding(
                       padding: EdgeInsets.only(top: 8.0),
                       child: Text(
@@ -326,7 +313,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
           ],
         ),
         SizedBox(
-          height: 600, // Puedes ajustar esta altura según sea necesario
+          height: 600,
           child: TabBarView(
             controller: _tabController,
             children: [
@@ -361,7 +348,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     CustomNameTextField(
                       controller: descriptionAreaController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Piso 1)',
+                      hintText: 'Ingresa una descripción (Ej. Falso piso sala)',
                       validator: _validateProjectName,
                     ),
                     const SizedBox(height: 8,),
@@ -370,7 +357,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop, // Ajustar según el diseño
+                        color: AppColors.primaryMetraShop,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -426,7 +413,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
                     CustomNameTextField(
                       controller: descriptionMedidasController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Piso 1)',
+                      hintText: 'Ingresa una descripción (Ej. Falso piso sala)',
                       validator: _validateProjectName,
                     ),
                     const Text(
@@ -484,7 +471,6 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
     );
   }
 
-  // Este método construye el campo dinámico con un botón de eliminar
   Widget _buildDynamicField(Map<String, TextEditingController> field, VoidCallback onRemove) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -502,7 +488,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
               controller: field['description']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Piso ...)',
+              hintText: 'Ingresa una descripción (Ej. Falso piso ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -529,7 +515,6 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
     );
   }
 
-  // Similar para las medidas
   Widget _buildDynamicMeasureField(Map<String, TextEditingController> field, VoidCallback onRemove) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
@@ -547,7 +532,7 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
               controller: field['descriptionMeasure']!,
               label: 'Descripción adicional',
               validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Piso ...)',
+              hintText: 'Ingresa una descripción (Ej. Falso piso ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -611,12 +596,18 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
 
   void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
     setState(() {
+      // Liberar memoria de los controladores antes de eliminar
+      field['description']?.dispose();
+      field['measure']?.dispose();
+      field['descriptionMeasure']?.dispose();
+      field['lengthMeasure']?.dispose();
+      field['heightMeasure']?.dispose();
+
       fields.remove(field);
     });
   }
 
-  // Función para procesar el resultado y almacenar datos en PisosResultProvider
-  Widget _buildResultButton(String tipoPiso) {
+  Widget _buildResultButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: CustomElevatedButton(
@@ -625,85 +616,68 @@ class _DatosPisosScreenState extends ConsumerState<DatosPisosScreens> with Ticke
           // Validar selecciones
           setState(() {
             showEspesorError = selectedValueEspesor == null;
-            // Solo validar resistencia si es falso piso
-            if (tipoPiso == 'falso') {
-              showResistenciaError = selectedValueResistencia == null;
-            }
-            // Solo validar proporción si es contrapiso
-            if (tipoPiso == 'contrapiso') {
-              showProporcionError = selectedValueProporcion == null;
-            }
+            showResistenciaError = selectedValueResistencia == null;
           });
 
           // Verificar todos los campos requeridos
-          bool camposValidos = formKey.currentState?.validate() == true && selectedValueEspesor != null;
-          if (tipoPiso == 'falso') {
-            camposValidos = camposValidos && selectedValueResistencia != null;
-          }
-          if (tipoPiso == 'contrapiso') {
-            camposValidos = camposValidos && selectedValueProporcion != null;
-          }
+          bool camposValidos = formKey.currentState?.validate() == true &&
+              selectedValueEspesor != null &&
+              selectedValueResistencia != null;
 
           if (camposValidos) {
-            var datosPiso = ref.read(pisosResultProvider.notifier);
+            var datosFalsoPiso = ref.read(falsoPisoResultProvider.notifier);
             var espesorValor = espesor.replaceAll(" cm", "");
 
-            // Eliminamos "1 : " de la proporción, si existe
-            var proporcionValor = proporcionMortero.replaceAll("1 : ", "");
-
             if (_currentIndex == 0) {
-              datosPiso.createPisos(
-                tipoPiso,
+              // Tab de Área
+              datosFalsoPiso.createFalsoPiso(
                 descriptionAreaController.text,
                 factorController.text,
                 espesorValor,
-                resistencia: tipoPiso == 'falso' ? resistencia : null,
-                proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
+                resistencia: resistencia,
                 area: areaTextController.text,
               );
 
+              // Agregar campos dinámicos de área
               for (var field in areaFields) {
-                datosPiso.createPisos(
-                  tipoPiso,
+                datosFalsoPiso.createFalsoPiso(
                   field['description']!.text,
                   factorController.text,
                   espesorValor,
-                  resistencia: tipoPiso == 'falso' ? resistencia : null,
-                  proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
+                  resistencia: resistencia,
                   area: field['measure']!.text,
                 );
               }
             } else {
-              datosPiso.createPisos(
-                tipoPiso,
+              // Tab de Medidas
+              datosFalsoPiso.createFalsoPiso(
                 descriptionMedidasController.text,
                 factorController.text,
                 espesorValor,
-                resistencia: tipoPiso == 'falso' ? resistencia : null,
-                proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
+                resistencia: resistencia,
                 largo: lengthTextController.text,
                 ancho: heightTextController.text,
               );
 
+              // Agregar campos dinámicos de medidas
               for (var field in measureFields) {
-                datosPiso.createPisos(
-                  tipoPiso,
+                datosFalsoPiso.createFalsoPiso(
                   field['descriptionMeasure']!.text,
                   factorController.text,
                   espesorValor,
-                  resistencia: tipoPiso == 'falso' ? resistencia : null,
-                  proporcionMortero: tipoPiso == 'contrapiso' ? proporcionValor : null,
+                  resistencia: resistencia,
                   largo: field['lengthMeasure']!.text,
                   ancho: field['heightMeasure']!.text,
                 );
               }
             }
-            final pisosCreados = ref.read(pisosResultProvider);
-            print("CREADOS: Número de pisos antes de navegar: ${pisosCreados.length}");
-            print(ref.watch(pisosResultProvider));
+
+            final falsosPisosCreados = ref.read(falsoPisoResultProvider);
+            print("CREADOS: Número de falsos pisos antes de navegar: ${falsosPisosCreados.length}");
+            print("Datos: ${ref.watch(falsoPisoResultProvider)}");
 
             // Navegar a resultados
-            context.pushNamed('pisos_results');
+            context.pushNamed('falso-pisos-results');
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),

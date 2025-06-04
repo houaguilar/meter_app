@@ -8,7 +8,6 @@ import '../../../../../config/theme/theme.dart';
 import '../../../../../data/local/shared_preferences_helper.dart';
 import '../../../../../init_dependencies.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
-import '../../../../providers/home/estructuras/structural_providers.dart';
 import '../../../../widgets/fields/custom_name_text_field.dart';
 import '../../../../widgets/widgets.dart';
 import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
@@ -175,7 +174,13 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   }
 
   Widget _buildResistenciaSelection() {
-    final List<String> opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "245 kg/cm²", "280 kg/cm²"];
+    // Actualizar las opciones de resistencia para coincidir con las del Excel
+    final List<String> opcionesResistencia = [
+      "175 kg/cm²",
+      "210 kg/cm²",
+      "245 kg/cm²",
+    ];
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
@@ -675,7 +680,9 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
             }
             final pisosCreados = ref.read(structuralElementsProvider);
             print("CREADOS: Número de estructuralElements antes de navegar: ${pisosCreados.length}");
-            print(ref.watch(structuralElementsProvider));
+            print(ref.watch(columnaResultProvider));
+            print(ref.watch(vigaResultProvider));
+
             // Navegar a la pantalla de resultados
             context.pushNamed('structural-element-results');
           } else {

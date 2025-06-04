@@ -1,4 +1,4 @@
-// lib/presentation/providers/losa_aligerada/losa_aligerada_providers.dart
+// lib/presentation/providers/losas/losas_aligeradas_providers.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
@@ -105,7 +105,7 @@ String datosShareLosaAligerada(DatosShareLosaAligeradaRef ref) {
   String datos = "";
   if (description.length == area.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${area[i]} m2\n";
+      datos += "* ${description[i]}: ${area[i].toStringAsFixed(2)} m2\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);
@@ -114,51 +114,16 @@ String datosShareLosaAligerada(DatosShareLosaAligeradaRef ref) {
   return datos;
 }
 
-// Providers para calcular las cantidades de materiales
+// PROVIDERS PARA LOS 4 MATERIALES PRINCIPALES
+
 @riverpod
-double cantidadLadrillosLosaAligerada(CantidadLadrillosLosaAligeradaRef ref) {
+double cantidadCementoLosaAligerada(CantidadCementoLosaAligeradaRef ref) {
   final losasAligeradas = ref.watch(losaAligeradaResultProvider);
   final losaAligeradaService = LosaAligeradaService();
 
   double total = 0.0;
   for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularLadrillos(losa);
-  }
-  return total;
-}
-
-@riverpod
-double cantidadConcretoLosaAligerada(CantidadConcretoLosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularConcreto(losa);
-  }
-  return total;
-}
-
-@riverpod
-double cantidadAceroLosaAligerada(CantidadAceroLosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularAcero(losa);
-  }
-  return total;
-}
-
-@riverpod
-double cantidadMaderaLosaAligerada(CantidadMaderaLosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularMadera(losa);
+    total += losaAligeradaService.calcularCemento(losa);
   }
   return total;
 }
@@ -188,18 +153,6 @@ double cantidadPiedraChancadaLosaAligerada(CantidadPiedraChancadaLosaAligeradaRe
 }
 
 @riverpod
-double cantidadCementoLosaAligerada(CantidadCementoLosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularCemento(losa);
-  }
-  return total;
-}
-
-@riverpod
 double cantidadAguaLosaAligerada(CantidadAguaLosaAligeradaRef ref) {
   final losasAligeradas = ref.watch(losaAligeradaResultProvider);
   final losaAligeradaService = LosaAligeradaService();
@@ -211,38 +164,15 @@ double cantidadAguaLosaAligerada(CantidadAguaLosaAligeradaRef ref) {
   return total;
 }
 
+// Provider para volumen de concreto (información adicional)
 @riverpod
-double cantidadAlambre8LosaAligerada(CantidadAlambre8LosaAligeradaRef ref) {
+double volumenConcretoLosaAligerada(VolumenConcretoLosaAligeradaRef ref) {
   final losasAligeradas = ref.watch(losaAligeradaResultProvider);
   final losaAligeradaService = LosaAligeradaService();
 
   double total = 0.0;
   for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularAlambre8(losa);
-  }
-  return total;
-}
-
-@riverpod
-double cantidadAlambre16LosaAligerada(CantidadAlambre16LosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularAlambre16(losa);
-  }
-  return total;
-}
-
-@riverpod
-double cantidadClavosLosaAligerada(CantidadClavosLosaAligeradaRef ref) {
-  final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-  final losaAligeradaService = LosaAligeradaService();
-
-  double total = 0.0;
-  for (var losa in losasAligeradas) {
-    total += losaAligeradaService.calcularClavos(losa);
+    total += losaAligeradaService.calcularVolumenConcreto(losa);
   }
   return total;
 }

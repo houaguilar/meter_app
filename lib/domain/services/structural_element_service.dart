@@ -1,57 +1,154 @@
-
+// lib/domain/services/structural_element_service.dart
 import '../entities/home/estructuras/columna/columna.dart';
 import '../entities/home/estructuras/viga/viga.dart';
 
 class StructuralElementService {
-  // Common service methods for both Column and Beam
-  double? calcularVolumen(dynamic elemento) {
-    if (elemento.volumen != null && elemento.volumen!.isNotEmpty) {
-      return double.tryParse(elemento.volumen!);
+
+  // Factores de materiales según resistencia del concreto (líneas 15-80 del Excel)
+  static const Map<String, Map<String, double>> factoresConcreto = {
+    "140 kg/cm²": {
+      "cemento": 6.8, // bolsas por m³
+      "arenaGruesa": 0.58, // m³ por m³
+      "piedraConcreto": 0.62, // m³ por m³
+      "agua": 0.185, // m³ por m³
+    },
+    "175 kg/cm²": {
+      "cemento": 8.43, // bolsas por m³
+      "arenaGruesa": 0.54, // m³ por m³
+      "piedraConcreto": 0.55, // m³ por m³
+      "agua": 0.185, // m³ por m³
+    },
+    "210 kg/cm²": {
+      "cemento": 9.73, // bolsas por m³
+      "arenaGruesa": 0.52, // m³ por m³
+      "piedraConcreto": 0.53, // m³ por m³
+      "agua": 0.186, // m³ por m³
+    },
+    "245 kg/cm²": {
+      "cemento": 11.5, // bolsas por m³
+      "arenaGruesa": 0.5, // m³ por m³
+      "piedraConcreto": 0.51, // m³ por m³
+      "agua": 0.187, // m³ por m³
+    },
+    "280 kg/cm²": {
+      "cemento": 13.34, // bolsas por m³
+      "arenaGruesa": 0.45, // m³ por m³
+      "piedraConcreto": 0.51, // m³ por m³
+      "agua": 0.189, // m³ por m³
+    },
+  };
+
+  // Validar si un elemento estructural es válido
+  bool esValido(dynamic elemento) {
+    if (elemento is Columna) {
+      return _esValidaColumna(elemento);
+    } else if (elemento is Viga) {
+      return _esValidaViga(elemento);
     }
-    if (elemento.largo != null && elemento.ancho != null && elemento.altura != null) {
-      final largo = double.tryParse(elemento.largo!);
-      final ancho = double.tryParse(elemento.ancho!);
-      final altura = double.tryParse(elemento.altura!);
-      if (largo != null && ancho != null && altura != null) {
-        return largo * ancho * altura;
-      }
+    return false;
+  }
+
+  bool _esValidaColumna(Columna columna) {
+    // Debe tener volumen O (largo, ancho y altura)
+    bool tieneVolumen = columna.volumen != null && columna.volumen!.isNotEmpty;
+    bool tieneDimensiones = columna.largo != null &&
+        columna.largo!.isNotEmpty &&
+        columna.ancho != null &&
+        columna.ancho!.isNotEmpty &&
+        columna.altura != null &&
+        columna.altura!.isNotEmpty;
+
+    return tieneVolumen || tieneDimensiones;
+  }
+
+  bool _esValidaViga(Viga viga) {
+    // Debe tener volumen O (largo, ancho y altura)
+    bool tieneVolumen = viga.volumen != null && viga.volumen!.isNotEmpty;
+    bool tieneDimensiones = viga.largo != null &&
+        viga.largo!.isNotEmpty &&
+        viga.ancho != null &&
+        viga.ancho!.isNotEmpty &&
+        viga.altura != null &&
+        viga.altura!.isNotEmpty;
+
+    return tieneVolumen || tieneDimensiones;
+  }
+
+  // Calcular volumen del elemento
+  double? calcularVolumen(dynamic elemento) {
+    if (elemento is Columna) {
+      return _calcularVolumenColumna(elemento);
+    } else if (elemento is Viga) {
+      return _calcularVolumenViga(elemento);
     }
     return null;
   }
 
-  bool esValido(dynamic elemento) {
-    return (elemento.largo != null && elemento.ancho != null && elemento.altura != null) ||
-        (elemento.volumen != null && elemento.volumen!.isNotEmpty);
+  double? _calcularVolumenColumna(Columna columna) {
+    // Si tiene volumen directo, usarlo
+    if (columna.volumen != null && columna.volumen!.isNotEmpty) {
+      return double.tryParse(columna.volumen!);
+    }
+
+    // Si tiene dimensiones, calcular volumen
+    if (columna.largo != null && columna.largo!.isNotEmpty &&
+        columna.ancho != null && columna.ancho!.isNotEmpty &&
+        columna.altura != null && columna.altura!.isNotEmpty) {
+
+      final largo = double.tryParse(columna.largo!);
+      final ancho = double.tryParse(columna.ancho!);
+      final altura = double.tryParse(columna.altura!);
+
+      if (largo != null && ancho != null && altura != null) {
+        return largo * ancho * altura;
+      }
+    }
+
+    return null;
   }
 
-  // Métodos específicos para Columnas
+  double? _calcularVolumenViga(Viga viga) {
+    // Si tiene volumen directo, usarlo
+    if (viga.volumen != null && viga.volumen!.isNotEmpty) {
+      return double.tryParse(viga.volumen!);
+    }
+
+    // Si tiene dimensiones, calcular volumen
+    if (viga.largo != null && viga.largo!.isNotEmpty &&
+        viga.ancho != null && viga.ancho!.isNotEmpty &&
+        viga.altura != null && viga.altura!.isNotEmpty) {
+
+      final largo = double.tryParse(viga.largo!);
+      final ancho = double.tryParse(viga.ancho!);
+      final altura = double.tryParse(viga.altura!);
+
+      if (largo != null && ancho != null && altura != null) {
+        return largo * ancho * altura;
+      }
+    }
+
+    return null;
+  }
+
+  // ===== CÁLCULOS DE MATERIALES PARA COLUMNAS =====
+
   double calcularCementoColumna(List<Columna> columnas) {
     double totalCemento = 0.0;
 
-    for (var columna in columnas) {
-      double volumen = calcularVolumen(columna) ?? 0.0;
-      double factorDesperdicio = double.tryParse(columna.factorDesperdicio) != null
-          ? double.parse(columna.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final columna in columnas) {
+      final volumen = calcularVolumen(columna);
+      if (volumen != null && volumen > 0) {
+        final resistencia = columna.resistencia;
+        final factorDesperdicio = double.tryParse(columna.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de cemento según resistencia de concreto
-      double factorCemento;
-      switch (columna.resistencia) {
-        case "175 kg/cm²":
-          factorCemento = 7.0; // 7.0 bolsas por m³
-          break;
-        case "210 kg/cm²":
-          factorCemento = 8.0; // 8.0 bolsas por m³
-          break;
-        case "280 kg/cm²":
-          factorCemento = 9.0; // 9.0 bolsas por m³
-          break;
-        default:
-          factorCemento = 8.0; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final cementoPorM3 = factores["cemento"]!;
+          final cementoConDesperdicio = cementoPorM3 * (1 + desperdicioDecimal);
+          totalCemento += cementoConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
     }
 
     return totalCemento;
@@ -60,30 +157,20 @@ class StructuralElementService {
   double calcularArenaColumna(List<Columna> columnas) {
     double totalArena = 0.0;
 
-    for (var columna in columnas) {
-      double volumen = calcularVolumen(columna) ?? 0.0;
-      double factorDesperdicio = double.tryParse(columna.factorDesperdicio) != null
-          ? double.parse(columna.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final columna in columnas) {
+      final volumen = calcularVolumen(columna);
+      if (volumen != null && volumen > 0) {
+        final resistencia = columna.resistencia;
+        final factorDesperdicio = double.tryParse(columna.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de arena según resistencia
-      double factorArena;
-      switch (columna.resistencia) {
-        case "175 kg/cm²":
-          factorArena = 0.56; // 0.56 m³ por m³ de concreto
-          break;
-        case "210 kg/cm²":
-          factorArena = 0.54; // 0.54 m³ por m³ de concreto
-          break;
-        case "280 kg/cm²":
-          factorArena = 0.50; // 0.50 m³ por m³ de concreto
-          break;
-        default:
-          factorArena = 0.54; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final arenaPorM3 = factores["arenaGruesa"]!;
+          final arenaConDesperdicio = arenaPorM3 * (1 + desperdicioDecimal);
+          totalArena += arenaConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalArena += volumen * factorArena * (1 + factorDesperdicio);
     }
 
     return totalArena;
@@ -92,30 +179,20 @@ class StructuralElementService {
   double calcularPiedraColumna(List<Columna> columnas) {
     double totalPiedra = 0.0;
 
-    for (var columna in columnas) {
-      double volumen = calcularVolumen(columna) ?? 0.0;
-      double factorDesperdicio = double.tryParse(columna.factorDesperdicio) != null
-          ? double.parse(columna.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final columna in columnas) {
+      final volumen = calcularVolumen(columna);
+      if (volumen != null && volumen > 0) {
+        final resistencia = columna.resistencia;
+        final factorDesperdicio = double.tryParse(columna.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de piedra según resistencia
-      double factorPiedra;
-      switch (columna.resistencia) {
-        case "175 kg/cm²":
-          factorPiedra = 0.67; // 0.67 m³ por m³ de concreto
-          break;
-        case "210 kg/cm²":
-          factorPiedra = 0.66; // 0.66 m³ por m³ de concreto
-          break;
-        case "280 kg/cm²":
-          factorPiedra = 0.64; // 0.64 m³ por m³ de concreto
-          break;
-        default:
-          factorPiedra = 0.66; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final piedraPorM3 = factores["piedraConcreto"]!;
+          final piedraConDesperdicio = piedraPorM3 * (1 + desperdicioDecimal);
+          totalPiedra += piedraConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalPiedra += volumen * factorPiedra * (1 + factorDesperdicio);
     }
 
     return totalPiedra;
@@ -124,63 +201,44 @@ class StructuralElementService {
   double calcularAguaColumna(List<Columna> columnas) {
     double totalAgua = 0.0;
 
-    for (var columna in columnas) {
-      double volumen = calcularVolumen(columna) ?? 0.0;
-      double factorDesperdicio = double.tryParse(columna.factorDesperdicio) != null
-          ? double.parse(columna.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final columna in columnas) {
+      final volumen = calcularVolumen(columna);
+      if (volumen != null && volumen > 0) {
+        final resistencia = columna.resistencia;
+        final factorDesperdicio = double.tryParse(columna.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de agua según resistencia (litros por m³ convertidos a m³)
-      double factorAgua;
-      switch (columna.resistencia) {
-        case "175 kg/cm²":
-          factorAgua = 0.184; // 184 litros por m³ convertido a m³
-          break;
-        case "210 kg/cm²":
-          factorAgua = 0.182; // 182 litros por m³ convertido a m³
-          break;
-        case "280 kg/cm²":
-          factorAgua = 0.178; // 178 litros por m³ convertido a m³
-          break;
-        default:
-          factorAgua = 0.182; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final aguaPorM3 = factores["agua"]!;
+          final aguaConDesperdicio = aguaPorM3 * (1 + desperdicioDecimal);
+          totalAgua += aguaConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
     }
 
     return totalAgua;
   }
 
-  // Métodos específicos para Vigas (similar a columnas pero con factores específicos)
+  // ===== CÁLCULOS DE MATERIALES PARA VIGAS =====
+
   double calcularCementoViga(List<Viga> vigas) {
     double totalCemento = 0.0;
 
-    for (var viga in vigas) {
-      double volumen = calcularVolumen(viga) ?? 0.0;
-      double factorDesperdicio = double.tryParse(viga.factorDesperdicio) != null
-          ? double.parse(viga.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final viga in vigas) {
+      final volumen = calcularVolumen(viga);
+      if (volumen != null && volumen > 0) {
+        final resistencia = viga.resistencia;
+        final factorDesperdicio = double.tryParse(viga.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de cemento según resistencia de concreto
-      double factorCemento;
-      switch (viga.resistencia) {
-        case "175 kg/cm²":
-          factorCemento = 7.0; // 7.0 bolsas por m³
-          break;
-        case "210 kg/cm²":
-          factorCemento = 8.0; // 8.0 bolsas por m³
-          break;
-        case "280 kg/cm²":
-          factorCemento = 9.0; // 9.0 bolsas por m³
-          break;
-        default:
-          factorCemento = 8.0; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final cementoPorM3 = factores["cemento"]!;
+          final cementoConDesperdicio = cementoPorM3 * (1 + desperdicioDecimal);
+          totalCemento += cementoConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalCemento += volumen * factorCemento * (1 + factorDesperdicio);
     }
 
     return totalCemento;
@@ -189,30 +247,20 @@ class StructuralElementService {
   double calcularArenaViga(List<Viga> vigas) {
     double totalArena = 0.0;
 
-    for (var viga in vigas) {
-      double volumen = calcularVolumen(viga) ?? 0.0;
-      double factorDesperdicio = double.tryParse(viga.factorDesperdicio) != null
-          ? double.parse(viga.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final viga in vigas) {
+      final volumen = calcularVolumen(viga);
+      if (volumen != null && volumen > 0) {
+        final resistencia = viga.resistencia;
+        final factorDesperdicio = double.tryParse(viga.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de arena según resistencia
-      double factorArena;
-      switch (viga.resistencia) {
-        case "175 kg/cm²":
-          factorArena = 0.56; // 0.56 m³ por m³ de concreto
-          break;
-        case "210 kg/cm²":
-          factorArena = 0.54; // 0.54 m³ por m³ de concreto
-          break;
-        case "280 kg/cm²":
-          factorArena = 0.50; // 0.50 m³ por m³ de concreto
-          break;
-        default:
-          factorArena = 0.54; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final arenaPorM3 = factores["arenaGruesa"]!;
+          final arenaConDesperdicio = arenaPorM3 * (1 + desperdicioDecimal);
+          totalArena += arenaConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalArena += volumen * factorArena * (1 + factorDesperdicio);
     }
 
     return totalArena;
@@ -221,30 +269,20 @@ class StructuralElementService {
   double calcularPiedraViga(List<Viga> vigas) {
     double totalPiedra = 0.0;
 
-    for (var viga in vigas) {
-      double volumen = calcularVolumen(viga) ?? 0.0;
-      double factorDesperdicio = double.tryParse(viga.factorDesperdicio) != null
-          ? double.parse(viga.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final viga in vigas) {
+      final volumen = calcularVolumen(viga);
+      if (volumen != null && volumen > 0) {
+        final resistencia = viga.resistencia;
+        final factorDesperdicio = double.tryParse(viga.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de piedra según resistencia
-      double factorPiedra;
-      switch (viga.resistencia) {
-        case "175 kg/cm²":
-          factorPiedra = 0.67; // 0.67 m³ por m³ de concreto
-          break;
-        case "210 kg/cm²":
-          factorPiedra = 0.66; // 0.66 m³ por m³ de concreto
-          break;
-        case "280 kg/cm²":
-          factorPiedra = 0.64; // 0.64 m³ por m³ de concreto
-          break;
-        default:
-          factorPiedra = 0.66; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final piedraPorM3 = factores["piedraConcreto"]!;
+          final piedraConDesperdicio = piedraPorM3 * (1 + desperdicioDecimal);
+          totalPiedra += piedraConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalPiedra += volumen * factorPiedra * (1 + factorDesperdicio);
     }
 
     return totalPiedra;
@@ -253,32 +291,40 @@ class StructuralElementService {
   double calcularAguaViga(List<Viga> vigas) {
     double totalAgua = 0.0;
 
-    for (var viga in vigas) {
-      double volumen = calcularVolumen(viga) ?? 0.0;
-      double factorDesperdicio = double.tryParse(viga.factorDesperdicio) != null
-          ? double.parse(viga.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    for (final viga in vigas) {
+      final volumen = calcularVolumen(viga);
+      if (volumen != null && volumen > 0) {
+        final resistencia = viga.resistencia;
+        final factorDesperdicio = double.tryParse(viga.factorDesperdicio) ?? 0.0;
+        final desperdicioDecimal = factorDesperdicio / 100;
 
-      // Factor de agua según resistencia (litros por m³ convertidos a m³)
-      double factorAgua;
-      switch (viga.resistencia) {
-        case "175 kg/cm²":
-          factorAgua = 0.184; // 184 litros por m³ convertido a m³
-          break;
-        case "210 kg/cm²":
-          factorAgua = 0.182; // 182 litros por m³ convertido a m³
-          break;
-        case "280 kg/cm²":
-          factorAgua = 0.178; // 178 litros por m³ convertido a m³
-          break;
-        default:
-          factorAgua = 0.182; // Valor predeterminado
+        final factores = factoresConcreto[resistencia];
+        if (factores != null) {
+          final aguaPorM3 = factores["agua"]!;
+          final aguaConDesperdicio = aguaPorM3 * (1 + desperdicioDecimal);
+          totalAgua += aguaConDesperdicio * volumen;
+        }
       }
-
-      // Cálculo final con desperdicio
-      totalAgua += volumen * factorAgua * (1 + factorDesperdicio);
     }
 
     return totalAgua;
+  }
+
+  // ===== MÉTODO PARA OBTENER FACTORES DE RESISTENCIA =====
+
+  Map<String, double>? getFactoresResistencia(String resistencia) {
+    return factoresConcreto[resistencia];
+  }
+
+  // ===== MÉTODO PARA OBTENER RESISTENCIAS DISPONIBLES =====
+
+  List<String> getResistenciasDisponibles() {
+    return factoresConcreto.keys.toList();
+  }
+
+  // ===== MÉTODO PARA VALIDAR RESISTENCIA =====
+
+  bool esResistenciaValida(String resistencia) {
+    return factoresConcreto.containsKey(resistencia);
   }
 }

@@ -111,6 +111,9 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
         return;
       }
 
+      // Debug: imprimir información del elemento seleccionado
+      print('🔍 Elemento seleccionado: ${element.name} (ID: ${element.id})');
+
       // Actualizar selección
       ref.read(selectedStructuralElementProvider.notifier).state = element;
 
@@ -129,7 +132,18 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   void _navigateToAvailableElement(StructuralElement element) {
     try {
       final elementType = _getStructuralElementType(element.id);
+
+      // Debug: imprimir el tipo de elemento que se va a establecer
+      print('🏗️ Tipo de elemento a establecer: $elementType');
+
+      // Establecer el tipo de elemento antes de navegar
       ref.read(tipoStructuralElementProvider.notifier).selectStructuralElement(elementType);
+
+      // Verificar que se estableció correctamente
+      final tipoEstablecido = ref.read(tipoStructuralElementProvider);
+      print('✅ Tipo establecido en provider: $tipoEstablecido');
+
+      // Navegar a la pantalla de datos
       context.pushNamed('structural-element-datos');
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);
@@ -156,10 +170,13 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   String _getStructuralElementType(String elementId) {
     switch (elementId) {
       case '1':
+        print('🏛️ Seleccionando COLUMNA para ID: $elementId');
         return 'columna';
       case '2':
+        print('🌉 Seleccionando VIGA para ID: $elementId');
         return 'viga';
       default:
+        print('❓ ID no reconocido: $elementId, usando columna por defecto');
         return 'columna';
     }
   }
@@ -227,7 +244,6 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
 
   /// Contactar soporte técnico
   void _contactSupport() {
-    // Implementar lógica de contacto
     _showErrorMessage('Funcionalidad de soporte próximamente disponible');
   }
 
@@ -307,219 +323,6 @@ class StructuralElementGridBuilder<T> extends StatelessWidget {
   }
 }
 
-/// Extensión específica para StructuralElement que proporciona información para la UI
-extension StructuralElementUI on StructuralElement {
-  /// Determina si el elemento estructural está disponible
-  bool get isAvailable {
-    const availableIds = ['1', '2']; // Columna y Viga
-    return availableIds.contains(id);
-  }
-
-  /// Obtiene el color asociado al elemento
-  Color get primaryColor {
-    if (isAvailable) {
-      return AppColors.primary;
-    } else {
-      return AppColors.warning;
-    }
-  }
-
-  /// Obtiene la categoría del elemento estructural
-  StructuralElementCategory get category {
-    switch (id) {
-      case '1':
-        return StructuralElementCategory.columna;
-      case '2':
-        return StructuralElementCategory.viga;
-      case '3':
-        return StructuralElementCategory.zapata;
-      case '4':
-        return StructuralElementCategory.cimentacion;
-      default:
-        return StructuralElementCategory.unknown;
-    }
-  }
-
-  /// Obtiene el estado de disponibilidad como texto
-  String get availabilityStatus {
-    return isAvailable ? 'Disponible' : 'Próximamente';
-  }
-
-  /// Obtiene la complejidad de cálculo
-  CalculationComplexity get calculationComplexity {
-    switch (category) {
-      case StructuralElementCategory.columna:
-      case StructuralElementCategory.viga:
-        return CalculationComplexity.medium;
-      case StructuralElementCategory.zapata:
-      case StructuralElementCategory.cimentacion:
-        return CalculationComplexity.high;
-      case StructuralElementCategory.unknown:
-        return CalculationComplexity.unknown;
-    }
-  }
-
-  /// Obtiene información detallada del elemento
-  StructuralElementInfo get detailedInfo {
-    return StructuralElementInfo(
-      id: id,
-      name: name,
-      category: category,
-      isAvailable: isAvailable,
-      primaryColor: primaryColor,
-      description: _getDetailedDescription(),
-      technicalSpecs: _getTechnicalSpecs(),
-      complexity: calculationComplexity,
-    );
-  }
-
-  String _getDetailedDescription() {
-    switch (category) {
-      case StructuralElementCategory.columna:
-        return 'Elementos verticales que transmiten cargas de compresión a la cimentación.';
-      case StructuralElementCategory.viga:
-        return 'Elementos horizontales que soportan cargas transversales.';
-      case StructuralElementCategory.zapata:
-        return 'Elementos de cimentación superficial para transmitir cargas al suelo.';
-      case StructuralElementCategory.cimentacion:
-        return 'Sistema de elementos que transmiten las cargas de la estructura al terreno.';
-      case StructuralElementCategory.unknown:
-        return 'Elemento estructural especializado.';
-    }
-  }
-
-  List<String> _getTechnicalSpecs() {
-    final lines = details.split('\n');
-    return lines
-        .where((line) => line.trim().isNotEmpty)
-        .map((line) => line.replaceAll('·', '').trim())
-        .where((line) => line.isNotEmpty)
-        .toList();
-  }
-}
-
-/// Enum para categorías de elementos estructurales
-enum StructuralElementCategory {
-  columna,
-  viga,
-  zapata,
-  cimentacion,
-  unknown;
-
-  String get displayName {
-    switch (this) {
-      case StructuralElementCategory.columna:
-        return 'Columna';
-      case StructuralElementCategory.viga:
-        return 'Viga';
-      case StructuralElementCategory.zapata:
-        return 'Zapata';
-      case StructuralElementCategory.cimentacion:
-        return 'Cimentación';
-      case StructuralElementCategory.unknown:
-        return 'Desconocido';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case StructuralElementCategory.columna:
-        return Icons.view_column;
-      case StructuralElementCategory.viga:
-        return Icons.horizontal_rule;
-      case StructuralElementCategory.zapata:
-        return Icons.foundation;
-      case StructuralElementCategory.cimentacion:
-        return Icons.account_balance;
-      case StructuralElementCategory.unknown:
-        return Icons.help_outline;
-    }
-  }
-}
-
-/// Enum para complejidad de cálculo
-enum CalculationComplexity {
-  low,
-  medium,
-  high,
-  unknown;
-
-  String get displayName {
-    switch (this) {
-      case CalculationComplexity.low:
-        return 'Básico';
-      case CalculationComplexity.medium:
-        return 'Intermedio';
-      case CalculationComplexity.high:
-        return 'Avanzado';
-      case CalculationComplexity.unknown:
-        return 'No definido';
-    }
-  }
-
-  Color get color {
-    switch (this) {
-      case CalculationComplexity.low:
-        return AppColors.success;
-      case CalculationComplexity.medium:
-        return AppColors.warning;
-      case CalculationComplexity.high:
-        return AppColors.error;
-      case CalculationComplexity.unknown:
-        return AppColors.neutral400;
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case CalculationComplexity.low:
-        return Icons.star_border;
-      case CalculationComplexity.medium:
-        return Icons.star_half;
-      case CalculationComplexity.high:
-        return Icons.star;
-      case CalculationComplexity.unknown:
-        return Icons.help_outline;
-    }
-  }
-}
-
-/// Clase de información detallada del elemento estructural
-class StructuralElementInfo {
-  final String id;
-  final String name;
-  final StructuralElementCategory category;
-  final bool isAvailable;
-  final Color primaryColor;
-  final String description;
-  final List<String> technicalSpecs;
-  final CalculationComplexity complexity;
-
-  const StructuralElementInfo({
-    required this.id,
-    required this.name,
-    required this.category,
-    required this.isAvailable,
-    required this.primaryColor,
-    required this.description,
-    required this.technicalSpecs,
-    required this.complexity,
-  });
-
-  /// Convierte a JSON para logging o debugging
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'category': category.displayName,
-      'isAvailable': isAvailable,
-      'description': description,
-      'technicalSpecs': technicalSpecs,
-      'complexity': complexity.displayName,
-    };
-  }
-}
-
 /// Factory method para mostrar elementos estructurales no disponibles
 void showStructuralElementNotAvailable(
     BuildContext context, {
@@ -543,13 +346,9 @@ class SelectedStructuralElementInfo extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedElement = ref.watch(selectedStructuralElementProvider);
+    final tipoElemento = ref.watch(tipoStructuralElementProvider);
 
-    if (selectedElement == null) {
-      return const SizedBox.shrink();
-    }
-
-    final info = selectedElement.detailedInfo;
-
+    // Debug widget para mostrar el estado actual
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
@@ -561,68 +360,29 @@ class SelectedStructuralElementInfo extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                info.category.icon,
-                color: info.primaryColor,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Elemento seleccionado: ${info.name}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: info.primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  info.isAvailable ? 'Disponible' : 'Próximamente',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: info.primaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Text(
-            info.description,
+            'DEBUG INFO:',
             style: const TextStyle(
               fontSize: 14,
-              color: AppColors.textSecondary,
+              fontWeight: FontWeight.bold,
+              color: AppColors.error,
             ),
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(
-                info.complexity.icon,
-                color: info.complexity.color,
-                size: 16,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Complejidad: ${info.complexity.displayName}',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: info.complexity.color,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
+          Text('Elemento seleccionado: ${selectedElement?.name ?? 'Ninguno'}'),
+          Text('ID del elemento: ${selectedElement?.id ?? 'N/A'}'),
+          Text('Tipo en provider: $tipoElemento'),
+          const SizedBox(height: 8),
+          if (selectedElement != null)
+            ElevatedButton(
+              onPressed: () {
+                print('🔍 Estado actual del provider:');
+                print('- Elemento: ${selectedElement.name}');
+                print('- ID: ${selectedElement.id}');
+                print('- Tipo en provider: $tipoElemento');
+              },
+              child: const Text('Debug Print'),
+            ),
         ],
       ),
     );

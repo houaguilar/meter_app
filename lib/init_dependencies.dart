@@ -59,6 +59,9 @@ import 'domain/datasources/map/location_data_source.dart';
 import 'domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'domain/datasources/projects/metrados/result/result_local_data_source.dart';
 import 'domain/entities/entities.dart';
+import 'domain/entities/home/estructuras/columna/columna.dart';
+import 'domain/entities/home/estructuras/viga/viga.dart';
+import 'domain/entities/home/losas/losas.dart';
 import 'domain/repositories/auth/auth_repository.dart';
 import 'domain/repositories/home/inicio/article_repository.dart';
 import 'domain/repositories/home/inicio/measurement_repository.dart';
@@ -112,6 +115,10 @@ Future<void> initDependencies() async {
     MetradoSchema,
     PisoSchema,
     LadrilloSchema,
+    TarrajeoSchema,
+    LosaAligeradaSchema,
+    ColumnaSchema,
+    VigaSchema,
   ],
     directory: isarDirectory,
     inspector: true,
