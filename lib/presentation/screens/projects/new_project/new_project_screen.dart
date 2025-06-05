@@ -31,6 +31,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
   bool _hasError = false;
   String? _errorMessage;
   bool _isSubmitting = false;
+  int? _createdProjectId; // Para almacenar el ID del proyecto creado
 
   // Animación
   late AnimationController _animationController;
@@ -106,6 +107,9 @@ class _NewProjectScreenState extends State<NewProjectScreen>
   Future<void> _saveProject() async {
     if (_isSubmitting) return;
 
+    // Ocultar teclado
+    FocusScope.of(context).unfocus();
+
     // Validar formulario
     if (!_validateForm()) return;
 
@@ -140,7 +144,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
       return false;
     }
 
-    // Validación de caracteres especiales
+    // Validación mejorada de caracteres - permitir ñ y acentos
     if (_containsInvalidCharacters(name)) {
       _setError('El nombre contiene caracteres no válidos');
       return false;
@@ -149,8 +153,9 @@ class _NewProjectScreenState extends State<NewProjectScreen>
     return true;
   }
 
-  /// Verifica caracteres inválidos
+  /// Verifica caracteres inválidos - MEJORADO para permitir ñ y acentos
   bool _containsInvalidCharacters(String text) {
+    // Solo prohibir caracteres que realmente son problemáticos para nombres de archivo
     final invalidChars = RegExp(r'[<>"\\\/:*?|]');
     return invalidChars.hasMatch(text);
   }
@@ -186,7 +191,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
   }
 
   /// Maneja el éxito
-  void _handleSuccess() {
+  void _handleSuccess(Project? project) {
     if (!mounted) return;
 
     // Vibración de éxito
@@ -198,8 +203,14 @@ class _NewProjectScreenState extends State<NewProjectScreen>
       'Proyecto creado exitosamente',
     );
 
-    // Navegar hacia atrás
-    context.pop();
+    // Navegar hacia atrás con información del proyecto creado
+    // CORREGIDO: Usar el nombre del texto ingresado como fallback
+    final result = {
+      'projectName': project?.name ?? _nameController.text.trim(),
+      if (project?.id != null) 'projectId': project!.id,
+    };
+
+    context.pop(result);
   }
 
   @override
@@ -207,10 +218,14 @@ class _NewProjectScreenState extends State<NewProjectScreen>
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
-      body: BlocListener<ProjectsBloc, ProjectsState>(
-        listener: _handleBlocListener,
-        child: SafeArea(
-          child: _buildBody(),
+      // MEJORADO: GestureDetector para ocultar teclado al tocar fuera
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: BlocListener<ProjectsBloc, ProjectsState>(
+          listener: _handleBlocListener,
+          child: SafeArea(
+            child: _buildBody(),
+          ),
         ),
       ),
     );
@@ -257,6 +272,8 @@ class _NewProjectScreenState extends State<NewProjectScreen>
                     _buildHeader(),
                     const SizedBox(height: 32),
                     _buildForm(),
+                    const SizedBox(height: 24),
+                    _buildCharacterTips(), // NUEVO: Consejos sobre caracteres permitidos
                     const Expanded(
                       child: SizedBox(height: 32),
                     ),
@@ -360,8 +377,14 @@ class _NewProjectScreenState extends State<NewProjectScreen>
             enabled: !_isSubmitting,
             textCapitalization: TextCapitalization.sentences,
             maxLength: 100,
+            // MEJORADO: Permitir caracteres latinos incluyendo ñ
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(
+                RegExp(r'[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s\-_.,()]+'),
+              ),
+            ],
             decoration: InputDecoration(
-              hintText: 'Ej: Casa de la familia García',
+              hintText: 'Ej: Casa de la familia García - Año 2024',
               prefixIcon: Icon(
                 Icons.folder_outlined,
                 color: _hasError
@@ -387,6 +410,8 @@ class _NewProjectScreenState extends State<NewProjectScreen>
             ),
             style: AppTypography.bodyLarge,
             onFieldSubmitted: (_) => _saveProject(),
+            // MEJORADO: Cerrar teclado al tocar fuera
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
           ),
           if (!_hasError) ...[
             const SizedBox(height: 8),
@@ -398,6 +423,82 @@ class _NewProjectScreenState extends State<NewProjectScreen>
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  /// NUEVO: Consejos sobre caracteres permitidos
+  Widget _buildCharacterTips() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.accent.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline,
+                color: AppColors.accent,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Caracteres permitidos',
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              _buildCharacterChip('Letras: A-Z, a-z'),
+              _buildCharacterChip('Acentos: á, é, í, ó, ú'),
+              _buildCharacterChip('Eñe: ñ, Ñ'),
+              _buildCharacterChip('Números: 0-9'),
+              _buildCharacterChip('Espacios y guiones'),
+              _buildCharacterChip('Puntos y comas'),
+              _buildCharacterChip('Paréntesis: ( )'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'No se permiten: < > " \\ / : * ? |',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textTertiary,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCharacterChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.bodySmall.copyWith(
+          color: AppColors.accent,
+          fontSize: 11,
+        ),
       ),
     );
   }
@@ -453,7 +554,8 @@ class _NewProjectScreenState extends State<NewProjectScreen>
   /// Maneja los eventos del BLoC
   void _handleBlocListener(BuildContext context, ProjectsState state) {
     if (state is ProjectAdded) {
-      _handleSuccess();
+      // MEJORADO: Pasar información del proyecto creado
+      _handleSuccess(state.project);
     } else if (state is ProjectNameAlreadyExists) {
       _setError(state.message);
     } else if (state is ProjectFailure) {
@@ -478,18 +580,18 @@ extension ProjectNameValidation on String {
     if (trim().length > 100) return false;
 
     // No debe contener solo espacios o caracteres especiales
-    if (trim().replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), '').isEmpty) {
+    if (trim().replaceAll(RegExp(r'[^a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9\s]'), '').isEmpty) {
       return false;
     }
 
     return true;
   }
 
-  /// Sanitiza el nombre del proyecto
+  /// Sanitiza el nombre del proyecto - MEJORADO para conservar ñ y acentos
   String get sanitizedProjectName {
     return trim()
-        .replaceAll(RegExp(r'[<>"\\\/:*?|]'), '')
-        .replaceAll(RegExp(r'\s+'), ' ');
+        .replaceAll(RegExp(r'[<>"\\\/:*?|]'), '') // Solo remover caracteres realmente problemáticos
+        .replaceAll(RegExp(r'\s+'), ' '); // Normalizar espacios múltiples
   }
 }
 
@@ -533,30 +635,32 @@ class ProjectNameTips extends StatelessWidget {
           ...[
             'Usa nombres descriptivos: "Casa García" en lugar de "Proyecto 1"',
             'Incluye la ubicación si es relevante: "Oficina Centro Lima"',
+            'Puedes usar acentos y ñ: "Edificio Señor Hernández"',
             'Evita caracteres especiales como / \\ : * ? " < > |',
             'Mantén el nombre corto pero informativo',
-          ].map((tip) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '• ',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.accent,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    tip,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
+          ].map((tip) =>
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.accent,
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: Text(
+                        tip,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )).toList(),
+              )).toList(),
         ],
       ),
     );

@@ -1,3 +1,4 @@
+// lib/presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,11 +61,33 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
 
     // Cargamos la configuración de SharedPreferences si es necesario
     sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
+
+    // FIX: Validar y obtener el tipo de elemento
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _validateAndSetElementType();
+
       if (!sharedPreferencesHelper.isTutorialShown()) {
         showTutorial();
       }
     });
+  }
+
+  // FIX: Método para validar y establecer el tipo de elemento
+  void _validateAndSetElementType() {
+    final tipo = ref.read(tipoStructuralElementProvider);
+    print('🔍 Tipo de elemento obtenido en DatosScreen: $tipo');
+
+    if (tipo.isEmpty) {
+      print('⚠️ Tipo de elemento vacío, redirigiendo...');
+      context.pop();
+      return;
+    }
+
+    setState(() {
+      tipoElemento = tipo;
+    });
+
+    print('✅ Tipo de elemento establecido: $tipoElemento');
   }
 
   @override
@@ -107,7 +130,26 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
 
   @override
   Widget build(BuildContext context) {
-    tipoElemento = ref.watch(tipoStructuralElementProvider);
+    // FIX: Observar cambios en el provider
+    ref.listen(tipoStructuralElementProvider, (previous, next) {
+      print('🔄 Cambio detectado en tipoStructuralElementProvider: $previous -> $next');
+      if (next.isNotEmpty && next != tipoElemento) {
+        setState(() {
+          tipoElemento = next;
+        });
+      }
+    });
+
+    // Si no tenemos tipo, mostrar loading o redirigir
+    if (tipoElemento.isEmpty) {
+      return Scaffold(
+        appBar: AppBarWidget(titleAppBar: 'Cargando...'),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     String appBarTitle = tipoElemento == 'columna' ? 'Columna' : 'Viga';
 
     return Scaffold(
@@ -117,6 +159,8 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Column(
           children: [
+            // Widget de debug temporal (solo en debug mode)
+            if (tipoElemento.isNotEmpty) _buildDebugInfo(),
             Expanded(
               child: SingleChildScrollView(
                 keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -141,10 +185,90 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 ),
               ),
             ),
-            _buildResultButton(),
-            const SizedBox(height: 45),
+            // FIX: Arreglar el botón de resultado con constrainWidthToWidest: true para evitar infinite width
+            SafeArea(
+              child: Container(
+                width: double.infinity, // Establecer ancho específico
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blueMetraShop,
+                    foregroundColor: AppColors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      showResistenciaError = selectedValueResistencia == null;
+                    });
+
+                    if (formKey.currentState?.validate() == true && selectedValueResistencia != null) {
+                      // FIX: Verificar el tipo antes de procesar
+                      final tipoActual = ref.read(tipoStructuralElementProvider);
+                      print('🎯 Procesando datos para tipo: $tipoActual');
+
+                      if (tipoActual == 'columna') {
+                        _processColumnaData();
+                      } else if (tipoActual == 'viga') {
+                        _processVigaData();
+                      } else {
+                        print('❌ Tipo no reconocido: $tipoActual');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Error: Tipo de elemento no válido')),
+                        );
+                        return;
+                      }
+                      ref.watch(vigaResultProvider);
+                      ref.watch(columnaResultProvider);
+                      // Navegar a la pantalla de resultados
+                      context.pushNamed('structural-element-results');
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
+                      );
+                    }
+                  },
+                  child: const Text('Resultado'),
+                ),
+              ),
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Widget de debug temporal
+  Widget _buildDebugInfo() {
+    // Solo mostrar en modo debug
+    bool inDebugMode = false;
+    assert(inDebugMode = true);
+
+    if (!inDebugMode) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
+      color: Colors.yellow.withOpacity(0.3),
+      child: Row(
+        children: [
+          Text('DEBUG: Tipo actual = $tipoElemento'),
+          const Spacer(),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(60, 30), // Tamaño específico
+            ),
+            onPressed: () {
+              final tipo = ref.read(tipoStructuralElementProvider);
+              print('🔍 Estado actual del provider: $tipo');
+              print('🔍 Estado local: $tipoElemento');
+            },
+            child: const Text('Check'),
+          ),
+        ],
       ),
     );
   }
@@ -313,7 +437,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                     CustomNameTextField(
                       controller: descriptionAreaController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Columna 1)',
+                      hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} 1)',
                       validator: _validateStringRequired,
                     ),
                     const SizedBox(height: 8),
@@ -328,7 +452,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                     const SizedBox(height: 8),
                     CustomMeasureTextField(
                       controller: volumenTextController,
-                      validator: _validateStringRequired,
+                      validator: _validateNumeric,
                       labelText: 'Volumen (m³)',
                       keyboardType: TextInputType.number,
                     ),
@@ -378,7 +502,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                     CustomNameTextField(
                       controller: descriptionMedidasController,
                       label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Columna 1)',
+                      hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} 1)',
                       validator: _validateStringRequired,
                     ),
                     const Text(
@@ -395,7 +519,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                         Expanded(
                           child: CustomMeasureTextField(
                             controller: lengthTextController,
-                            validator: _validateStringRequired,
+                            validator: _validateNumeric,
                             labelText: 'Largo (m)',
                             keyboardType: TextInputType.number,
                           ),
@@ -404,7 +528,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                         Expanded(
                           child: CustomMeasureTextField(
                             controller: widthTextController,
-                            validator: _validateStringRequired,
+                            validator: _validateNumeric,
                             labelText: 'Ancho (m)',
                             keyboardType: TextInputType.number,
                           ),
@@ -413,7 +537,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                     ),
                     CustomMeasureTextField(
                       controller: heightTextController,
-                      validator: _validateStringRequired,
+                      validator: _validateNumeric,
                       labelText: 'Altura (m)',
                       keyboardType: TextInputType.number,
                     ),
@@ -459,7 +583,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
               controller: field['description']!,
               label: 'Descripción adicional',
               validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. Columna ...)',
+              hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -476,7 +600,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
             const SizedBox(height: 8),
             CustomMeasureTextField(
               controller: field['volumen']!,
-              validator: _validateStringRequired,
+              validator: _validateNumeric,
               labelText: 'Volumen (m³)',
               keyboardType: TextInputType.number,
             ),
@@ -503,7 +627,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
               controller: field['description']!,
               label: 'Descripción adicional',
               validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. Columna ...)',
+              hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} ...)',
               onPressed: onRemove,
               icon: Icons.close,
               color: AppColors.errorGeneralColor,
@@ -524,7 +648,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 Expanded(
                   child: CustomMeasureTextField(
                     controller: field['largo']!,
-                    validator: _validateStringRequired,
+                    validator: _validateNumeric,
                     labelText: 'Largo (m)',
                     keyboardType: TextInputType.number,
                   ),
@@ -533,7 +657,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 Expanded(
                   child: CustomMeasureTextField(
                     controller: field['ancho']!,
-                    validator: _validateStringRequired,
+                    validator: _validateNumeric,
                     labelText: 'Ancho (m)',
                     keyboardType: TextInputType.number,
                   ),
@@ -542,7 +666,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
             ),
             CustomMeasureTextField(
               controller: field['altura']!,
-              validator: _validateStringRequired,
+              validator: _validateNumeric,
               labelText: 'Altura (m)',
               keyboardType: TextInputType.number,
             ),
@@ -578,120 +702,126 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     });
   }
 
-  Widget _buildResultButton() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: CustomElevatedButton(
-        label: 'Resultado',
-        onPressed: () {
-          setState(() {
-            showResistenciaError = selectedValueResistencia == null; // Muestra error si resistencia no está seleccionada
-          });
+  void _processColumnaData() {
+    var datosColumna = ref.read(columnaResultProvider.notifier);
 
-          if (formKey.currentState?.validate() == true && selectedValueResistencia != null) {
-            if (tipoElemento == 'columna') {
-              var datosColumna = ref.read(columnaResultProvider.notifier);
+    // Limpiar datos previos
+    datosColumna.clearList();
 
-              if (_currentIndex == 0) {
-                datosColumna.createColumna(
-                  descriptionAreaController.text,
-                  resistencia,
-                  factorController.text,
-                  volumen: volumenTextController.text,
-                );
+    try {
+      if (_currentIndex == 0) {
+        // Tab de volumen
+        datosColumna.createColumna(
+          descriptionAreaController.text,
+          resistencia,
+          factorController.text,
+          volumen: volumenTextController.text,
+        );
 
-                for (var field in volumenFields) {
-                  datosColumna.createColumna(
-                    field['description']!.text,
-                    resistencia,
-                    factorController.text,
-                    volumen: field['volumen']!.text,
-                  );
-                }
-              } else {
-                datosColumna.createColumna(
-                  descriptionMedidasController.text,
-                  resistencia,
-                  factorController.text,
-                  largo: lengthTextController.text,
-                  ancho: widthTextController.text,
-                  altura: heightTextController.text,
-                );
+        for (var field in volumenFields) {
+          datosColumna.createColumna(
+            field['description']!.text,
+            resistencia,
+            factorController.text,
+            volumen: field['volumen']!.text,
+          );
+        }
+      } else {
+        // Tab de dimensiones
+        datosColumna.createColumna(
+          descriptionMedidasController.text,
+          resistencia,
+          factorController.text,
+          largo: lengthTextController.text,
+          ancho: widthTextController.text,
+          altura: heightTextController.text,
+        );
 
-                for (var field in dimensionesFields) {
-                  datosColumna.createColumna(
-                    field['description']!.text,
-                    resistencia,
-                    factorController.text,
-                    largo: field['largo']!.text,
-                    ancho: field['ancho']!.text,
-                    altura: field['altura']!.text,
-                  );
-                }
-              }
-              final pisosCreados = ref.read(columnaResultProvider);
-              print("CREADOS: Número de columna antes de navegar: ${pisosCreados.length}");
-              print('Columnas creadas:');
-              print(ref.watch(columnaResultProvider));
-            } else {
-              var datosViga = ref.read(vigaResultProvider.notifier);
+        for (var field in dimensionesFields) {
+          datosColumna.createColumna(
+            field['description']!.text,
+            resistencia,
+            factorController.text,
+            largo: field['largo']!.text,
+            ancho: field['ancho']!.text,
+            altura: field['altura']!.text,
+          );
+        }
+      }
 
-              if (_currentIndex == 0) {
-                datosViga.createViga(
-                  descriptionAreaController.text,
-                  resistencia,
-                  factorController.text,
-                  volumen: volumenTextController.text,
-                );
+      final columnasCreadas = ref.read(columnaResultProvider);
+      print("✅ Columnas creadas: ${columnasCreadas.length}");
+      ref.watch(columnaResultProvider);
+    } catch (e) {
+      print("❌ Error creando columnas: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al procesar datos de columna: $e')),
+      );
+    }
+  }
 
-                for (var field in volumenFields) {
-                  datosViga.createViga(
-                    field['description']!.text,
-                    resistencia,
-                    factorController.text,
-                    volumen: field['volumen']!.text,
-                  );
-                }
-              } else {
-                datosViga.createViga(
-                  descriptionMedidasController.text,
-                  resistencia,
-                  factorController.text,
-                  largo: lengthTextController.text,
-                  ancho: widthTextController.text,
-                  altura: heightTextController.text,
-                );
+  void _processVigaData() {
+    var datosViga = ref.read(vigaResultProvider.notifier);
 
-                for (var field in dimensionesFields) {
-                  datosViga.createViga(
-                    field['description']!.text,
-                    resistencia,
-                    factorController.text,
-                    largo: field['largo']!.text,
-                    ancho: field['ancho']!.text,
-                    altura: field['altura']!.text,
-                  );
-                }
-              }
-              final pisosCreados = ref.read(vigaResultProvider);
-              print("CREADOS: Número de vigas antes de navegar: ${pisosCreados.length}");
-              print('Vigas creadas:');
-              print(ref.watch(vigaResultProvider));
-            }
-            final pisosCreados = ref.read(structuralElementsProvider);
-            print("CREADOS: Número de estructuralElements antes de navegar: ${pisosCreados.length}");
-            print(ref.watch(columnaResultProvider));
-            print(ref.watch(vigaResultProvider));
+    // Limpiar datos previos
+    datosViga.clearList();
 
-            // Navegar a la pantalla de resultados
-            context.pushNamed('structural-element-results');
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
-            );
-          }
-        },
-      ),
-    );
+    try {
+      if (_currentIndex == 0) {
+        // Tab de volumen
+        datosViga.createViga(
+          descriptionAreaController.text,
+          resistencia,
+          factorController.text,
+          volumen: volumenTextController.text,
+        );
+
+        for (var field in volumenFields) {
+          datosViga.createViga(
+            field['description']!.text,
+            resistencia,
+            factorController.text,
+            volumen: field['volumen']!.text,
+          );
+        }
+      } else {
+        // Tab de dimensiones
+        datosViga.createViga(
+          descriptionMedidasController.text,
+          resistencia,
+          factorController.text,
+          largo: lengthTextController.text,
+          ancho: widthTextController.text,
+          altura: heightTextController.text,
+        );
+
+        for (var field in dimensionesFields) {
+          datosViga.createViga(
+            field['description']!.text,
+            resistencia,
+            factorController.text,
+            largo: field['largo']!.text,
+            ancho: field['ancho']!.text,
+            altura: field['altura']!.text,
+          );
+        }
+      }
+
+      final vigasCreadas = ref.read(vigaResultProvider);
+      print("✅ Vigas creadas: ${vigasCreadas.length}");
+      ref.watch(vigaResultProvider);
+    } catch (e) {
+      print("❌ Error creando vigas: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al procesar datos de viga: $e')),
+      );
+    }
+  }
+}
+
+// Extension helper para capitalizar strings
+extension StringExtension on String {
+  String capitalize() {
+    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }

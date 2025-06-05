@@ -28,6 +28,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   final _formKey = GlobalKey<FormState>();
   String? selectedProjectId;
   bool _isLoading = false;
+  bool _shouldClearResults = false;
+  List<Project> _currentProjects = []; // Para validar el dropdown
 
   @override
   void initState() {
@@ -44,7 +46,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(ladrilloResultProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Guardar Metrado'),
@@ -59,6 +60,10 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           ),
           BlocListener<MetradosBloc, MetradosState>(
             listener: _handleMetradoState,
+          ),
+          // NUEVO: Listener para ProjectsBloc
+          BlocListener<ProjectsBloc, ProjectsState>(
+            listener: _handleProjectsState,
           ),
         ],
         child: _buildBody(),
@@ -83,6 +88,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
             _buildResultSummary(),
             const SizedBox(height: 32),
             _buildSaveButton(),
+            // NUEVO: Espacio adicional para evitar overlap con SnackBar
+            const SizedBox(height: 80),
           ],
         ),
       ),
@@ -154,6 +161,9 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   }
 
   Widget _buildProjectDropdown(List<Project> projects) {
+    // CORREGIDO: Validar que selectedProjectId existe en la lista
+    _validateSelectedProject(projects);
+
     return DropdownButtonFormField<String>(
       decoration: InputDecoration(
         labelText: 'Proyecto',
@@ -166,8 +176,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       ),
       value: selectedProjectId,
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Por favor selecciona un proyecto';
+        if (value == null || value.isEmpty || value == 'add_project') {
+          return 'Por favor selecciona un proyecto válido';
         }
         return null;
       },
@@ -181,7 +191,20 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           });
         }
       },
+      isExpanded: true, // MEJORADO: Para mejor layout
     );
+  }
+
+  // NUEVO: Validar que el proyecto seleccionado existe
+  void _validateSelectedProject(List<Project> projects) {
+    _currentProjects = projects;
+
+    if (selectedProjectId != null && selectedProjectId != 'add_project') {
+      final exists = projects.any((project) => project.id.toString() == selectedProjectId);
+      if (!exists) {
+        selectedProjectId = null; // Reset si el proyecto no existe
+      }
+    }
   }
 
   Widget _buildDescriptionField() {
@@ -408,15 +431,31 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     final routeName = _getNewProjectRoute(allResults.first);
 
     try {
-      await context.pushNamed(routeName);
-      // Recargar proyectos después de crear uno nuevo
+      // Navegar y esperar el resultado
+      final result = await context.pushNamed(routeName);
+
+      // Si regresó con un proyecto creado, recargar proyectos
       if (mounted) {
         context.read<ProjectsBloc>().add(LoadProjectsEvent());
+
+        // MEJORADO: Buscar el proyecto recién creado por nombre si no tenemos ID
+        if (result is Map<String, dynamic>) {
+          if (result.containsKey('projectId')) {
+            setState(() {
+              selectedProjectId = result['projectId'].toString();
+            });
+          } else if (result.containsKey('projectName')) {
+            // Buscar por nombre después de que se carguen los proyectos
+            _pendingProjectName = result['projectName'];
+          }
+        }
       }
     } catch (e) {
       _showError('Error al navegar: $e');
     }
   }
+
+  String? _pendingProjectName; // Para buscar el proyecto por nombre
 
   String _getNewProjectRoute(dynamic result) {
     if (result is Ladrillo) return 'new-project-ladrillo';
@@ -432,8 +471,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       return;
     }
 
-    if (selectedProjectId == null) {
-      _showError('Por favor selecciona un proyecto');
+    if (selectedProjectId == null || selectedProjectId == 'add_project') {
+      _showError('Por favor selecciona un proyecto válido');
       return;
     }
 
@@ -452,6 +491,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
     setState(() {
       _isLoading = true;
+      _shouldClearResults = true;
     });
 
     // Sanitizar descripción
@@ -508,14 +548,35 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     }
   }
 
+  // NUEVO: Manejar estados de ProjectsBloc
+  void _handleProjectsState(BuildContext context, ProjectsState state) {
+    if (state is ProjectSuccess && _pendingProjectName != null) {
+      // Buscar el proyecto recién creado por nombre
+      final newProject = state.projects.firstWhere(
+            (project) => project.name == _pendingProjectName,
+        orElse: () => state.projects.first, // Fallback al primer proyecto
+      );
+
+      setState(() {
+        selectedProjectId = newProject.id.toString();
+        _pendingProjectName = null;
+      });
+    }
+  }
+
   void _handleResultState(BuildContext context, ResultState state) {
     if (state is ResultSuccess) {
       _showSuccess('Resultado guardado con éxito');
-      _clearResults();
+
+      if (_shouldClearResults) {
+        _clearResults();
+      }
+
       Navigator.pop(context);
     } else if (state is ResultFailure) {
       setState(() {
         _isLoading = false;
+        _shouldClearResults = false;
       });
       _showError('Error al guardar: ${state.message}');
     }
@@ -532,11 +593,13 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     } else if (state is MetradoFailure) {
       setState(() {
         _isLoading = false;
+        _shouldClearResults = false;
       });
       _showError('Error al crear metrado: ${state.message}');
     } else if (state is MetradoNameAlreadyExists) {
       setState(() {
         _isLoading = false;
+        _shouldClearResults = false;
       });
       _showError(state.message);
     }
@@ -555,6 +618,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   void _showError(String message) {
     if (!mounted) return;
 
+    // CORREGIDO: SnackBar con behavior fixed para evitar problemas de layout
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -565,10 +629,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           ],
         ),
         backgroundColor: Colors.red.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        behavior: SnackBarBehavior.fixed, // CAMBIADO de floating a fixed
         duration: const Duration(seconds: 4),
       ),
     );
@@ -577,6 +638,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   void _showSuccess(String message) {
     if (!mounted) return;
 
+    // CORREGIDO: SnackBar con behavior fixed para evitar problemas de layout
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -587,10 +649,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           ],
         ),
         backgroundColor: Colors.green.shade600,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        behavior: SnackBarBehavior.fixed, // CAMBIADO de floating a fixed
         duration: const Duration(seconds: 3),
       ),
     );

@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
+import '../../../domain/entities/map/place_entity.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/map/place/place_bloc.dart';
 import '../../widgets/app_bar/app_bar_widget.dart';
@@ -35,6 +36,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
   // Estado interno
   Position? _currentPosition;
+  PlaceEntity? _selectedPlace; // Nueva variable para la ubicación seleccionada
   bool _isMapReady = false;
   bool _isLocationPermissionGranted = false;
   bool _isLocationLoading = true;
@@ -151,8 +153,8 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           _currentPosition = position;
         });
 
-        // Solo mover la cámara si el mapa está listo
-        if (_isMapReady && _mapController != null) {
+        // Solo mover la cámara si el mapa está listo y no hay un lugar seleccionado
+        if (_isMapReady && _mapController != null && _selectedPlace == null) {
           _animateToPosition(position);
         }
       }
@@ -212,6 +214,18 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
+  // Nuevo método para animar hacia un lugar seleccionado
+  void _animateToPlace(PlaceEntity place) {
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(place.lat, place.lng),
+          zoom: 16.0,
+        ),
+      ),
+    );
+  }
+
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
     setState(() {
@@ -221,8 +235,10 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     // Aplicar tema del mapa
     _applyMapTheme();
 
-    // Si ya tenemos la posición, navegar a ella
-    if (_currentPosition != null) {
+    // Decidir qué ubicación mostrar
+    if (_selectedPlace != null) {
+      _animateToPlace(_selectedPlace!);
+    } else if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
     }
   }
@@ -267,6 +283,21 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           infoWindow: const InfoWindow(
             title: 'Mi ubicación',
             snippet: 'Tu ubicación actual',
+          ),
+        ),
+      );
+    }
+
+    // Agregar marcador del lugar seleccionado
+    if (_selectedPlace != null) {
+      markers.add(
+        Marker(
+          markerId: const MarkerId('selected_place'),
+          position: LatLng(_selectedPlace!.lat, _selectedPlace!.lng),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+          infoWindow: InfoWindow(
+            title: 'Lugar seleccionado',
+            snippet: _selectedPlace!.description,
           ),
         ),
       );
@@ -431,8 +462,22 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       appBar: AppBarWidget(titleAppBar: 'Proveedores'),
       body: Stack(
         children: [
-          // Mapa
-          _buildMapContent(),
+          // Mapa con listener del PlaceBloc
+          BlocListener<PlaceBloc, PlaceState>(
+            listener: (context, state) {
+              if (state is OptimizedPlaceSelected) {
+                setState(() {
+                  _selectedPlace = state.place;
+                });
+
+                // Animar hacia el lugar seleccionado si el mapa está listo
+                if (_isMapReady && _mapController != null) {
+                  _animateToPlace(state.place);
+                }
+              }
+            },
+            child: _buildMapContent(),
+          ),
 
           // Barra de búsqueda
           Positioned(
@@ -478,7 +523,12 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
         return GoogleMap(
           onMapCreated: _onMapCreated,
-          initialCameraPosition: _currentPosition != null
+          initialCameraPosition: _selectedPlace != null
+              ? CameraPosition(
+            target: LatLng(_selectedPlace!.lat, _selectedPlace!.lng),
+            zoom: 16.0,
+          )
+              : _currentPosition != null
               ? CameraPosition(
             target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
             zoom: 15.0,
@@ -529,24 +579,82 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
             ),
           ),
 
-          // Header
+          // Header con información del lugar seleccionado
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Row(
+            child: Column(
               children: [
-                Text(
-                  'Proveedores Recomendados',
-                  style: AppTypography.h5.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    Text(
+                      'Proveedores Recomendados',
+                      style: AppTypography.h5.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.store,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ],
+                ),
+
+                // Mostrar información del lugar seleccionado
+                if (_selectedPlace != null) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.success.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppColors.success.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            _selectedPlace!.description,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedPlace = null;
+                            });
+                            // Regresar a la ubicación actual
+                            if (_currentPosition != null && _mapController != null) {
+                              _animateToPosition(_currentPosition!);
+                            }
+                          },
+                          child: Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.success,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const Spacer(),
-                Icon(
-                  Icons.store,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+                ],
               ],
             ),
           ),
@@ -566,6 +674,9 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     return FloatingActionButton(
       onPressed: () {
         if (_currentPosition != null) {
+          setState(() {
+            _selectedPlace = null; // Limpiar lugar seleccionado
+          });
           _animateToPosition(_currentPosition!);
         } else {
           _getCurrentLocation();

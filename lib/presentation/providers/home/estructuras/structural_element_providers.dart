@@ -1,4 +1,5 @@
-// lib/presentation/providers/home/structural/structural_element_providers.dart
+// lib/presentation/providers/home/estructuras/structural_element_providers.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../config/constants/constant.dart';
@@ -45,31 +46,18 @@ class SelectedStructuralElement extends _$SelectedStructuralElement {
   }
 }
 
+// FIX: Cambiamos a StateProvider para mejor manejo del estado
+final tipoStructuralElementProvider = StateProvider<String>((ref) {
+  print('🔄 Inicializando TipoStructuralElement con valor vacío');
+  return '';
+});
+
+// FIX: Agregamos un provider helper para debug
 @riverpod
-class TipoStructuralElement extends _$TipoStructuralElement {
-  @override
-  String build() {
-    print('🔄 Inicializando TipoStructuralElement con valor vacío');
-    return '';
-  }
-
-  void selectStructuralElement(String name) {
-    print('🎯 Estableciendo tipo de elemento estructural: $name');
-    print('🔍 Valor anterior: $state');
-    state = name;
-    print('✅ Valor establecido: $state');
-  }
-
-  void clearSelection() {
-    print('🧹 Limpiando tipo de elemento estructural');
-    state = '';
-  }
-
-  // Método helper para debug
-  String getCurrentType() {
-    print('📋 Tipo actual: $state');
-    return state;
-  }
+String currentStructuralElementType(CurrentStructuralElementTypeRef ref) {
+  final tipo = ref.watch(tipoStructuralElementProvider);
+  print('📋 Tipo actual observado: $tipo');
+  return tipo;
 }
 
 // Factores de materiales según resistencia del concreto (líneas 15-80 del Excel)
@@ -150,10 +138,12 @@ class ColumnaResult extends _$ColumnaResult {
       throw Exception("La columna debe tener largo, ancho y altura o volumen definidos.");
     }
 
+    print('✅ Nueva columna creada: ${newColumna.description}, volumen: $volumenCalculado m³');
     state = [...state, newColumna];
   }
 
   void clearList() {
+    print('🧹 Limpiando lista de columnas');
     state = [];
   }
 }
@@ -161,7 +151,9 @@ class ColumnaResult extends _$ColumnaResult {
 @riverpod
 List<double> volumenColumna(VolumenColumnaRef ref) {
   final columnas = ref.watch(columnaResultProvider);
-  return columnas.map((columna) => calcularVolumenElemento(columna)).toList();
+  final volumenes = columnas.map((columna) => calcularVolumenElemento(columna)).toList();
+  print('📊 Volúmenes de columnas calculados: $volumenes');
+  return volumenes;
 }
 
 @riverpod
@@ -187,7 +179,7 @@ String datosShareColumna(DatosShareColumnaRef ref) {
   return datos;
 }
 
-// Nuevos providers para cálculos de materiales de Columna
+// Providers para cálculos de materiales de Columna
 @riverpod
 double cantidadCementoColumna(CantidadCementoColumnaRef ref) {
   final columnas = ref.watch(columnaResultProvider);
@@ -206,6 +198,7 @@ double cantidadCementoColumna(CantidadCementoColumnaRef ref) {
     }
   }
 
+  print('🧱 Cemento total para columnas: $cementoTotal');
   return cementoTotal;
 }
 
@@ -304,10 +297,12 @@ class VigaResult extends _$VigaResult {
       throw Exception("La viga debe tener largo, ancho y altura o volumen definidos.");
     }
 
+    print('✅ Nueva viga creada: ${newViga.description}, volumen: $volumenCalculado m³');
     state = [...state, newViga];
   }
 
   void clearList() {
+    print('🧹 Limpiando lista de vigas');
     state = [];
   }
 }
@@ -315,7 +310,9 @@ class VigaResult extends _$VigaResult {
 @riverpod
 List<double> volumenViga(VolumenVigaRef ref) {
   final vigas = ref.watch(vigaResultProvider);
-  return vigas.map((viga) => calcularVolumenElemento(viga)).toList();
+  final volumenes = vigas.map((viga) => calcularVolumenElemento(viga)).toList();
+  print('📊 Volúmenes de vigas calculados: $volumenes');
+  return volumenes;
 }
 
 @riverpod
@@ -341,7 +338,7 @@ String datosShareViga(DatosShareVigaRef ref) {
   return datos;
 }
 
-// Nuevos providers para cálculos de materiales de Viga
+// Providers para cálculos de materiales de Viga
 @riverpod
 double cantidadCementoViga(CantidadCementoVigaRef ref) {
   final vigas = ref.watch(vigaResultProvider);
@@ -360,6 +357,7 @@ double cantidadCementoViga(CantidadCementoVigaRef ref) {
     }
   }
 
+  print('🧱 Cemento total para vigas: $cementoTotal');
   return cementoTotal;
 }
 

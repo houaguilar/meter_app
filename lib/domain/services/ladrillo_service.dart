@@ -1,8 +1,11 @@
 import '../entities/entities.dart';
 
+/// Servicio simplificado para operaciones básicas de ladrillo
 class LadrilloService {
+
+  /// Calcula el área de un ladrillo
   double? calcularArea(Ladrillo ladrillo) {
-    if (ladrillo.area != null) {
+    if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
       return double.tryParse(ladrillo.area!);
     }
     if (ladrillo.largo != null && ladrillo.altura != null) {
@@ -15,256 +18,138 @@ class LadrilloService {
     return null;
   }
 
+  /// Valida que un ladrillo tenga los datos mínimos necesarios
   bool esValido(Ladrillo ladrillo) {
-    return (ladrillo.largo != null && ladrillo.altura != null) || ladrillo.area != null;
+    return (ladrillo.largo != null && ladrillo.altura != null) ||
+        (ladrillo.area != null && ladrillo.area!.isNotEmpty);
   }
 
-  // Calcula la cantidad de ladrillos
-  double calcularLadrillosTotal(List<Ladrillo> ladrillos) {
-    double totalLadrillos = 0.0;
+  /// Obtiene información descriptiva del ladrillo
+  String getDescripcionCompleta(Ladrillo ladrillo) {
+    final area = calcularArea(ladrillo);
+    final areaStr = area != null ? area.toStringAsFixed(2) : 'N/A';
 
-    for (var ladrillo in ladrillos) {
-      double area = calcularArea(ladrillo) ?? 0.0;
-      double factorDesperdicio = double.tryParse(ladrillo.factorDesperdicio) != null
-          ? double.parse(ladrillo.factorDesperdicio) / 100
-          : 0.05; // 5% por defecto
+    return '''
+Descripción: ${ladrillo.description}
+Tipo: ${ladrillo.tipoLadrillo}
+Asentado: ${ladrillo.tipoAsentado}
+Área: $areaStr m²
+Proporción mortero: 1:${ladrillo.proporcionMortero}
+''';
+  }
 
-      double ladrillosPorM2 = 0.0;
+  /// Valida los datos de entrada antes de crear un ladrillo
+  ValidationResult validarDatos({
+    required String description,
+    required String tipoLadrillo,
+    required String factorDesperdicio,
+    required String factorMortero,
+    required String proporcionMortero,
+    required String tipoAsentado,
+    String? largo,
+    String? altura,
+    String? area,
+  }) {
+    final errores = <String>[];
 
-      // Cálculo basado en el tipo de ladrillo y asentado
-      switch (ladrillo.tipoLadrillo) {
-        case 'Kingkong':
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              ladrillosPorM2 = (1 / ((24 / 100 + 0.015) * (9 / 100 + 0.015)));
-              break;
-            case 'canto':
-              ladrillosPorM2 = (1 / ((24 / 100 + 0.015) * (13 / 100 + 0.015)));
-              break;
-            case 'cabeza':
-              ladrillosPorM2 = (1 / ((13 / 100 + 0.015) * (9 / 100 + 0.015)));
-              break;
-            default:
-              ladrillosPorM2 = (1 / ((24 / 100 + 0.015) * (9 / 100 + 0.015)));
-          }
-          break;
-        case 'Pandereta':
-        default:
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              ladrillosPorM2 = (1 / ((23 / 100 + 0.015) * (9 / 100 + 0.015)));
-              break;
-            case 'canto':
-              ladrillosPorM2 = (1 / ((23 / 100 + 0.015) * (12 / 100 + 0.015)));
-              break;
-            case 'cabeza':
-              ladrillosPorM2 = (1 / ((12 / 100 + 0.015) * (9 / 100 + 0.015)));
-              break;
-            default:
-              ladrillosPorM2 = (1 / ((23 / 100 + 0.015) * (9 / 100 + 0.015)));
-          }
-      }
-
-      // Aplicar factor de desperdicio
-      ladrillosPorM2 = ladrillosPorM2 * (1 + factorDesperdicio);
-
-      // Multiplicar por el área total del muro
-      totalLadrillos += ladrillosPorM2 * area;
+    // Validar descripción
+    if (description.trim().isEmpty) {
+      errores.add('La descripción es obligatoria');
     }
 
-    return totalLadrillos;
-  }
+    // Validar que tenga área o medidas
+    final tieneArea = area != null && area.isNotEmpty;
+    final tieneMedidas = largo != null && largo.isNotEmpty &&
+        altura != null && altura.isNotEmpty;
 
-  // Calcula la cantidad total de cemento en bolsas
-  double calcularCementoTotal(List<Ladrillo> ladrillos) {
-    double totalCemento = 0.0;
-
-    for (var ladrillo in ladrillos) {
-      double area = calcularArea(ladrillo) ?? 0.0;
-      double factorDesperdicio = 0.10; // 10% de desperdicio para mortero
-      String proporcionStr;
-      if (ladrillo.proporcionMortero.contains(":")) {
-        proporcionStr = ladrillo.proporcionMortero.replaceAll("1 : ", "");
-      } else {
-        proporcionStr = ladrillo.proporcionMortero;
-      }
-      int proporcion = int.tryParse(proporcionStr) ?? 4;
-
-      double volumenMortero = 0.0;
-
-      // Cálculo del volumen de mortero según tipo de ladrillo y asentado
-      switch (ladrillo.tipoLadrillo) {
-        case 'Kingkong':
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.020;
-              break;
-            case 'canto':
-              volumenMortero = 0.010;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.046;
-              break;
-            default:
-              volumenMortero = 0.020;
-          }
-          break;
-        case 'Pandereta':
-        default:
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.023;
-              break;
-            case 'canto':
-              volumenMortero = 0.015;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.057;
-              break;
-            default:
-              volumenMortero = 0.023;
-          }
-      }
-
-      // Proporción de cemento según proporción de mortero
-      double proporcionCemento = proporcion == 4 ? 8.56 : 7.10; // bolsas/m³
-
-      // Cálculo final con desperdicio
-      double cementoPorM2 = volumenMortero * proporcionCemento;
-      double cementoConDesperdicio = cementoPorM2 * (1 + factorDesperdicio);
-
-      totalCemento += cementoConDesperdicio * area;
+    if (!tieneArea && !tieneMedidas) {
+      errores.add('Debe proporcionar área o largo y altura');
     }
 
-    return totalCemento;
-  }
-
-  // Calcula la cantidad total de arena en m³
-  double calcularArenaTotal(List<Ladrillo> ladrillos) {
-    double totalArena = 0.0;
-
-    for (var ladrillo in ladrillos) {
-      double area = calcularArea(ladrillo) ?? 0.0;
-      double factorDesperdicio = 0.10; // 10% de desperdicio para mortero
-      String proporcionStr;
-      if (ladrillo.proporcionMortero.contains(":")) {
-        proporcionStr = ladrillo.proporcionMortero.replaceAll("1 : ", "");
-      } else {
-        proporcionStr = ladrillo.proporcionMortero;
-      }
-      int proporcion = int.tryParse(proporcionStr) ?? 4;
-      double volumenMortero = 0.0;
-
-      // Cálculo del volumen de mortero según tipo de ladrillo y asentado
-      switch (ladrillo.tipoLadrillo) {
-        case 'Kingkong':
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.020;
-              break;
-            case 'canto':
-              volumenMortero = 0.010;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.046;
-              break;
-            default:
-              volumenMortero = 0.020;
-          }
-          break;
-        case 'Pandereta':
-        default:
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.023;
-              break;
-            case 'canto':
-              volumenMortero = 0.015;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.057;
-              break;
-            default:
-              volumenMortero = 0.023;
-          }
-      }
-
-      // Factor de arena según proporción
-      double factorArena = proporcion == 4 ? 1.16 : 1.20; // m³/m³ de mortero
-
-      // Cálculo final con desperdicio
-      double arenaPorM2 = volumenMortero * factorArena;
-      double arenaConDesperdicio = arenaPorM2 * (1 + factorDesperdicio);
-
-      totalArena += arenaConDesperdicio * area;
+    // Validar factores numéricos
+    if (double.tryParse(factorDesperdicio) == null) {
+      errores.add('Factor de desperdicio de ladrillo inválido');
     }
 
-    return totalArena;
-  }
-
-  // Calcula la cantidad total de agua en m³
-  double calcularAguaTotal(List<Ladrillo> ladrillos) {
-    double totalAgua = 0.0;
-
-    for (var ladrillo in ladrillos) {
-      double area = calcularArea(ladrillo) ?? 0.0;
-      double factorDesperdicio = 0.10; // 10% de desperdicio para mortero
-      String proporcionStr;
-      if (ladrillo.proporcionMortero.contains(":")) {
-        proporcionStr = ladrillo.proporcionMortero.replaceAll("1 : ", "");
-      } else {
-        proporcionStr = ladrillo.proporcionMortero;
-      }
-      int proporcion = int.tryParse(proporcionStr) ?? 4;
-      print("ladrillo.proporcionMortero");
-      print(ladrillo.proporcionMortero);
-
-      double volumenMortero = 0.0;
-
-      // Cálculo del volumen de mortero según tipo de ladrillo y asentado
-      switch (ladrillo.tipoLadrillo) {
-        case 'Kingkong':
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.020;
-              break;
-            case 'canto':
-              volumenMortero = 0.010;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.046;
-              break;
-            default:
-              volumenMortero = 0.020;
-          }
-          break;
-        case 'Pandereta':
-        default:
-          switch (ladrillo.tipoAsentado) {
-            case 'soga':
-              volumenMortero = 0.023;
-              break;
-            case 'canto':
-              volumenMortero = 0.015;
-              break;
-            case 'cabeza':
-              volumenMortero = 0.057;
-              break;
-            default:
-              volumenMortero = 0.023;
-          }
-      }
-
-      // Factor de agua según proporción (litros convertidos a m³)
-      double factorAgua = proporcion == 4 ? 0.240 : 0.240; // m³/m³ de mortero
-
-      // Cálculo final con desperdicio
-      double aguaPorM2 = volumenMortero * factorAgua;
-      double aguaConDesperdicio = aguaPorM2 * (1 + factorDesperdicio);
-
-      totalAgua += aguaConDesperdicio * area;
+    if (double.tryParse(factorMortero) == null) {
+      errores.add('Factor de desperdicio de mortero inválido');
     }
 
-    return totalAgua;
+    // Validar área si se proporciona
+    if (tieneArea) {
+      final areaNum = double.tryParse(area!);
+      if (areaNum == null || areaNum <= 0) {
+        errores.add('El área debe ser un número mayor a 0');
+      }
+    }
+
+    // Validar medidas si se proporcionan
+    if (tieneMedidas) {
+      final largoNum = double.tryParse(largo!);
+      final alturaNum = double.tryParse(altura!);
+
+      if (largoNum == null || largoNum <= 0) {
+        errores.add('El largo debe ser un número mayor a 0');
+      }
+
+      if (alturaNum == null || alturaNum <= 0) {
+        errores.add('La altura debe ser un número mayor a 0');
+      }
+    }
+
+    return ValidationResult(
+      esValido: errores.isEmpty,
+      errores: errores,
+    );
   }
+
+  /// Obtiene las dimensiones estándar de un tipo de ladrillo
+  Map<String, double>? getDimensionesEstandar(String tipoLadrillo) {
+    const dimensiones = {
+      'Pandereta': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+      'Pandereta1': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+      'Pandereta2': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
+      'Kingkong': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+      'Kingkong1': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+      'Kingkong2': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
+      'Común': {'largo': 24.0, 'ancho': 12.0, 'alto': 8.0},
+    };
+
+    final tipoNormalizado = _normalizarTipoLadrillo(tipoLadrillo);
+    return dimensiones[tipoNormalizado];
+  }
+
+  /// Normaliza el tipo de ladrillo
+  String _normalizarTipoLadrillo(String tipo) {
+    switch (tipo.toLowerCase()) {
+      case 'pandereta':
+      case 'pandereta1':
+      case 'pandereta2':
+        return 'Pandereta';
+      case 'kingkong':
+      case 'kingkong1':
+      case 'kingkong2':
+      case 'king kong':
+        return 'Kingkong';
+      case 'común':
+      case 'comun':
+        return 'Común';
+      default:
+        return 'Pandereta';
+    }
+  }
+}
+
+/// Clase para resultado de validación
+class ValidationResult {
+  final bool esValido;
+  final List<String> errores;
+
+  const ValidationResult({
+    required this.esValido,
+    required this.errores,
+  });
+
+  String get mensajeError => errores.join(', ');
+  bool get tieneErrores => errores.isNotEmpty;
 }
