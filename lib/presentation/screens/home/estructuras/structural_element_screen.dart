@@ -1,3 +1,4 @@
+// lib/presentation/screens/home/estructuras/structural_element_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,6 +35,14 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   void initState() {
     super.initState();
     _initializeAnimations();
+
+    // FIX: Limpiar estado al inicializar
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tipoStructuralElementProvider.notifier).state = '';
+      ref.read(columnaResultProvider.notifier).clearList();
+      ref.read(vigaResultProvider.notifier).clearList();
+      print('🧹 Estado inicial limpiado');
+    });
   }
 
   @override
@@ -115,7 +124,7 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       print('🔍 Elemento seleccionado: ${element.name} (ID: ${element.id})');
 
       // Actualizar selección
-      ref.read(selectedStructuralElementProvider.notifier).state = element;
+      ref.read(selectedStructuralElementProvider.notifier).selectElement(element);
 
       // Determinar navegación basada en disponibilidad
       if (_isStructuralElementAvailable(element.id)) {
@@ -136,15 +145,21 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       // Debug: imprimir el tipo de elemento que se va a establecer
       print('🏗️ Tipo de elemento a establecer: $elementType');
 
-      // Establecer el tipo de elemento antes de navegar
-      ref.read(tipoStructuralElementProvider.notifier).selectStructuralElement(elementType);
+      // FIX: Establecer el tipo de elemento usando StateProvider
+      ref.read(tipoStructuralElementProvider.notifier).state = elementType;
 
       // Verificar que se estableció correctamente
       final tipoEstablecido = ref.read(tipoStructuralElementProvider);
       print('✅ Tipo establecido en provider: $tipoEstablecido');
 
-      // Navegar a la pantalla de datos
-      context.pushNamed('structural-element-datos');
+      // Esperar un frame para asegurar que el estado se propagó
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final tipoFinal = ref.read(tipoStructuralElementProvider);
+        print('🔍 Tipo final antes de navegar: $tipoFinal');
+
+        // Navegar a la pantalla de datos
+        context.pushNamed('structural-element-datos');
+      });
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);
     }
@@ -339,7 +354,7 @@ void showStructuralElementNotAvailable(
   );
 }
 
-/// Widget de ejemplo para mostrar información del elemento seleccionado
+/// Widget de debug para mostrar información del elemento seleccionado
 class SelectedStructuralElementInfo extends ConsumerWidget {
   const SelectedStructuralElementInfo({super.key});
 

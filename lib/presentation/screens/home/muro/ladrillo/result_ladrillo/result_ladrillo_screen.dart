@@ -15,748 +15,882 @@ import '../../../../../providers/providers.dart';
 import '../../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-class ResultLadrilloScreen extends ConsumerWidget {
+class ResultLadrilloScreen extends ConsumerStatefulWidget {
   const ResultLadrilloScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ResultLadrilloScreen> createState() => _ResultLadrilloScreenState();
+}
 
+class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
+    with SingleTickerProviderStateMixin {
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeAnimations();
+    _hideLoaderAfterDelay();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.7, curve: Curves.easeOut),
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.2, 1.0, curve: Curves.easeOut),
+    ));
+
+    _animationController.forward();
+  }
+
+  void _hideLoaderAfterDelay() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(Duration(seconds: 2), () {
-        context.hideLoader();
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          context.hideLoader();
+        }
       });
     });
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
         ref.read(ladrilloResultProvider.notifier).clearList();
         return true;
       },
       child: Scaffold(
-        appBar: AppBarWidget(titleAppBar: 'Resultado'),
-        body: const _ResultLadrilloScreenView(),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: _buildFloatingActionButtons(context, ref),
+        backgroundColor: AppColors.backgroundLight,
+        appBar: _buildAppBar(),
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: _buildBody(),
+          ),
+        ),
+        bottomNavigationBar: _buildBottomActionBar(),
       ),
     );
   }
 
-  Widget _buildFloatingActionButtons(BuildContext context, WidgetRef ref) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Row(
+  PreferredSizeWidget _buildAppBar() {
+    return AppBarWidget(titleAppBar: 'Resultados');
+  }
+
+  Widget _buildBody() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    final materials = ref.watch(ladrilloMaterialsProvider);
+
+    if (ladrillos.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(
+        right: 24,
+        left: 24,
+        top: 10,
+        bottom: 20, // Reducido para que no interfiera con bottomNavigationBar
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          _buildSuccessIcon(),
+          const SizedBox(height: 20),
+          _buildProjectSummaryCard(materials),
+          const SizedBox(height: 20),
+          _buildMetradoDataCard(ladrillos),
+          const SizedBox(height: 20),
+          _buildMaterialsCard(materials),
+          const SizedBox(height: 20),
+          _buildConfigurationCard(ladrillos),
+          const SizedBox(height: 120), // Espacio para los botones de abajo
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _buildActionButton(
-              context,
-              ref,
-              label: 'Guardar',
-              icon: Icons.add_box_rounded,
-              heroTag: 'save_button_wall',
-              onPressed: () {
-                final listaLadrillo = ref.watch(ladrilloResultProvider);
-                if (listaLadrillo.isNotEmpty) {
-                  context.pushNamed('save-ladrillo');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('No hay datos para guardar')),
-                  );
-                }
-              },
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: Colors.orange[400],
             ),
-            const SizedBox(width: 8),
-            _buildActionButton(
-              context,
-              ref,
-              label: 'Compartir',
-              icon: Icons.share_rounded,
-              heroTag: 'share_button_wall',
-              onPressed: () => _showOptionsDialog(context, ref),
+            const SizedBox(height: 16),
+            const Text(
+              'No hay datos de ladrillos',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Regresa y completa los datos para ver los resultados',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Regresar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.blueMetraShop,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
-        ElevatedButton.icon(
-          onPressed: () {
-            final listaLadrillo = ref.watch(ladrilloResultProvider);
-            if (listaLadrillo.isNotEmpty) {
-              context.pushNamed('map-screen-2');
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('No hay datos de ladrillos')),
-              );
-            }
-          },
-          icon: const Icon(Icons.search_rounded),
-          label: const Text('Buscar proveedores'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+      ),
+    );
+  }
+
+  Widget _buildSuccessIcon() {
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 1000),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.scale(
+          scale: 0.5 + (value * 0.5),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.success.withOpacity(0.3),
+                width: 2,
+              ),
+            ),
+            child: SvgPicture.asset(
+              AppIcons.checkmarkCircleIcon,
+              width: 48,
+              height: 48,
+              colorFilter: ColorFilter.mode(
+                AppColors.success,
+                BlendMode.srcIn,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 15),
-      ],
-    );
-  }
-
-  Widget _buildActionButton(
-      BuildContext context,
-      WidgetRef ref, {
-        required String label,
-        required IconData icon,
-        required Object heroTag,
-        required VoidCallback onPressed
-      }) {
-    return FloatingActionButton.extended(
-      label: Text(label),
-      icon: Icon(icon),
-      onPressed: onPressed,
-      heroTag: heroTag,
-    );
-  }
-
-  void _showOptionsDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return OptionsDialog(
-          options: [
-            DialogOption(
-              icon: Icons.picture_as_pdf,
-              text: 'PDF',
-              onTap: () async {
-                try {
-                  Navigator.of(context).pop(); // Cerrar dialog
-                  final pdfFile = await generatePdfNuevo(ref);
-                  final xFile = XFile(pdfFile.path);
-                  Share.shareXFiles([xFile], text: 'Resultados del metrado de ladrillos.');
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error al generar PDF: $e')),
-                  );
-                }
-              },
-            ),
-            DialogOption(
-              icon: Icons.text_fields,
-              text: 'TEXTO',
-              onTap: () async {
-                Navigator.of(context).pop(); // Cerrar dialog
-                await Share.share(_shareContent(ref));
-              },
-            ),
-          ],
         );
       },
     );
   }
 
-  String _shareContent(WidgetRef ref) {
-    final listaLadrillo = ref.watch(ladrilloResultProvider);
+  Widget _buildProjectSummaryCard(LadrilloMaterials materials) {
+    return _buildModernCard(
+      title: 'Resumen del Proyecto',
+      icon: Icons.summarize_outlined,
+      iconColor: AppColors.blueMetraShop,
+      child: Column(
+        children: [
+          _buildSummaryRow('Área Total', '${materials.areaTotal.toStringAsFixed(2)} m²'),
+          const SizedBox(height: 12),
+          _buildSummaryRow('Total de Muros', '${ref.watch(ladrilloResultProvider).length}'),
+          const SizedBox(height: 12),
+          _buildSummaryRow('Tipo de Ladrillo', _getTipoLadrillo()),
+          const SizedBox(height: 12),
+          _buildSummaryRow('Tipo de Asentado', _getTipoAsentado()),
+        ],
+      ),
+    );
+  }
 
-    if (listaLadrillo.isEmpty) {
-      return 'Error: No hay datos de ladrillos';
-    }
+  Widget _buildMetradoDataCard(List<Ladrillo> ladrillos) {
+    return _buildModernCard(
+      title: 'Datos del Metrado',
+      icon: Icons.view_list_outlined,
+      iconColor: AppColors.accent,
+      child: Column(
+        children: [
+          _buildDataTable(ladrillos),
+        ],
+      ),
+    );
+  }
 
-    String cantidadPruebaLadToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo).toStringAsFixed(0);
-    String cantidadPruebaAreToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva).toStringAsFixed(2);
-    String cantidadPruebaCemToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo).ceilToDouble().toString();
-    String cantidadPruebaAguaToString = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva).toStringAsFixed(2);
+  Widget _buildMaterialsCard(LadrilloMaterials materials) {
+    return _buildModernCard(
+      title: 'Lista de Materiales',
+      icon: Icons.inventory_2_outlined,
+      iconColor: AppColors.success,
+      child: Column(
+        children: [
+          _buildMaterialTable(materials),
+          const SizedBox(height: 16),
+          _buildMaterialChips(materials),
+        ],
+      ),
+    );
+  }
 
-    // Obtener factores de desperdicio del primer ladrillo (todos deberían tener los mismos)
-    final primerLadrillo = listaLadrillo.first;
+  Widget _buildConfigurationCard(List<Ladrillo> ladrillos) {
+    if (ladrillos.isEmpty) return const SizedBox.shrink();
+
+    final primerLadrillo = ladrillos.first;
     final desperdicioLadrillo = double.tryParse(primerLadrillo.factorDesperdicio) ?? 5.0;
     final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0;
 
-    String datosMetrado = 'DATOS METRADO';
-    String listaMateriales = 'LISTA DE MATERIALES';
-
-    final datosLadrillo = ref.watch(datosShareLadrilloProvider);
-    final shareText = '$datosMetrado \n$datosLadrillo \n-------------\n$listaMateriales \n*Arena gruesa: $cantidadPruebaAreToString m³ \n*Cemento: $cantidadPruebaCemToString bls \n*Agua: $cantidadPruebaAguaToString m³ \n*Ladrillo: $cantidadPruebaLadToString und \n\n*Desperdicio Ladrillo: ${desperdicioLadrillo.toStringAsFixed(1)}% \n*Desperdicio Mortero: ${desperdicioMortero.toStringAsFixed(1)}%';
-
-    return shareText;
-  }
-}
-
-class _ResultLadrilloScreenView extends ConsumerWidget {
-  const _ResultLadrilloScreenView();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final listaLadrillo = ref.watch(ladrilloResultProvider);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(right: 24, left: 24, top: 10, bottom: 24),
+    return _buildModernCard(
+      title: 'Configuración Aplicada',
+      icon: Icons.settings_outlined,
+      iconColor: AppColors.warning,
       child: Column(
         children: [
-          const SizedBox(height: 10),
-          SvgPicture.asset(AppIcons.checkmarkCircleIcon),
-          const SizedBox(height: 10),
-          if (listaLadrillo.isNotEmpty) ...[
-            _buildSummaryCard(
-              context,
-              'Datos del Metrado',
-              const _LadrilloContainer(),
-            ),
-            const SizedBox(height: 20),
-            _buildSummaryCard(
-              context,
-              'Lista de Materiales',
-              _buildMaterialList(ref),
-            ),
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    size: 64,
-                    color: Colors.orange[400],
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No hay datos de ladrillos',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Regresa y completa los datos para ver los resultados',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 200),
+          _buildConfigRow('Desperdicio de Ladrillo', '${desperdicioLadrillo.toStringAsFixed(1)}%'),
+          const SizedBox(height: 12),
+          _buildConfigRow('Desperdicio de Mortero', '${desperdicioMortero.toStringAsFixed(1)}%'),
+          const SizedBox(height: 12),
+          _buildConfigRow('Proporción Mortero', '1:${primerLadrillo.proporcionMortero}'),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, String title, Widget content) {
-    return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+  Widget _buildModernCard({
+    required String title,
+    required IconData icon,
+    required Color iconColor,
+    required Widget child,
+  }) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.border.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(22),
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              color: AppColors.yellowMetraShop,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(15),
-                topRight: Radius.circular(15),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.1),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
               ),
             ),
-            child: Text(
-              title,
-              style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryMetraShop
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15),
-            child: content,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMaterialList(WidgetRef ref) {
-    final listaLadrillo = ref.watch(ladrilloResultProvider);
-
-    if (listaLadrillo.isEmpty) {
-      return const Text('No hay datos de ladrillos para calcular');
-    }
-
-    // Calcular cantidades totales usando las funciones actualizadas
-    final cantidadLadrillos = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo).toStringAsFixed(0);
-    final cantidadArenaTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva).toStringAsFixed(2);
-    final cantidadCementoTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo).ceilToDouble().toString();
-    final cantidadAguaTotal = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva).toStringAsFixed(2);
-
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2), // Ancho para la descripción
-        1: FlexColumnWidth(1), // Ancho para la unidad
-        2: FlexColumnWidth(2), // Ancho para la cantidad
-      },
-      children: [
-        _buildMaterialRow('Descripción', 'Und.', 'Cantidad', isHeader: true),
-        _buildMaterialRow('Cemento', 'Bls', cantidadCementoTotal),
-        _buildMaterialRow('Arena gruesa', 'm³', cantidadArenaTotal),
-        _buildMaterialRow('Agua', 'm³', cantidadAguaTotal),
-        _buildMaterialRow('Ladrillo', 'Und', cantidadLadrillos),
-      ],
-    );
-  }
-
-  TableRow _buildMaterialRow(String description, String unit, String amount,
-      {bool isHeader = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-    );
-
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            description,
-            style: textStyle,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            unit,
-            style: textStyle,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(
-            amount,
-            style: textStyle,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LadrilloContainer extends ConsumerWidget {
-  const _LadrilloContainer();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final results = ref.watch(ladrilloResultProvider);
-
-    return _buildLadrilloContainer(context, results);
-  }
-
-  Widget _buildLadrilloContainer(BuildContext context, List<Ladrillo> results) {
-    if (results.isEmpty) {
-      return const Text('No hay datos de ladrillos');
-    }
-
-    double calcularArea(Ladrillo ladrillo) {
-      if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
-        return double.tryParse(ladrillo.area!) ?? 0.0; // Si es área
-      } else {
-        final largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
-        final altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
-        return largo * altura; // Si es largo y altura
-      }
-    }
-
-    // Calcular la suma total de todas las áreas
-    double calcularSumaTotalDeAreas(List<Ladrillo> results) {
-      double sumaTotal = 0.0;
-      for (int i = 0; i < results.length; i++) {
-        sumaTotal += calcularArea(results[i]);
-      }
-      return sumaTotal;
-    }
-
-    double sumaTotalDeAreas = calcularSumaTotalDeAreas(results);
-
-    return Padding(
-      padding: const EdgeInsets.all(0.0),
-      child: Table(
-        columnWidths: const {
-          0: FlexColumnWidth(2), // Ancho fijo para la primera columna
-          1: FlexColumnWidth(1), // Ancho fijo para la segunda columna
-          2: FlexColumnWidth(2), // Ancho fijo para la tercera columna
-        },
-        children: [
-          // Encabezados de tabla
-          const TableRow(
-            children: [
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Descripción',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Und.',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Área',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Filas de datos
-          for (var result in results)
-            TableRow(
+            child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    result.description,
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: iconColor,
+                    size: 20,
                   ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'm²',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text(
-                    calcularArea(result).toStringAsFixed(2), // Mostrar el área calculada
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ],
             ),
-          // Fila del total
-          TableRow(
-            decoration: BoxDecoration(color: Colors.grey[300]),
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'Total:',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Text(
-                  'm²',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  sumaTotalDeAreas.toStringAsFixed(2),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: child,
           ),
         ],
       ),
     );
   }
-}
 
-// ============================================================================
-// FUNCIONES DE CÁLCULO ACTUALIZADAS BASADAS EN EL EXCEL
-// ============================================================================
-
-// Datos de tipos de ladrillos con sus dimensiones (en cm)
-Map<String, Map<String, double>> get tiposLadrillo => {
-  'Pandereta': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
-  'Pandereta1': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
-  'Pandereta2': {'largo': 23.0, 'ancho': 12.0, 'alto': 9.0},
-  'Kingkong': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
-  'Kingkong1': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
-  'Kingkong2': {'largo': 24.0, 'ancho': 13.0, 'alto': 9.0},
-  'Común': {'largo': 24.0, 'ancho': 12.0, 'alto': 8.0},
-};
-
-// Proporciones de mortero con sus factores
-Map<String, Map<String, double>> get proporcionesMortero => {
-  '3': {'cemento': 454.0, 'arena': 1.1, 'agua': 250.0},
-  '4': {'cemento': 364.0, 'arena': 1.16, 'agua': 240.0},
-  '5': {'cemento': 302.0, 'arena': 1.2, 'agua': 240.0},
-  '6': {'cemento': 261.0, 'arena': 1.2, 'agua': 235.0},
-};
-
-// Función para obtener el área de un muro
-double obtenerAreaLadrillo(Ladrillo ladrillo) {
-  if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
-    return double.tryParse(ladrillo.area!) ?? 0.0;
-  } else {
-    double largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
-    double altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
-    return largo * altura;
-  }
-}
-
-// Función para calcular cantidad total de material
-double calcularCantidadMaterialNuevo(List<Ladrillo> ladrillos, double Function(Ladrillo) calcularFuncion) {
-  return ladrillos.fold(0.0, (suma, ladrillo) => suma + calcularFuncion(ladrillo));
-}
-
-// Función principal para calcular ladrillos actualizada
-double calcularLadrillosNuevo(Ladrillo ladrillo) {
-  double area = obtenerAreaLadrillo(ladrillo);
-  double factorDesperdicioLadrillo = (double.tryParse(ladrillo.factorDesperdicio) ?? 5.0) / 100;
-
-  String tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
-  Map<String, double>? dimensiones = tiposLadrillo[tipoLadrilloKey];
-
-  if (dimensiones == null) {
-    // Usar Pandereta por defecto
-    dimensiones = tiposLadrillo['Pandereta']!;
+  Widget _buildSummaryRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
   }
 
-  double largo = dimensiones['largo']!;
-  double ancho = dimensiones['ancho']!;
-  double alto = dimensiones['alto']!;
-
-  // Cálculo de ladrillos por m² según forma de asentado
-  double ladrillosPorM2;
-
-  if (ladrillo.tipoAsentado == 'soga') {
-    // Usar largo y alto, considerando juntas de 1.5 cm
-    ladrillosPorM2 = 1 / ((((largo + 1.5) / 100) * ((alto + 1.5) / 100)));
-  } else if (ladrillo.tipoAsentado == 'cabeza') {
-    // Usar ancho y alto, considerando juntas de 1.5 cm
-    ladrillosPorM2 = 1 / ((((ancho + 1.5) / 100) * ((alto + 1.5) / 100)));
-  } else { // canto
-    // Usar largo y ancho, considerando juntas de 1.5 cm
-    ladrillosPorM2 = 1 / ((((largo + 1.5) / 100) * ((ancho + 1.5) / 100)));
+  Widget _buildConfigRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: AppColors.textSecondary,
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.warning.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.warning,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
-  // Aplicar factor de desperdicio de ladrillo
-  double ladrillosPorM2ConDesperdicio = ladrillosPorM2 * (1 + factorDesperdicioLadrillo);
-
-  return ladrillosPorM2ConDesperdicio * area;
-}
-
-// Función para calcular el volumen de mortero
-double calcularVolumenMorteroNuevo(Ladrillo ladrillo) {
-  double area = obtenerAreaLadrillo(ladrillo);
-
-  String tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
-  Map<String, double>? dimensiones = tiposLadrillo[tipoLadrilloKey];
-
-  if (dimensiones == null) {
-    dimensiones = tiposLadrillo['Pandereta']!;
+  Widget _buildDataTable(List<Ladrillo> ladrillos) {
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1.5),
+      },
+      children: [
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),
+        ...ladrillos.map((ladrillo) {
+          final area = _calcularAreaLadrillo(ladrillo);
+          return _buildTableRow([
+            ladrillo.description,
+            'm²',
+            area.toStringAsFixed(2),
+          ]);
+        }).toList(),
+        _buildTableRow([
+          'Total:',
+          'm²',
+          ref.watch(ladrilloMaterialsProvider).areaTotal.toStringAsFixed(2),
+        ], isTotal: true),
+      ],
+    );
   }
 
-  double largo = dimensiones['largo']! / 100; // convertir a metros
-  double ancho = dimensiones['ancho']! / 100; // convertir a metros
-  double alto = dimensiones['alto']! / 100; // convertir a metros
-
-  // Calcular ladrillos por m² sin desperdicio para el cálculo de volumen
-  double ladrillosPorM2Sin;
-  if (ladrillo.tipoAsentado == 'soga') {
-    ladrillosPorM2Sin = 1 / ((((dimensiones['largo']! + 1.5) / 100) * ((dimensiones['alto']! + 1.5) / 100)));
-  } else if (ladrillo.tipoAsentado == 'cabeza') {
-    ladrillosPorM2Sin = 1 / ((((dimensiones['ancho']! + 1.5) / 100) * ((dimensiones['alto']! + 1.5) / 100)));
-  } else { // canto
-    ladrillosPorM2Sin = 1 / ((((dimensiones['largo']! + 1.5) / 100) * ((dimensiones['ancho']! + 1.5) / 100)));
+  Widget _buildMaterialTable(LadrilloMaterials materials) {
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(2),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(1.5),
+      },
+      children: [
+        _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
+        _buildTableRow(['Ladrillos', 'Und', materials.ladrillos.toStringAsFixed(0)]),
+        _buildTableRow(['Cemento', 'Bls', materials.cemento.ceil().toString()]),
+        _buildTableRow(['Arena gruesa', 'm³', materials.arena.toStringAsFixed(2)]),
+        _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
+      ],
+    );
   }
 
-  // Volumen del ladrillo individual
-  double volumenLadrillo = largo * ancho * alto;
+  Widget _buildMaterialChips(LadrilloMaterials materials) {
+    final materials_list = [
+      {'icon': Icons.construction, 'label': 'Ladrillos', 'value': '${materials.ladrillos.toStringAsFixed(0)} und', 'color': AppColors.primary},
+      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materials.cemento.ceil()} bls', 'color': AppColors.secondary},
+      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materials.arena.toStringAsFixed(2)} m³', 'color': AppColors.warning},
+      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materials.agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
+    ];
 
-  // Espesor del muro según el tipo de asentado
-  double espesorMuro;
-  if (ladrillo.tipoAsentado == 'soga') {
-    espesorMuro = ancho; // ancho del ladrillo
-  } else if (ladrillo.tipoAsentado == 'cabeza') {
-    espesorMuro = largo; // largo del ladrillo
-  } else { // canto
-    espesorMuro = alto; // alto del ladrillo
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: materials_list.map((material) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: (material['color'] as Color).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: (material['color'] as Color).withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                material['icon'] as IconData,
+                size: 16,
+                color: material['color'] as Color,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                material['value'] as String,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: material['color'] as Color,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
   }
 
-  // Volumen de mortero por m² = Volumen bruto - Volumen ocupado por ladrillos
-  double morteroM3PorM2 = (1.0 * 1.0 * espesorMuro) - (ladrillosPorM2Sin * volumenLadrillo);
+  TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
+    final textStyle = TextStyle(
+      fontSize: isHeader ? 14 : 12,
+      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+      color: isHeader ? AppColors.textPrimary :
+      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+    );
 
-  return morteroM3PorM2 * area;
-}
-
-// Función para calcular cemento
-double calcularCementoNuevo(Ladrillo ladrillo) {
-  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
-
-  // Obtener factor de desperdicio de mortero directamente del ladrillo
-  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
-
-  String proporcionStr = ladrillo.proporcionMortero;
-  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
-
-  if (datosProporcion == null) {
-    // Usar 1:4 por defecto
-    datosProporcion = proporcionesMortero['4']!;
+    return TableRow(
+      decoration: isTotal ? BoxDecoration(
+        color: AppColors.blueMetraShop.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ) : null,
+      children: cells.map((cell) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Text(
+          cell,
+          style: textStyle,
+          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
+        ),
+      )).toList(),
+    );
   }
 
-  // Factor cemento (bolsas por m³ de mortero)
-  double factorCemento = datosProporcion['cemento']! / 42.5; // 42.5 kg por bolsa
+  // CORREGIDO: bottomNavigationBar simplificado usando Container
+  Widget _buildBottomActionBar() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
 
-  // Cálculo de cemento sin desperdicio
-  double cementoSinDesperdicio = factorCemento * volumenMortero;
+    if (ladrillos.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
-  // Aplicar factor de desperdicio de mortero
-  return cementoSinDesperdicio * (1 + factorDesperdicioMortero);
-}
-
-// Función para calcular arena
-double calcularArenaNueva(Ladrillo ladrillo) {
-  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
-
-  // Obtener factor de desperdicio de mortero directamente del ladrillo
-  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
-
-  String proporcionStr = ladrillo.proporcionMortero;
-  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
-
-  if (datosProporcion == null) {
-    // Usar 1:4 por defecto
-    datosProporcion = proporcionesMortero['4']!;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Botones de acción principales en fila
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () => _handleSaveAction(),
+                      icon: const Icon(Icons.save_outlined),
+                      label: const Text('Guardar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.success,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showShareOptions(),
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Compartir'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.secondary,
+                        side: BorderSide(color: AppColors.secondary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Botón principal de proveedores
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _handleProviderAction(),
+                  icon: const Icon(Icons.search_rounded),
+                  label: const Text('Buscar Proveedores'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.blueMetraShop,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
-  // Cálculo de arena sin desperdicio
-  double arenaSinDesperdicio = datosProporcion['arena']! * volumenMortero;
-
-  // Aplicar factor de desperdicio de mortero
-  return arenaSinDesperdicio * (1 + factorDesperdicioMortero);
-}
-
-// Función para calcular agua
-double calcularAguaNueva(Ladrillo ladrillo) {
-  double volumenMortero = calcularVolumenMorteroNuevo(ladrillo);
-
-  // Obtener factor de desperdicio de mortero directamente del ladrillo
-  double factorDesperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
-
-  String proporcionStr = ladrillo.proporcionMortero;
-  Map<String, double>? datosProporcion = proporcionesMortero[proporcionStr];
-
-  if (datosProporcion == null) {
-    // Usar 1:4 por defecto
-    datosProporcion = proporcionesMortero['4']!;
+  // Métodos auxiliares
+  String _getTipoLadrillo() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    return ladrillos.isNotEmpty ? ladrillos.first.tipoLadrillo : 'N/A';
   }
 
-  // Cálculo de agua basado en la fórmula del Excel
-  // Factor cemento para calcular el agua correctamente
-  double factorCemento = datosProporcion['cemento']! / 42.5;
-  double aguaSinDesperdicio = ((factorCemento * (42.5 * 0.8)) / 1000) * volumenMortero;
-
-  // Aplicar factor de desperdicio de mortero
-  return aguaSinDesperdicio * (1 + factorDesperdicioMortero);
-}
-
-// Función auxiliar para normalizar el tipo de ladrillo
-String _normalizarTipoLadrillo(String tipo) {
-  switch (tipo.toLowerCase()) {
-    case 'pandereta':
-    case 'pandereta1':
-    case 'pandereta2':
-      return 'Pandereta';
-    case 'kingkong':
-    case 'kingkong1':
-    case 'kingkong2':
-    case 'king kong':
-      return 'Kingkong';
-    case 'común':
-    case 'comun':
-      return 'Común';
-    default:
-      return 'Pandereta'; // Por defecto
-  }
-}
-
-// Función para generar PDF actualizada
-Future<File> generatePdfNuevo(WidgetRef ref) async {
-  final pdf = pw.Document();
-  final listaLadrillo = ref.watch(ladrilloResultProvider);
-
-  if (listaLadrillo.isEmpty) {
-    throw Exception('No hay datos de ladrillos para generar PDF');
+  String _getTipoAsentado() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    return ladrillos.isNotEmpty ? ladrillos.first.tipoAsentado : 'N/A';
   }
 
-  String title = 'Resultados de Muros de Ladrillos';
+  double _calcularAreaLadrillo(Ladrillo ladrillo) {
+    if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
+      return double.tryParse(ladrillo.area!) ?? 0.0;
+    } else {
+      final largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
+      final altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
+      return largo * altura;
+    }
+  }
 
-  // Calcular totales con las nuevas funciones
-  final cantidadLadrillos = calcularCantidadMaterialNuevo(listaLadrillo, calcularLadrillosNuevo);
-  final cantidadArena = calcularCantidadMaterialNuevo(listaLadrillo, calcularArenaNueva);
-  final cantidadCemento = calcularCantidadMaterialNuevo(listaLadrillo, calcularCementoNuevo);
-  final cantidadAgua = calcularCantidadMaterialNuevo(listaLadrillo, calcularAguaNueva);
+  void _handleSaveAction() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    if (ladrillos.isNotEmpty) {
+      context.pushNamed('save-ladrillo');
+    } else {
+      _showErrorSnackBar('No hay datos para guardar');
+    }
+  }
 
-  // Obtener factores de desperdicio del primer ladrillo
-  final primerLadrillo = listaLadrillo.first;
-  final desperdicioLadrillo = double.tryParse(primerLadrillo.factorDesperdicio) ?? 5.0;
-  final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0;
+  void _handleProviderAction() {
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    if (ladrillos.isNotEmpty) {
+      context.pushNamed('map-screen-2');
+    } else {
+      _showErrorSnackBar('No hay datos de ladrillos');
+    }
+  }
 
-  // Calcular área total
-  final areaTotal = listaLadrillo.fold(0.0, (sum, l) => sum + obtenerAreaLadrillo(l));
+  void _showShareOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => _buildShareBottomSheet(),
+    );
+  }
 
-  pdf.addPage(
-    pw.Page(
-      build: (context) => pw.Center(
-        child: pw.Column(
+  Widget _buildShareBottomSheet() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.neutral300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Compartir Resultados',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Elige el formato para compartir tus resultados',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildShareOption(
+                  icon: Icons.picture_as_pdf,
+                  label: 'Compartir PDF',
+                  color: Colors.red,
+                  onTap: () => _sharePDF(),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildShareOption(
+                  icon: Icons.text_fields,
+                  label: 'Compartir Texto',
+                  color: AppColors.blueMetraShop,
+                  onTap: () => _shareText(),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close),
+            label: const Text('Cancelar'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              side: BorderSide(color: AppColors.neutral400),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShareOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sharePDF() async {
+    try {
+      Navigator.of(context).pop();
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+
+      final pdfFile = await _generatePDF();
+      final xFile = XFile(pdfFile.path);
+
+      context.hideLoader();
+
+      await Share.shareXFiles(
+        [xFile],
+        text: 'Resultados del metrado de ladrillos - METRASHOP',
+      );
+    } catch (e) {
+      context.hideLoader();
+      _showErrorSnackBar('Error al generar PDF: $e');
+    }
+  }
+
+  Future<void> _shareText() async {
+    try {
+      Navigator.of(context).pop();
+      final materials = ref.watch(ladrilloMaterialsProvider);
+      final ladrillos = ref.watch(ladrilloResultProvider);
+      final datosMetrado = ref.watch(datosShareLadrilloProvider);
+
+      final shareText = materials.toShareString(datosMetrado) +
+          materials.getConfigInfo(ladrillos);
+
+      await Share.share(shareText);
+    } catch (e) {
+      _showErrorSnackBar('Error al compartir: $e');
+    }
+  }
+
+  Future<File> _generatePDF() async {
+    final pdf = pw.Document();
+    final ladrillos = ref.watch(ladrilloResultProvider);
+    final materials = ref.watch(ladrilloMaterialsProvider);
+
+    if (ladrillos.isEmpty) {
+      throw Exception('No hay datos de ladrillos para generar PDF');
+    }
+
+    final primerLadrillo = ladrillos.first;
+
+    pdf.addPage(
+      pw.Page(
+        build: (context) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+            // Título
+            pw.Text(
+              'RESULTADOS DE MUROS DE LADRILLOS',
+              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 20),
 
             // Información del proyecto
-            pw.Text('INFORMACIÓN DEL PROYECTO:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'INFORMACIÓN DEL PROYECTO:',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 10),
             pw.Text('• Tipo de Ladrillo: ${primerLadrillo.tipoLadrillo}'),
             pw.Text('• Tipo de Asentado: ${primerLadrillo.tipoAsentado}'),
             pw.Text('• Proporción Mortero: 1:${primerLadrillo.proporcionMortero}'),
-            pw.Text('• Área total: ${areaTotal.toStringAsFixed(2)} m²'),
-            pw.Text('• Total de muros: ${listaLadrillo.length}'),
+            pw.Text('• Área total: ${materials.areaTotal.toStringAsFixed(2)} m²'),
+            pw.Text('• Total de muros: ${ladrillos.length}'),
             pw.SizedBox(height: 20),
 
             // Materiales calculados
-            pw.Text('MATERIALES CALCULADOS:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'MATERIALES CALCULADOS:',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 10),
-            pw.Text('• Ladrillos: ${cantidadLadrillos.toStringAsFixed(0)} unidades'),
-            pw.Text('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³'),
-            pw.Text('• Cemento: ${cantidadCemento.ceilToDouble()} bolsas'),
-            pw.Text('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³'),
+            pw.Text('• Ladrillos: ${materials.ladrillos.toStringAsFixed(0)} unidades'),
+            pw.Text('• Cemento: ${materials.cemento.ceil()} bolsas'),
+            pw.Text('• Arena gruesa: ${materials.arena.toStringAsFixed(2)} m³'),
+            pw.Text('• Agua: ${materials.agua.toStringAsFixed(2)} m³'),
             pw.SizedBox(height: 20),
 
             // Configuración aplicada
-            pw.Text('CONFIGURACIÓN APLICADA:', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'CONFIGURACIÓN APLICADA:',
+              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 10),
-            pw.Text('• Desperdicio de Ladrillo: ${desperdicioLadrillo.toStringAsFixed(1)}%'),
-            pw.Text('• Desperdicio de Mortero: ${desperdicioMortero.toStringAsFixed(1)}%'),
+            pw.Text('• Desperdicio de Mortero: ${double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0}%'),
             pw.SizedBox(height: 20),
 
             // Detalle de muros
-            pw.Text('DETALLE DE MUROS:', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+            pw.Text(
+              'DETALLE DE MUROS:',
+              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 5),
-            ...listaLadrillo.map((ladrillo) => pw.Text(
-              '• ${ladrillo.description}: ${obtenerAreaLadrillo(ladrillo).toStringAsFixed(2)} m²',
+            ...ladrillos.map((ladrillo) => pw.Text(
+              '• ${ladrillo.description}: ${_calcularAreaLadrillo(ladrillo).toStringAsFixed(2)} m²',
               style: pw.TextStyle(fontSize: 12),
             )),
             pw.SizedBox(height: 20),
 
-            // Información adicional
-            pw.Text('INFORMACIÓN TÉCNICA:', style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold)),
+            // Información técnica
+            pw.Text(
+              'INFORMACIÓN TÉCNICA:',
+              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
+            ),
             pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en las fórmulas del Excel "CALCULO DE MATERIALES POR PARTIDAss.xlsx"',
+            pw.Text('• Cálculos basados en fórmulas de ingeniería actualizadas',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
             pw.Text('• Incluye juntas de mortero de 1.5 cm horizontales y verticales',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
@@ -767,11 +901,31 @@ Future<File> generatePdfNuevo(WidgetRef ref) async {
           ],
         ),
       ),
-    ),
-  );
+    );
 
-  final output = await getTemporaryDirectory();
-  final file = File('${output.path}/resultados_ladrillos_${DateTime.now().millisecondsSinceEpoch}.pdf');
-  await file.writeAsBytes(await pdf.save());
-  return file;
+    final output = await getTemporaryDirectory();
+    final file = File('${output.path}/resultados_ladrillos_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file;
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
 }
