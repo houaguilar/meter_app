@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/estructuras/result/result_structural_elements_screen.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,23 +6,24 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../config/theme/theme.dart';
-import '../../../../providers/home/estructuras/structural_element_providers.dart';
-import '../../../../widgets/widgets.dart';
+import '../../../../../../config/theme/theme.dart';
+import '../../../../../../domain/entities/entities.dart';
+import '../../../../../assets/icons.dart';
+import '../../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-class ResultStructuralElementsScreen extends ConsumerStatefulWidget {
-  const ResultStructuralElementsScreen({super.key});
+class ResultContrapisoScreen extends ConsumerStatefulWidget {
+  const ResultContrapisoScreen({super.key});
 
   @override
-  ConsumerState<ResultStructuralElementsScreen> createState() => _ResultStructuralElementsScreenState();
+  ConsumerState<ResultContrapisoScreen> createState() => _ResultContrapisoScreenState();
 }
 
-class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructuralElementsScreen>
+class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     with SingleTickerProviderStateMixin {
 
   late AnimationController _animationController;
@@ -35,7 +35,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     super.initState();
     _initializeAnimations();
     _hideLoaderAfterDelay();
-    _validateDataOnInit();
   }
 
   @override
@@ -79,34 +78,11 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     });
   }
 
-  void _validateDataOnInit() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tipoElemento = ref.read(tipoStructuralElementProvider);
-      final columnas = ref.read(columnaResultProvider);
-      final vigas = ref.read(vigaResultProvider);
-
-      print('🔍 Estado en ResultScreen:');
-      print('- Tipo: $tipoElemento');
-      print('- Columnas: ${columnas.length}');
-      print('- Vigas: ${vigas.length}');
-
-      if (tipoElemento.isEmpty ||
-          (tipoElemento == 'columna' && columnas.isEmpty) ||
-          (tipoElemento == 'viga' && vigas.isEmpty)) {
-        print('❌ No hay datos válidos, regresando...');
-        _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
-        context.pop();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-
     return WillPopScope(
       onWillPop: () async {
-        _clearDataOnExit();
+        ref.read(contrapisoResultProvider.notifier).clearList();
         return true;
       },
       child: Scaffold(
@@ -116,10 +92,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: _buildBody(tipoElemento),
+            child: _buildBody(),
           ),
         ),
-        bottomNavigationBar: _buildBottomActionBar(tipoElemento),
+        bottomNavigationBar: _buildBottomActionBar(),
       ),
     );
   }
@@ -128,9 +104,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     return AppBarWidget(titleAppBar: 'Resultados');
   }
 
-  Widget _buildBody(String tipoElemento) {
-    if (tipoElemento.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+  Widget _buildBody() {
+    final pisos = ref.watch(contrapisoResultProvider);
+    final resultados = pisos.isNotEmpty ? CalculadoraContrapiso.calcularMateriales(pisos) : null;
+
+    if (pisos.isEmpty) {
+      return _buildEmptyState();
     }
 
     return SingleChildScrollView(
@@ -145,15 +124,63 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(tipoElemento),
+          _buildProjectSummaryCard(resultados!, pisos),
           const SizedBox(height: 20),
-          _buildMetradoDataCard(tipoElemento),
+          _buildMetradoDataCard(pisos),
           const SizedBox(height: 20),
-          _buildMaterialsCard(tipoElemento),
+          _buildMaterialsCard(resultados),
           const SizedBox(height: 20),
-          _buildConfigurationCard(tipoElemento),
+          _buildConfigurationCard(pisos),
           const SizedBox(height: 120),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: Colors.orange[400],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No hay datos de contrapiso',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Regresa y completa los datos para ver los resultados',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Regresar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.blueMetraShop,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -190,60 +217,59 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildProjectSummaryCard(String tipoElemento) {
-    final totalVolumen = _getTotalVolumen(tipoElemento);
-    final totalElementos = _getTotalElementos(tipoElemento);
-    final resistencia = _getResistencia(tipoElemento);
-
+  Widget _buildProjectSummaryCard(ResultadosContrapiso materiales, List<Piso> pisos) {
     return _buildModernCard(
       title: 'Resumen del Proyecto',
       icon: Icons.summarize_outlined,
       iconColor: AppColors.blueMetraShop,
       child: Column(
         children: [
-          _buildSummaryRow('Volumen Total', '${totalVolumen.toStringAsFixed(2)} m³'),
+          _buildSummaryRow('Volumen Total', '${materiales.volumenTotal.toStringAsFixed(2)} m³'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Total de ${tipoElemento.capitalize()}s', '$totalElementos'),
+          _buildSummaryRow('Total de Contrapisos', '${pisos.length}'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Elemento', tipoElemento.capitalize()),
+          _buildSummaryRow('Tipo', 'Contrapiso'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Resistencia', resistencia),
+          _buildSummaryRow('Proporción Mortero', _getProporcionMortero(pisos)),
         ],
       ),
     );
   }
 
-  Widget _buildMetradoDataCard(String tipoElemento) {
+  Widget _buildMetradoDataCard(List<Piso> pisos) {
     return _buildModernCard(
       title: 'Datos del Metrado',
       icon: Icons.view_list_outlined,
       iconColor: AppColors.accent,
       child: Column(
         children: [
-          _buildDataTable(tipoElemento),
+          _buildDataTable(pisos),
         ],
       ),
     );
   }
 
-  Widget _buildMaterialsCard(String tipoElemento) {
+  Widget _buildMaterialsCard(ResultadosContrapiso materiales) {
     return _buildModernCard(
       title: 'Lista de Materiales',
       icon: Icons.inventory_2_outlined,
       iconColor: AppColors.success,
       child: Column(
         children: [
-          _buildMaterialTable(tipoElemento),
+          _buildMaterialTable(materiales),
           const SizedBox(height: 16),
-          _buildMaterialChips(tipoElemento),
+          _buildMaterialChips(materiales),
         ],
       ),
     );
   }
 
-  Widget _buildConfigurationCard(String tipoElemento) {
-    final factorDesperdicio = _getFactorDesperdicio(tipoElemento);
-    final resistencia = _getResistencia(tipoElemento);
+  Widget _buildConfigurationCard(List<Piso> pisos) {
+    if (pisos.isEmpty) return const SizedBox.shrink();
+
+    final primerPiso = pisos.first;
+    final desperdicio = double.tryParse(primerPiso.factorDesperdicio) ?? 5.0;
+    final espesor = double.tryParse(primerPiso.espesor) ?? 5.0;
 
     return _buildModernCard(
       title: 'Configuración Aplicada',
@@ -251,11 +277,11 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Factor de Desperdicio', '${factorDesperdicio.toStringAsFixed(1)}%'),
+          _buildConfigRow('Desperdicio de Mortero', '${desperdicio.toStringAsFixed(1)}%'),
           const SizedBox(height: 12),
-          _buildConfigRow('Resistencia del Concreto', resistencia),
+          _buildConfigRow('Espesor promedio', '${espesor.toStringAsFixed(1)} cm'),
           const SizedBox(height: 12),
-          _buildConfigRow('Tipo de Elemento', tipoElemento.capitalize()),
+          _buildConfigRow('Proporción Mortero', '1:${primerPiso.proporcionMortero ?? "5"}'),
         ],
       ),
     );
@@ -385,11 +411,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildDataTable(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
-    final totalVolumen = _getTotalVolumen(tipoElemento);
-
+  Widget _buildDataTable(List<Piso> pisos) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -398,28 +420,24 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       },
       children: [
         _buildTableRow(['Descripción', 'Und.', 'Volumen'], isHeader: true),
-        ...List.generate(elements.length, (index) {
+        ...pisos.map((piso) {
+          final volumen = _calcularVolumenPiso(piso);
           return _buildTableRow([
-            elements[index].description ?? 'Sin descripción',
+            piso.description,
             'm³',
-            volumenes[index].toStringAsFixed(2),
+            volumen.toStringAsFixed(2),
           ]);
-        }),
+        }).toList(),
         _buildTableRow([
           'Total:',
           'm³',
-          totalVolumen.toStringAsFixed(2),
+          pisos.fold(0.0, (sum, piso) => sum + _calcularVolumenPiso(piso)).toStringAsFixed(2),
         ], isTotal: true),
       ],
     );
   }
 
-  Widget _buildMaterialTable(String tipoElemento) {
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-
+  Widget _buildMaterialTable(ResultadosContrapiso materiales) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -428,31 +446,24 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'Bls', cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(2)]),
-        _buildTableRow(['Piedra para concreto', 'm³', piedra.toStringAsFixed(2)]),
-        _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+        _buildTableRow(['Cemento', 'Bls', materiales.cementoTotal.ceil().toString()]),
+        _buildTableRow(['Arena gruesa', 'm³', materiales.arenaTotal.toStringAsFixed(2)]),
+        _buildTableRow(['Agua', 'm³', materiales.aguaTotal.toStringAsFixed(2)]),
       ],
     );
   }
 
-  Widget _buildMaterialChips(String tipoElemento) {
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-
-    final materials = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${cemento.ceil()} bls', 'color': AppColors.primary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${arena.toStringAsFixed(2)} m³', 'color': AppColors.secondary},
-      {'icon': Icons.texture, 'label': 'Piedra', 'value': '${piedra.toStringAsFixed(2)} m³', 'color': AppColors.warning},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
+  Widget _buildMaterialChips(ResultadosContrapiso materiales) {
+    final materials_list = [
+      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materiales.cementoTotal.ceil()} bls', 'color': AppColors.primary},
+      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materiales.arenaTotal.toStringAsFixed(2)} m³', 'color': AppColors.warning},
+      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materiales.aguaTotal.toStringAsFixed(2)} m³', 'color': AppColors.info},
     ];
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: materials.map((material) {
+      children: materials_list.map((material) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -511,8 +522,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildBottomActionBar(String tipoElemento) {
-    if (tipoElemento.isEmpty) {
+  Widget _buildBottomActionBar() {
+    final pisos = ref.watch(contrapisoResultProvider);
+
+    if (pisos.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -533,6 +546,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Botones de acción principales en fila
               Row(
                 children: [
                   Expanded(
@@ -569,6 +583,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
                 ],
               ),
               const SizedBox(height: 12),
+              // Botón principal de proveedores
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -594,6 +609,41 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         ),
       ),
     );
+  }
+
+  // Métodos auxiliares
+  String _getProporcionMortero(List<Piso> pisos) {
+    return pisos.isNotEmpty ? '1:${pisos.first.proporcionMortero ?? "5"}' : 'N/A';
+  }
+
+  double _calcularVolumenPiso(Piso piso) {
+    final espesor = double.tryParse(piso.espesor) ?? 0.0;
+    if (piso.area != null && piso.area!.isNotEmpty) {
+      final area = double.tryParse(piso.area!) ?? 0.0;
+      return area * (espesor / 100);
+    } else {
+      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
+      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
+      return largo * ancho * (espesor / 100);
+    }
+  }
+
+  void _handleSaveAction() {
+    final pisos = ref.watch(contrapisoResultProvider);
+    if (pisos.isNotEmpty) {
+      context.pushNamed('contrapiso-save');
+    } else {
+      _showErrorSnackBar('No hay datos para guardar');
+    }
+  }
+
+  void _handleProviderAction() {
+    final pisos = ref.watch(contrapisoResultProvider);
+    if (pisos.isNotEmpty) {
+      context.pushNamed('contrapiso-map-screen');
+    } else {
+      _showErrorSnackBar('No hay datos de contrapiso');
+    }
   }
 
   void _showShareOptions() {
@@ -719,105 +769,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  // Métodos auxiliares para obtener datos
-  List<dynamic> _getElements(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(columnaResultProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(vigaResultProvider);
-    }
-    return [];
-  }
-
-  List<double> _getVolumenes(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(volumenColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(volumenVigaProvider);
-    }
-    return [];
-  }
-
-  double _getTotalVolumen(String tipoElemento) {
-    final volumenes = _getVolumenes(tipoElemento);
-    return volumenes.fold(0.0, (sum, volumen) => sum + volumen);
-  }
-
-  int _getTotalElementos(String tipoElemento) {
-    return _getElements(tipoElemento).length;
-  }
-
-  String _getResistencia(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    if (elements.isNotEmpty) {
-      return elements.first.resistencia ?? 'N/A';
-    }
-    return 'N/A';
-  }
-
-  double _getFactorDesperdicio(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    if (elements.isNotEmpty) {
-      return double.tryParse(elements.first.factorDesperdicio ?? '5') ?? 5.0;
-    }
-    return 5.0;
-  }
-
-  double _getCemento(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadCementoColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadCementoVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getArena(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadArenaColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadArenaVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getPiedra(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadPiedraColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadPiedraVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getAgua(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadAguaColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadAguaVigaProvider);
-    }
-    return 0.0;
-  }
-
-  // Métodos de acción
-  void _handleSaveAction() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    if (tipoElemento.isNotEmpty) {
-      context.pushNamed('save-structural-element');
-    } else {
-      _showErrorMessage('No hay datos para guardar');
-    }
-  }
-
-  void _handleProviderAction() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    if (tipoElemento.isNotEmpty) {
-      context.pushNamed('map-screen-structural');
-    } else {
-      _showErrorMessage('No hay datos de elementos estructurales');
-    }
-  }
-
   Future<void> _sharePDF() async {
     try {
       Navigator.of(context).pop();
@@ -827,75 +778,71 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateStructuralElementPDF(ref);
-
+      final pdfFile = await PDFFactory.generateContrapisoPDF(ref);
       final xFile = XFile(pdfFile.path);
 
       context.hideLoader();
 
       await Share.shareXFiles(
         [xFile],
-        text: 'Resultados del metrado de elementos estructurales - METRASHOP',
+        text: 'Resultados del metrado de contrapiso - METRASHOP',
       );
     } catch (e) {
       context.hideLoader();
-      _showErrorMessage('Error al generar PDF: $e');
+      _showErrorSnackBar('Error al generar PDF: $e');
     }
   }
 
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
-      final shareText = _generateShareText();
+      final pisos = ref.watch(contrapisoResultProvider);
+      final resultados = CalculadoraContrapiso.calcularMateriales(pisos);
+      final datosMetrado = ref.watch(datosShareContrapisoProvider);
+
+      final shareText = _buildShareText(resultados, datosMetrado, pisos);
+
       await Share.share(shareText);
     } catch (e) {
-      _showErrorMessage('Error al compartir: $e');
+      _showErrorSnackBar('Error al compartir: $e');
     }
   }
 
-  String _generateShareText() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
+  String _buildShareText(ResultadosContrapiso resultados, String datosMetrado, List<Piso> pisos) {
+    final primerPiso = pisos.isNotEmpty ? pisos.first : null;
+    final proporcion = primerPiso?.proporcionMortero ?? '5';
+    final desperdicio = primerPiso != null ? double.tryParse(primerPiso.factorDesperdicio) ?? 5.0 : 5.0;
 
-    String datosMetrado = 'DATOS METRADO\n';
-    for (int i = 0; i < elements.length && i < volumenes.length; i++) {
-      datosMetrado += '* ${elements[i].description}: ${volumenes[i].toStringAsFixed(2)} m³\n';
-    }
+    return '''RESULTADOS DE CONTRAPISO - METRASHOP
 
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
+DATOS DEL METRADO:
+$datosMetrado
 
-    return '''$datosMetrado
--------------
-LISTA DE MATERIALES
-*Cemento: ${cemento.ceil()} bls
-*Arena gruesa: ${arena.toStringAsFixed(2)} m³
-*Piedra para concreto: ${piedra.toStringAsFixed(2)} m³
-*Agua: ${agua.toStringAsFixed(2)} m³
+LISTA DE MATERIALES:
+• Cemento: ${resultados.cementoTotal.ceil()} bls
+• Arena gruesa: ${resultados.arenaTotal.toStringAsFixed(2)} m³
+• Agua: ${resultados.aguaTotal.toStringAsFixed(2)} m³
 
-*Factor de Desperdicio: ${_getFactorDesperdicio(tipoElemento).toStringAsFixed(1)}%
-*Resistencia: ${_getResistencia(tipoElemento)}''';
+INFORMACIÓN DEL PROYECTO:
+• Tipo: Contrapiso
+• Proporción Mortero: 1:$proporcion
+• Volumen total: ${resultados.volumenTotal.toStringAsFixed(2)} m³
+• Factor de desperdicio: ${desperdicio.toStringAsFixed(1)}%
+• Total de secciones: ${pisos.length}
+
+Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
   }
 
   Future<File> _generatePDF() async {
     final pdf = pw.Document();
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
+    final pisos = ref.watch(contrapisoResultProvider);
+    final resultados = CalculadoraContrapiso.calcularMateriales(pisos);
 
-    if (elements.isEmpty) {
-      throw Exception('No hay datos de elementos estructurales para generar PDF');
+    if (pisos.isEmpty) {
+      throw Exception('No hay datos de contrapiso para generar PDF');
     }
 
-    final primerElemento = elements.first;
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-    final totalVolumen = _getTotalVolumen(tipoElemento);
+    final primerPiso = pisos.first;
 
     pdf.addPage(
       pw.Page(
@@ -904,7 +851,7 @@ LISTA DE MATERIALES
           children: [
             // Título
             pw.Text(
-              'RESULTADOS DE ${tipoElemento.toUpperCase()}S',
+              'RESULTADOS DE CONTRAPISO',
               style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 20),
@@ -915,10 +862,10 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Tipo de Elemento: ${tipoElemento.capitalize()}'),
-            pw.Text('• Resistencia del Concreto: ${primerElemento.resistencia}'),
-            pw.Text('• Volumen total: ${totalVolumen.toStringAsFixed(2)} m³'),
-            pw.Text('• Total de ${tipoElemento}s: ${elements.length}'),
+            pw.Text('• Tipo: Contrapiso'),
+            pw.Text('• Proporción Mortero: 1:${primerPiso.proporcionMortero ?? "5"}'),
+            pw.Text('• Volumen total: ${resultados.volumenTotal.toStringAsFixed(2)} m³'),
+            pw.Text('• Total de secciones: ${pisos.length}'),
             pw.SizedBox(height: 20),
 
             // Materiales calculados
@@ -927,10 +874,9 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${cemento.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${arena.toStringAsFixed(2)} m³'),
-            pw.Text('• Piedra para concreto: ${piedra.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${agua.toStringAsFixed(2)} m³'),
+            pw.Text('• Cemento: ${resultados.cementoTotal.ceil()} bolsas'),
+            pw.Text('• Arena gruesa: ${resultados.arenaTotal.toStringAsFixed(2)} m³'),
+            pw.Text('• Agua: ${resultados.aguaTotal.toStringAsFixed(2)} m³'),
             pw.SizedBox(height: 20),
 
             // Configuración aplicada
@@ -939,18 +885,18 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Factor de Desperdicio: ${_getFactorDesperdicio(tipoElemento).toStringAsFixed(1)}%'),
-            pw.Text('• Resistencia del Concreto: ${_getResistencia(tipoElemento)}'),
+            pw.Text('• Desperdicio de Mortero: ${double.tryParse(primerPiso.factorDesperdicio) ?? 5.0}%'),
+            pw.Text('• Espesor promedio: ${double.tryParse(primerPiso.espesor) ?? 5.0} cm'),
             pw.SizedBox(height: 20),
 
-            // Detalle de elementos
+            // Detalle de secciones
             pw.Text(
-              'DETALLE DE ${tipoElemento.toUpperCase()}S:',
+              'DETALLE DE SECCIONES:',
               style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 5),
-            ...List.generate(elements.length, (index) => pw.Text(
-              '• ${elements[index].description}: ${volumenes[index].toStringAsFixed(2)} m³',
+            ...pisos.map((piso) => pw.Text(
+              '• ${piso.description}: ${_calcularVolumenPiso(piso).toStringAsFixed(2)} m³',
               style: pw.TextStyle(fontSize: 12),
             )),
             pw.SizedBox(height: 20),
@@ -961,11 +907,11 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en dosificaciones de concreto según resistencia',
+            pw.Text('• Cálculos basados en factores técnicos del Excel líneas 15-164',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores de desperdicio aplicados independientemente',
+            pw.Text('• Factores de materiales según proporción de mortero aplicados',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Volúmenes calculados en metros cúbicos (m³)',
+            pw.Text('• Factor de desperdicio aplicado de forma independiente',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
             pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
@@ -975,22 +921,12 @@ LISTA DE MATERIALES
     );
 
     final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_${tipoElemento}_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    final file = File('${output.path}/resultados_contrapiso_${DateTime.now().millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(await pdf.save());
     return file;
   }
 
-  void _clearDataOnExit() {
-    final tipoElemento = ref.read(tipoStructuralElementProvider);
-    if (tipoElemento == 'columna') {
-      ref.read(columnaResultProvider.notifier).clearList();
-    } else if (tipoElemento == 'viga') {
-      ref.read(vigaResultProvider.notifier).clearList();
-    }
-    print('🧹 Datos limpiados al salir');
-  }
-
-  void _showErrorMessage(String message) {
+  void _showErrorSnackBar(String message) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1011,10 +947,104 @@ LISTA DE MATERIALES
   }
 }
 
-// Extension helper para capitalizar strings
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
+/// Clase principal para cálculos de contrapiso basada en el Excel
+class CalculadoraContrapiso {
+  // Factores de materiales según proporción del mortero (líneas 15-164 del Excel)
+  static const Map<String, Map<String, double>> _factoresMortero = {
+    '3': {
+      'cemento': 10.5, // bolsas por m³
+      'arena': 0.95,   // m³ por m³
+      'agua': 0.285,   // m³ por m³
+    },
+    '4': {
+      'cemento': 8.9,  // bolsas por m³
+      'arena': 1.0,    // m³ por m³
+      'agua': 0.272,   // m³ por m³
+    },
+    '5': {
+      'cemento': 7.4,  // bolsas por m³
+      'arena': 1.05,   // m³ por m³
+      'agua': 0.268,   // m³ por m³
+    },
+    '6': {
+      'cemento': 6.3,  // bolsas por m³
+      'arena': 1.08,   // m³ por m³
+      'agua': 0.265,   // m³ por m³
+    },
+  };
+
+  static ResultadosContrapiso calcularMateriales(List<Piso> pisos) {
+    if (pisos.isEmpty) {
+      return const ResultadosContrapiso(
+        cementoTotal: 0,
+        arenaTotal: 0,
+        aguaTotal: 0,
+        volumenTotal: 0,
+      );
+    }
+
+    double cementoTotal = 0.0;
+    double arenaTotal = 0.0;
+    double aguaTotal = 0.0;
+    double volumenTotal = 0.0;
+
+    for (var piso in pisos) {
+      // Obtener valores del piso
+      final proporcion = piso.proporcionMortero ?? '5';
+      final espesor = double.tryParse(piso.espesor) ?? 5.0;
+      final desperdicio = (double.tryParse(piso.factorDesperdicio) ?? 5.0) / 100.0;
+
+      // Obtener factores de la proporción
+      final factores = _factoresMortero[proporcion] ?? _factoresMortero['5']!;
+
+      // Calcular área
+      final area = _obtenerArea(piso);
+
+      // Calcular volumen de mortero
+      final volumen = area * (espesor / 100); // convertir cm a metros
+
+      // Calcular materiales con desperdicio
+      final cemento = factores['cemento']! * volumen * (1 + desperdicio);
+      final arena = factores['arena']! * volumen * (1 + desperdicio);
+      final agua = factores['agua']! * volumen * (1 + desperdicio);
+
+      // Sumar a totales
+      cementoTotal += cemento;
+      arenaTotal += arena;
+      aguaTotal += agua;
+      volumenTotal += volumen;
+    }
+
+    return ResultadosContrapiso(
+      cementoTotal: cementoTotal,
+      arenaTotal: arenaTotal,
+      aguaTotal: aguaTotal,
+      volumenTotal: volumenTotal,
+    );
   }
+
+  static double _obtenerArea(Piso piso) {
+    if (piso.area != null && piso.area!.isNotEmpty) {
+      return double.tryParse(piso.area!) ?? 0.0;
+    } else {
+      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
+      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
+      return largo * ancho;
+    }
+  }
+}
+
+/// Clase para almacenar resultados de cálculos
+class ResultadosContrapiso {
+  final double cementoTotal;
+  final double arenaTotal;
+  final double aguaTotal;
+  final double volumenTotal;
+
+  const ResultadosContrapiso({
+    required this.cementoTotal,
+    required this.arenaTotal,
+    required this.aguaTotal,
+    required this.volumenTotal,
+  });
 }

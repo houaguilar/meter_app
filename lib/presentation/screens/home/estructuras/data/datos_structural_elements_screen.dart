@@ -1,15 +1,17 @@
 // lib/presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
+import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/presentation/assets/icons.dart';
 
 import '../../../../../config/theme/theme.dart';
 import '../../../../../data/local/shared_preferences_helper.dart';
 import '../../../../../init_dependencies.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
-import '../../../../widgets/fields/custom_name_text_field.dart';
+import '../../../../widgets/modern_widgets.dart';
+import '../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../widgets/widgets.dart';
 import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
@@ -21,116 +23,136 @@ class DatosStructuralElementsScreen extends ConsumerStatefulWidget {
   ConsumerState<DatosStructuralElementsScreen> createState() => _DatosStructuralElementsScreenState();
 }
 
-class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralElementsScreen> with TickerProviderStateMixin {
+class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralElementsScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin, TutorialMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   late TabController _tabController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late SharedPreferencesHelper sharedPreferencesHelper;
+
   int _currentIndex = 0;
+  bool _isLoading = false;
 
-  late final SharedPreferencesHelper sharedPreferencesHelper;
+  // Controladores de texto modernos
+  final TextEditingController _factorController = TextEditingController(text: '5');
+  final TextEditingController _descriptionAreaController = TextEditingController();
+  final TextEditingController _descriptionMedidasController = TextEditingController();
+  final TextEditingController _volumenTextController = TextEditingController();
+  final TextEditingController _lengthTextController = TextEditingController();
+  final TextEditingController _widthTextController = TextEditingController();
+  final TextEditingController _heightTextController = TextEditingController();
 
-  // TextControllers y formKey para campos base de proyecto
-  final TextEditingController factorController = TextEditingController(text: '5');
-  final TextEditingController descriptionAreaController = TextEditingController();
-  final TextEditingController descriptionMedidasController = TextEditingController();
-  final TextEditingController volumenTextController = TextEditingController();
-  final TextEditingController lengthTextController = TextEditingController();
-  final TextEditingController widthTextController = TextEditingController();
-  final TextEditingController heightTextController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final formKey = GlobalKey<FormState>();
-  bool showResistenciaError = false;
+  // Estados de selección
+  String? _selectedResistencia;
 
+  // Listas dinámicas
+  List<Map<String, TextEditingController>> _volumenFields = [];
+  List<Map<String, TextEditingController>> _dimensionesFields = [];
+
+  // Tipo de elemento
   String tipoElemento = '';
-  String resistencia = '';
-  late String factor;
-
-  String? selectedValueResistencia;
-
-  // Usamos listas de mapas para manejar dinámicamente los campos adicionales
-  List<Map<String, TextEditingController>> volumenFields = [];
-  List<Map<String, TextEditingController>> dimensionesFields = [];
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _initializeAnimations();
+    initializeTutorial();
+    _checkAndShowTutorial();
+    _validateAndSetElementType();
+  }
+
+  void _checkAndShowTutorial() {
+    // Mostrar tutorial específico para tarrajeo
+    showModuleTutorial('structural');
+  }
+
+  void _showTutorialManually() {
+    forceTutorial('structural');
+  }
+
+  void _initializeControllers() {
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      setState(() {
-        _currentIndex = _tabController.index;
-      });
-    });
-
-    // Cargamos la configuración de SharedPreferences si es necesario
-    sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
-
-    // FIX: Validar y obtener el tipo de elemento
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _validateAndSetElementType();
-
-      if (!sharedPreferencesHelper.isTutorialShown()) {
-        showTutorial();
+      if (mounted) {
+        setState(() {
+          _currentIndex = _tabController.index;
+        });
       }
     });
   }
 
-  // FIX: Método para validar y establecer el tipo de elemento
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward();
+  }
+
   void _validateAndSetElementType() {
-    final tipo = ref.read(tipoStructuralElementProvider);
-    print('🔍 Tipo de elemento obtenido en DatosScreen: $tipo');
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final tipo = ref.read(tipoStructuralElementProvider);
+      print('🔍 Tipo de elemento obtenido en DatosScreen: $tipo');
 
-    if (tipo.isEmpty) {
-      print('⚠️ Tipo de elemento vacío, redirigiendo...');
-      context.pop();
-      return;
-    }
+      if (tipo.isEmpty) {
+        print('⚠️ Tipo de elemento vacío, redirigiendo...');
+        context.pop();
+        return;
+      }
 
-    setState(() {
-      tipoElemento = tipo;
+      setState(() {
+        tipoElemento = tipo;
+      });
+
+      print('✅ Tipo de elemento establecido: $tipoElemento');
     });
-
-    print('✅ Tipo de elemento establecido: $tipoElemento');
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _animationController.dispose();
+    _factorController.dispose();
+    _descriptionAreaController.dispose();
+    _descriptionMedidasController.dispose();
+    _volumenTextController.dispose();
+    _lengthTextController.dispose();
+    _widthTextController.dispose();
+    _heightTextController.dispose();
+    _disposeDynamicFields();
     super.dispose();
   }
 
-  void showTutorial() {
-    showDialog(
-      context: context,
-      builder: (context) => TutorialOverlay(
-        onSkip: () {
-          sharedPreferencesHelper.setTutorialShown(true);
-          context.pop();
-        },
-      ),
-    );
-  }
-
-  String? _validateStringRequired(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Este campo es obligatorio';
+  void _disposeDynamicFields() {
+    for (var field in _volumenFields) {
+      field.values.forEach((controller) => controller.dispose());
     }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Este campo es obligatorio';
+    for (var field in _dimensionesFields) {
+      field.values.forEach((controller) => controller.dispose());
     }
-    if (double.tryParse(value) == null) {
-      return 'Por favor ingresa un número válido';
-    }
-    if (double.parse(value) < 0) {
-      return 'El valor debe ser mayor o igual a 0';
-    }
-    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Observar cambios en el provider
+    super.build(context);
+
+    // Observar cambios en el provider
     ref.listen(tipoStructuralElementProvider, (previous, next) {
       print('🔄 Cambio detectado en tipoStructuralElementProvider: $previous -> $next');
       if (next.isNotEmpty && next != tipoElemento) {
@@ -140,7 +162,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
     });
 
-    // Si no tenemos tipo, mostrar loading o redirigir
+    // Si no tenemos tipo, mostrar loading
     if (tipoElemento.isEmpty) {
       return Scaffold(
         appBar: AppBarWidget(titleAppBar: 'Cargando...'),
@@ -150,90 +172,145 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       );
     }
 
-    String appBarTitle = tipoElemento == 'columna' ? 'Columna' : 'Viga';
+    String appBarTitle = tipoElemento == 'columna' ? 'Cálculo de Columna' : 'Cálculo de Viga';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBarWidget(titleAppBar: appBarTitle, isVisibleTutorial: true, showTutorial: showTutorial),
-      body: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Column(
-          children: [
-            // Widget de debug temporal (solo en debug mode)
-            if (tipoElemento.isNotEmpty) _buildDebugInfo(),
-            Expanded(
-              child: SingleChildScrollView(
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                scrollDirection: Axis.vertical,
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
-                        child: Column(
-                          children: [
-                            _buildResistenciaSelection(),
-                            _buildFactorDesperdicio(),
-                          ],
-                        ),
-                      ),
-                      _buildTabs(context),
-                    ],
-                  ),
+      appBar: _buildAppBar(appBarTitle),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: _buildBody(),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(String title) {
+    return AppBarWidget(
+      titleAppBar: title,
+      isVisibleTutorial: true,
+      showTutorial: _showTutorialManually,
+    );
+  }
+
+  Widget _buildBody() {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildHeaderSection(),
+                    _buildConfigurationSection(),
+                    _buildTabSection(),
+                  ],
                 ),
               ),
             ),
-            // FIX: Arreglar el botón de resultado con constrainWidthToWidest: true para evitar infinite width
-            SafeArea(
-              child: Container(
-                width: double.infinity, // Establecer ancho específico
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.blueMetraShop,
-                    foregroundColor: AppColors.white,
-                    minimumSize: const Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
+          ),
+          _buildActionSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.blueMetraShop.withOpacity(0.1),
+            AppColors.blueMetraShop.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.blueMetraShop.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SvgPicture.asset(
+                  AppIcons.archiveProjectIcon,
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.blueMetraShop,
+                    BlendMode.srcIn,
                   ),
-                  onPressed: () {
-                    setState(() {
-                      showResistenciaError = selectedValueResistencia == null;
-                    });
-
-                    if (formKey.currentState?.validate() == true && selectedValueResistencia != null) {
-                      // FIX: Verificar el tipo antes de procesar
-                      final tipoActual = ref.read(tipoStructuralElementProvider);
-                      print('🎯 Procesando datos para tipo: $tipoActual');
-
-                      if (tipoActual == 'columna') {
-                        _processColumnaData();
-                      } else if (tipoActual == 'viga') {
-                        _processVigaData();
-                      } else {
-                        print('❌ Tipo no reconocido: $tipoActual');
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Error: Tipo de elemento no válido')),
-                        );
-                        return;
-                      }
-                      ref.watch(vigaResultProvider);
-                      ref.watch(columnaResultProvider);
-                      // Navegar a la pantalla de resultados
-                      context.pushNamed('structural-element-results');
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
-                      );
-                    }
-                  },
-                  child: const Text('Resultado'),
                 ),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Configuración del Proyecto',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Elemento: ${tipoElemento.capitalize()}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildResistenciaSelection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfigurationSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ModernCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ModernSectionHeader(
+              title: 'Factor de Desperdicio',
+              subtitle: 'Configura el porcentaje de desperdicio',
+              icon: Icons.tune,
+            ),
+            const SizedBox(height: 16),
+            ModernTextField(
+              controller: _factorController,
+              label: 'Desperdicio',
+              suffix: '%',
+              validator: _validatePercentage,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.construction,
             ),
           ],
         ),
@@ -241,453 +318,322 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     );
   }
 
-  // Widget de debug temporal
-  Widget _buildDebugInfo() {
-    // Solo mostrar en modo debug
-    bool inDebugMode = false;
-    assert(inDebugMode = true);
+  Widget _buildResistenciaSelection() {
+    final opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "245 kg/cm²"];
 
-    if (!inDebugMode) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Resistencia del Concreto',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ModernChoiceChips(
+          options: opcionesResistencia,
+          selectedValue: _selectedResistencia,
+          onSelected: (value) {
+            setState(() {
+              _selectedResistencia = value;
+            });
+          },
+        ),
+      ],
+    );
+  }
 
+  Widget _buildTabSection() {
     return Container(
-      margin: const EdgeInsets.all(8),
-      padding: const EdgeInsets.all(8),
-      color: Colors.yellow.withOpacity(0.3),
-      child: Row(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('DEBUG: Tipo actual = $tipoElemento'),
-          const Spacer(),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(60, 30), // Tamaño específico
+          const ModernSectionHeader(
+            title: 'Datos del Metrado',
+            subtitle: 'Ingresa las medidas de tu elemento estructural',
+            icon: Icons.straighten,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
             ),
-            onPressed: () {
-              final tipo = ref.read(tipoStructuralElementProvider);
-              print('🔍 Estado actual del provider: $tipo');
-              print('🔍 Estado local: $tipoElemento');
-            },
-            child: const Text('Check'),
+            child: Column(
+              children: [
+                _buildTabBar(),
+                SizedBox(
+                  height: 400,
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildVolumenTab(),
+                      _buildDimensionesTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFactorDesperdicio() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 15),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: CustomFactorTextField(
-            controller: factorController,
-            label: 'Desperdicio (%)',
-            validator: _validateStringRequired,
-            hintText: '',
-          ),
-        ),
-        const SizedBox(height: 15),
-      ],
-    );
-  }
-
-  Widget _buildResistenciaSelection() {
-    // Actualizar las opciones de resistencia para coincidir con las del Excel
-    final List<String> opcionesResistencia = [
-      "175 kg/cm²",
-      "210 kg/cm²",
-      "245 kg/cm²",
-    ];
-
+  Widget _buildTabBar() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                'Resistencia del concreto:',
-                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              margin: const EdgeInsets.only(right: 15),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Column(
-                children: [
-                  Wrap(
-                    runAlignment: WrapAlignment.spaceEvenly,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 10,
-                    children: opcionesResistencia.map((opcion) {
-                      bool isSelected = selectedValueResistencia == opcion;
-                      return ChoiceChip(
-                        label: Text(opcion),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              selectedValueResistencia = opcion;
-                              resistencia = selectedValueResistencia!;
-                            });
-                          }
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
-                            width: 1.0,
-                          ),
-                        ),
-                        checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
-                        selectedColor: AppColors.blueMetraShop,
-                        backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
-                        labelStyle: TextStyle(
-                            color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
-                      );
-                    }).toList(),
-                  ),
-                  if (showResistenciaError && selectedValueResistencia == null)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Campo requerido',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    )
-                ],
-              ),
-            )
-          ],
+        color: AppColors.backgroundLight,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
         ),
       ),
-    );
-  }
-
-  Widget _buildTabs(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24),
-          child: Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop)),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: AppColors.blueMetraShop,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
         ),
-        const SizedBox(height: 10),
-        TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primaryMetraShop,
-          unselectedLabelColor: AppColors.primaryMetraShop.withOpacity(0.5),
-          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          indicatorColor: AppColors.indicatorTabBarColor,
-          tabs: const [
-            Tab(text: 'Volumen'),
-            Tab(text: 'Dimensiones'),
-          ],
-        ),
-        SizedBox(
-          height: 600,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildVolumenTab(),
-              _buildDimensionesTab(),
-            ],
+        indicatorColor: AppColors.blueMetraShop,
+        indicatorWeight: 3,
+        tabs: const [
+          Tab(
+            icon: Icon(Icons.view_in_ar),
+            text: 'Por Volumen',
           ),
-        ),
-      ],
+          Tab(
+            icon: Icon(Icons.straighten),
+            text: 'Por Dimensiones',
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildVolumenTab() {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              elevation: 2,
-              color: Colors.grey.shade100,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ModernMeasurementCard(
+            title: 'Medida Principal',
+            children: [
+              ModernTextField(
+                controller: _descriptionAreaController,
+                label: 'Descripción',
+                hintText: 'Ej: ${tipoElemento.capitalize()} principal',
+                validator: _validateRequired,
+                prefixIcon: Icons.description,
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomNameTextField(
-                      controller: descriptionAreaController,
-                      label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} 1)',
-                      validator: _validateStringRequired,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Datos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    CustomMeasureTextField(
-                      controller: volumenTextController,
-                      validator: _validateNumeric,
-                      labelText: 'Volumen (m³)',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 16),
+              ModernTextField(
+                controller: _volumenTextController,
+                label: 'Volumen',
+                suffix: 'm³',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.view_in_ar,
               ),
-            ),
-            Column(
-              children: [
-                ...volumenFields.map((field) => _buildDynamicVolumenField(
-                    field,
-                        () => _removeField(volumenFields, field)
-                )),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: CustomTextBlueButton(
-                    onPressed: () => _addVolumenField(volumenFields),
-                    label: 'Agregar nuevo elemento',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+          ..._volumenFields.map((field) => _buildDynamicVolumenField(field)),
+          const SizedBox(height: 16),
+          ModernAddButton(
+            onPressed: _addVolumenField,
+            label: 'Agregar Nuevo Volumen',
+            icon: Icons.add_box,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildDimensionesTab() {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 12),
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ModernMeasurementCard(
+            title: 'Medida Principal',
+            children: [
+              ModernTextField(
+                controller: _descriptionMedidasController,
+                label: 'Descripción',
+                hintText: 'Ej: ${tipoElemento.capitalize()} principal',
+                validator: _validateRequired,
+                prefixIcon: Icons.description,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomNameTextField(
-                      controller: descriptionMedidasController,
-                      label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} 1)',
-                      validator: _validateStringRequired,
-                    ),
-                    const Text(
-                      'Datos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomMeasureTextField(
-                            controller: lengthTextController,
-                            validator: _validateNumeric,
-                            labelText: 'Largo (m)',
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: CustomMeasureTextField(
-                            controller: widthTextController,
-                            validator: _validateNumeric,
-                            labelText: 'Ancho (m)',
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                    CustomMeasureTextField(
-                      controller: heightTextController,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ModernTextField(
+                      controller: _lengthTextController,
+                      label: 'Largo',
+                      suffix: 'm',
                       validator: _validateNumeric,
-                      labelText: 'Altura (m)',
                       keyboardType: TextInputType.number,
+                      prefixIcon: Icons.straighten,
                     ),
-                  ],
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                ...dimensionesFields.map((field) => _buildDynamicDimensionesField(
-                    field,
-                        () => _removeField(dimensionesFields, field)
-                )),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: CustomTextBlueButton(
-                    onPressed: () => _addDimensionesField(dimensionesFields),
-                    label: 'Agregar nuevo elemento',
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ModernTextField(
+                      controller: _widthTextController,
+                      label: 'Ancho',
+                      suffix: 'm',
+                      validator: _validateNumeric,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.width_full,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              ModernTextField(
+                controller: _heightTextController,
+                label: 'Altura',
+                suffix: 'm',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.height,
+              ),
+            ],
+          ),
+          ..._dimensionesFields.map((field) => _buildDynamicDimensionesField(field)),
+          const SizedBox(height: 16),
+          ModernAddButton(
+            onPressed: _addDimensionesField,
+            label: 'Agregar Nueva Dimensión',
+            icon: Icons.add_box,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildDynamicVolumenField(Map<String, TextEditingController> field, VoidCallback onRemove) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
+  Widget _buildDynamicVolumenField(Map<String, TextEditingController> field) {
+    return ModernMeasurementCard(
+      title: 'Volumen Adicional',
+      onRemove: () => _removeField(_volumenFields, field),
+      children: [
+        ModernTextField(
+          controller: field['description']!,
+          label: 'Descripción',
+          hintText: 'Ej: ${tipoElemento.capitalize()} secundario',
+          validator: _validateRequired,
+          prefixIcon: Icons.description,
+        ),
+        const SizedBox(height: 16),
+        ModernTextField(
+          controller: field['volumen']!,
+          label: 'Volumen',
+          suffix: 'm³',
+          validator: _validateNumeric,
+          keyboardType: TextInputType.number,
+          prefixIcon: Icons.view_in_ar,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDynamicDimensionesField(Map<String, TextEditingController> field) {
+    return ModernMeasurementCard(
+      title: 'Dimensión Adicional',
+      onRemove: () => _removeField(_dimensionesFields, field),
+      children: [
+        ModernTextField(
+          controller: field['description']!,
+          label: 'Descripción',
+          hintText: 'Ej: ${tipoElemento.capitalize()} secundario',
+          validator: _validateRequired,
+          prefixIcon: Icons.description,
+        ),
+        const SizedBox(height: 16),
+        Row(
           children: [
-            CustomNameTextField(
-              controller: field['description']!,
-              label: 'Descripción adicional',
-              validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} ...)',
-              onPressed: onRemove,
-              icon: Icons.close,
-              color: AppColors.errorGeneralColor,
-              isVisible: true,
-            ),
-            const Text(
-              'Datos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryMetraShop,
+            Expanded(
+              child: ModernTextField(
+                controller: field['largo']!,
+                label: 'Largo',
+                suffix: 'm',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.straighten,
               ),
             ),
-            const SizedBox(height: 8),
-            CustomMeasureTextField(
-              controller: field['volumen']!,
-              validator: _validateNumeric,
-              labelText: 'Volumen (m³)',
-              keyboardType: TextInputType.number,
+            const SizedBox(width: 16),
+            Expanded(
+              child: ModernTextField(
+                controller: field['ancho']!,
+                label: 'Ancho',
+                suffix: 'm',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.width_full,
+              ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        ModernTextField(
+          controller: field['altura']!,
+          label: 'Altura',
+          suffix: 'm',
+          validator: _validateNumeric,
+          keyboardType: TextInputType.number,
+          prefixIcon: Icons.height,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: ModernActionButtonD(
+          onPressed: _isLoading ? null : () => _processCalculation(),
+          isLoading: _isLoading,
+          label: 'Calcular Materiales',
+          icon: Icons.calculate,
         ),
       ),
     );
   }
 
-  Widget _buildDynamicDimensionesField(Map<String, TextEditingController> field, VoidCallback onRemove) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            CustomNameTextField(
-              controller: field['description']!,
-              label: 'Descripción adicional',
-              validator: _validateStringRequired,
-              hintText: 'Ingresa una descripción (Ej. ${tipoElemento.capitalize()} ...)',
-              onPressed: onRemove,
-              icon: Icons.close,
-              color: AppColors.errorGeneralColor,
-              isVisible: true,
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Datos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryMetraShop,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomMeasureTextField(
-                    controller: field['largo']!,
-                    validator: _validateNumeric,
-                    labelText: 'Largo (m)',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: CustomMeasureTextField(
-                    controller: field['ancho']!,
-                    validator: _validateNumeric,
-                    labelText: 'Ancho (m)',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-            CustomMeasureTextField(
-              controller: field['altura']!,
-              validator: _validateNumeric,
-              labelText: 'Altura (m)',
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _addVolumenField(List<Map<String, TextEditingController>> fields) {
+  // Métodos auxiliares
+  void _addVolumenField() {
     setState(() {
-      fields.add({
+      _volumenFields.add({
         'description': TextEditingController(),
         'volumen': TextEditingController(),
       });
     });
   }
 
-  void _addDimensionesField(List<Map<String, TextEditingController>> fields) {
+  void _addDimensionesField() {
     setState(() {
-      fields.add({
+      _dimensionesFields.add({
         'description': TextEditingController(),
         'largo': TextEditingController(),
         'ancho': TextEditingController(),
@@ -696,126 +642,275 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     });
   }
 
-  void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
+  void _removeField(List<Map<String, TextEditingController>> fields,
+      Map<String, TextEditingController> field) {
     setState(() {
+      field.values.forEach((controller) => controller.dispose());
       fields.remove(field);
     });
   }
 
+  Future<void> _processCalculation() async {
+    if (!_validateForm()) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      context.showCalculationLoader(
+        message: 'Calculando materiales',
+        description: 'Aplicando fórmulas estructurales...',
+      );
+
+      // Procesar según el tipo de elemento
+      final tipoActual = ref.read(tipoStructuralElementProvider);
+      print('🎯 Procesando datos para tipo: $tipoActual');
+
+      if (tipoActual == 'columna') {
+        _processColumnaData();
+      } else if (tipoActual == 'viga') {
+        _processVigaData();
+      } else {
+        print('❌ Tipo no reconocido: $tipoActual');
+        _showErrorMessage('Error: Tipo de elemento no válido');
+        return;
+      }
+
+      // Observar cambios en los providers
+      ref.watch(vigaResultProvider);
+      ref.watch(columnaResultProvider);
+      context.pushNamed('structural-element-results');
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (mounted) {
+        context.hideLoader();
+      }
+    } catch (e) {
+      _showErrorMessage('Error al procesar los datos: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        context.hideLoader();
+      }
+    }
+  }
+
+  bool _validateForm() {
+    if (_formKey.currentState?.validate() != true) {
+      _showErrorMessage('Por favor, completa todos los campos obligatorios');
+      return false;
+    }
+
+    if (_selectedResistencia == null) {
+      _showErrorMessage('Selecciona una resistencia del concreto');
+      return false;
+    }
+
+    return true;
+  }
+
   void _processColumnaData() {
     var datosColumna = ref.read(columnaResultProvider.notifier);
-
-    // Limpiar datos previos
     datosColumna.clearList();
 
     try {
       if (_currentIndex == 0) {
         // Tab de volumen
-        datosColumna.createColumna(
-          descriptionAreaController.text,
-          resistencia,
-          factorController.text,
-          volumen: volumenTextController.text,
-        );
-
-        for (var field in volumenFields) {
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
           datosColumna.createColumna(
-            field['description']!.text,
-            resistencia,
-            factorController.text,
-            volumen: field['volumen']!.text,
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            volumen: _volumenTextController.text,
           );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosColumna.createColumna(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              volumen: field['volumen']!.text,
+            );
+          }
         }
       } else {
         // Tab de dimensiones
-        datosColumna.createColumna(
-          descriptionMedidasController.text,
-          resistencia,
-          factorController.text,
-          largo: lengthTextController.text,
-          ancho: widthTextController.text,
-          altura: heightTextController.text,
-        );
-
-        for (var field in dimensionesFields) {
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty &&
+            _heightTextController.text.isNotEmpty) {
           datosColumna.createColumna(
-            field['description']!.text,
-            resistencia,
-            factorController.text,
-            largo: field['largo']!.text,
-            ancho: field['ancho']!.text,
-            altura: field['altura']!.text,
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+            altura: _heightTextController.text,
           );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty &&
+              field['altura']!.text.isNotEmpty) {
+            datosColumna.createColumna(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+              altura: field['altura']!.text,
+            );
+          }
         }
       }
 
       final columnasCreadas = ref.read(columnaResultProvider);
       print("✅ Columnas creadas: ${columnasCreadas.length}");
-      ref.watch(columnaResultProvider);
     } catch (e) {
       print("❌ Error creando columnas: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al procesar datos de columna: $e')),
-      );
+      _showErrorMessage('Error al procesar datos de columna: $e');
     }
   }
 
   void _processVigaData() {
     var datosViga = ref.read(vigaResultProvider.notifier);
-
-    // Limpiar datos previos
     datosViga.clearList();
 
     try {
       if (_currentIndex == 0) {
         // Tab de volumen
-        datosViga.createViga(
-          descriptionAreaController.text,
-          resistencia,
-          factorController.text,
-          volumen: volumenTextController.text,
-        );
-
-        for (var field in volumenFields) {
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
           datosViga.createViga(
-            field['description']!.text,
-            resistencia,
-            factorController.text,
-            volumen: field['volumen']!.text,
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            volumen: _volumenTextController.text,
           );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosViga.createViga(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              volumen: field['volumen']!.text,
+            );
+          }
         }
       } else {
         // Tab de dimensiones
-        datosViga.createViga(
-          descriptionMedidasController.text,
-          resistencia,
-          factorController.text,
-          largo: lengthTextController.text,
-          ancho: widthTextController.text,
-          altura: heightTextController.text,
-        );
-
-        for (var field in dimensionesFields) {
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty &&
+            _heightTextController.text.isNotEmpty) {
           datosViga.createViga(
-            field['description']!.text,
-            resistencia,
-            factorController.text,
-            largo: field['largo']!.text,
-            ancho: field['ancho']!.text,
-            altura: field['altura']!.text,
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+            altura: _heightTextController.text,
           );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty &&
+              field['altura']!.text.isNotEmpty) {
+            datosViga.createViga(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+              altura: field['altura']!.text,
+            );
+          }
         }
       }
 
       final vigasCreadas = ref.read(vigaResultProvider);
       print("✅ Vigas creadas: ${vigasCreadas.length}");
-      ref.watch(vigaResultProvider);
     } catch (e) {
       print("❌ Error creando vigas: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al procesar datos de viga: $e')),
-      );
+      _showErrorMessage('Error al procesar datos de viga: $e');
     }
+  }
+
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // Validadores
+  String? _validateRequired(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+    return null;
+  }
+
+  String? _validateNumeric(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Ingresa un número válido';
+    }
+
+    if (number <= 0) {
+      return 'El valor debe ser mayor a 0';
+    }
+
+    return null;
+  }
+
+  String? _validatePercentage(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Ingresa un número válido';
+    }
+
+    if (number < 0 || number > 100) {
+      return 'Debe estar entre 0% y 100%';
+    }
+
+    return null;
   }
 }
 

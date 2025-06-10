@@ -42,7 +42,7 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
         throw const ServerException('El nombre del proyecto es requerido');
       }
 
-      if (name.length > 100) {
+      if (name.length > 50) {
         throw const ServerException('El nombre del proyecto es demasiado largo');
       }
 
@@ -105,7 +105,7 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
         throw const ServerException('El nombre del proyecto es requerido');
       }
 
-      if (project.name.length > 100) {
+      if (project.name.length > 50) {
         throw const ServerException('El nombre del proyecto es demasiado largo');
       }
 
@@ -311,13 +311,24 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
 
     // Remover caracteres peligrosos
     String cleaned = name
-        .replaceAll(RegExp('[<>"\'{}`]'), '') // Remover caracteres HTML/JS
-        .replaceAll(RegExp(r'[^\w\s\-_.\(\)]', unicode: true), '') // Solo caracteres seguros
+        .replaceAll(RegExp(r'[<>"\\\/:*?|`]'), '') // Solo remover caracteres realmente peligrosos
         .trim();
 
+    // Normalizar espacios múltiples a uno solo
+    while (cleaned.contains('  ')) {
+      cleaned = cleaned.replaceAll('  ', ' ');
+    }
+
+    // Validar que contenga al menos algunos caracteres válidos
+    final hasValidChars = RegExp(r'[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ0-9]').hasMatch(cleaned);
+
+    if (!hasValidChars || cleaned.trim().isEmpty) {
+      return 'Proyecto sin nombre';
+    }
+
     // Limitar longitud
-    if (cleaned.length > 100) {
-      cleaned = cleaned.substring(0, 100).trim();
+    if (cleaned.length > 50) {
+      cleaned = cleaned.substring(0, 50).trim();
     }
 
     return cleaned.isEmpty ? 'Proyecto sin nombre' : cleaned;

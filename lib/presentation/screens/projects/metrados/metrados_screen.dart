@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/projects/metrado/metrado.dart';
 import '../../../blocs/projects/metrados/metrados_bloc.dart';
-import '../result/result_test.dart';
+import '../result/result_screen.dart';
 
 class MetradosScreen extends StatefulWidget {
   final int projectId;
@@ -639,7 +639,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
   void _navigateToResults(Metrado metrado) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ResultScreens(
+        builder: (context) => ResultScreen(
           metradoId: metrado.id.toString(),
         ),
       ),

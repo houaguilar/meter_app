@@ -83,11 +83,11 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     bool rememberMe = false,
   }) async {
-    if (rememberMe) {
+    /*if (rememberMe) {
       await sharedPreferencesHelper.saveCredentials(email, password);
     } else {
       await sharedPreferencesHelper.clearCredentials();
-    }
+    }*/
     return _getUser(
           () async => await remoteDataSource.loginWithEmailPassword(
             email: email,
@@ -96,13 +96,13 @@ class AuthRepositoryImpl implements AuthRepository {
     );
   }
 
-  Future<Map<String, String>?> getSavedSession() async {
+  /*Future<Map<String, String>?> getSavedSession() async {
     return sharedPreferencesHelper.getCredentials();
   }
 
   Future<void> clearSavedSession() async {
     return sharedPreferencesHelper.clearCredentials();
-  }
+  }*/
 
   @override
   Future<Either<Failure, User>> signUpWithPhonePassword({

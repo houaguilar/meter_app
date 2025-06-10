@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:animations/animations.dart';
@@ -67,88 +68,96 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.primaryMetraShop,
-        title: const Text(
-          'Mis Proyectos',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: AppColors.white,
-          ),
-        ),
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline, color: AppColors.white),
-            tooltip: 'Ayuda',
-            onPressed: () => _showHelpDialog(context),
-          ),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        // Usa el color primario de tu tema automáticamente
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Status Message Area
-            BlocBuilder<ProjectsBloc, ProjectsState>(
-              builder: (context, state) {
-                if (state is ProjectSuccess && state.projects.isEmpty) {
-                  return const _EmptyStateHeader();
-                }
-                return const SizedBox.shrink();
-              },
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: AppColors.primaryMetraShop,
+          title: const Text(
+            'Mis Proyectos',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: AppColors.white,
             ),
-
-            // Buscador de proyectos (nuevo)
-            _buildSearchBar(),
-
-            // Project List
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: BlocConsumer<ProjectsBloc, ProjectsState>(
-                  listener: (context, state) {
-                    if (state is ProjectNameAlreadyExists) {
-                      _showErrorSnackBar(context, state.message);
-                    } else if (state is ProjectFailure) {
-                      _showErrorSnackBar(context, state.message);
-                    } else if (state is ProjectAdded) {
-                      _showSuccessSnackBar(context, 'Proyecto guardado exitosamente');
-                    }
-                  },
-                  builder: (context, state) {
-                    if (state is ProjectLoading) {
-                      return _buildLoadingContent();
-                    } else if (state is ProjectSuccess) {
-                      return _buildProjectsList(context, state);
-                    } else if (state is ProjectFailure) {
-                      return _buildErrorContent(context, state.message);
-                    } else {
-                      return const Center(child: Text('Cargando proyectos...'));
-                    }
-                  },
-                ),
-              ),
+          ),
+          elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline, color: AppColors.white),
+              tooltip: 'Ayuda',
+              onPressed: () => _showHelpDialog(context),
             ),
           ],
         ),
-      ),
-      floatingActionButton: OpenContainer(
-        transitionType: ContainerTransitionType.fadeThrough,
-        closedElevation: 6.0,
-        closedShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(56.0)),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Status Message Area
+              BlocBuilder<ProjectsBloc, ProjectsState>(
+                builder: (context, state) {
+                  if (state is ProjectSuccess && state.projects.isEmpty) {
+                    return const _EmptyStateHeader();
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+
+              // Buscador de proyectos (nuevo)
+              _buildSearchBar(),
+
+              // Project List
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: BlocConsumer<ProjectsBloc, ProjectsState>(
+                    listener: (context, state) {
+                      if (state is ProjectNameAlreadyExists) {
+                        _showErrorSnackBar(context, state.message);
+                      } else if (state is ProjectFailure) {
+                        _showErrorSnackBar(context, state.message);
+                      } else if (state is ProjectAdded) {
+                        _showSuccessSnackBar(context, 'Proyecto guardado exitosamente');
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is ProjectLoading) {
+                        return _buildLoadingContent();
+                      } else if (state is ProjectSuccess) {
+                        return _buildProjectsList(context, state);
+                      } else if (state is ProjectFailure) {
+                        return _buildErrorContent(context, state.message);
+                      } else {
+                        return const Center(child: Text('Cargando proyectos...'));
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-        transitionDuration: const Duration(milliseconds: 500),
-        openBuilder: (context, _) => const NewProjectScreen(),
-        closedBuilder: (context, openContainer) => FloatingActionButton(
-          backgroundColor: AppColors.blueMetraShop,
-          onPressed: openContainer,
-          tooltip: 'Crear nuevo proyecto',
-          child: const Icon(Icons.add, color: AppColors.white),
+        floatingActionButton: OpenContainer(
+          transitionType: ContainerTransitionType.fadeThrough,
+          closedElevation: 6.0,
+          closedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(56.0)),
+          ),
+          transitionDuration: const Duration(milliseconds: 500),
+          openBuilder: (context, _) => const NewProjectScreen(),
+          closedBuilder: (context, openContainer) => FloatingActionButton(
+            backgroundColor: AppColors.blueMetraShop,
+            onPressed: openContainer,
+            tooltip: 'Crear nuevo proyecto',
+            child: const Icon(Icons.add, color: AppColors.white),
+          ),
         ),
       ),
     );
@@ -436,7 +445,7 @@ class _ProjectsScreenState extends State<ProjectsScreen> with SingleTickerProvid
             const SizedBox(height: 32),
             ElevatedButton.icon(
               onPressed: () {
-                context.push('/projects/new-project');
+                context.pushNamed('new-project');
               },
               icon: const Icon(Icons.add),
               label: const Text('Crear Proyecto'),

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/presentation/assets/icons.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_factor_text_field.dart';
-import 'package:meter_app/presentation/widgets/fields/custom_measure_text_field.dart';
 
+import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';
 import '../../../../../../init_dependencies.dart';
-import '../../../../../config/theme/theme.dart';
-import '../../../../widgets/fields/custom_name_text_field.dart';
+import '../../../../widgets/modern_widgets.dart';
+import '../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../widgets/widgets.dart';
 import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
-
 
 class DatosTarrajeoScreen extends ConsumerStatefulWidget {
   const DatosTarrajeoScreen({super.key});
@@ -21,559 +22,584 @@ class DatosTarrajeoScreen extends ConsumerStatefulWidget {
   ConsumerState<DatosTarrajeoScreen> createState() => _DatosTarrajeoScreenState();
 }
 
-class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with TickerProviderStateMixin {
+class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin, TutorialMixin {
+
+  @override
+  bool get wantKeepAlive => true;
+
   late TabController _tabController;
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late SharedPreferencesHelper sharedPreferencesHelper;
+
   int _currentIndex = 0;
+  bool _isLoading = false;
 
-  late final SharedPreferencesHelper sharedPreferencesHelper;
+  // Controladores de texto mejorados
+  final TextEditingController _factorController = TextEditingController(text: '5');
+  final TextEditingController _descriptionAreaController = TextEditingController();
+  final TextEditingController _descriptionMedidasController = TextEditingController();
+  final TextEditingController _areaTextController = TextEditingController();
+  final TextEditingController _lengthTextController = TextEditingController();
+  final TextEditingController _heightTextController = TextEditingController();
 
-  // TextControllers y formKey para campos base de proyecto
-  final TextEditingController factorController = TextEditingController(text: '5');
-  final TextEditingController descriptionAreaController = TextEditingController();
-  final TextEditingController descriptionMedidasController = TextEditingController();
-  final TextEditingController areaTextController = TextEditingController();
-  final TextEditingController lengthTextController = TextEditingController();
-  final TextEditingController heightTextController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  final formKey = GlobalKey<FormState>();
-  bool showEspesorError = false;
-  bool showProporcionError = false;
+  // Estados de selección
+  String? _selectedEspesor;
+  String? _selectedProporcion;
 
-  late String tarrajeo;
-  String espesor = "";
-  late String factor;
-  String proporcionMortero = '';
-
-  String? selectedValueEspesor;
-  String? selectedValueProporcion;
-
-  // Usamos listas de mapas para manejar dinámicamente los campos adicionales
-  List<Map<String, TextEditingController>> areaFields = [];
-  List<Map<String, TextEditingController>> measureFields = [];
+  // Listas dinámicas
+  List<Map<String, TextEditingController>> _areaFields = [];
+  List<Map<String, TextEditingController>> _measureFields = [];
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _initializeAnimations();
+    initializeTutorial();
+    _checkAndShowTutorial();
+  }
+
+  void _checkAndShowTutorial() {
+    // Mostrar tutorial específico para tarrajeo
+    showModuleTutorial('tarrajeo');
+  }
+
+  void _showTutorialManually() {
+    forceTutorial('tarrajeo');
+  }
+
+  void _initializeControllers() {
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(() {
-      setState(() {
-        _currentIndex = _tabController.index;
-      });
-    });
-
-    // Cargamos la configuración de SharedPreferences si es necesario
-    sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!sharedPreferencesHelper.isTutorialShown()) {
-        showTutorial();
+      if (mounted) {
+        setState(() {
+          _currentIndex = _tabController.index;
+        });
       }
     });
+  }
+
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _animationController.dispose();
+    _factorController.dispose();
+    _descriptionAreaController.dispose();
+    _descriptionMedidasController.dispose();
+    _areaTextController.dispose();
+    _lengthTextController.dispose();
+    _heightTextController.dispose();
+    _disposeDynamicFields();
     super.dispose();
   }
 
-  void showTutorial() {
-    showDialog(
-      context: context,
-      builder: (context) => TutorialOverlay(
-        onSkip: () {
-          sharedPreferencesHelper.setTutorialShown(true);
-          context.pop();
-        },
-      ),
-    );
-  }
-
-  String? _validateProjectName(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Este campo es obligatorio';
+  void _disposeDynamicFields() {
+    for (var field in _areaFields) {
+      field.values.forEach((controller) => controller.dispose());
     }
-    return null;
+    for (var field in _measureFields) {
+      field.values.forEach((controller) => controller.dispose());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(tipoTarrajeoProvider);
+    super.build(context);
     final tipoTarrajeo = ref.watch(tipoTarrajeoProvider);
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: AppBarWidget(titleAppBar: 'Medición', isVisibleTutorial: true, showTutorial: showTutorial,),
-      body: GestureDetector(
-        onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                scrollDirection: Axis.vertical,
-                child: Form(
-                  key: formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 24, right: 24, left: 24, bottom: 10),
-                        child: Column(
-                          children: [
-                            _buildEspesorSelection(),
-                            _buildProjectFields(),
-                            _buildProporcionSelection(),
-                          ],
-                        ),
-                      ),
-                      _buildTabs(context),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            _buildResultButton(tipoTarrajeo),
-            const SizedBox(height: 45),
-          ],
-        ),
+      appBar: _buildAppBar(),
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: _buildBody(tipoTarrajeo),
       ),
     );
   }
 
-  // Métodos auxiliares para construir la UI
-  Widget _buildProjectFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 15,),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade300),
+  PreferredSizeWidget _buildAppBar() {
+    return AppBarWidget(
+      titleAppBar: 'Cálculo de Tarrajeo',
+      isVisibleTutorial: true,
+      showTutorial: _showTutorialManually,
+    );
+  }
+
+  Widget _buildBody(String tipoTarrajeo) {
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    _buildHeaderSection(tipoTarrajeo),
+                    _buildConfigurationSection(),
+                    _buildTabSection(),
+                  ],
+                ),
+              ),
+            ),
           ),
-          child: CustomFactorTextField(
-            controller: factorController,
-            label: 'Desperdicio (%)',
-            validator: _validateProjectName,
-            hintText: '',
-          ),
+          _buildActionSection(tipoTarrajeo),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderSection(String tipoTarrajeo) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.yellowMetraShop.withOpacity(0.1),
+            AppColors.yellowMetraShop.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        const SizedBox(height: 15,),
-      ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.yellowMetraShop.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.yellowMetraShop.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: SvgPicture.asset(
+                  AppIcons.archiveProjectIcon,
+                  width: 24,
+                  height: 24,
+                  colorFilter: const ColorFilter.mode(
+                    AppColors.yellowMetraShop,
+                    BlendMode.srcIn,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Configuración del Proyecto',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Tipo de tarrajeo: ${tipoTarrajeo.isNotEmpty ? tipoTarrajeo : "Tarrajeo Normal"}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildEspesorSelection(),
+          const SizedBox(height: 16),
+          _buildProporcionSelection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConfigurationSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ModernCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const ModernSectionHeader(
+              title: 'Factor de Desperdicio',
+              subtitle: 'Configura el porcentaje de desperdicio',
+              icon: Icons.tune,
+            ),
+            const SizedBox(height: 16),
+            ModernTextField(
+              controller: _factorController,
+              label: 'Desperdicio',
+              suffix: '%',
+              validator: _validatePercentage,
+              keyboardType: TextInputType.number,
+              prefixIcon: Icons.construction,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   Widget _buildEspesorSelection() {
-    final List<String> espesoresTarrajeo = ["1.0 cm", "1.5 cm", "2.0 cm"];
+    const espesores = ["1.0 cm", "1.5 cm", "2.0 cm"];
 
-    return contentChoiceChips(
-        'espesor',
-        'Espesor:',
-        espesoresTarrajeo
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Espesor',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ModernChoiceChips(
+          options: espesores,
+          selectedValue: _selectedEspesor,
+          onSelected: (value) {
+            setState(() {
+              _selectedEspesor = value;
+            });
+          },
+        ),
+      ],
     );
   }
 
   Widget _buildProporcionSelection() {
-    final List<String> proporciones = ["1 : 4", "1 : 5", "1 : 6"];
-    return contentChoiceChips(
-        'proporcion',
-        'Proporción:',
-        proporciones
-    );
-  }
+    const proporciones = ["1 : 4", "1 : 5", "1 : 6"];
 
-  Widget contentChoiceChips(String type, String description, List<String> typeList) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                description,
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),
-              ),
-            ),
-            const SizedBox(height: 10,),
-            Container(
-              margin: const EdgeInsets.only(right: 15),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Column(
-                children: [
-                  Wrap(
-                    runAlignment: WrapAlignment.spaceEvenly,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 10,
-                    children: typeList.map((typeValue) {
-                      bool isSelected = false;
-
-                      switch(type) {
-                        case 'espesor':
-                          isSelected = selectedValueEspesor == typeValue;
-                          break;
-                        case 'proporcion':
-                          isSelected = selectedValueProporcion == typeValue;
-                          break;
-                      }
-
-                      return ChoiceChip(
-                        label: Text(typeValue),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            setState(() {
-                              switch (type) {
-                                case 'espesor':
-                                  selectedValueEspesor = typeValue;
-                                  espesor = selectedValueEspesor!;
-                                  break;
-                                case 'proporcion':
-                                  selectedValueProporcion = typeValue;
-                                  proporcionMortero = selectedValueProporcion!;
-                                  break;
-                              }
-                            });
-                          }
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                          side: BorderSide(
-                            color: isSelected ? AppColors.blueMetraShop : AppColors.blueMetraShop.withOpacity(0.5),
-                            width: 1.0,
-                          ),
-                        ),
-                        checkmarkColor: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5),
-                        selectedColor: AppColors.blueMetraShop,
-                        backgroundColor: isSelected ? AppColors.blueMetraShop : AppColors.white,
-                        labelStyle: TextStyle(
-                            color: isSelected ? AppColors.white : AppColors.blueMetraShop.withOpacity(0.5)),
-                      );
-                    }).toList(),
-                  ),
-                  if ((type == 'espesor' && showEspesorError && selectedValueEspesor == null) ||
-                      (type == 'proporcion' && showProporcionError && selectedValueProporcion == null))
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Campo requerido',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    )
-                ],
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTabs(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: const Text('Metrado', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppColors.primaryMetraShop),),
-        ),
-        const SizedBox(height: 10,),
-        TabBar(
-          controller: _tabController,
-          labelColor: AppColors.primaryMetraShop,
-          unselectedLabelColor: AppColors.primaryMetraShop.withOpacity(0.5),
-          labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-          indicatorColor: AppColors.indicatorTabBarColor,
-          tabs: const [
-            Tab(text: 'Área'),
-            Tab(text: 'Medidas'),
-          ],
-        ),
-        SizedBox(
-          height: 600, // Puedes ajustar esta altura según sea necesario
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildAreaTab(),
-              _buildMeasureTab(),
-            ],
+        const Text(
+          'Proporción de Mortero',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
+        const SizedBox(height: 12),
+        ModernChoiceChips(
+          options: proporciones,
+          selectedValue: _selectedProporcion,
+          onSelected: (value) {
+            setState(() {
+              _selectedProporcion = value;
+            });
+          },
+        ),
       ],
+    );
+  }
+
+  Widget _buildTabSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const ModernSectionHeader(
+            title: 'Datos del Metrado',
+            subtitle: 'Ingresa las medidas de tu proyecto',
+            icon: Icons.straighten,
+          ),
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Column(
+              children: [
+                _buildTabBar(),
+                SizedBox(
+                  height: 400,
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildAreaTab(),
+                      _buildMeasureTab(),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.backgroundLight,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: TabBar(
+        controller: _tabController,
+        labelColor: AppColors.yellowMetraShop,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+        indicatorColor: AppColors.yellowMetraShop,
+        indicatorWeight: 3,
+        tabs: const [
+          Tab(
+            icon: Icon(Icons.crop_square),
+            text: 'Por Área',
+          ),
+          Tab(
+            icon: Icon(Icons.straighten),
+            text: 'Por Medidas',
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildAreaTab() {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 12,),
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              elevation: 2,
-              color: Colors.grey.shade100,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ModernMeasurementCard(
+            title: 'Medida Principal',
+            children: [
+              ModernTextField(
+                controller: _descriptionAreaController,
+                label: 'Descripción',
+                hintText: 'Ej: Tarrajeo muro principal',
+                validator: _validateRequired,
+                prefixIcon: Icons.description,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomNameTextField(
-                      controller: descriptionAreaController,
-                      label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Tarrajeo 1)',
-                      validator: _validateProjectName,
-                    ),
-                    const SizedBox(height: 8,),
-                    const Text(
-                      'Datos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    CustomMeasureTextField(
-                      controller: areaTextController,
-                      validator: _validateProjectName,
-                      labelText: 'Area(m²)',
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 16),
+              ModernTextField(
+                controller: _areaTextController,
+                label: 'Área Total',
+                suffix: 'm²',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.crop_square,
               ),
-            ),
-            Column(
-              children: [
-                ...areaFields.map((field) => _buildDynamicField(
-                    field,
-                        () => _removeField(areaFields, field)
-                )),
-                Container(
-                  alignment: Alignment.topLeft,
-                  child: CustomTextBlueButton(
-                    onPressed: () => _addField(areaFields),
-                    label:'Agregar nueva medida',
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+            ],
+          ),
+          ..._areaFields.map((field) => _buildDynamicAreaField(field)),
+          const SizedBox(height: 16),
+          ModernAddButton(
+            onPressed: _addAreaField,
+            label: 'Agregar Nueva Área',
+            icon: Icons.add_box,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMeasureTab() {
     return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          children: [
-            const SizedBox(height: 12,),
-            Card(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          ModernMeasurementCard(
+            title: 'Medida Principal',
+            children: [
+              ModernTextField(
+                controller: _descriptionMedidasController,
+                label: 'Descripción',
+                hintText: 'Ej: Tarrajeo muro principal',
+                validator: _validateRequired,
+                prefixIcon: Icons.description,
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    CustomNameTextField(
-                      controller: descriptionMedidasController,
-                      label: 'Descripción',
-                      hintText: 'Ingresa una descripción (Ej. Tarrajeo 1)',
-                      validator: _validateProjectName,
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ModernTextField(
+                      controller: _lengthTextController,
+                      label: 'Longitud',
+                      suffix: 'm',
+                      validator: _validateNumeric,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.straighten,
                     ),
-                    const Text(
-                      'Datos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop,
-                      ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ModernTextField(
+                      controller: _heightTextController,
+                      label: 'Ancho',
+                      suffix: 'm',
+                      validator: _validateNumeric,
+                      keyboardType: TextInputType.number,
+                      prefixIcon: Icons.height,
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomMeasureTextField(
-                            controller: lengthTextController,
-                            validator: _validateProjectName,
-                            labelText: 'Longitud(metros)',
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                        const SizedBox(width: 10,),
-                        Expanded(
-                          child: CustomMeasureTextField(
-                            controller: heightTextController,
-                            validator: _validateProjectName,
-                            labelText: 'Ancho(metros)',
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          ..._measureFields.map((field) => _buildDynamicMeasureField(field)),
+          const SizedBox(height: 16),
+          ModernAddButton(
+            onPressed: _addMeasureField,
+            label: 'Agregar Nueva Medida',
+            icon: Icons.add_box,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDynamicAreaField(Map<String, TextEditingController> field) {
+    return ModernMeasurementCard(
+      title: 'Área Adicional',
+      onRemove: () => _removeField(_areaFields, field),
+      children: [
+        ModernTextField(
+          controller: field['description']!,
+          label: 'Descripción',
+          hintText: 'Ej: Tarrajeo muro lateral',
+          validator: _validateRequired,
+          prefixIcon: Icons.description,
+        ),
+        const SizedBox(height: 16),
+        ModernTextField(
+          controller: field['measure']!,
+          label: 'Área',
+          suffix: 'm²',
+          validator: _validateNumeric,
+          keyboardType: TextInputType.number,
+          prefixIcon: Icons.crop_square,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDynamicMeasureField(Map<String, TextEditingController> field) {
+    return ModernMeasurementCard(
+      title: 'Medida Adicional',
+      onRemove: () => _removeField(_measureFields, field),
+      children: [
+        ModernTextField(
+          controller: field['descriptionMeasure']!,
+          label: 'Descripción',
+          hintText: 'Ej: Tarrajeo muro lateral',
+          validator: _validateRequired,
+          prefixIcon: Icons.description,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: ModernTextField(
+                controller: field['lengthMeasure']!,
+                label: 'Longitud',
+                suffix: 'm',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.straighten,
               ),
             ),
-            Column(
-              children: [
-                ...measureFields.map((field) => _buildDynamicMeasureField(
-                    field,
-                        () => _removeField(measureFields, field)
-                )),
-                Container(
-                  alignment: Alignment.centerLeft,
-                  child: CustomTextBlueButton(
-                    onPressed: () => _addMeasureField(measureFields),
-                    label:'Agregar nueva medida',
-                  ),
-                ),
-              ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: ModernTextField(
+                controller: field['heightMeasure']!,
+                label: 'Ancho',
+                suffix: 'm',
+                validator: _validateNumeric,
+                keyboardType: TextInputType.number,
+                prefixIcon: Icons.height,
+              ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionSection(String tipoTarrajeo) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: ModernActionButtonD(
+          onPressed: _isLoading ? null : () => _processCalculation(tipoTarrajeo),
+          isLoading: _isLoading,
+          label: 'Calcular Materiales',
+          icon: Icons.calculate,
         ),
       ),
     );
   }
 
-  Widget _buildDynamicField(Map<String, TextEditingController> field, VoidCallback onRemove) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            CustomNameTextField(
-              controller: field['description']!,
-              label: 'Descripción adicional',
-              validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Tarrajeo ...)',
-              onPressed: onRemove,
-              icon: Icons.close,
-              color: AppColors.errorGeneralColor,
-              isVisible: true,
-            ),
-            const Text(
-              'Datos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryMetraShop,
-              ),
-            ),
-            const SizedBox(height: 8),
-            CustomMeasureTextField(
-              controller: field['measure']!,
-              validator: _validateProjectName,
-              labelText: 'Area(m²)',
-              keyboardType: TextInputType.number,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDynamicMeasureField(Map<String, TextEditingController> field, VoidCallback onRemove) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8.0),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            CustomNameTextField(
-              controller: field['descriptionMeasure']!,
-              label: 'Descripción adicional',
-              validator: _validateProjectName,
-              hintText: 'Ingresa una descripción (Ej. Tarrajeo ...)',
-              onPressed: onRemove,
-              icon: Icons.close,
-              color: AppColors.errorGeneralColor,
-              isVisible: true,
-            ),
-            const SizedBox(height: 10,),
-            const Text(
-              'Datos',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primaryMetraShop,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: CustomMeasureTextField(
-                    controller: field['lengthMeasure']!,
-                    validator: _validateProjectName,
-                    labelText: 'Longitud(metros)',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 10,),
-                Expanded(
-                  child: CustomMeasureTextField(
-                    controller: field['heightMeasure']!,
-                    validator: _validateProjectName,
-                    labelText: 'Ancho(metros)',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _addField(List<Map<String, TextEditingController>> fields) {
+  // Métodos auxiliares
+  void _addAreaField() {
     setState(() {
-      fields.add({
+      _areaFields.add({
         'description': TextEditingController(),
         'measure': TextEditingController(),
       });
     });
   }
 
-  void _addMeasureField(List<Map<String, TextEditingController>> fields) {
+  void _addMeasureField() {
     setState(() {
-      fields.add({
+      _measureFields.add({
         'descriptionMeasure': TextEditingController(),
         'lengthMeasure': TextEditingController(),
         'heightMeasure': TextEditingController(),
@@ -581,91 +607,193 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen> with 
     });
   }
 
-  void _removeField(List<Map<String, TextEditingController>> fields, Map<String, TextEditingController> field) {
+  void _removeField(List<Map<String, TextEditingController>> fields,
+      Map<String, TextEditingController> field) {
     setState(() {
+      field.values.forEach((controller) => controller.dispose());
       fields.remove(field);
     });
   }
 
-  Widget _buildResultButton(String tipoTarrajeo) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: CustomElevatedButton(
-        label: 'Resultado',
-        onPressed: () {
-          // Validar selecciones
-          setState(() {
-            showEspesorError = selectedValueEspesor == null;
-            showProporcionError = selectedValueProporcion == null;
-          });
+  Future<void> _processCalculation(String tipoTarrajeo) async {
+    if (!_validateForm()) return;
 
-          // Verificar todos los campos requeridos
-          bool camposValidos = formKey.currentState?.validate() == true &&
-              selectedValueEspesor != null &&
-              selectedValueProporcion != null;
+    setState(() {
+      _isLoading = true;
+    });
 
-          if (camposValidos) {
-            var datosTarrajeo = ref.read(tarrajeoResultProvider.notifier);
-            var espesorValor = espesor.replaceAll(" cm", "");
+    try {
+      await _createTarrajeoData(tipoTarrajeo);
+      ref.watch(tarrajeoResultProvider);
+      context.pushNamed('tarrajeo_results');
 
-            // Eliminamos "1 : " de la proporción, si existe
-            var proporcionValor = proporcionMortero.replaceAll("1 : ", "");
+      /*context.showCalculationLoader(
+        message: 'Calculando materiales',
+        description: 'Aplicando fórmulas actualizadas...',
+      );*/
 
-            if (_currentIndex == 0) {
-              datosTarrajeo.createTarrajeo(
-                tipoTarrajeo,
-                descriptionAreaController.text,
-                factorController.text,
-                proporcionValor,
-                espesorValor,
-                area: areaTextController.text,
-              );
+ //     await Future.delayed(const Duration(seconds: 2));
 
-              for (var field in areaFields) {
-                datosTarrajeo.createTarrajeo(
-                  tipoTarrajeo,
-                  field['description']!.text,
-                  factorController.text,
-                  proporcionValor,
-                  espesorValor,
-                  area: field['measure']!.text,
-                );
-              }
-            } else {
-              datosTarrajeo.createTarrajeo(
-                tipoTarrajeo,
-                descriptionMedidasController.text,
-                factorController.text,
-                proporcionValor,
-                espesorValor,
-                longitud: lengthTextController.text,
-                ancho: heightTextController.text,
-              );
+      if (mounted) {
+        context.hideLoader();
+      }
+    } catch (e) {
+      _showErrorMessage('Error al procesar los datos: ${e.toString()}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
-              for (var field in measureFields) {
-                datosTarrajeo.createTarrajeo(
-                  tipoTarrajeo,
-                  field['descriptionMeasure']!.text,
-                  factorController.text,
-                  proporcionValor,
-                  espesorValor,
-                  longitud: field['lengthMeasure']!.text,
-                  ancho: field['heightMeasure']!.text,
-                );
-              }
-            }
-            final pisosCreados = ref.read(tarrajeoResultProvider);
-            print("CREADOS: Número de pisos antes de navegar: ${pisosCreados.length}");
-            print(ref.watch(tarrajeoResultProvider));
-            // Navegar a resultados
-            context.pushNamed('tarrajeo_results');
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Por favor, completa todos los campos obligatorios')),
-            );
-          }
-        },
+  bool _validateForm() {
+    if (_formKey.currentState?.validate() != true) {
+      _showErrorMessage('Por favor, completa todos los campos obligatorios');
+      return false;
+    }
+
+    if (_selectedEspesor == null) {
+      _showErrorMessage('Selecciona un espesor');
+      return false;
+    }
+
+    if (_selectedProporcion == null) {
+      _showErrorMessage('Selecciona una proporción de mortero');
+      return false;
+    }
+
+    return true;
+  }
+
+  Future<void> _createTarrajeoData(String tipoTarrajeo) async {
+    final datosTarrajeo = ref.read(tarrajeoResultProvider.notifier);
+    datosTarrajeo.clearList();
+
+    final espesorValor = _selectedEspesor!.replaceAll(" cm", "");
+    final proporcionValor = _selectedProporcion!.replaceAll("1 : ", "");
+
+    if (_currentIndex == 0) {
+      // Tab de área
+      if (_descriptionAreaController.text.isNotEmpty &&
+          _areaTextController.text.isNotEmpty) {
+        datosTarrajeo.createTarrajeo(
+          tipoTarrajeo.isNotEmpty ? tipoTarrajeo : "Tarrajeo Normal",
+          _descriptionAreaController.text,
+          _factorController.text,
+          proporcionValor,
+          espesorValor,
+          area: _areaTextController.text,
+        );
+      }
+
+      for (var field in _areaFields) {
+        if (field['description']!.text.isNotEmpty &&
+            field['measure']!.text.isNotEmpty) {
+          datosTarrajeo.createTarrajeo(
+            tipoTarrajeo.isNotEmpty ? tipoTarrajeo : "Tarrajeo Normal",
+            field['description']!.text,
+            _factorController.text,
+            proporcionValor,
+            espesorValor,
+            area: field['measure']!.text,
+          );
+        }
+      }
+    } else {
+      // Tab de medidas
+      if (_descriptionMedidasController.text.isNotEmpty &&
+          _lengthTextController.text.isNotEmpty &&
+          _heightTextController.text.isNotEmpty) {
+        datosTarrajeo.createTarrajeo(
+          tipoTarrajeo.isNotEmpty ? tipoTarrajeo : "Tarrajeo Normal",
+          _descriptionMedidasController.text,
+          _factorController.text,
+          proporcionValor,
+          espesorValor,
+          longitud: _lengthTextController.text,
+          ancho: _heightTextController.text,
+        );
+      }
+
+      for (var field in _measureFields) {
+        if (field['descriptionMeasure']!.text.isNotEmpty &&
+            field['lengthMeasure']!.text.isNotEmpty &&
+            field['heightMeasure']!.text.isNotEmpty) {
+          datosTarrajeo.createTarrajeo(
+            tipoTarrajeo.isNotEmpty ? tipoTarrajeo : "Tarrajeo Normal",
+            field['descriptionMeasure']!.text,
+            _factorController.text,
+            proporcionValor,
+            espesorValor,
+            longitud: field['lengthMeasure']!.text,
+            ancho: field['heightMeasure']!.text,
+          );
+        }
+      }
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 12),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
       ),
     );
+  }
+
+  // Validadores
+  String? _validateRequired(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+    return null;
+  }
+
+  String? _validateNumeric(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Ingresa un número válido';
+    }
+
+    if (number <= 0) {
+      return 'El valor debe ser mayor a 0';
+    }
+
+    return null;
+  }
+
+  String? _validatePercentage(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Este campo es obligatorio';
+    }
+
+    final number = double.tryParse(value);
+    if (number == null) {
+      return 'Ingresa un número válido';
+    }
+
+    if (number < 0 || number > 100) {
+      return 'Debe estar entre 0% y 100%';
+    }
+
+    return null;
   }
 }

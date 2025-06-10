@@ -25,15 +25,14 @@ import '../../presentation/screens/auth/init/metra_shop_screen.dart';
 import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
-import '../../presentation/screens/home/losas/resultado/resultado_losas.dart';
+import '../../presentation/screens/home/losas/resultado/result_losas_screen.dart';
 import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
-import '../../presentation/screens/home/pisos/contrapiso/datos/datos_p.dart';
+import '../../presentation/screens/home/pisos/contrapiso/datos/datos_contrapiso_screen.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
-import '../../presentation/screens/mapa/widgets/optimized_place_search_screen.dart';
 import '../../presentation/screens/perfil/info/profile_info_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
-import '../../presentation/screens/projects/result/result_test.dart';
+import '../../presentation/screens/projects/result/result_screen.dart';
 
 
 final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
@@ -279,13 +278,13 @@ class AppRouter {
                     parentNavigatorKey: _rootNavigator,
                     path: 'contrapiso',
                     name: 'contrapiso',
-                    builder: (context, state) => const DatosPisosScreens(),
+                    builder: (context, state) => const DatosContrapisoScreen(),
                     routes: [
                       GoRoute(
                         parentNavigatorKey: _rootNavigator,
                         path: 'contrapiso-result',
                         name: 'contrapiso-result',
-                        builder: (context, state) => const ResultPisosScreen(),
+                        builder: (context, state) => const ResultContrapisoScreen(),
                         routes: [
                           GoRoute(
                               parentNavigatorKey: _rootNavigator,
@@ -428,7 +427,7 @@ class AppRouter {
                     name: 'results',
                     builder: (context, state) {
                       final String metradoId = state.pathParameters['metradoId']!;
-                      return ResultScreens(metradoId: metradoId);
+                      return ResultScreen(metradoId: metradoId);
                     },
                   ),
                 ],

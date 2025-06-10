@@ -10,7 +10,7 @@ export 'home/tarrajeo/tarrajeo_screen.dart';
 
 //Pisos
 export 'home/pisos/pisos_screen.dart';
-export 'home/pisos/contrapiso/result/result_pisos_screen.dart';
+export 'home/pisos/contrapiso/result/result_contrapiso_screen.dart';
 
 //Losas
 export 'home/losas/losas_screen.dart';

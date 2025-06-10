@@ -87,10 +87,18 @@ class _PerfilScreenState extends State<PerfilScreen>
   Widget build(BuildContext context) {
     super.build(context); // Requerido para AutomaticKeepAliveClientMixin
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
-      body: _buildBody(),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        // Usa el color primario de tu tema automáticamente
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: _buildAppBar(),
+        body: _buildBody(),
+      ),
     );
   }
 

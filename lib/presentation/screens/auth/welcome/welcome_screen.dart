@@ -50,7 +50,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   // Configuración
   static const int _totalPages = 3;
   static const Duration _pageTransitionDuration = Duration(milliseconds: 300);
-  static const Duration _autoPlayDuration = Duration(seconds: 4);
 
   // Datos del onboarding
   late List<OnboardingPageData> _pages;
@@ -182,7 +181,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _mainAnimationController,
-      curve: const Interval(0.0, 0.7, curve: Curves.elasticOut),
+      curve: const Interval(0.0, 0.7, curve: Curves.easeOut), // Cambio de Curves.elasticOut
     ));
 
     _indicatorAnimation = Tween<double>(
@@ -198,7 +197,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _buttonAnimationController,
-      curve: Curves.easeOutBack,
+      curve: Curves.easeOut, // Cambio de Curves.easeOutBack
     ));
 
     _backgroundColorAnimation = ColorTween(
@@ -299,7 +298,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // MANEJO DE PÁGINAS
+  // MANEJO DE PÁGINAS - CORREGIDO
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _onPageChanged(int index) {
@@ -309,9 +308,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       _currentPageIndex = index;
     });
 
-    // Animar cambio de color de fondo
+    _updateBackgroundColor(index);
+
+    // Feedback háptico suave
+    HapticFeedback.selectionClick();
+  }
+
+  void _updateBackgroundColor(int index) {
+    // Crear nueva animación de color
     _backgroundColorAnimation = ColorTween(
-      begin: _backgroundColorAnimation.value ?? _pages[0].color,
+      begin: _backgroundColorAnimation.value ?? _pages[_currentPageIndex].color,
       end: _pages[index].color,
     ).animate(CurvedAnimation(
       parent: _backgroundController,
@@ -320,9 +326,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
     _backgroundController.reset();
     _backgroundController.forward();
-
-    // Feedback háptico suave
-    HapticFeedback.selectionClick();
   }
 
   void _nextPage() {
@@ -343,6 +346,14 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     setState(() {
       _isAnimating = true;
     });
+
+    // Actualizar el índice inmediatamente para las animaciones
+    setState(() {
+      _currentPageIndex = page;
+    });
+
+    // Actualizar color de fondo
+    _updateBackgroundColor(page);
 
     _pageController.animateToPage(
       page,
@@ -377,7 +388,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // BUILD METHODS
+  // BUILD METHODS - CORREGIDOS CON MEJORES LAYOUTS
   // ═══════════════════════════════════════════════════════════════════════════
 
   @override
@@ -410,10 +421,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget _buildContent() {
     return Column(
       children: [
-        _buildHeader(),
-        Expanded(child: _buildPageView()),
-        _buildPageIndicators(),
-        _buildActionSection(),
+        // Header flexible
+        Flexible(
+          flex: 2,
+          child: _buildHeader(),
+        ),
+        // PageView expandido
+        Expanded(
+          flex: 6,
+          child: _buildPageView(),
+        ),
+        // Indicadores con altura fija pero segura
+        Container(
+          height: 60,
+          child: _buildPageIndicators(),
+        ),
+        // Acciones flexibles
+        Flexible(
+          flex: 3,
+          child: _buildActionSection(),
+        ),
       ],
     );
   }
@@ -501,70 +528,75 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   Widget _buildOnboardingPage(OnboardingPageData pageData, int index) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Imagen con efecto hero
-          Hero(
-            tag: 'onboarding_image_$index',
-            child: Container(
-              height: 200,
-              decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.white.withOpacity(0.2),
-                    blurRadius: 20,
-                    spreadRadius: 5,
+    return SingleChildScrollView(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Imagen con efecto hero
+            Hero(
+              tag: 'onboarding_image_$index',
+              child: Container(
+                height: 160,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: AppColors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.white.withOpacity(0.2),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    pageData.imagePath,
+                    height: 100,
+                    color: AppColors.white,
                   ),
-                ],
-              ),
-              child: Center(
-                child: SvgPicture.asset(
-                  pageData.imagePath,
-                  height: 120,
-                  color: AppColors.white,
                 ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 48),
+            const SizedBox(height: 32),
 
-          // Título
-          Text(
-            pageData.title,
-            style: GoogleFonts.poppins(
-              fontSize: 28,
-              fontWeight: FontWeight.w800,
-              color: AppColors.white,
-              height: 1.2,
+            // Título
+            Text(
+              pageData.title,
+              style: GoogleFonts.poppins(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.white,
+                height: 1.2,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-          // Descripción
-          Text(
-            pageData.description,
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w400,
-              color: AppColors.white.withOpacity(0.9),
-              height: 1.5,
+            // Descripción
+            Text(
+              pageData.description,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: AppColors.white.withOpacity(0.9),
+                height: 1.4,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-          ),
 
-          const SizedBox(height: 32),
+            const SizedBox(height: 24),
 
-          // Características
-          _buildFeaturesList(pageData.features),
-        ],
+            // Características - Limitadas para evitar overflow
+            _buildFeaturesList(pageData.features.take(2).toList()),
+          ],
+        ),
       ),
     );
   }
@@ -584,7 +616,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               child: Opacity(
                 opacity: value,
                 child: Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
                       Container(
@@ -600,7 +632,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                         child: Text(
                           feature,
                           style: GoogleFonts.poppins(
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                             color: AppColors.white.withOpacity(0.8),
                           ),
@@ -621,7 +653,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     return AnimatedBuilder(
       animation: _indicatorAnimation,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 32),
+        padding: const EdgeInsets.symmetric(vertical: 16),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(_totalPages, (index) {
@@ -656,88 +688,97 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   Widget _buildActionSection() {
     return AnimatedBuilder(
       animation: _buttonSlideAnimation,
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          children: [
-            // Botón principal
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                onPressed: _currentPageIndex == _totalPages - 1
-                    ? _completeWelcome
-                    : _nextPage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.white,
-                  foregroundColor: _pages[_currentPageIndex].color,
-                  elevation: 0,
-                  shadowColor: Colors.transparent,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      _currentPageIndex == _totalPages - 1
-                          ? 'Comenzar'
-                          : 'Siguiente',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      _currentPageIndex == _totalPages - 1
-                          ? Icons.rocket_launch_rounded
-                          : Icons.arrow_forward_rounded,
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      builder: (context, child) {
+        // Asegurar que la opacidad esté en rango válido
+        final opacity = _buttonSlideAnimation.value.clamp(0.0, 1.0);
+        final translateY = 30 * (1 - _buttonSlideAnimation.value).clamp(0.0, 1.0);
 
-            // Navegación adicional
-            if (_currentPageIndex > 0)
-              Padding(
-                padding: const EdgeInsets.only(top: 16),
-                child: TextButton(
-                  onPressed: _previousPage,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.arrow_back_rounded,
-                        color: AppColors.white.withOpacity(0.7),
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Anterior',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.white.withOpacity(0.7),
+        return Transform.translate(
+          offset: Offset(0, translateY),
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Botón principal
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50, // Reducido de 56 a 50
+                    child: ElevatedButton(
+                      onPressed: _currentPageIndex == _totalPages - 1
+                          ? _completeWelcome
+                          : _nextPage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.white,
+                        foregroundColor: _pages[_currentPageIndex].color,
+                        elevation: 0,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
-                    ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _currentPageIndex == _totalPages - 1
+                                ? 'Comenzar'
+                                : 'Siguiente',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            _currentPageIndex == _totalPages - 1
+                                ? Icons.rocket_launch_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+
+                  // Navegación adicional - Solo si hay espacio
+                  if (_currentPageIndex > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12), // Reducido de 16 a 12
+                      child: TextButton(
+                        onPressed: _previousPage,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.arrow_back_rounded,
+                              color: AppColors.white.withOpacity(0.7),
+                              size: 16, // Reducido de 18 a 16
+                            ),
+                            const SizedBox(width: 6), // Reducido de 8 a 6
+                            Text(
+                              'Anterior',
+                              style: GoogleFonts.poppins(
+                                fontSize: 13, // Reducido de 14 a 13
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.white.withOpacity(0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
-      ),
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, 50 * (1 - _buttonSlideAnimation.value)),
-          child: Opacity(
-            opacity: _buttonSlideAnimation.value,
-            child: child,
+            ),
           ),
         );
       },

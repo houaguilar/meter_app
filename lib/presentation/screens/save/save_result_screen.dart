@@ -510,14 +510,16 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
     // Obtener todos los tipos de resultados
     final ladrillos = ref.read(ladrilloResultProvider);
-    final pisos = ref.read(pisosResultProvider);
+    final falsoPisos = ref.read(falsoPisoResultProvider);
+    final contrapiso = ref.read(contrapisoResultProvider);
     final tarrajeos = ref.read(tarrajeoResultProvider);
     final losas = ref.read(losaAligeradaResultProvider);
     final columnas = ref.read(columnaResultProvider);
     final vigas = ref.read(vigaResultProvider);
 
     allResults.addAll(ladrillos);
-    allResults.addAll(pisos);
+    allResults.addAll(falsoPisos);
+    allResults.addAll(contrapiso);
     allResults.addAll(tarrajeos);
     allResults.addAll(losas);
     allResults.addAll(columnas);
@@ -568,9 +570,9 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     if (state is ResultSuccess) {
       _showSuccess('Resultado guardado con éxito');
 
-      if (_shouldClearResults) {
+      /*if (_shouldClearResults) {
         _clearResults();
-      }
+      }*/
 
       Navigator.pop(context);
     } else if (state is ResultFailure) {

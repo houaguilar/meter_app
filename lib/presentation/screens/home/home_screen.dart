@@ -58,13 +58,21 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: widget.childView,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        // Usa el color primario de tu tema automáticamente
+        statusBarColor: Theme.of(context).primaryColor,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
       ),
-      bottomNavigationBar: const CustomBottomNavigation(),
-      extendBody: false,
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: widget.childView,
+        ),
+        bottomNavigationBar: const CustomBottomNavigation(),
+        extendBody: false,
+      ),
     );
   }
 }

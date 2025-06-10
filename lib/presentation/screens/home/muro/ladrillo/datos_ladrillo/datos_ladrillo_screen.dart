@@ -6,14 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
 
-import '../../../../../../config/constants/constants.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../../init_dependencies.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
+import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';
-import '../tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosLadrilloScreen extends ConsumerStatefulWidget {
   const DatosLadrilloScreen({super.key});
@@ -24,7 +22,7 @@ class DatosLadrilloScreen extends ConsumerStatefulWidget {
 }
 
 class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
-    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+    with TickerProviderStateMixin, AutomaticKeepAliveClientMixin, TutorialMixin {
 
   @override
   bool get wantKeepAlive => true;
@@ -46,7 +44,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   final TextEditingController _lengthTextController = TextEditingController();
   final TextEditingController _heightTextController = TextEditingController();
 
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKeyLadrillo = GlobalKey<FormState>();
 
   // Estados de selección
   String? _selectedAsentado;
@@ -61,7 +59,18 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    _checkTutorial();
+    initializeTutorial(); // Inicializar el tutorial manager
+    _checkAndShowTutorial();
+    //_checkTutorial();
+  }
+
+  void _checkAndShowTutorial() {
+    // Mostrar tutorial automáticamente si es la primera vez
+    showModuleTutorial('wall');
+  }
+
+  void _showTutorialManually() {
+    forceTutorial('wall');
   }
 
   void _initializeControllers() {
@@ -90,15 +99,6 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     ));
 
     _animationController.forward();
-  }
-
-  void _checkTutorial() {
-    sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!sharedPreferencesHelper.isTutorialShown()) {
-        _showTutorial();
-      }
-    });
   }
 
   @override
@@ -144,7 +144,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     return AppBarWidget(
       titleAppBar: 'Cálculo de Ladrillo',
       isVisibleTutorial: true,
-      showTutorial: _showTutorial,
+      showTutorial: _showTutorialManually,
     );
   }
 
@@ -157,7 +157,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Form(
-                key: _formKey,
+                key: _formKeyLadrillo,
                 child: Column(
                   children: [
                     _buildHeaderSection(tipoLadrillo),
@@ -598,7 +598,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
       ),
       child: SafeArea(
         top: false,
-        child: ModernActionButton(
+        child: ModernActionButtonD(
           onPressed: _isLoading ? null : () => _processCalculation(tipoLadrillo),
           isLoading: _isLoading,
           label: 'Calcular Materiales',
@@ -636,7 +636,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     });
   }
 
-  void _showTutorial() {
+  /*void _showTutorial() {
     showDialog(
       context: context,
       builder: (context) => TutorialOverlay(
@@ -646,7 +646,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
         },
       ),
     );
-  }
+  }*/
 
   Future<void> _processCalculation(String tipoLadrillo) async {
     if (!_validateForm()) return;
@@ -657,7 +657,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
 
     try {
       await _createLadrilloData(tipoLadrillo);
-      print(ref.watch(ladrilloResultProvider));
+      ref.watch(ladrilloResultProvider);
       context.pushNamed('ladrillo_results');
       context.showCalculationLoader(
         message: 'Calculando materiales',
@@ -681,7 +681,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   }
 
   bool _validateForm() {
-    if (_formKey.currentState?.validate() != true) {
+    if (_formKeyLadrillo.currentState?.validate() != true) {
       _showErrorMessage('Por favor, completa todos los campos obligatorios');
       return false;
     }

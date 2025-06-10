@@ -5,7 +5,7 @@ import '../theme/theme.dart';
 import 'calculator_loader.dart';
 
 /// Extensiones para simplificar el uso del loader desde cualquier BuildContext
-extension CalculationLoaderExtension on BuildContext {
+extension CalculationLoaderExtensionss on BuildContext {
   /// Muestra un loader de cálculo
   void showCalculationLoader({
     String message = 'Calculando...',

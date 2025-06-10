@@ -203,14 +203,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
       'Proyecto creado exitosamente',
     );
 
-    // Navegar hacia atrás con información del proyecto creado
-    // CORREGIDO: Usar el nombre del texto ingresado como fallback
-    final result = {
-      'projectName': project?.name ?? _nameController.text.trim(),
-      if (project?.id != null) 'projectId': project!.id,
-    };
-
-    context.pop(result);
+    context.pop();
   }
 
   @override
@@ -247,7 +240,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new),
-        onPressed: _isSubmitting ? null : () => context.pop(),
+        onPressed: () => context.pop(),
         tooltip: 'Volver',
       ),
       systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -535,7 +528,7 @@ class _NewProjectScreenState extends State<NewProjectScreen>
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
-          onPressed: _isSubmitting ? null : () => context.pop(),
+          onPressed: () => context.pop(),
           icon: const Icon(Icons.close),
           label: const Text('Cancelar'),
           style: OutlinedButton.styleFrom(

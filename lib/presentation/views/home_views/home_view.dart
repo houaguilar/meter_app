@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/assets/images.dart';
@@ -52,29 +53,37 @@ class _HomeViewState extends State<HomeView>
   Widget build(BuildContext context) {
     super.build(context);
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: _buildAppBar(),
-      body: BlocConsumer<MeasurementBloc, MeasurementState>(
-        listener: (context, state) {
-          if (state is MeasurementLoaded) {
-            _cachedMeasurements = state.items;
-          }
-        },
-        builder: (context, state) {
-          // No usar AnimatedSwitcher aquí para evitar problemas
-          if (state is MeasurementLoading && _cachedMeasurements == null) {
-            return _buildLoadingState();
-          } else if (state is MeasurementError && _cachedMeasurements == null) {
-            return _buildErrorState(state.message);
-          } else {
-            // Usar datos en cache o del estado actual
-            final items = state is MeasurementLoaded
-                ? state.items
-                : _cachedMeasurements ?? [];
-            return _buildLoadedState(items);
-          }
-        },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        // Usa el color primario de tu tema automáticamente
+        statusBarColor: AppColors.blueMetraShop,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: _buildAppBar(),
+        body: BlocConsumer<MeasurementBloc, MeasurementState>(
+          listener: (context, state) {
+            if (state is MeasurementLoaded) {
+              _cachedMeasurements = state.items;
+            }
+          },
+          builder: (context, state) {
+            // No usar AnimatedSwitcher aquí para evitar problemas
+            if (state is MeasurementLoading && _cachedMeasurements == null) {
+              return _buildLoadingState();
+            } else if (state is MeasurementError && _cachedMeasurements == null) {
+              return _buildErrorState(state.message);
+            } else {
+              // Usar datos en cache o del estado actual
+              final items = state is MeasurementLoaded
+                  ? state.items
+                  : _cachedMeasurements ?? [];
+              return _buildLoadedState(items);
+            }
+          },
+        ),
       ),
     );
   }
@@ -248,7 +257,9 @@ class _HomeViewState extends State<HomeView>
               const SizedBox(width: 20),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => context.pushNamed('home-to-test'),
+                  onTap:() {
+
+                  },
                   child: const ShortcutCard(
                     title: 'Materiales',
                     imageAssetPath: AppImages.materialesHomeCardImg,
