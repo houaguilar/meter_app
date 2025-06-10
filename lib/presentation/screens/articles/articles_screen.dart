@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -40,22 +41,30 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return Scaffold(
-      appBar: _buildAppBar(),
-      body: RefreshIndicator(
-        onRefresh: _handleRefresh,
-        child: BlocConsumer<ArticleBloc, ArticleState>(
-          listener: (context, state) {
-            if (state is ArticleError) {
-              _showErrorSnackBar(context, state.message);
-            }
-          },
-          builder: (context, state) {
-            return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 500),
-              child: _buildBody(state),
-            );
-          },
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        // Usa el color primario de tu tema automáticamente
+        statusBarColor: AppColors.yellowMetraShop,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        appBar: _buildAppBar(),
+        body: RefreshIndicator(
+          onRefresh: _handleRefresh,
+          child: BlocConsumer<ArticleBloc, ArticleState>(
+            listener: (context, state) {
+              if (state is ArticleError) {
+                _showErrorSnackBar(context, state.message);
+              }
+            },
+            builder: (context, state) {
+              return AnimatedSwitcher(
+                duration: const Duration(milliseconds: 500),
+                child: _buildBody(state),
+              );
+            },
+          ),
         ),
       ),
     );

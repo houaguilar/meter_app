@@ -598,7 +598,7 @@ class _ModernAddButtonState extends State<ModernAddButton>
 }
 
 /// Botón de acción moderno principal
-class ModernActionButton extends StatefulWidget {
+class ModernActionButtonD extends StatefulWidget {
   final VoidCallback? onPressed;
   final String label;
   final IconData icon;
@@ -606,7 +606,7 @@ class ModernActionButton extends StatefulWidget {
   final Color? backgroundColor;
   final Color? foregroundColor;
 
-  const ModernActionButton({
+  const ModernActionButtonD({
     super.key,
     required this.onPressed,
     required this.label,
@@ -617,10 +617,10 @@ class ModernActionButton extends StatefulWidget {
   });
 
   @override
-  State<ModernActionButton> createState() => _ModernActionButtonState();
+  State<ModernActionButtonD> createState() => _ModernActionButtonDState();
 }
 
-class _ModernActionButtonState extends State<ModernActionButton>
+class _ModernActionButtonDState extends State<ModernActionButtonD>
     with SingleTickerProviderStateMixin {
 
   late AnimationController _animationController;

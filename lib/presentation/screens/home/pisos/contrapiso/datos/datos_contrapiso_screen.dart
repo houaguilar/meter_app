@@ -4,25 +4,25 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
 
-import '../../../../../../config/theme/theme.dart';
-import '../../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../../init_dependencies.dart';
-import '../../../../../providers/pisos/falso_piso_providers.dart';
+import '../../../../../../../config/theme/theme.dart';
+import '../../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../../init_dependencies.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';
 import '../../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
-class DatosFalsoPisoScreen extends ConsumerStatefulWidget {
-  const DatosFalsoPisoScreen({super.key});
-  static const String route = 'datos-falso-piso';
+class DatosContrapisoScreen extends ConsumerStatefulWidget {
+  const DatosContrapisoScreen({super.key});
+  static const String route = 'contrapiso-detail';
 
   @override
-  ConsumerState<DatosFalsoPisoScreen> createState() => _DatosFalsoPisoScreenState();
+  ConsumerState<DatosContrapisoScreen> createState() => _DatosContrapisoScreenState();
 }
 
-class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
+class _DatosContrapisoScreenState extends ConsumerState<DatosContrapisoScreen>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin, TutorialMixin {
 
   @override
@@ -36,7 +36,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
   int _currentIndex = 0;
   bool _isLoading = false;
 
-  // Controladores de texto modernos
+  // Controladores de texto mejorados
   final TextEditingController _factorController = TextEditingController(text: '5');
   final TextEditingController _descriptionAreaController = TextEditingController();
   final TextEditingController _descriptionMedidasController = TextEditingController();
@@ -48,7 +48,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
 
   // Estados de selección
   String? _selectedEspesor;
-  String? _selectedResistencia;
+  String? _selectedProporcion;
 
   // Listas dinámicas
   List<Map<String, TextEditingController>> _areaFields = [];
@@ -139,7 +139,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
 
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
-      titleAppBar: 'Cálculo de Falso Piso',
+      titleAppBar: 'Cálculo de Contrapiso',
       isVisibleTutorial: true,
       showTutorial: _showTutorialManually,
     );
@@ -226,7 +226,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tipo: Falso Piso',
+                      'Tipo: Contrapiso',
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -240,7 +240,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
           const SizedBox(height: 20),
           _buildEspesorSelection(),
           const SizedBox(height: 16),
-          _buildResistenciaSelection(),
+          _buildProporcionSelection(),
         ],
       ),
     );
@@ -255,17 +255,17 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
           children: [
             const ModernSectionHeader(
               title: 'Factor de Desperdicio',
-              subtitle: 'Configura el porcentaje de desperdicio',
+              subtitle: 'Configura el porcentaje de desperdicio del mortero',
               icon: Icons.tune,
             ),
             const SizedBox(height: 16),
             ModernTextField(
               controller: _factorController,
-              label: 'Desperdicio del Concreto',
+              label: 'Desperdicio Mortero',
               suffix: '%',
               validator: _validatePercentage,
               keyboardType: TextInputType.number,
-              prefixIcon: Icons.construction,
+              prefixIcon: Icons.water_drop,
             ),
           ],
         ),
@@ -274,13 +274,13 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
   }
 
   Widget _buildEspesorSelection() {
-    final List<String> espesores = ["8 cm", "9 cm", "10 cm", "11 cm", "12 cm"];
+    const List<String> espesores = ["4 cm", "5 cm", "6 cm", "7 cm"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Espesor del Falso Piso',
+          'Espesor del Contrapiso',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -301,14 +301,14 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
     );
   }
 
-  Widget _buildResistenciaSelection() {
-    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²", "210 kg/cm²", "245 kg/cm²"];
+  Widget _buildProporcionSelection() {
+    const List<String> proporciones = ["1 : 3", "1 : 4", "1 : 5", "1 : 6"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Resistencia del Concreto',
+          'Proporción del Mortero',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -317,11 +317,11 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
         ),
         const SizedBox(height: 12),
         ModernChoiceChips(
-          options: resistencias,
-          selectedValue: _selectedResistencia,
+          options: proporciones,
+          selectedValue: _selectedProporcion,
           onSelected: (value) {
             setState(() {
-              _selectedResistencia = value;
+              _selectedProporcion = value;
             });
           },
         ),
@@ -337,7 +337,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
         children: [
           const ModernSectionHeader(
             title: 'Datos del Metrado',
-            subtitle: 'Ingresa las medidas de tu proyecto',
+            subtitle: 'Ingresa las medidas de tu contrapiso',
             icon: Icons.straighten,
           ),
           const SizedBox(height: 16),
@@ -412,7 +412,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
               ModernTextField(
                 controller: _descriptionAreaController,
                 label: 'Descripción',
-                hintText: 'Ej: Falso piso sala',
+                hintText: 'Ej: Contrapiso sala',
                 validator: _validateRequired,
                 prefixIcon: Icons.description,
               ),
@@ -450,7 +450,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
               ModernTextField(
                 controller: _descriptionMedidasController,
                 label: 'Descripción',
-                hintText: 'Ej: Falso piso sala',
+                hintText: 'Ej: Contrapiso sala',
                 validator: _validateRequired,
                 prefixIcon: Icons.description,
               ),
@@ -475,7 +475,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
                       suffix: 'm',
                       validator: _validateNumeric,
                       keyboardType: TextInputType.number,
-                      prefixIcon: Icons.width_wide,
+                      prefixIcon: Icons.height,
                     ),
                   ),
                 ],
@@ -502,7 +502,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
         ModernTextField(
           controller: field['description']!,
           label: 'Descripción',
-          hintText: 'Ej: Falso piso cocina',
+          hintText: 'Ej: Contrapiso cocina',
           validator: _validateRequired,
           prefixIcon: Icons.description,
         ),
@@ -527,7 +527,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
         ModernTextField(
           controller: field['descriptionMeasure']!,
           label: 'Descripción',
-          hintText: 'Ej: Falso piso cocina',
+          hintText: 'Ej: Contrapiso cocina',
           validator: _validateRequired,
           prefixIcon: Icons.description,
         ),
@@ -552,7 +552,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
                 suffix: 'm',
                 validator: _validateNumeric,
                 keyboardType: TextInputType.number,
-                prefixIcon: Icons.width_wide,
+                prefixIcon: Icons.height,
               ),
             ),
           ],
@@ -577,7 +577,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
       child: SafeArea(
         top: false,
         child: ModernActionButtonD(
-          onPressed: _isLoading ? null : _processCalculation,
+          onPressed: _isLoading ? null : () => _processCalculation(),
           isLoading: _isLoading,
           label: 'Calcular Materiales',
           icon: Icons.calculate,
@@ -622,12 +622,14 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
     });
 
     try {
-      await _createFalsoPisoData();
-      ref.watch(falsoPisoResultProvider);
-      context.pushNamed('falso-pisos-results');
+      await _createPisoData();
+      print(ref.watch(contrapisoResultProvider));
+      ref.watch(contrapisoResultProvider);
+      context.pushNamed('contrapiso-result');
+
       context.showCalculationLoader(
         message: 'Calculando materiales',
-        description: 'Aplicando fórmulas del falso piso...',
+        description: 'Aplicando fórmulas actualizadas...',
       );
 
       await Future.delayed(const Duration(seconds: 2));
@@ -653,33 +655,34 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
     }
 
     if (_selectedEspesor == null) {
-      _showErrorMessage('Selecciona el espesor del falso piso');
+      _showErrorMessage('Selecciona un espesor');
       return false;
     }
 
-    if (_selectedResistencia == null) {
-      _showErrorMessage('Selecciona la resistencia del concreto');
+    if (_selectedProporcion == null) {
+      _showErrorMessage('Selecciona una proporción de mortero');
       return false;
     }
 
     return true;
   }
 
-  Future<void> _createFalsoPisoData() async {
-    final datosFalsoPiso = ref.read(falsoPisoResultProvider.notifier);
-    datosFalsoPiso.clearList();
+  Future<void> _createPisoData() async {
+    final datosPiso = ref.read(contrapisoResultProvider.notifier);
+    datosPiso.clearList();
 
     final espesorValor = _selectedEspesor!.replaceAll(" cm", "");
+    final proporcionValor = _selectedProporcion!.replaceAll("1 : ", "");
 
     if (_currentIndex == 0) {
       // Tab de área
       if (_descriptionAreaController.text.isNotEmpty &&
           _areaTextController.text.isNotEmpty) {
-        datosFalsoPiso.createFalsoPiso(
+        datosPiso.createContrapiso(
           _descriptionAreaController.text,
           _factorController.text,
           espesorValor,
-          resistencia: _selectedResistencia!,
+          proporcionMortero: proporcionValor,
           area: _areaTextController.text,
         );
       }
@@ -687,11 +690,11 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
       for (var field in _areaFields) {
         if (field['description']!.text.isNotEmpty &&
             field['measure']!.text.isNotEmpty) {
-          datosFalsoPiso.createFalsoPiso(
+          datosPiso.createContrapiso(
             field['description']!.text,
             _factorController.text,
             espesorValor,
-            resistencia: _selectedResistencia!,
+            proporcionMortero: proporcionValor,
             area: field['measure']!.text,
           );
         }
@@ -701,11 +704,11 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
       if (_descriptionMedidasController.text.isNotEmpty &&
           _lengthTextController.text.isNotEmpty &&
           _heightTextController.text.isNotEmpty) {
-        datosFalsoPiso.createFalsoPiso(
+        datosPiso.createContrapiso(
           _descriptionMedidasController.text,
           _factorController.text,
           espesorValor,
-          resistencia: _selectedResistencia!,
+          proporcionMortero: proporcionValor,
           largo: _lengthTextController.text,
           ancho: _heightTextController.text,
         );
@@ -715,11 +718,11 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
         if (field['descriptionMeasure']!.text.isNotEmpty &&
             field['lengthMeasure']!.text.isNotEmpty &&
             field['heightMeasure']!.text.isNotEmpty) {
-          datosFalsoPiso.createFalsoPiso(
+          datosPiso.createContrapiso(
             field['descriptionMeasure']!.text,
             _factorController.text,
             espesorValor,
-            resistencia: _selectedResistencia!,
+            proporcionMortero: proporcionValor,
             largo: field['lengthMeasure']!.text,
             ancho: field['heightMeasure']!.text,
           );

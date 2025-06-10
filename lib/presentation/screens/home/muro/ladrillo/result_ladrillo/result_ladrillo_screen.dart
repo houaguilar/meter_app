@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../../data/models/models.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../widgets/widgets.dart';
@@ -784,7 +785,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await _generatePDF();
+      final pdfFile = await PDFFactory.generateLadrilloPDF(ref);
+
       final xFile = XFile(pdfFile.path);
 
       context.hideLoader();

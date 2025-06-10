@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/estructuras/result/result_structural_elements_screen.dart
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,18 +11,19 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../providers/home/estructuras/structural_element_providers.dart';
+import '../../../../../domain/entities/home/losas/losas.dart';
+import '../../../../providers/providers.dart';
 import '../../../../widgets/widgets.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-class ResultStructuralElementsScreen extends ConsumerStatefulWidget {
-  const ResultStructuralElementsScreen({super.key});
+class ResultLosasScreen extends ConsumerStatefulWidget {
+  const ResultLosasScreen({super.key});
 
   @override
-  ConsumerState<ResultStructuralElementsScreen> createState() => _ResultStructuralElementsScreenState();
+  ConsumerState<ResultLosasScreen> createState() => _ResultLosasScreenState();
 }
 
-class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructuralElementsScreen>
+class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     with SingleTickerProviderStateMixin {
 
   late AnimationController _animationController;
@@ -35,7 +35,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     super.initState();
     _initializeAnimations();
     _hideLoaderAfterDelay();
-    _validateDataOnInit();
   }
 
   @override
@@ -79,34 +78,11 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     });
   }
 
-  void _validateDataOnInit() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final tipoElemento = ref.read(tipoStructuralElementProvider);
-      final columnas = ref.read(columnaResultProvider);
-      final vigas = ref.read(vigaResultProvider);
-
-      print('🔍 Estado en ResultScreen:');
-      print('- Tipo: $tipoElemento');
-      print('- Columnas: ${columnas.length}');
-      print('- Vigas: ${vigas.length}');
-
-      if (tipoElemento.isEmpty ||
-          (tipoElemento == 'columna' && columnas.isEmpty) ||
-          (tipoElemento == 'viga' && vigas.isEmpty)) {
-        print('❌ No hay datos válidos, regresando...');
-        _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
-        context.pop();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-
     return WillPopScope(
       onWillPop: () async {
-        _clearDataOnExit();
+        ref.read(losaAligeradaResultProvider.notifier).clearList();
         return true;
       },
       child: Scaffold(
@@ -116,21 +92,23 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           opacity: _fadeAnimation,
           child: SlideTransition(
             position: _slideAnimation,
-            child: _buildBody(tipoElemento),
+            child: _buildBody(),
           ),
         ),
-        bottomNavigationBar: _buildBottomActionBar(tipoElemento),
+        bottomNavigationBar: _buildBottomActionBar(),
       ),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBarWidget(titleAppBar: 'Resultados');
+    return AppBarWidget(titleAppBar: 'Resultados Losa Aligerada');
   }
 
-  Widget _buildBody(String tipoElemento) {
-    if (tipoElemento.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+  Widget _buildBody() {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+
+    if (losasAligeradas.isEmpty) {
+      return _buildEmptyState();
     }
 
     return SingleChildScrollView(
@@ -145,15 +123,63 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(tipoElemento),
+          _buildProjectSummaryCard(),
           const SizedBox(height: 20),
-          _buildMetradoDataCard(tipoElemento),
+          _buildMetradoDataCard(losasAligeradas),
           const SizedBox(height: 20),
-          _buildMaterialsCard(tipoElemento),
+          _buildMaterialsCard(),
           const SizedBox(height: 20),
-          _buildConfigurationCard(tipoElemento),
-          const SizedBox(height: 120),
+          _buildConfigurationCard(losasAligeradas),
+          const SizedBox(height: 120), // Espacio para los botones de abajo
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              size: 64,
+              color: Colors.orange[400],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No hay datos de losas aligeradas',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Regresa y completa los datos para ver los resultados',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () => context.pop(),
+              icon: const Icon(Icons.arrow_back),
+              label: const Text('Regresar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.blueMetraShop,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -190,10 +216,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildProjectSummaryCard(String tipoElemento) {
-    final totalVolumen = _getTotalVolumen(tipoElemento);
-    final totalElementos = _getTotalElementos(tipoElemento);
-    final resistencia = _getResistencia(tipoElemento);
+  Widget _buildProjectSummaryCard() {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider);
+    final areaTotal = _calcularAreaTotal(losasAligeradas);
 
     return _buildModernCard(
       title: 'Resumen del Proyecto',
@@ -201,49 +227,57 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       iconColor: AppColors.blueMetraShop,
       child: Column(
         children: [
-          _buildSummaryRow('Volumen Total', '${totalVolumen.toStringAsFixed(2)} m³'),
+          _buildSummaryRow('Área Total', '${areaTotal.toStringAsFixed(2)} m²'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Total de ${tipoElemento.capitalize()}s', '$totalElementos'),
+          _buildSummaryRow('Total de Losas', '${losasAligeradas.length}'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Elemento', tipoElemento.capitalize()),
+          _buildSummaryRow('Volumen Concreto', '${volumenConcreto.toStringAsFixed(2)} m³'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Resistencia', resistencia),
+          _buildSummaryRow('Material Aligerado', _getMaterialAligerado(losasAligeradas)),
         ],
       ),
     );
   }
 
-  Widget _buildMetradoDataCard(String tipoElemento) {
+  Widget _buildMetradoDataCard(List<LosaAligerada> losasAligeradas) {
     return _buildModernCard(
       title: 'Datos del Metrado',
       icon: Icons.view_list_outlined,
       iconColor: AppColors.accent,
       child: Column(
         children: [
-          _buildDataTable(tipoElemento),
+          _buildDataTable(losasAligeradas),
         ],
       ),
     );
   }
 
-  Widget _buildMaterialsCard(String tipoElemento) {
+  Widget _buildMaterialsCard() {
+    final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider);
+    final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider);
+    final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider);
+    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider);
+
     return _buildModernCard(
       title: 'Lista de Materiales',
       icon: Icons.inventory_2_outlined,
       iconColor: AppColors.success,
       child: Column(
         children: [
-          _buildMaterialTable(tipoElemento),
+          _buildMaterialTable(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
           const SizedBox(height: 16),
-          _buildMaterialChips(tipoElemento),
+          _buildMaterialChips(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
         ],
       ),
     );
   }
 
-  Widget _buildConfigurationCard(String tipoElemento) {
-    final factorDesperdicio = _getFactorDesperdicio(tipoElemento);
-    final resistencia = _getResistencia(tipoElemento);
+  Widget _buildConfigurationCard(List<LosaAligerada> losasAligeradas) {
+    if (losasAligeradas.isEmpty) return const SizedBox.shrink();
+
+    final primeraLosa = losasAligeradas.first;
+    final desperdicioLadrillo = double.tryParse(primeraLosa.desperdicioLadrillo) ?? 5.0;
+    final desperdicioConcreto = double.tryParse(primeraLosa.desperdicioConcreto) ?? 5.0;
 
     return _buildModernCard(
       title: 'Configuración Aplicada',
@@ -251,11 +285,15 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Factor de Desperdicio', '${factorDesperdicio.toStringAsFixed(1)}%'),
+          _buildConfigRow('Altura de Losa', primeraLosa.altura),
           const SizedBox(height: 12),
-          _buildConfigRow('Resistencia del Concreto', resistencia),
+          _buildConfigRow('Material Aligerado', primeraLosa.materialAligerado),
           const SizedBox(height: 12),
-          _buildConfigRow('Tipo de Elemento', tipoElemento.capitalize()),
+          _buildConfigRow('Resistencia Concreto', primeraLosa.resistenciaConcreto),
+          const SizedBox(height: 12),
+          _buildConfigRow('Desperdicio Ladrillo', '${desperdicioLadrillo.toStringAsFixed(1)}%'),
+          const SizedBox(height: 12),
+          _buildConfigRow('Desperdicio Concreto', '${desperdicioConcreto.toStringAsFixed(1)}%'),
         ],
       ),
     );
@@ -385,10 +423,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildDataTable(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
-    final totalVolumen = _getTotalVolumen(tipoElemento);
+  Widget _buildDataTable(List<LosaAligerada> losasAligeradas) {
+    final areaTotal = _calcularAreaTotal(losasAligeradas);
 
     return Table(
       columnWidths: const {
@@ -397,29 +433,25 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         2: FlexColumnWidth(1.5),
       },
       children: [
-        _buildTableRow(['Descripción', 'Und.', 'Volumen'], isHeader: true),
-        ...List.generate(elements.length, (index) {
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),
+        ...losasAligeradas.map((losa) {
+          final area = _calcularAreaLosa(losa);
           return _buildTableRow([
-            elements[index].description ?? 'Sin descripción',
-            'm³',
-            volumenes[index].toStringAsFixed(2),
+            losa.description,
+            'm²',
+            area.toStringAsFixed(2),
           ]);
-        }),
+        }).toList(),
         _buildTableRow([
           'Total:',
-          'm³',
-          totalVolumen.toStringAsFixed(2),
+          'm²',
+          areaTotal.toStringAsFixed(2),
         ], isTotal: true),
       ],
     );
   }
 
-  Widget _buildMaterialTable(String tipoElemento) {
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-
+  Widget _buildMaterialTable(double cemento, double arena, double piedra, double agua) {
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -430,29 +462,24 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
         _buildTableRow(['Cemento', 'Bls', cemento.ceil().toString()]),
         _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(2)]),
-        _buildTableRow(['Piedra para concreto', 'm³', piedra.toStringAsFixed(2)]),
+        _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(2)]),
         _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
       ],
     );
   }
 
-  Widget _buildMaterialChips(String tipoElemento) {
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-
-    final materials = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${cemento.ceil()} bls', 'color': AppColors.primary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${arena.toStringAsFixed(2)} m³', 'color': AppColors.secondary},
-      {'icon': Icons.texture, 'label': 'Piedra', 'value': '${piedra.toStringAsFixed(2)} m³', 'color': AppColors.warning},
+  Widget _buildMaterialChips(double cemento, double arena, double piedra, double agua) {
+    final materialsList = [
+      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${cemento.ceil()} bls', 'color': AppColors.secondary},
+      {'icon': Icons.grain, 'label': 'Arena', 'value': '${arena.toStringAsFixed(2)} m³', 'color': AppColors.warning},
+      {'icon': Icons.landscape, 'label': 'Piedra', 'value': '${piedra.toStringAsFixed(2)} m³', 'color': AppColors.primary},
       {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
     ];
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: materials.map((material) {
+      children: materialsList.map((material) {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -511,8 +538,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildBottomActionBar(String tipoElemento) {
-    if (tipoElemento.isEmpty) {
+  Widget _buildBottomActionBar() {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+
+    if (losasAligeradas.isEmpty) {
       return const SizedBox.shrink();
     }
 
@@ -533,6 +562,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // Botones de acción principales en fila
               Row(
                 children: [
                   Expanded(
@@ -569,6 +599,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
                 ],
               ),
               const SizedBox(height: 12),
+              // Botón principal de proveedores
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -594,6 +625,47 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         ),
       ),
     );
+  }
+
+  // Métodos auxiliares
+  double _calcularAreaTotal(List<LosaAligerada> losasAligeradas) {
+    double total = 0.0;
+    for (var losa in losasAligeradas) {
+      total += _calcularAreaLosa(losa);
+    }
+    return total;
+  }
+
+  double _calcularAreaLosa(LosaAligerada losa) {
+    if (losa.area != null && losa.area!.isNotEmpty) {
+      return double.tryParse(losa.area!) ?? 0.0;
+    } else {
+      final largo = double.tryParse(losa.largo ?? '') ?? 0.0;
+      final ancho = double.tryParse(losa.ancho ?? '') ?? 0.0;
+      return largo * ancho;
+    }
+  }
+
+  String _getMaterialAligerado(List<LosaAligerada> losasAligeradas) {
+    return losasAligeradas.isNotEmpty ? losasAligeradas.first.materialAligerado : 'N/A';
+  }
+
+  void _handleSaveAction() {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    if (losasAligeradas.isNotEmpty) {
+      context.pushNamed('save-losas');
+    } else {
+      _showErrorSnackBar('No hay datos para guardar');
+    }
+  }
+
+  void _handleProviderAction() {
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    if (losasAligeradas.isNotEmpty) {
+      context.pushNamed('map-screen-losas');
+    } else {
+      _showErrorSnackBar('No hay datos de losas');
+    }
   }
 
   void _showShareOptions() {
@@ -719,105 +791,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  // Métodos auxiliares para obtener datos
-  List<dynamic> _getElements(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(columnaResultProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(vigaResultProvider);
-    }
-    return [];
-  }
-
-  List<double> _getVolumenes(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(volumenColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(volumenVigaProvider);
-    }
-    return [];
-  }
-
-  double _getTotalVolumen(String tipoElemento) {
-    final volumenes = _getVolumenes(tipoElemento);
-    return volumenes.fold(0.0, (sum, volumen) => sum + volumen);
-  }
-
-  int _getTotalElementos(String tipoElemento) {
-    return _getElements(tipoElemento).length;
-  }
-
-  String _getResistencia(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    if (elements.isNotEmpty) {
-      return elements.first.resistencia ?? 'N/A';
-    }
-    return 'N/A';
-  }
-
-  double _getFactorDesperdicio(String tipoElemento) {
-    final elements = _getElements(tipoElemento);
-    if (elements.isNotEmpty) {
-      return double.tryParse(elements.first.factorDesperdicio ?? '5') ?? 5.0;
-    }
-    return 5.0;
-  }
-
-  double _getCemento(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadCementoColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadCementoVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getArena(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadArenaColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadArenaVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getPiedra(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadPiedraColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadPiedraVigaProvider);
-    }
-    return 0.0;
-  }
-
-  double _getAgua(String tipoElemento) {
-    if (tipoElemento == 'columna') {
-      return ref.watch(cantidadAguaColumnaProvider);
-    } else if (tipoElemento == 'viga') {
-      return ref.watch(cantidadAguaVigaProvider);
-    }
-    return 0.0;
-  }
-
-  // Métodos de acción
-  void _handleSaveAction() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    if (tipoElemento.isNotEmpty) {
-      context.pushNamed('save-structural-element');
-    } else {
-      _showErrorMessage('No hay datos para guardar');
-    }
-  }
-
-  void _handleProviderAction() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    if (tipoElemento.isNotEmpty) {
-      context.pushNamed('map-screen-structural');
-    } else {
-      _showErrorMessage('No hay datos de elementos estructurales');
-    }
-  }
-
   Future<void> _sharePDF() async {
     try {
       Navigator.of(context).pop();
@@ -827,19 +800,18 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateStructuralElementPDF(ref);
-
+      final pdfFile = await PDFFactory.generateLosaAligeradaPDF(ref);
       final xFile = XFile(pdfFile.path);
 
       context.hideLoader();
 
       await Share.shareXFiles(
         [xFile],
-        text: 'Resultados del metrado de elementos estructurales - METRASHOP',
+        text: 'Resultados del metrado de losas aligeradas - METRASHOP',
       );
     } catch (e) {
       context.hideLoader();
-      _showErrorMessage('Error al generar PDF: $e');
+      _showErrorSnackBar('Error al generar PDF: $e');
     }
   }
 
@@ -849,53 +821,71 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       final shareText = _generateShareText();
       await Share.share(shareText);
     } catch (e) {
-      _showErrorMessage('Error al compartir: $e');
+      _showErrorSnackBar('Error al compartir: $e');
     }
   }
 
   String _generateShareText() {
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    final datosLosa = ref.watch(datosShareLosaAligeradaProvider);
+    final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider);
+    final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider);
+    final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider);
+    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider);
 
-    String datosMetrado = 'DATOS METRADO\n';
-    for (int i = 0; i < elements.length && i < volumenes.length; i++) {
-      datosMetrado += '* ${elements[i].description}: ${volumenes[i].toStringAsFixed(2)} m³\n';
+    final buffer = StringBuffer();
+
+    // Encabezado
+    buffer.writeln('METRASHOP - LOSAS ALIGERADAS');
+    buffer.writeln('=' * 50);
+    buffer.writeln();
+
+    // Información del proyecto
+    if (losasAligeradas.isNotEmpty) {
+      final primeraLosa = losasAligeradas.first;
+      buffer.writeln('INFORMACIÓN DEL PROYECTO:');
+      buffer.writeln('• Altura de losa: ${primeraLosa.altura}');
+      buffer.writeln('• Material aligerado: ${primeraLosa.materialAligerado}');
+      buffer.writeln('• Resistencia concreto: ${primeraLosa.resistenciaConcreto}');
+      buffer.writeln('• Total de losas: ${losasAligeradas.length}');
+      buffer.writeln();
     }
 
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
+    // Datos del metrado
+    buffer.writeln('DATOS DEL METRADO:');
+    buffer.writeln(datosLosa);
+    buffer.writeln();
 
-    return '''$datosMetrado
--------------
-LISTA DE MATERIALES
-*Cemento: ${cemento.ceil()} bls
-*Arena gruesa: ${arena.toStringAsFixed(2)} m³
-*Piedra para concreto: ${piedra.toStringAsFixed(2)} m³
-*Agua: ${agua.toStringAsFixed(2)} m³
+    // Lista de materiales
+    buffer.writeln('LISTA DE MATERIALES:');
+    buffer.writeln('• Cemento: ${cantidadCemento.ceil()} bls');
+    buffer.writeln('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³');
+    buffer.writeln('• Piedra chancada: ${cantidadPiedra.toStringAsFixed(2)} m³');
+    buffer.writeln('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³');
+    buffer.writeln();
 
-*Factor de Desperdicio: ${_getFactorDesperdicio(tipoElemento).toStringAsFixed(1)}%
-*Resistencia: ${_getResistencia(tipoElemento)}''';
+    // Pie de página
+    buffer.writeln('Calculado con METRASHOP');
+    buffer.writeln('"CALCULA Y COMPRA SIN PARAR DE CONSTRUIR"');
+    buffer.writeln('Fecha: ${_getCurrentDate()}');
+
+    return buffer.toString();
   }
 
   Future<File> _generatePDF() async {
     final pdf = pw.Document();
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-    final elements = _getElements(tipoElemento);
-    final volumenes = _getVolumenes(tipoElemento);
+    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
+    final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider);
+    final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider);
+    final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider);
+    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider);
+    final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider);
 
-    if (elements.isEmpty) {
-      throw Exception('No hay datos de elementos estructurales para generar PDF');
+    if (losasAligeradas.isEmpty) {
+      throw Exception('No hay datos de losas para generar PDF');
     }
 
-    final primerElemento = elements.first;
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
-    final totalVolumen = _getTotalVolumen(tipoElemento);
+    final primeraLosa = losasAligeradas.first;
 
     pdf.addPage(
       pw.Page(
@@ -904,7 +894,7 @@ LISTA DE MATERIALES
           children: [
             // Título
             pw.Text(
-              'RESULTADOS DE ${tipoElemento.toUpperCase()}S',
+              'RESULTADOS DE LOSAS ALIGERADAS',
               style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 20),
@@ -915,10 +905,12 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Tipo de Elemento: ${tipoElemento.capitalize()}'),
-            pw.Text('• Resistencia del Concreto: ${primerElemento.resistencia}'),
-            pw.Text('• Volumen total: ${totalVolumen.toStringAsFixed(2)} m³'),
-            pw.Text('• Total de ${tipoElemento}s: ${elements.length}'),
+            pw.Text('• Altura de losa: ${primeraLosa.altura}'),
+            pw.Text('• Material aligerado: ${primeraLosa.materialAligerado}'),
+            pw.Text('• Resistencia concreto: ${primeraLosa.resistenciaConcreto}'),
+            pw.Text('• Área total: ${_calcularAreaTotal(losasAligeradas).toStringAsFixed(2)} m²'),
+            pw.Text('• Total de losas: ${losasAligeradas.length}'),
+            pw.Text('• Volumen total concreto: ${volumenConcreto.toStringAsFixed(2)} m³'),
             pw.SizedBox(height: 20),
 
             // Materiales calculados
@@ -927,10 +919,10 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${cemento.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${arena.toStringAsFixed(2)} m³'),
-            pw.Text('• Piedra para concreto: ${piedra.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${agua.toStringAsFixed(2)} m³'),
+            pw.Text('• Cemento: ${cantidadCemento.ceil()} bolsas'),
+            pw.Text('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³'),
+            pw.Text('• Piedra chancada: ${cantidadPiedra.toStringAsFixed(2)} m³'),
+            pw.Text('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³'),
             pw.SizedBox(height: 20),
 
             // Configuración aplicada
@@ -939,18 +931,18 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Factor de Desperdicio: ${_getFactorDesperdicio(tipoElemento).toStringAsFixed(1)}%'),
-            pw.Text('• Resistencia del Concreto: ${_getResistencia(tipoElemento)}'),
+            pw.Text('• Desperdicio de ladrillo: ${double.tryParse(primeraLosa.desperdicioLadrillo) ?? 5.0}%'),
+            pw.Text('• Desperdicio de concreto: ${double.tryParse(primeraLosa.desperdicioConcreto) ?? 5.0}%'),
             pw.SizedBox(height: 20),
 
-            // Detalle de elementos
+            // Detalle de losas
             pw.Text(
-              'DETALLE DE ${tipoElemento.toUpperCase()}S:',
+              'DETALLE DE LOSAS:',
               style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 5),
-            ...List.generate(elements.length, (index) => pw.Text(
-              '• ${elements[index].description}: ${volumenes[index].toStringAsFixed(2)} m³',
+            ...losasAligeradas.map((losa) => pw.Text(
+              '• ${losa.description}: ${_calcularAreaLosa(losa).toStringAsFixed(2)} m²',
               style: pw.TextStyle(fontSize: 12),
             )),
             pw.SizedBox(height: 20),
@@ -961,11 +953,11 @@ LISTA DE MATERIALES
               style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en dosificaciones de concreto según resistencia',
+            pw.Text('• Cálculos basados en fórmulas de ingeniería actualizadas',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores de desperdicio aplicados independientemente',
+            pw.Text('• El volumen de concreto se calcula según el tipo de material aligerado',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Volúmenes calculados en metros cúbicos (m³)',
+            pw.Text('• Factores de desperdicio aplicados de forma independiente',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
             pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
                 style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
@@ -975,22 +967,17 @@ LISTA DE MATERIALES
     );
 
     final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_${tipoElemento}_${DateTime.now().millisecondsSinceEpoch}.pdf');
+    final file = File('${output.path}/resultados_losas_aligeradas_${DateTime.now().millisecondsSinceEpoch}.pdf');
     await file.writeAsBytes(await pdf.save());
     return file;
   }
 
-  void _clearDataOnExit() {
-    final tipoElemento = ref.read(tipoStructuralElementProvider);
-    if (tipoElemento == 'columna') {
-      ref.read(columnaResultProvider.notifier).clearList();
-    } else if (tipoElemento == 'viga') {
-      ref.read(vigaResultProvider.notifier).clearList();
-    }
-    print('🧹 Datos limpiados al salir');
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    return "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
   }
 
-  void _showErrorMessage(String message) {
+  void _showErrorSnackBar(String message) {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -1008,13 +995,5 @@ LISTA DE MATERIALES
         duration: const Duration(seconds: 3),
       ),
     );
-  }
-}
-
-// Extension helper para capitalizar strings
-extension StringExtension on String {
-  String capitalize() {
-    if (isEmpty) return this;
-    return "${this[0].toUpperCase()}${substring(1)}";
   }
 }
