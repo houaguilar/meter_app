@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
-
 import '../../../../config/theme/theme.dart';
 
-class ProfileInformationTab extends StatefulWidget {
-  const ProfileInformationTab({super.key});
+class ImprovedProfileInformationTab extends StatefulWidget {
+  const ImprovedProfileInformationTab({super.key});
 
   @override
-  State<ProfileInformationTab> createState() => _ProfileInformationTabState();
+  State<ImprovedProfileInformationTab> createState() => _ImprovedProfileInformationTabState();
 }
 
-class _ProfileInformationTabState extends State<ProfileInformationTab> {
+class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformationTab> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
@@ -29,14 +28,23 @@ class _ProfileInformationTabState extends State<ProfileInformationTab> {
     'Albañil',
     'Operario',
     'Maestro de Obra',
+    'Técnico en Construcción',
+    'Inspector de Obras',
+    'Supervisor de Proyectos',
     'Otro'
   ];
 
   bool _formChanged = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeControllers();
+    _setupListeners();
+  }
+
+  void _initializeControllers() {
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _employmentController = TextEditingController();
@@ -45,20 +53,24 @@ class _ProfileInformationTabState extends State<ProfileInformationTab> {
     _provinceController = TextEditingController();
     _districtController = TextEditingController();
 
-    // Initialize controllers from bloc state if available
+    // Initialize from bloc state if available
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
-      final profile = state.userProfile;
-      _nameController.text = profile.name;
-      _phoneController.text = profile.phone;
-      _employmentController.text = profile.employment;
-      _nationalityController.text = profile.nationality;
-      _cityController.text = profile.city;
-      _provinceController.text = profile.province;
-      _districtController.text = profile.district;
+      _populateControllers(state.userProfile);
     }
+  }
 
-    // Add listeners to detect form changes
+  void _populateControllers(dynamic profile) {
+    _nameController.text = profile.name ?? '';
+    _phoneController.text = profile.phone ?? '';
+    _employmentController.text = profile.employment ?? '';
+    _nationalityController.text = profile.nationality ?? '';
+    _cityController.text = profile.city ?? '';
+    _provinceController.text = profile.province ?? '';
+    _districtController.text = profile.district ?? '';
+  }
+
+  void _setupListeners() {
     _nameController.addListener(_onFormChanged);
     _phoneController.addListener(_onFormChanged);
     _employmentController.addListener(_onFormChanged);
@@ -69,13 +81,20 @@ class _ProfileInformationTabState extends State<ProfileInformationTab> {
   }
 
   void _onFormChanged() {
-    setState(() {
-      _formChanged = true;
-    });
+    if (!_formChanged) {
+      setState(() {
+        _formChanged = true;
+      });
+    }
   }
 
   @override
   void dispose() {
+    _disposeControllers();
+    super.dispose();
+  }
+
+  void _disposeControllers() {
     _nameController.dispose();
     _phoneController.dispose();
     _employmentController.dispose();
@@ -83,180 +102,349 @@ class _ProfileInformationTabState extends State<ProfileInformationTab> {
     _cityController.dispose();
     _provinceController.dispose();
     _districtController.dispose();
-    super.dispose();
+  }
+
+  void _saveChanges() {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+      });
+
+      final profileBloc = context.read<ProfileBloc>();
+
+      // Update profile with individual field updates to avoid null issues
+      profileBloc.add(UpdateProfile(
+        name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+        employment: _employmentController.text.trim().isNotEmpty && _employmentController.text.trim() != 'Seleccione una ocupación'
+            ? _employmentController.text.trim() : null,
+        nationality: _nationalityController.text.trim().isNotEmpty ? _nationalityController.text.trim() : null,
+        city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
+        province: _provinceController.text.trim().isNotEmpty ? _provinceController.text.trim() : null,
+        district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
+      ));
+
+      // Submit the profile changes
+      profileBloc.add(SubmitProfile());
+
+      setState(() {
+        _formChanged = false;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _resetForm() {
+    final state = context.read<ProfileBloc>().state;
+    if (state is ProfileLoaded) {
+      _populateControllers(state.userProfile);
+      setState(() {
+        _formChanged = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileBloc, ProfileState>(
       listener: (context, state) {
-        if (state is ProfileLoaded) {
-          // Only update controllers if they're not being edited
-          if (!_formChanged) {
-            final profile = state.userProfile;
-            _nameController.text = profile.name;
-            _phoneController.text = profile.phone;
-            _employmentController.text = profile.employment;
-            _nationalityController.text = profile.nationality;
-            _cityController.text = profile.city;
-            _provinceController.text = profile.province;
-            _districtController.text = profile.district;
-          }
+        if (state is ProfileLoaded && !_formChanged) {
+          _populateControllers(state.userProfile);
+        }
+        if (state is ProfileLoading) {
+          setState(() {
+            _isLoading = true;
+          });
+        } else {
+          setState(() {
+            _isLoading = false;
+          });
         }
       },
       builder: (context, state) {
-        if (state is ProfileLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (state is ProfileLoaded) {
-          return Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Información Personal',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryMetraShop,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _nameController,
-                    label: 'Nombre y apellido',
-                    hint: 'Ingrese su nombre completo',
-                    icon: Icons.person_outline,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingrese su nombre';
-                      }
-                      return null;
-                    },
-                  ),
-                  _buildTextField(
-                    controller: _phoneController,
-                    label: 'Teléfono',
-                    hint: 'Ingrese su número de teléfono',
-                    icon: Icons.phone_outlined,
-                    keyboardType: TextInputType.phone,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingrese su número de teléfono';
-                      }
-                      // Corrección de la expresión regular
-                      if (!RegExp(r'^\d{9,10}$').hasMatch(value)) {
-                        return 'Por favor ingrese un número válido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDropdownField(
-                    label: 'Ocupación',
-                    currentValue: _employmentController.text.isNotEmpty
-                        ? _employmentController.text
-                        : _occupations[0],
-                    items: _occupations,
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _employmentController.text = value;
-                          _formChanged = true;
-                        });
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  const Text(
-                    'Ubicación',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.primaryMetraShop,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    controller: _nationalityController,
-                    label: 'Nacionalidad',
-                    hint: 'Ingrese su nacionalidad',
-                    icon: Icons.flag_outlined,
-                  ),
-                  _buildTextField(
-                    controller: _cityController,
-                    label: 'Ciudad',
-                    hint: 'Ingrese su ciudad',
-                    icon: Icons.location_city_outlined,
-                  ),
-                  _buildTextField(
-                    controller: _provinceController,
-                    label: 'Provincia',
-                    hint: 'Ingrese su provincia',
-                    icon: Icons.map_outlined,
-                  ),
-                  _buildTextField(
-                    controller: _districtController,
-                    label: 'Distrito',
-                    hint: 'Ingrese su distrito',
-                    icon: Icons.place_outlined,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.blueMetraShop,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      onPressed: _formChanged ? _saveProfile : null,
-                      child: const Text(
-                        'Guardar cambios',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        } else if (state is ProfileError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                const SizedBox(height: 16),
-                Text(
-                  'Error: ${state.message}',
-                  style: const TextStyle(color: Colors.red),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    context.read<ProfileBloc>().add(LoadProfile());
-                  },
-                  child: const Text('Reintentar'),
-                ),
-              ],
-            ),
-          );
+        if (state is ProfileLoading && !_formChanged) {
+          return _buildLoadingState();
         }
-        return const Center(child: Text('No se pudo cargar el perfil'));
+
+        return _buildForm();
       },
     );
   }
 
-  Widget _buildTextField({
+  Widget _buildLoadingState() {
+    return Container(
+      padding: EdgeInsets.all(24),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              strokeWidth: 3,
+            ),
+            SizedBox(height: 16),
+            Text(
+              'Cargando información del perfil...',
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildForm() {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.background,
+            AppColors.surfaceVariant,
+          ],
+        ),
+      ),
+      child: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildSectionHeader(
+                'Información Personal',
+                'Completa tu perfil para una mejor experiencia',
+                Icons.person_outline_rounded,
+              ),
+              SizedBox(height: 24),
+              _buildPersonalInfoSection(),
+              SizedBox(height: 32),
+              _buildSectionHeader(
+                'Información Profesional',
+                'Detalles sobre tu actividad laboral',
+                Icons.work_outline_rounded,
+              ),
+              SizedBox(height: 24),
+              _buildProfessionalInfoSection(),
+              SizedBox(height: 32),
+              _buildSectionHeader(
+                'Ubicación',
+                'Información sobre tu lugar de residencia',
+                Icons.location_on_outlined,
+              ),
+              SizedBox(height: 24),
+              _buildLocationSection(),
+              SizedBox(height: 40),
+              _buildActionButtons(),
+              SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle, IconData icon) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoSection() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTextFormField(
+            controller: _nameController,
+            label: 'Nombre completo',
+            hint: 'Ingresa tu nombre completo',
+            icon: Icons.badge_outlined,
+            validator: (value) {
+              if (value?.trim().isEmpty ?? true) {
+                return 'El nombre es requerido';
+              }
+              if (value!.trim().length < 2) {
+                return 'El nombre debe tener al menos 2 caracteres';
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 20),
+          _buildTextFormField(
+            controller: _phoneController,
+            label: 'Teléfono',
+            hint: 'Ejemplo: +51 999 999 999',
+            icon: Icons.phone_outlined,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value?.trim().isNotEmpty ?? false) {
+                if (value!.trim().length < 8) {
+                  return 'Ingresa un número de teléfono válido';
+                }
+              }
+              return null;
+            },
+          ),
+          SizedBox(height: 20),
+          _buildTextFormField(
+            controller: _nationalityController,
+            label: 'Nacionalidad',
+            hint: 'Ejemplo: Peruana',
+            icon: Icons.flag_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfessionalInfoSection() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildDropdownField(
+            value: _employmentController.text.isEmpty ? _occupations.first : _employmentController.text,
+            items: _occupations,
+            label: 'Ocupación',
+            icon: Icons.work_outline_rounded,
+            onChanged: (value) {
+              if (value != null && value != _occupations.first) {
+                _employmentController.text = value;
+                _onFormChanged();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSection() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildTextFormField(
+            controller: _cityController,
+            label: 'Ciudad',
+            hint: 'Ejemplo: Lima',
+            icon: Icons.location_city_outlined,
+          ),
+          SizedBox(height: 20),
+          _buildTextFormField(
+            controller: _provinceController,
+            label: 'Provincia/Departamento',
+            hint: 'Ejemplo: Lima',
+            icon: Icons.map_outlined,
+          ),
+          SizedBox(height: 20),
+          _buildTextFormField(
+            controller: _districtController,
+            label: 'Distrito',
+            hint: 'Ejemplo: Miraflores',
+            icon: Icons.place_outlined,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextFormField({
     required TextEditingController controller,
     required String label,
     required String hint,
@@ -264,82 +452,235 @@ class _ProfileInformationTabState extends State<ProfileInformationTab> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          prefixIcon: Icon(icon),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 16,
-            horizontal: 16,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
         ),
-        keyboardType: keyboardType,
-        validator: validator,
-      ),
+        SizedBox(height: 8),
+        TextFormField(
+          controller: controller,
+          keyboardType: keyboardType,
+          validator: validator,
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w500,
+          ),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: AppColors.textSecondary.withOpacity(0.7),
+              fontWeight: FontWeight.w400,
+            ),
+            prefixIcon: Container(
+              margin: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primary,
+                size: 20,
+              ),
+            ),
+            filled: true,
+            fillColor: AppColors.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.error, width: 2),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildDropdownField({
-    required String label,
-    required String currentValue,
+    required String value,
     required List<String> items,
+    required String label,
+    required IconData icon,
     required void Function(String?) onChanged,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
           ),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 16,
-            horizontal: 16,
-          ),
-          prefixIcon: const Icon(Icons.work_outline),
         ),
-        value: items.contains(currentValue) ? currentValue : items[0],
-        items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
-        }).toList(),
-        onChanged: onChanged,
-      ),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: items.contains(value) ? value : items.first,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: item == items.first ? AppColors.textSecondary : AppColors.textPrimary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          decoration: InputDecoration(
+            prefixIcon: Container(
+              margin: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primary,
+                size: 20,
+              ),
+            ),
+            filled: true,
+            fillColor: AppColors.surfaceVariant,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.primary, width: 2),
+            ),
+            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          ),
+        ),
+      ],
     );
   }
 
-  void _saveProfile() {
-    if (_formKey.currentState!.validate()) {
-      // Update profile in bloc
-      context.read<ProfileBloc>().add(
-        UpdateProfile(
-          name: _nameController.text,
-          phone: _phoneController.text,
-          employment: _employmentController.text,
-          nationality: _nationalityController.text,
-          city: _cityController.text,
-          province: _provinceController.text,
-          district: _districtController.text,
-        ),
-      );
-
-      // Submit profile to save changes
-      context.read<ProfileBloc>().add(SubmitProfile());
-
-      // Reset form changed state
-      setState(() {
-        _formChanged = false;
-      });
-    }
+  Widget _buildActionButtons() {
+    return Container(
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          SizedBox(
+            width: double.infinity,
+            height: 56,
+            child: ElevatedButton(
+              onPressed: _formChanged && !_isLoading ? _saveChanges : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _formChanged ? AppColors.primary : AppColors.border,
+                foregroundColor: AppColors.white,
+                elevation: _formChanged ? 4 : 0,
+                shadowColor: AppColors.primary.withOpacity(0.3),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: _isLoading
+                  ? SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                  strokeWidth: 2,
+                ),
+              )
+                  : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.save_outlined,
+                    size: 22,
+                  ),
+                  SizedBox(width: 12),
+                  Text(
+                    'Guardar cambios',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_formChanged) ...[
+            SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: TextButton(
+                onPressed: _isLoading ? null : _resetForm,
+                style: TextButton.styleFrom(
+                  foregroundColor: AppColors.textSecondary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: AppColors.border),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.refresh_outlined,
+                      size: 20,
+                    ),
+                    SizedBox(width: 8),
+                    Text(
+                      'Deshacer cambios',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

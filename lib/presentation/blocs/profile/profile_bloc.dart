@@ -4,7 +4,6 @@ import 'package:meta/meta.dart';
 import '../../../config/usecase/usecase.dart';
 import '../../../domain/entities/auth/user_profile.dart';
 import '../../../domain/usecases/auth/change_password.dart';
-import '../../../domain/usecases/auth/update_profile_image.dart';
 import '../../../domain/usecases/use_cases.dart';
 
 part 'profile_event.dart';
@@ -14,24 +13,20 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
 
   final GetUserProfile _getUserProfile;
   final UpdateUserProfile _updateUserProfile;
-  final UpdateProfileImage _updateUserProfileImage;
   final ChangePassword _changePassword;
   UserProfile? _cachedProfile;
 
   ProfileBloc({
     required GetUserProfile getUserProfile,
     required UpdateUserProfile updateUserProfile,
-    required UpdateProfileImage updateProfileImage,
     required ChangePassword changePassword,
   })  : _getUserProfile = getUserProfile,
         _updateUserProfile = updateUserProfile,
-        _updateUserProfileImage = updateProfileImage,
         _changePassword = changePassword,
       super(ProfileInitial()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
     on<SubmitProfile>(_onSubmitProfile);
-    on<UpdateProfileImageEvent>(_onUpdateProfileImage);
     on<ChangePasswordEvent>(_onChangePassword);
   }
 
@@ -68,7 +63,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
         city: event.city ?? loadedState.userProfile.city,
         province: event.province ?? loadedState.userProfile.province,
         district: event.district ?? loadedState.userProfile.district,
-        profileImageUrl: event.profileImageUrl ?? loadedState.userProfile.profileImageUrl,
       );
 
       _cachedProfile = updatedProfile;
@@ -96,51 +90,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
           });
         },
       );
-    }
-  }
-
-  void _onUpdateProfileImage(UpdateProfileImageEvent event, Emitter<ProfileState> emit) async {
-    if (state is ProfileLoaded) {
-      final loadedState = state as ProfileLoaded;
-
-      emit(ProfileLoading()); // Show loader while processing the image
-
-      try {
-        // Call use case to upload the image and get the public URL
-        final result = await _updateUserProfileImage(
-          UpdateProfileImageParams(
-            userId: loadedState.userProfile.id,
-            filePath: event.filePath,
-          ),
-        );
-
-        result.fold(
-              (failure) async {
-            emit(ProfileError(failure.message));
-          },
-              (imageUrl) async {
-            // Update the profile with the new URL
-            final updatedProfile = loadedState.userProfile.copyWith(profileImageUrl: imageUrl);
-
-            // Use the use case to save the data in the database
-            final updateResult = await _updateUserProfile(
-              UpdateUserProfileParams(profile: updatedProfile),
-            );
-
-            updateResult.fold(
-                  (failure) async {
-                emit(ProfileError(failure.message));
-              },
-                  (_) {
-                _cachedProfile = updatedProfile; // Update the local cache
-                emit(ProfileLoaded(userProfile: updatedProfile));
-              },
-            );
-          },
-        );
-      } catch (e) {
-        emit(ProfileError('Error al actualizar la imagen de perfil.'));
-      }
     }
   }
 

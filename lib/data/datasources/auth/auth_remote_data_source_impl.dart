@@ -105,7 +105,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'city': '',
           'province': '',
           'district': '',
-          'profileImageUrl': '',
           'created_at': DateTime.now().toIso8601String(),
         });
       }
@@ -248,92 +247,99 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> updateUserProfileData(UserProfile userProfile) async {
     try {
-      final response = await supabaseClient
-          .from('profiles')
-          .update(userProfile.toJson())
-          .eq('id', userProfile.id);
+      // Crear un mapa solo con los campos que existen en la base de datos
+      final updateData = <String, dynamic>{};
 
-      if (response == null || response.isEmpty) {
-        throw ServerException('No se pudo actualizar el perfil.');
+      // Solo agregar campos que no sean nulos o vacíos
+      if (userProfile.name.isNotEmpty) {
+        updateData['name'] = userProfile.name;
+      }
+      if (userProfile.phone.isNotEmpty) {
+        updateData['phone'] = userProfile.phone;
+      }
+      if (userProfile.employment.isNotEmpty) {
+        updateData['employment'] = userProfile.employment;
+      }
+      if (userProfile.nationality.isNotEmpty) {
+        updateData['nationality'] = userProfile.nationality;
+      }
+      if (userProfile.city.isNotEmpty) {
+        updateData['city'] = userProfile.city;
+      }
+      if (userProfile.province.isNotEmpty) {
+        updateData['province'] = userProfile.province;
+      }
+      if (userProfile.district.isNotEmpty) {
+        updateData['district'] = userProfile.district;
       }
 
-    } catch (e) {
-      throw ServerException(e.toString());
-    }
-  }
+      // Agregar timestamp de actualización
+      updateData['updated_at'] = DateTime.now().toIso8601String();
 
-  @override
-  Future<void> updateProfileImage(String userId, String filePath) async {
-    final String imageUrl = await uploadProfileImage(filePath, userId);
+      // Realizar la actualización solo si hay datos para actualizar
+      if (updateData.isNotEmpty) {
+        final result = await supabaseClient
+            .from('profiles')
+            .update(updateData)
+            .eq('id', userProfile.id)
+            .select(); // Importante: agregar .select() para obtener respuesta
 
-    try {
-      final response = await supabaseClient
-          .from('profiles')
-          .update({'profileImageUrl': imageUrl})
-          .eq('id', userId);
+        // Verificar que la actualización fue exitosa
+        if (result.isEmpty) {
+          throw const ServerException('No se encontró el perfil para actualizar.');
+        }
 
-      if (response.error != null) {
-        throw ServerException('Error al actualizar la URL de la imagen: ${response.error!.message}');
+        print('Perfil actualizado exitosamente: ${result.first}');
       }
+
     } on PostgrestException catch (e) {
-      throw ServerException(e.toString());
+      print('Error PostgrestException: ${e.message}');
+      throw ServerException('Error de base de datos: ${e.message}');
     } catch (e) {
-      throw ServerException('Error al guardar la imagen en el perfil: $e');
+      print('Error general en updateUserProfileData: $e');
+      throw ServerException('Error al actualizar el perfil: $e');
     }
   }
-
-  @override
-  Future<String> uploadProfileImage(String filePath, String userId) async {
-    final fileName = 'profile_${userId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
-    try {
-      final fileBytes = await FlutterImageCompress.compressWithFile(
-        filePath,
-        quality: 85,
-      );
-
-      if (fileBytes == null) {
-        throw ServerException('Error al comprimir la imagen.');
-      }
-
-      await supabaseClient.storage.from('profile_images').uploadBinary(fileName, fileBytes);
-
-      // Obtener la URL pública de la imagen
-      final publicUrl = supabaseClient.storage.from('profile_images').getPublicUrl(fileName);
-      return publicUrl;
-    } on PostgrestException catch (e) {
-      throw ServerException('Error al subir la imagen: ${e}');
-    } catch (e) {
-      throw ServerException('Error al subir la imagen: $e');
-    }
-  }
-
+  
   @override
   Future<void> changePassword(String currentPassword, String newPassword) async {
     try {
       // Validate user is logged in
       final session = supabaseClient.auth.currentSession;
       if (session == null) {
-        throw const ServerException('User not logged in!');
+        throw const ServerException('Usuario no autenticado');
       }
 
       // Change password with Supabase
-      await supabaseClient.auth.updateUser(
+      final response = await supabaseClient.auth.updateUser(
         UserAttributes(
           password: newPassword,
         ),
-        // Some providers may require re-authentication with current password
-        // This depends on your Supabase setup
       );
+
+      // Verificar que la actualización fue exitosa
+      if (response.user == null) {
+        throw const ServerException('Error al actualizar la contraseña');
+      }
+
+      print('Contraseña actualizada exitosamente para usuario: ${response.user!.id}');
+
     } on AuthException catch (e) {
+      print('Error AuthException: ${e.message}');
       throw ServerException(e.message);
     } catch (e) {
-      throw ServerException(e.toString());
+      print('Error general en changePassword: $e');
+      throw ServerException('Error al cambiar la contraseña: $e');
     }
   }
 
   @override
   Future<void> logout() async {
-    await supabaseClient.auth.signOut();
+    try {
+      await supabaseClient.auth.signOut();
+    } catch (e) {
+      print('Error en logout: $e');
+      throw ServerException('Error al cerrar sesión: $e');
+    }
   }
 }

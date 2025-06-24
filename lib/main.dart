@@ -10,6 +10,7 @@ import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
@@ -44,6 +45,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final MeasurementBloc measurementBloc;
   late final ProfileBloc profileBloc;
   late final PlaceBloc placeBloc;
+  late final CombinedResultsBloc combinedResultsBloc;
 
   @override
   void initState() {
@@ -57,6 +59,7 @@ class _MyAppState extends ConsumerState<MyApp> {
     locationsBloc = serviceLocator<LocationsBloc>();
     profileBloc = serviceLocator<ProfileBloc>();
     placeBloc = serviceLocator<PlaceBloc>();
+    combinedResultsBloc = serviceLocator<CombinedResultsBloc>();
   }
 
   @override
@@ -110,6 +113,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
         BlocProvider(
             create: (_) => placeBloc,
+        ),
+        BlocProvider(
+          create: (_) => combinedResultsBloc,
         ),
       ],
       child: MultiBlocListener(

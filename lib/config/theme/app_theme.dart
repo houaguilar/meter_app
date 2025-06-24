@@ -49,7 +49,13 @@ class AppTheme {
       elevation: 0,
       centerTitle: true,
       titleTextStyle: AppTypography.h5.copyWith(color: AppColors.white),
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: AppColors.primaryMetraShop,
+        statusBarIconBrightness: Brightness.light,
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: AppColors.white,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ),
       iconTheme: const IconThemeData(color: AppColors.white),
     ),
 

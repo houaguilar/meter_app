@@ -12,6 +12,7 @@ import 'package:meter_app/presentation/screens/home/pisos/falso_piso/datos/datos
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/result_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
+import 'package:meter_app/presentation/screens/perfil/notificaciones/notifications_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
@@ -30,6 +31,7 @@ import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladri
 import '../../presentation/screens/home/pisos/contrapiso/datos/datos_contrapiso_screen.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
 import '../../presentation/screens/perfil/info/profile_info_screen.dart';
+import '../../presentation/screens/projects/combined/combined_results_screen.dart';
 import '../../presentation/screens/projects/metrados/metrados_screen.dart';
 import '../../presentation/screens/projects/new_project/new_project_screen.dart';
 import '../../presentation/screens/projects/result/result_screen.dart';
@@ -430,6 +432,20 @@ class AppRouter {
                       return ResultScreen(metradoId: metradoId);
                     },
                   ),
+                  // En tu GoRouter:
+                  GoRoute(
+                    path: 'combined-results/:projectId',
+                    name: 'combined-results',
+                    builder: (context, state) {
+                      final projectId = int.parse(state.pathParameters['projectId']!);
+                      final extra = state.extra as Map<String, dynamic>;
+                      return CombinedResultsScreen(
+                        projectId: projectId,
+                        selectedMetradoIds: List<int>.from(extra['selectedMetrados']),
+                        projectName: extra['projectName'],
+                      );
+                    },
+                  ),
                 ],
               ),
             ]
@@ -474,6 +490,12 @@ class AppRouter {
                 path: 'profile-settings',
                 name: 'profile-settings',
                 builder: (context, state) => const ProfileSettingsScreen(),
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'notifications-settings',
+                name: 'notifications-settings',
+                builder: (context, state) => const NotificationsSettingsScreen(),
               ),
             ]
           ),

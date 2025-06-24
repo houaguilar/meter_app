@@ -1,120 +1,165 @@
-
-import '../entities.dart';
-
 class UserProfile {
   final String id;
   final String name;
-  final String phone;
   final String email;
+  final String phone;
   final String employment;
   final String nationality;
   final String city;
   final String province;
   final String district;
-  final String? profileImageUrl;
 
-  // Make all fields final to ensure immutability
-  const UserProfile({
+  UserProfile({
     required this.id,
     required this.name,
-    required this.phone,
     required this.email,
-    this.employment = '',
-    this.nationality = '',
-    this.city = '',
-    this.province = '',
-    this.district = '',
-    this.profileImageUrl,
+    required this.phone,
+    required this.employment,
+    required this.nationality,
+    required this.city,
+    required this.province,
+    required this.district,
   });
 
-  factory UserProfile.fromUser(User user, Map<String, dynamic> additionalData) {
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? phone,
+    String? employment,
+    String? nationality,
+    String? city,
+    String? province,
+    String? district,
+  }) {
     return UserProfile(
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: additionalData['phone'] ?? '',
-      employment: additionalData['employment'] ?? '',
-      nationality: additionalData['nationality'] ?? '',
-      city: additionalData['city'] ?? '',
-      province: additionalData['province'] ?? '',
-      district: additionalData['district'] ?? '',
-      profileImageUrl: additionalData['profile_image_url'],
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      employment: employment ?? this.employment,
+      nationality: nationality ?? this.nationality,
+      city: city ?? this.city,
+      province: province ?? this.province,
+      district: district ?? this.district,
     );
-  }
-
-  // Add validation method to improve security
-  bool get isValid {
-    return id.isNotEmpty && name.isNotEmpty && email.isNotEmpty;
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'name': name,
-      'phone': phone,
       'email': email,
+      'phone': phone,
       'employment': employment,
       'nationality': nationality,
       'city': city,
       'province': province,
       'district': district,
-      'profile_image_url': profileImageUrl,
     };
   }
 
-  UserProfile copyWith({
-    String? id,
-    String? name,
-    String? phone,
-    String? email,
-    String? employment,
-    String? nationality,
-    String? city,
-    String? province,
-    String? district,
-    String? profileImageUrl,
-  }) {
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      phone: phone ?? this.phone,
-      email: email ?? this.email,
-      employment: employment ?? this.employment,
-      nationality: nationality ?? this.nationality,
-      city: city ?? this.city,
-      province: province ?? this.province,
-      district: district ?? this.district,
-      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      phone: json['phone'] ?? '',
+      employment: json['employment'] ?? '',
+      nationality: json['nationality'] ?? '',
+      city: json['city'] ?? '',
+      province: json['province'] ?? '',
+      district: json['district'] ?? '',
     );
   }
 
-  // Add equality operator for easy comparison
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-          other is UserProfile &&
-              runtimeType == other.runtimeType &&
-              id == other.id &&
-              name == other.name &&
-              phone == other.phone &&
-              email == other.email &&
-              employment == other.employment &&
-              nationality == other.nationality &&
-              city == other.city &&
-              province == other.province &&
-              district == other.district &&
-              profileImageUrl == other.profileImageUrl;
+  /// Calcula el porcentaje de completitud del perfil
+  double get completionPercentage {
+    final fields = [
+      name,
+      phone,
+      employment,
+      nationality,
+      city,
+      province,
+      district,
+    ];
+
+    final filledFields = fields.where((field) => field.isNotEmpty).length;
+    return (filledFields / fields.length) * 100;
+  }
+
+  /// Verifica si el perfil está completo
+  bool get isComplete {
+    return name.isNotEmpty &&
+        phone.isNotEmpty &&
+        employment.isNotEmpty &&
+        nationality.isNotEmpty &&
+        city.isNotEmpty &&
+        province.isNotEmpty &&
+        district.isNotEmpty;
+  }
+
+  /// Obtiene los campos faltantes del perfil
+  List<String> get missingFields {
+    final Map<String, String> fieldNames = {
+      'name': 'Nombre',
+      'phone': 'Teléfono',
+      'employment': 'Ocupación',
+      'nationality': 'Nacionalidad',
+      'city': 'Ciudad',
+      'province': 'Provincia',
+      'district': 'Distrito',
+    };
+
+    final Map<String, String> fieldValues = {
+      'name': name,
+      'phone': phone,
+      'employment': employment,
+      'nationality': nationality,
+      'city': city,
+      'province': province,
+      'district': district,
+    };
+
+    return fieldValues.entries
+        .where((entry) => entry.value.isEmpty)
+        .map((entry) => fieldNames[entry.key]!)
+        .toList();
+  }
 
   @override
-  int get hashCode =>
-      id.hashCode ^
-      name.hashCode ^
-      phone.hashCode ^
-      email.hashCode ^
-      employment.hashCode ^
-      nationality.hashCode ^
-      city.hashCode ^
-      province.hashCode ^
-      district.hashCode ^
-      (profileImageUrl?.hashCode ?? 0);
+  String toString() {
+    return 'UserProfile(id: $id, name: $name, email: $email, phone: $phone, employment: $employment, nationality: $nationality, city: $city, province: $province, district: $district)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is UserProfile &&
+        other.id == id &&
+        other.name == name &&
+        other.email == email &&
+        other.phone == phone &&
+        other.employment == employment &&
+        other.nationality == nationality &&
+        other.city == city &&
+        other.province == province &&
+        other.district == district;
+  }
+
+  @override
+  int get hashCode {
+    return Object.hash(
+      id,
+      name,
+      email,
+      phone,
+      employment,
+      nationality,
+      city,
+      province,
+      district,
+    );
+  }
 }

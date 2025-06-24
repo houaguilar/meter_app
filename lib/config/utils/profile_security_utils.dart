@@ -29,13 +29,6 @@ class ProfileSecurityUtils {
       warnings['name'] = 'El nombre contiene caracteres no permitidos';
     }
 
-    // Validar URL de imagen si está presente
-    if (profile.profileImageUrl != null &&
-        profile.profileImageUrl!.isNotEmpty &&
-        !isValidImageUrl(profile.profileImageUrl!)) {
-      warnings['profileImage'] = 'La URL de la imagen no es válida';
-    }
-
     return ProfileValidationResult(
       isValid: errors.isEmpty,
       errors: errors,
@@ -271,7 +264,6 @@ class ProfileSecurityUtils {
       profile.city,
       profile.province,
       profile.district,
-      profile.profileImageUrl ?? '',
     ];
 
     return !fields.any((field) => containsMaliciousContent(field));
@@ -319,7 +311,6 @@ class ProfileSecurityUtils {
       'phone': profile.phone.isNotEmpty ? obfuscatePhone(profile.phone) : 'empty',
       'employment': profile.employment.isNotEmpty ? 'set' : 'empty',
       'city': profile.city.isNotEmpty ? 'set' : 'empty',
-      'hasProfileImage': profile.profileImageUrl?.isNotEmpty == true,
     };
   }
 
@@ -335,7 +326,6 @@ class ProfileSecurityUtils {
       'employment': profile.employment.isNotEmpty,
       'city': profile.city.isNotEmpty,
       'district': profile.district.isNotEmpty,
-      'profileImage': profile.profileImageUrl?.isNotEmpty == true,
     };
 
     final completedCount = fields.values.where((completed) => completed).length;
@@ -371,10 +361,6 @@ class ProfileSecurityUtils {
 
     if (profile.city.isEmpty || profile.district.isEmpty) {
       recommendations.add('Completa tu ubicación para encontrar proveedores cerca de ti');
-    }
-
-    if (profile.profileImageUrl?.isEmpty != false) {
-      recommendations.add('Sube una foto de perfil para personalizar tu cuenta');
     }
 
     if (recommendations.isEmpty) {
@@ -593,8 +579,6 @@ extension UserProfileSecurity on UserProfile {
         final value = fieldName == 'city' ? city :
         fieldName == 'province' ? province : district;
         return ProfileSecurityUtils.isValidLocation(value);
-      case 'profileimage':
-        return ProfileSecurityUtils.isValidImageUrl(profileImageUrl ?? '');
       default:
         return true;
     }

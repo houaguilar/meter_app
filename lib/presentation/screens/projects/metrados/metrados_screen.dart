@@ -1,46 +1,49 @@
+// lib/presentation/screens/projects/metrados/metrados_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/projects/metrado/metrado.dart';
 import '../../../blocs/projects/metrados/metrados_bloc.dart';
-import '../result/result_screen.dart';
+import '../combined/combined_results_screen.dart';
 
 class MetradosScreen extends StatefulWidget {
   final int projectId;
   final String projectName;
 
-  const MetradosScreen({required this.projectId, required this.projectName, super.key});
+  const MetradosScreen({
+    required this.projectId,
+    required this.projectName,
+    super.key
+  });
 
   @override
   State<MetradosScreen> createState() => _MetradosScreenState();
 }
 
-class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProviderStateMixin {
+class _MetradosScreenState extends State<MetradosScreen>
+    with SingleTickerProviderStateMixin {
+
   late AnimationController _animationController;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey<RefreshIndicatorState> _refreshKey = GlobalKey<RefreshIndicatorState>();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
-  // Set para controlar los metrados seleccionados
+  // Estado de selección múltiple
   final Set<int> _selectedMetrados = {};
   bool _selectionMode = false;
+
+  // Animaciones
+  late Animation<double> _fabScaleAnimation;
+  late Animation<double> _selectionModeAnimation;
 
   @override
   void initState() {
     super.initState();
-
-    // Start loading metrados data
+    _initializeAnimations();
     _loadMetrados();
-
-    // Setup animation controller for animated list items
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    // Add listener to search controller
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -48,165 +51,241 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
   void dispose() {
     _animationController.dispose();
     _scrollController.dispose();
-    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
   }
 
-  void _onSearchChanged() {
-    setState(() {
-      _searchQuery = _searchController.text.toLowerCase();
-    });
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _fabScaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.elasticOut,
+    ));
+
+    _selectionModeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   void _loadMetrados() {
     context.read<MetradosBloc>().add(LoadMetradosEvent(projectId: widget.projectId));
   }
 
-  Future<void> _handleRefresh() async {
-    _loadMetrados();
-    // Wait for the bloc to complete loading
-    await Future.delayed(const Duration(seconds: 1));
-    return Future.value();
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text;
+    });
   }
 
-  // Método para activar/desactivar el modo de selección
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MANEJO DE SELECCIÓN MÚLTIPLE
+  // ═══════════════════════════════════════════════════════════════════════════
+
   void _toggleSelectionMode() {
     setState(() {
       _selectionMode = !_selectionMode;
       if (!_selectionMode) {
         _selectedMetrados.clear();
+        _animationController.reverse();
+      } else {
+        _animationController.forward();
       }
     });
   }
 
-  // Método para seleccionar/deseleccionar un metrado
   void _toggleMetradoSelection(int metradoId) {
     setState(() {
       if (_selectedMetrados.contains(metradoId)) {
         _selectedMetrados.remove(metradoId);
-        if (_selectedMetrados.isEmpty) {
-          _selectionMode = false;
-        }
       } else {
         _selectedMetrados.add(metradoId);
       }
     });
   }
 
-  // Método para eliminar metrados seleccionados
-  void _deleteSelectedMetrados() async {
-    final confirmed = await _showDeleteSelectedConfirmationDialog();
-    if (confirmed == true) {
-      // Eliminar los metrados seleccionados
-      for (var metradoId in _selectedMetrados.toList()) {
-        final metradosList = (context.read<MetradosBloc>().state as MetradoSuccess).metrados;
-        final metrado = metradosList.firstWhere((m) => m.id == metradoId);
-        context.read<MetradosBloc>().add(DeleteMetradoEvent(metrado: metrado));
-      }
-      // Salir del modo selección
-      setState(() {
-        _selectionMode = false;
+  void _selectAllMetrados(List<Metrado> metrados) {
+    setState(() {
+      if (_selectedMetrados.length == metrados.length) {
         _selectedMetrados.clear();
-      });
-    }
+      } else {
+        _selectedMetrados.addAll(metrados.map((m) => m.id));
+      }
+    });
   }
+
+  void _combineSelectedMetrados() {
+    if (_selectedMetrados.length < 2) {
+      _showErrorSnackBar('Selecciona al menos 2 metrados para combinar');
+      return;
+    }
+
+    // Navegación directa para evitar conflictos de GoRouter
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CombinedResultsScreen(
+          projectId: widget.projectId,
+          selectedMetradoIds: _selectedMetrados.toList(),
+          projectName: widget.projectName,
+        ),
+      ),
+    );
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _selectionMode = false;
+      _selectedMetrados.clear();
+      _animationController.reverse();
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // UI BUILDERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.white),
-          onPressed: () => context.pop(),
+      backgroundColor: AppColors.background,
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+      floatingActionButton: _buildFloatingActionButton(),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.white,
+      elevation: 0,
+      title: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _selectionMode
+            ? Text(
+          '${_selectedMetrados.length} seleccionados',
+          key: const ValueKey('selection-title'),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        )
+            : Text(
+          widget.projectName,
+          key: const ValueKey('project-title'),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Metrados',
-              style: TextStyle(
-                color: AppColors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              'Proyecto: ${widget.projectName}',
-              style: const TextStyle(
-                color: AppColors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-              ),
-            ),
-          ],
+      ),
+      leading: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _selectionMode
+            ? IconButton(
+          key: const ValueKey('close-selection'),
+          icon: const Icon(Icons.close),
+          onPressed: _exitSelectionMode,
+          tooltip: 'Salir de selección',
+        )
+            : IconButton(
+          key: const ValueKey('info'),
+          icon: const Icon(Icons.info_outline),
+          onPressed: _showProjectInfo,
+          tooltip: 'Información del proyecto',
         ),
-        backgroundColor: AppColors.primaryMetraShop,
-        elevation: 0,
-        actions: [
-          if (_selectionMode)
-            IconButton(
-              icon: const Icon(Icons.delete, color: AppColors.white),
-              tooltip: 'Eliminar seleccionados',
-              onPressed: _selectedMetrados.isNotEmpty ? _deleteSelectedMetrados : null,
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.select_all, color: AppColors.white),
-              tooltip: 'Seleccionar metrados',
-              onPressed: () => _toggleSelectionMode(),
-            ),
+      ),
+      actions: [
+        if (_selectionMode) ...[
+          BlocBuilder<MetradosBloc, MetradosState>(
+            builder: (context, state) {
+              if (state is MetradoSuccess) {
+                return IconButton(
+                  icon: Icon(
+                    _selectedMetrados.length == state.metrados.length
+                        ? Icons.deselect
+                        : Icons.select_all,
+                  ),
+                  onPressed: () => _selectAllMetrados(state.metrados),
+                  tooltip: _selectedMetrados.length == state.metrados.length
+                      ? 'Deseleccionar todos'
+                      : 'Seleccionar todos',
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           IconButton(
-            icon: const Icon(Icons.help_outline, color: AppColors.white),
-            tooltip: 'Ayuda',
-            onPressed: () => _showHelpDialog(),
+            icon: const Icon(Icons.delete_outline),
+            onPressed: _selectedMetrados.isNotEmpty
+                ? () => _showDeleteConfirmation(_selectedMetrados.toList())
+                : null,
+            tooltip: 'Eliminar seleccionados',
+          ),
+        ] else ...[
+          IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => context.pop(),
+            tooltip: 'Cerrar',
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildBody() {
+    return RefreshIndicator(
+      key: _refreshKey,
+      onRefresh: () async {
+        _loadMetrados();
+      },
+      color: AppColors.secondary,
+      child: Column(
+        children: [
+          _buildProjectInfoCard(),
+          _buildSearchBar(),
+          Expanded(
+            child: BlocConsumer<MetradosBloc, MetradosState>(
+              listener: (context, state) {
+                if (state is MetradoDeleted) {
+                  _showSuccessSnackBar('Metrado(s) eliminado(s) correctamente');
+                  _exitSelectionMode();
+                  // Recargar metrados después de eliminar
+                  context.read<MetradosBloc>().add(LoadMetradosEvent(projectId: widget.projectId));
+                } else if (state is MetradoEdited) {
+                  _showSuccessSnackBar('Metrado actualizado correctamente');
+                } else if (state is MetradoFailure) {
+                  _showErrorSnackBar(state.message);
+                }
+              },
+              builder: (context, state) {
+                if (state is MetradoLoading) {
+                  return _buildLoadingState();
+                } else if (state is MetradoSuccess) {
+                  final filteredMetrados = _filterMetrados(state.metrados);
+                  if (filteredMetrados.isEmpty) {
+                    return _buildEmptyState();
+                  }
+                  return _buildMetradosList(filteredMetrados);
+                } else if (state is MetradoFailure) {
+                  return _buildErrorState(state.message);
+                }
+                return _buildLoadingState();
+              },
+            ),
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Project info card
-            _buildProjectInfoCard(),
-
-            // Search bar
-            _buildSearchBar(),
-
-            // Metrados content
-            Expanded(
-              child: BlocConsumer<MetradosBloc, MetradosState>(
-                listener: (context, state) {
-                  if (state is MetradoAdded) {
-                    _showSuccessSnackBar('Metrado agregado correctamente');
-                  } else if (state is MetradoNameAlreadyExists) {
-                    _showErrorSnackBar(state.message);
-                  } else if (state is MetradoDeleted) {
-                    _showSuccessSnackBar('Metrado eliminado correctamente');
-                  } else if (state is MetradoEdited) {
-                    _showSuccessSnackBar('Metrado actualizado correctamente');
-                  } else if (state is MetradoFailure) {
-                    _showErrorSnackBar(state.message);
-                  }
-                },
-                builder: (context, state) {
-                  if (state is MetradoLoading) {
-                    return _buildLoadingState();
-                  } else if (state is MetradoSuccess) {
-                    if (state.metrados.isEmpty) {
-                      return _buildEmptyState();
-                    }
-                    return _buildMetradosList(state.metrados);
-                  } else if (state is MetradoFailure) {
-                    return _buildErrorState(state.message);
-                  }
-                  return _buildLoadingState();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      // Ya no incluimos el FloatingActionButton para agregar metrados
     );
   }
 
@@ -217,8 +296,8 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.blueMetraShop.withAlpha((0.8 * 255).round()),
-            AppColors.blueMetraShop.withAlpha((0.6 * 255).round()),
+            AppColors.secondary.withOpacity(0.8),
+            AppColors.secondary.withOpacity(0.6),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -226,7 +305,7 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withAlpha((0.3 * 255).round()),
+            color: Colors.grey.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 5,
             offset: const Offset(0, 3),
@@ -258,9 +337,8 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
             ],
           ),
           const SizedBox(height: 12),
-          // Texto modificado para reflejar que no se pueden agregar metrados aquí
           const Text(
-            'Metrados registrados para este proyecto. Seleccione para ver detalles o use el modo selección.',
+            'Selecciona uno o más metrados para ver o combinar resultados.',
             style: TextStyle(
               fontSize: 14,
               color: Colors.white,
@@ -282,13 +360,34 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
                       ),
                     ),
                     if (_selectionMode)
-                      Text(
-                        'Seleccionados: ${_selectedMetrados.length}',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+                      AnimatedBuilder(
+                        animation: _selectionModeAnimation,
+                        builder: (context, child) {
+                          return Opacity(
+                            opacity: _selectionModeAnimation.value,
+                            child: Transform.scale(
+                              scale: _selectionModeAnimation.value,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Seleccionados: ${_selectedMetrados.length}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
                   ],
                 );
@@ -318,390 +417,449 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
           prefixIcon: const Icon(Icons.search, color: Colors.grey),
           suffixIcon: _searchController.text.isNotEmpty
               ? IconButton(
-            icon: const Icon(Icons.clear, color: Colors.grey),
+            icon: const Icon(Icons.clear),
             onPressed: () {
               _searchController.clear();
+              setState(() => _searchQuery = '');
             },
           )
               : null,
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Colors.grey.shade300),
+            borderSide: BorderSide(color: AppColors.neutral200),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: const BorderSide(color: AppColors.blueMetraShop),
+            borderSide: BorderSide(color: AppColors.secondary, width: 2),
           ),
+          filled: true,
+          fillColor: AppColors.white,
         ),
-        style: const TextStyle(fontSize: 16),
       ),
     );
   }
 
-  Widget _buildLoadingState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.blueMetraShop),
-            strokeWidth: 3,
+  Widget _buildFloatingActionButton() {
+    return AnimatedBuilder(
+      animation: _fabScaleAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _fabScaleAnimation.value,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) {
+              return ScaleTransition(scale: animation, child: child);
+            },
+            child: _selectionMode
+                ? _buildCombineFAB()
+                : _buildSelectFAB(),
           ),
-          const SizedBox(height: 20),
-          Text(
-            'Cargando metrados...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSelectFAB() {
+    return FloatingActionButton.extended(
+      key: const ValueKey('select-fab'),
+      onPressed: _toggleSelectionMode,
+      backgroundColor: AppColors.secondary,
+      foregroundColor: AppColors.white,
+      icon: const Icon(Icons.check_box_outlined),
+      label: const Text(
+        'Seleccionar',
+        style: TextStyle(fontWeight: FontWeight.w600),
+      ),
+      elevation: 6,
+      heroTag: "select_metrados",
+    );
+  }
+
+  Widget _buildCombineFAB() {
+    final canCombine = _selectedMetrados.length >= 2;
+
+    return FloatingActionButton.extended(
+      key: const ValueKey('combine-fab'),
+      onPressed: canCombine ? _combineSelectedMetrados : null,
+      backgroundColor: canCombine ? AppColors.success : AppColors.neutral300,
+      foregroundColor: AppColors.white,
+      icon: Icon(
+        canCombine ? Icons.merge_type : Icons.merge_type_outlined,
+      ),
+      label: Text(
+        _selectedMetrados.isEmpty
+            ? 'Selecciona metrados'
+            : _selectedMetrados.length == 1
+            ? 'Selecciona otro más'
+            : 'Combinar (${_selectedMetrados.length})',
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      elevation: canCombine ? 6 : 2,
+      heroTag: "combine_metrados",
+    );
+  }
+
+  Widget _buildMetradosList(List<Metrado> metrados) {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.all(16),
+      itemCount: metrados.length,
+      itemBuilder: (context, index) {
+        final metrado = metrados[index];
+        return _buildMetradoItem(metrado, index);
+      },
+    );
+  }
+
+  Widget _buildMetradoItem(Metrado metrado, int index) {
+    final isSelected = _selectedMetrados.contains(metrado.id);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: isSelected ? AppColors.secondary.withOpacity(0.1) : AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelected ? AppColors.secondary : AppColors.neutral200,
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 1),
           ),
         ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _handleMetradoTap(metrado),
+          onLongPress: () => _handleMetradoLongPress(metrado),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Checkbox en modo selección
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _selectionMode
+                      ? Container(
+                    key: const ValueKey('checkbox'),
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Checkbox(
+                      value: isSelected,
+                      onChanged: (_) => _toggleMetradoSelection(metrado.id),
+                      activeColor: AppColors.secondary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                  )
+                      : Container(
+                    key: const ValueKey('icon'),
+                    margin: const EdgeInsets.only(right: 12),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.assessment_outlined,
+                      color: AppColors.secondary,
+                      size: 24,
+                    ),
+                  ),
+                ),
+
+                // Contenido del metrado
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        metrado.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected ? AppColors.secondary : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'ID: ${metrado.id}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Indicador de selección o flecha
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: _selectionMode
+                      ? (isSelected
+                      ? Icon(
+                    Icons.check_circle,
+                    color: AppColors.secondary,
+                    key: const ValueKey('selected'),
+                  )
+                      : Icon(
+                    Icons.radio_button_unchecked,
+                    color: AppColors.neutral300,
+                    key: const ValueKey('unselected'),
+                  ))
+                      : Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppColors.neutral400,
+                    size: 16,
+                    key: const ValueKey('arrow'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MANEJO DE EVENTOS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  void _handleMetradoTap(Metrado metrado) {
+    if (_selectionMode) {
+      _toggleMetradoSelection(metrado.id);
+    } else {
+      // Navegar a ResultScreen con todos los parámetros necesarios
+      context.pushNamed(
+        'results',
+        pathParameters: {
+          'projectId': widget.projectId.toString(),
+          'projectName': widget.projectName,
+          'metradoId': metrado.id.toString(),
+        },
+      );
+    }
+  }
+
+  void _handleMetradoLongPress(Metrado metrado) {
+    if (!_selectionMode) {
+      _toggleSelectionMode();
+      _toggleMetradoSelection(metrado.id);
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTODOS AUXILIARES
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  List<Metrado> _filterMetrados(List<Metrado> metrados) {
+    if (_searchQuery.isEmpty) return metrados;
+
+    return metrados.where((metrado) {
+      return metrado.name.toLowerCase().contains(_searchQuery.toLowerCase());
+    }).toList();
+  }
+
+  void _showProjectInfo() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: AppColors.secondary),
+            const SizedBox(width: 8),
+            const Text('Información del Proyecto'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Proyecto: ${widget.projectName}',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            Text('ID: ${widget.projectId}'),
+            const SizedBox(height: 16),
+            const Text(
+              'Funcionalidades disponibles:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 8),
+            _buildInfoBullet('Ver resultados individuales'),
+            _buildInfoBullet('Seleccionar múltiples metrados'),
+            _buildInfoBullet('Combinar resultados'),
+            _buildInfoBullet('Generar reportes PDF'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoBullet(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 16,
+            color: AppColors.success,
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(List<int> metradoIds) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        title: const Text('Confirmar Eliminación'),
+        content: Text(
+          '¿Estás seguro de que deseas eliminar ${metradoIds.length} ${metradoIds.length == 1 ? "metrado" : "metrados"}?\n\nEsta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _deleteSelectedMetrados(metradoIds);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: AppColors.white,
+            ),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteSelectedMetrados(List<int> metradoIds) {
+    // Obtener los metrados del estado actual
+    final currentState = context.read<MetradosBloc>().state;
+    if (currentState is MetradoSuccess) {
+      final metrados = currentState.metrados;
+
+      // Eliminar cada metrado seleccionado
+      for (final metradoId in metradoIds) {
+        final metrado = metrados.firstWhere((m) => m.id == metradoId);
+        context.read<MetradosBloc>().add(DeleteMetradoEvent(metrado: metrado));
+      }
+    }
+  }
+
+  // Estados de UI
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
       ),
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.folder_open,
-              size: 80,
-              color: Colors.grey[400],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.assessment_outlined,
+            size: 64,
+            color: AppColors.neutral300,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _searchQuery.isNotEmpty
+                ? 'No se encontraron metrados'
+                : 'No hay metrados registrados',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
             ),
-            const SizedBox(height: 24),
-            Text(
-              'No hay metrados registrados',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _searchQuery.isNotEmpty
+                ? 'Intenta con otros términos de búsqueda'
+                : 'Los metrados se crean desde los cálculos',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textTertiary,
             ),
-            const SizedBox(height: 12),
-            Text(
-              'Los metrados se agregarán desde otro flujo de la aplicación.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildErrorState(String message) {
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 80,
-              color: Colors.red[300],
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Error al cargar metrados',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey[700],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _loadMetrados,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMetradosList(List<Metrado> metrados) {
-    // Filter metrados based on search query
-    final filteredMetrados = _searchQuery.isEmpty
-        ? metrados
-        : metrados.where((metrado) =>
-        metrado.name.toLowerCase().contains(_searchQuery)
-    ).toList();
-
-    // Reset and start animation controller
-    _animationController.reset();
-    _animationController.forward();
-
-    if (filteredMetrados.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search_off,
-              size: 60,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No se encontraron metrados que coincidan con "$_searchQuery"',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: () {
-                _searchController.clear();
-              },
-              icon: const Icon(Icons.clear),
-              label: const Text('Limpiar búsqueda'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.blueMetraShop,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return RefreshIndicator(
-      key: _refreshKey,
-      color: AppColors.blueMetraShop,
-      onRefresh: _handleRefresh,
-      child: ListView.builder(
-        controller: _scrollController,
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: filteredMetrados.length,
-        itemBuilder: (context, index) {
-          final metrado = filteredMetrados[index];
-
-          // Create staggered animation for list items
-          final Animation<double> animation = CurvedAnimation(
-            parent: _animationController,
-            curve: Interval(
-              index / filteredMetrados.length * 0.75,
-              (index + 1) / filteredMetrados.length,
-              curve: Curves.easeInOut,
-            ),
-          );
-
-          return AnimatedBuilder(
-            animation: animation,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(
-                    begin: const Offset(0.5, 0),
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildMetradoCard(metrado),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildMetradoCard(Metrado metrado) {
-    // Indicar si el metrado está seleccionado
-    final bool isSelected = _selectedMetrados.contains(metrado.id);
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: isSelected ? 4 : 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: isSelected
-            ? const BorderSide(color: AppColors.blueMetraShop, width: 2)
-            : BorderSide.none,
-      ),
-      child: InkWell(
-        onTap: _selectionMode
-            ? () => _toggleMetradoSelection(metrado.id)
-            : () => _navigateToResults(metrado),
-        onLongPress: () {
-          if (!_selectionMode) {
-            _toggleSelectionMode();
-            _toggleMetradoSelection(metrado.id);
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          child: Row(
-            children: [
-              // Checkbox o indicador de selección
-              if (_selectionMode)
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (_) => _toggleMetradoSelection(metrado.id),
-                  activeColor: AppColors.blueMetraShop,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-
-              // Icono del metrado
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.yellowMetraShop.withAlpha((0.2 * 255).round()),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.receipt_long,
-                  color: AppColors.yellowMetraShop,
-                  size: 24,
-                ),
-              ),
-
-              const SizedBox(width: 16),
-
-              // Información del metrado
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      metrado.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryMetraShop,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'ID: ${metrado.id} • ${_selectionMode ? "Toca para seleccionar" : "Toca para ver resultados"}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Icono de navegación
-              if (!_selectionMode)
-                const Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey,
-                ),
-            ],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: AppColors.error,
           ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToResults(Metrado metrado) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ResultScreen(
-          metradoId: metrado.id.toString(),
-        ),
-      ),
-    );
-  }
-
-  Future<bool?> _showDeleteSelectedConfirmationDialog() {
-    final count = _selectedMetrados.length;
-
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.orange[400],
-              size: 40,
+          const SizedBox(height: 16),
+          Text(
+            'Error al cargar metrados',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Eliminar metrados',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          '¿Estás seguro de eliminar $count ${count == 1 ? "metrado seleccionado" : "metrados seleccionados"}?\n\nEsta acción no se puede deshacer y eliminará todos los resultados asociados.',
-          textAlign: TextAlign.center,
-        ),
-        actionsPadding: const EdgeInsets.all(16),
-        actionsAlignment: MainAxisAlignment.center,
-        actions: [
-          OutlinedButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey[700],
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Cancelar'),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 8),
+          Text(
+            message,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pop(true),
-            icon: const Icon(Icons.delete_outline, size: 18),
-            label: const Text('Eliminar'),
+            onPressed: _loadMetrados,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Reintentar'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red[400],
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              backgroundColor: AppColors.secondary,
+              foregroundColor: AppColors.white,
             ),
           ),
         ],
@@ -709,146 +867,40 @@ class _MetradosScreenState extends State<MetradosScreen> with SingleTickerProvid
     );
   }
 
-  void _showHelpDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        title: const Text('Ayuda - Metrados'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHelpItem(
-              icon: Icons.touch_app_outlined,
-              title: 'Ver resultados',
-              description: 'Toca un metrado para ver sus resultados asociados.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              icon: Icons.select_all,
-              title: 'Modo selección',
-              description: 'Pulsa el botón de selección o mantén presionado un metrado para activar el modo selección.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              icon: Icons.delete_outline,
-              title: 'Eliminar metrados',
-              description: 'En modo selección, selecciona los metrados y pulsa el icono de eliminar para borrarlos.',
-            ),
-            const SizedBox(height: 16),
-            _buildHelpItem(
-              icon: Icons.search,
-              title: 'Buscar metrados',
-              description: 'Usa el campo de búsqueda para filtrar los metrados por nombre.',
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.blueMetraShop,
-            ),
-            child: const Text('Entendido'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHelpItem({
-    required IconData icon,
-    required String title,
-    required String description,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.blueMetraShop.withAlpha((0.1 * 255).round()),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: AppColors.blueMetraShop, size: 24),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.primaryMetraShop,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
+  // Snackbars
   void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white),
-            const SizedBox(width: 12),
+            const Icon(Icons.check_circle, color: Colors.white),
+            const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.green[600],
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(8),
         ),
-        duration: const Duration(seconds: 2),
-        margin: const EdgeInsets.all(16),
       ),
     );
   }
 
   void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
+            const Icon(Icons.error, color: Colors.white),
+            const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: Colors.red[600],
+        backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
-        duration: const Duration(seconds: 3),
-        margin: const EdgeInsets.all(16),
-        action: SnackBarAction(
-          label: 'OK',
-          textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
+          borderRadius: BorderRadius.circular(8),
         ),
       ),
     );
