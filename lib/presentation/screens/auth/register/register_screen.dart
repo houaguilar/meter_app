@@ -5,15 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
+import '../../../../config/utils/auth/auth_error_handler.dart';
+import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/error_handler.dart';
-import '../../../../config/utils/show_snackbar.dart';
 import '../../../../config/utils/validators.dart';
 import '../../../assets/images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
-import '../../../widgets/widgets.dart';
 
-/// Pantalla de registro mejorada con validaciones robustas,
-/// políticas de contraseña, términos y condiciones, y animaciones fluidas.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -437,13 +435,12 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _handleRegisterError(dynamic error) {
-    String message = ErrorHandler.getErrorMessage(error.toString());
-
     // Limpiar contraseñas por seguridad
     _passwordController.clear();
     _confirmPasswordController.clear();
 
-    _showErrorMessage(message);
+    // Usar el nuevo manejador de errores de autenticación
+    AuthErrorHandler.handleRegistrationError(context, error.toString());
 
     // Animar error
     _scaleAnimationController.forward().then((_) {
@@ -600,6 +597,17 @@ class _RegisterScreenState extends State<RegisterScreen>
   void _handleAuthStateChanges(BuildContext context, AuthState state) {
     switch (state.runtimeType) {
       case AuthSuccess:
+        final successState = state as AuthSuccess;
+        // Mostrar mensaje de éxito y diálogo de bienvenida
+        AuthSuccessUtils.showRegistrationSuccess(context, successState.user.name);
+
+        // Mostrar diálogo de bienvenida para nuevos usuarios
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (mounted) {
+            AuthSuccessUtils.showWelcomeDialog(context, successState.user.name);
+          }
+        });
+
         _navigateToWelcome();
         break;
       case AuthFailure:

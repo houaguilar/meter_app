@@ -58,11 +58,33 @@ class AuthRepositoryImpl implements AuthRepository {
       if (session == null) {
         return left(Failure(message: 'User not logged in!'));
       }
-      final profile = await remoteDataSource.getUserProfileData(session.user.id);
 
-      return right(profile ?? UserProfile(id: 'id', name: 'name', phone: 'phone', email: 'email'));
+      final profileModel = await remoteDataSource.getUserProfileData(session.user.id);
+
+      if (profileModel == null) {
+        // Si no hay perfil, crear uno vacío con los datos de la sesión
+        final emptyProfile = UserProfile(
+          id: session.user.id,
+          name: session.user.userMetadata?['name'] ?? '',
+          email: session.user.email ?? '',
+          phone: '',
+          employment: '',
+          nationality: '',
+          city: '',
+          province: '',
+          district: '',
+        );
+        return right(emptyProfile);
+      }
+
+      // Convertir el modelo a entidad de dominio
+      final profile = profileModel.toDomain();
+      return right(profile);
+
     } on ServerException catch (e) {
       return left(Failure(message: e.message));
+    } catch (e) {
+      return left(Failure(message: 'Error inesperado: ${e.toString()}'));
     }
   }
 
@@ -78,16 +100,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> loginWithPhonePassword({
+  Future<Either<Failure, User>> loginWithEmailPassword({
     required String email,
     required String password,
     bool rememberMe = false,
   }) async {
-    /*if (rememberMe) {
-      await sharedPreferencesHelper.saveCredentials(email, password);
-    } else {
-      await sharedPreferencesHelper.clearCredentials();
-    }*/
     return _getUser(
           () async => await remoteDataSource.loginWithEmailPassword(
             email: email,
@@ -96,16 +113,8 @@ class AuthRepositoryImpl implements AuthRepository {
     );
   }
 
-  /*Future<Map<String, String>?> getSavedSession() async {
-    return sharedPreferencesHelper.getCredentials();
-  }
-
-  Future<void> clearSavedSession() async {
-    return sharedPreferencesHelper.clearCredentials();
-  }*/
-
   @override
-  Future<Either<Failure, User>> signUpWithPhonePassword({
+  Future<Either<Failure, User>> signUpWithEmailPassword({
     required String name,
     required String email,
     required String password,
@@ -148,26 +157,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await fn();
 
       return right(user);
-    } on ServerException catch (e) {
-      return left(Failure(message: e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, String>> uploadProfileImage(String userId, String filePath) async {
-    try {
-      final imageUrl = await remoteDataSource.uploadProfileImage(filePath, userId);
-      return right(imageUrl);
-    } on ServerException catch (e) {
-      return left(Failure(message: e.message));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> updateProfileImage(String userId, String filePath) async {
-    try {
-      await remoteDataSource.updateProfileImage(userId, filePath);
-      return right(null);
     } on ServerException catch (e) {
       return left(Failure(message: e.message));
     }

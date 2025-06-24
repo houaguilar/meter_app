@@ -5,15 +5,13 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
+import '../../../../config/utils/auth/auth_error_handler.dart';
+import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/error_handler.dart';
-import '../../../../config/utils/show_snackbar.dart';
 import '../../../../config/utils/validators.dart';
 import '../../../assets/images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
-import '../../../widgets/widgets.dart';
 
-/// Pantalla de inicio de sesión mejorada con validaciones robustas,
-/// manejo de errores, animaciones y mejores prácticas de seguridad.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -330,7 +328,12 @@ class _LoginScreenState extends State<LoginScreen>
       ]);
     } catch (e) {
       if (mounted) {
-        _handleLoginError(e);
+        AuthErrorHandler.handleGoogleSignInError(context, e.toString());
+
+        // Animar error
+        _scaleAnimationController.forward().then((_) {
+          _scaleAnimationController.reverse();
+        });
       }
     } finally {
       if (mounted) {
@@ -464,6 +467,9 @@ class _LoginScreenState extends State<LoginScreen>
   void _handleAuthStateChanges(BuildContext context, AuthState state) {
     switch (state.runtimeType) {
       case AuthSuccess:
+        final successState = state as AuthSuccess;
+        // Mostrar mensaje de éxito antes de navegar
+        AuthSuccessUtils.showLoginSuccess(context, successState.user.name);
         _navigateToWelcome();
         break;
       case AuthFailure:

@@ -6,7 +6,7 @@ import '../../entities/auth/user.dart';
 import '../../entities/auth/user_profile.dart';
 
 abstract interface class AuthRepository {
-  Future<Either<Failure, User>> signUpWithPhonePassword({
+  Future<Either<Failure, User>> signUpWithEmailPassword({
     required String name,
     required String email,
     required String password,
@@ -14,7 +14,7 @@ abstract interface class AuthRepository {
 
   Future<Either<Failure, User>> signInWithGoogle();
 
-  Future<Either<Failure, User>> loginWithPhonePassword({
+  Future<Either<Failure, User>> loginWithEmailPassword({
     required String email,
     required String password,
   });
@@ -24,10 +24,6 @@ abstract interface class AuthRepository {
   Future<Either<Failure, UserProfile>> getUserProfile();
 
   Future<Either<Failure, void>> updateUserProfile(UserProfile userProfile);
-
-  Future<Either<Failure, String>> uploadProfileImage(String userId, String filePath);
-
-  Future<Either<Failure, void>> updateProfileImage(String userId, String filePath);
 
   Future<Either<Failure, void>> changePassword(String currentPassword, String newPassword);
 

@@ -19,7 +19,6 @@ import 'package:meter_app/domain/datasources/projects/projects_local_data_source
 import 'package:meter_app/domain/datasources/projects/projects_remote_data_source.dart';
 import 'package:meter_app/domain/repositories/map/location_repository.dart';
 import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
-import 'package:meter_app/domain/usecases/auth/update_profile_image.dart';
 import 'package:meter_app/domain/usecases/map/save_location.dart';
 import 'package:meter_app/domain/usecases/map/get_all_locations.dart';
 import 'package:meter_app/domain/usecases/projects/get_all_projects.dart';
@@ -31,6 +30,7 @@ import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
@@ -234,9 +234,6 @@ void _initProfile() {
     )
     ..registerFactory(
           () => UpdateUserProfile(serviceLocator<AuthRepository>()),
-    )
-    ..registerFactory(
-          () => UpdateProfileImage(serviceLocator<AuthRepository>()),
     );
 
   // Bloc
@@ -244,7 +241,6 @@ void _initProfile() {
         () => ProfileBloc(
       getUserProfile: serviceLocator<GetUserProfile>(),
       updateUserProfile: serviceLocator<UpdateUserProfile>(),
-      updateProfileImage: serviceLocator<UpdateProfileImage>(),
           changePassword: serviceLocator<ChangePassword>(),
         ),
   );
@@ -369,6 +365,12 @@ void _initProjects() {
   serviceLocator.registerLazySingleton(() => ResultBloc(
     saveResultsUseCase: serviceLocator<SaveResultsUseCase>(),
     loadResultsUseCase: serviceLocator<LoadResultsUseCase>(),
+  ));
+
+  print('Registrando CombinedResultsBloc...');
+  serviceLocator.registerFactory(() => CombinedResultsBloc(
+    getAllMetrados: serviceLocator<GetAllMetrados>(),
+    loadResults: serviceLocator<LoadResultsUseCase>(),
   ));
 }
 

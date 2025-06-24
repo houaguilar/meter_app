@@ -169,6 +169,22 @@ class AppColors {
   /// Borde inferior decorativo
   static const Color bottomBorderAccent = Color(0xFF617294);
 
+  // Colores Metrados
+  static const Color cement = Color(0xFF9E9E9E);
+  static const Color sand = Color(0xFFFFB74D);
+  static const Color fineSand = Color(0xFFFFCC80);
+  static const Color stone = Color(0xFF757575);
+  static const Color water = Color(0xFF2196F3);
+  static const Color brick = Color(0xFFD84315);
+  static const Color wire = Color(0xFF424242);
+  static const Color nails = Color(0xFF616161);
+  static const Color wood = Color(0xFF6D4C41);
+  static const Color floor = Color(0xFF8D6E63);
+  static const Color plaster = Color(0xFFBDBDBD);
+  static const Color slab = Color(0xFF78909C);
+  static const Color column = Color(0xFF546E7A);
+  static const Color beam = Color(0xFF607D8B);
+
   // ═══════════════════════════════════════════════════════════════════════════
   // COLORES LEGACY (MANTENER TEMPORALMENTE PARA COMPATIBILIDAD)
   // ═══════════════════════════════════════════════════════════════════════════

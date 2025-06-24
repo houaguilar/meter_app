@@ -50,34 +50,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: _buildAppBar(),
       body: _buildBody(),
-      floatingActionButton: _buildFloatingActionButton(),
-    );
-  }
-
-  /// Construye la app bar con título y acciones
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: AppColors.primary,
-      iconTheme: const IconThemeData(color: AppColors.white),
-      elevation: 0,
-      title: const Text(
-        'Mi información',
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: AppColors.white,
-        ),
-      ),
-      systemOverlayStyle: SystemUiOverlayStyle.light,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.edit, color: AppColors.white),
-          onPressed: _navigateToEdit,
-          tooltip: 'Editar perfil',
-        ),
-      ],
     );
   }
 
@@ -100,233 +73,307 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
 
   /// Construye el contenido basado en el estado del perfil
   Widget _buildProfileContent(BuildContext context, ProfileState state) {
-    return switch (state.runtimeType) {
-      ProfileLoading => _buildLoadingState(),
-      ProfileLoaded => _buildLoadedState(state as ProfileLoaded),
-      ProfileError => _buildErrorState(state as ProfileError),
-      _ => _buildInitialState(),
-    };
+    return CustomScrollView(
+      slivers: [
+        _buildSliverAppBar(),
+        SliverToBoxAdapter(
+          child: _buildProfileBody(state),
+        ),
+      ],
+    );
+  }
+
+  /// Construye la SliverAppBar moderna con gradiente
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 200,
+      floating: false,
+      pinned: true,
+      elevation: 0,
+      backgroundColor: AppColors.primary,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.primary,
+                AppColors.secondary,
+              ],
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Elementos decorativos
+              Positioned(
+                top: 60,
+                right: -50,
+                child: Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.white.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 100,
+                left: -30,
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.accent.withOpacity(0.2),
+                  ),
+                ),
+              ),
+              // Título centrado
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.person_outline_rounded,
+                      size: 48,
+                      color: AppColors.white,
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'Mi Información',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.white,
+                      ),
+                    ),
+                    Text(
+                      'Gestiona tus datos personales',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        Container(
+          margin: const EdgeInsets.only(right: 12),
+          child: IconButton(
+            onPressed: _navigateToEdit,
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.edit_rounded,
+                color: AppColors.white,
+                size: 20,
+              ),
+            ),
+            tooltip: 'Editar información',
+          ),
+        ),
+      ],
+      systemOverlayStyle: SystemUiOverlayStyle.light,
+    );
+  }
+
+  /// Construye el cuerpo del perfil según el estado
+  Widget _buildProfileBody(ProfileState state) {
+    if (state is ProfileLoading) {
+      return _buildLoadingState();
+    } else if (state is ProfileLoaded) {
+      return _buildProfileInfo(state.userProfile);
+    } else if (state is ProfileError) {
+      return _buildErrorState(state);
+    } else {
+      return _buildInitialState();
+    }
   }
 
   /// Estado de carga
   Widget _buildLoadingState() {
-    return const Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Cargando información...',
-            style: TextStyle(
-              fontSize: 16,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// Estado con información cargada
-  Widget _buildLoadedState(ProfileLoaded state) {
-    return RefreshIndicator(
-      color: AppColors.secondary,
-      onRefresh: _handlePullToRefresh,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
-        child: _buildProfileInfo(state.userProfile),
-      ),
-    );
-  }
-
-  /// Estado de error
-  Widget _buildErrorState(ProfileError state) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      child: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
             ),
-            const SizedBox(height: 16),
-            const Text(
-              'Error al cargar la información',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(height: 8),
+            SizedBox(height: 16),
             Text(
-              state.message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
+              'Cargando información...',
+              style: TextStyle(
                 fontSize: 16,
                 color: AppColors.textSecondary,
               ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _retryLoadProfile,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.secondary,
-                foregroundColor: AppColors.white,
-              ),
-            ),
           ],
         ),
-      ),
-    );
-  }
-
-  /// Estado inicial
-  Widget _buildInitialState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Inicializando información...',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w500,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _initializeScreen,
-            child: const Text('Cargar información'),
-          ),
-        ],
       ),
     );
   }
 
   /// Construye la información completa del perfil
   Widget _buildProfileInfo(UserProfile userProfile) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildProfileHeader(userProfile),
-        const SizedBox(height: 20),
-        _buildPersonalInfoSection(userProfile),
-        const SizedBox(height: 20),
-        _buildContactInfoSection(userProfile),
-        const SizedBox(height: 20),
-        _buildLocationInfoSection(userProfile),
-        const SizedBox(height: 80), // Espacio para el FAB
-      ],
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildWelcomeCard(userProfile),
+          const SizedBox(height: 24),
+          _buildCompletionCard(userProfile),
+          const SizedBox(height: 24),
+          _buildPersonalInfoSection(userProfile),
+          const SizedBox(height: 20),
+          _buildContactInfoSection(userProfile),
+          const SizedBox(height: 20),
+          _buildLocationSection(userProfile),
+          const SizedBox(height: 100), // Espacio para el FAB
+        ],
+      ),
     );
   }
 
-  /// Construye el header del perfil con foto y datos básicos
-  Widget _buildProfileHeader(UserProfile userProfile) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+  /// Tarjeta de bienvenida personalizada
+  Widget _buildWelcomeCard(UserProfile userProfile) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.secondary.withOpacity(0.1),
+            AppColors.accent.withOpacity(0.1),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.secondary.withOpacity(0.2),
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Hero(
-              tag: 'profile-image-info',
-              child: Container(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.person_rounded,
+                  color: AppColors.white,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '¡Hola ${userProfile.name.isNotEmpty ? userProfile.name.split(' ').first : 'Usuario'}!',
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const Text(
+                      'Aquí puedes ver toda tu información personal',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey.shade200,
-                  backgroundImage: _getProfileImage(userProfile),
-                  child: _getProfileImage(userProfile) == null
-                      ? const Icon(Icons.person, size: 50, color: Colors.grey)
-                      : null,
-                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              userProfile.name.isNotEmpty ? userProfile.name : 'Nombre no disponible',
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.primary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                userProfile.employment.isNotEmpty
-                    ? userProfile.employment
-                    : 'Profesión no especificada',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildCompletionBadge(userProfile),
-          ],
-        ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  /// Construye el badge de completitud del perfil
-  Widget _buildCompletionBadge(UserProfile userProfile) {
+  /// Tarjeta de completitud del perfil
+  Widget _buildCompletionCard(UserProfile userProfile) {
     final completionPercentage = _calculateProfileCompletion(userProfile);
-    final completedFields = (completionPercentage * 6 / 100).round();
+    final completedFields = (completionPercentage * 5 / 100).round(); // Sin imagen
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _getProgressColor(completionPercentage).withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: _getProgressColor(completionPercentage).withOpacity(0.3),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getCompletionIcon(completionPercentage),
-            size: 16,
-            color: _getProgressColor(completionPercentage),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
           ),
-          const SizedBox(width: 8),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _getCompletionIcon(completionPercentage),
+                color: _getProgressColor(completionPercentage),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Completitud del Perfil',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           Text(
-            'Perfil ${completionPercentage.toInt()}% completo ($completedFields/6)',
+            '$completedFields de 5 campos completados',
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: completionPercentage / 100,
+            backgroundColor: AppColors.neutral200,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              _getProgressColor(completionPercentage),
+            ),
+            minHeight: 8,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${completionPercentage.toInt()}% completo',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -338,22 +385,22 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     );
   }
 
-  /// Construye la sección de información personal
+  /// Sección de información personal
   Widget _buildPersonalInfoSection(UserProfile userProfile) {
     return _buildInfoSection(
       title: 'Información Personal',
-      icon: Icons.person_outline,
+      icon: Icons.person_outline_rounded,
       children: [
         _buildInfoRow(
           'Nombre completo',
           userProfile.name.isNotEmpty ? userProfile.name : 'No especificado',
-          Icons.person,
-          canCopy: true,
+          Icons.badge_outlined,
+          canCopy: userProfile.name.isNotEmpty,
         ),
         _buildInfoRow(
           'Ocupación',
           userProfile.employment.isNotEmpty ? userProfile.employment : 'No especificado',
-          Icons.work_outline,
+          Icons.work_outline_rounded,
         ),
         _buildInfoRow(
           'Nacionalidad',
@@ -364,7 +411,7 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     );
   }
 
-  /// Construye la sección de información de contacto
+  /// Sección de información de contacto
   Widget _buildContactInfoSection(UserProfile userProfile) {
     return _buildInfoSection(
       title: 'Información de Contacto',
@@ -388,8 +435,8 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     );
   }
 
-  /// Construye la sección de información de ubicación
-  Widget _buildLocationInfoSection(UserProfile userProfile) {
+  /// Sección de ubicación
+  Widget _buildLocationSection(UserProfile userProfile) {
     return _buildInfoSection(
       title: 'Ubicación',
       icon: Icons.location_on_outlined,
@@ -413,56 +460,62 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     );
   }
 
-  /// Construye una sección de información con título e icono
+  /// Widget de sección de información
   Widget _buildInfoSection({
     required String title,
     required IconData icon,
     required List<Widget> children,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: AppColors.secondary,
-                    size: 20,
-                  ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
+                child: Icon(
+                  icon,
+                  color: AppColors.secondary,
+                  size: 20,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...children,
-          ],
-        ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ...children,
+        ],
       ),
     );
   }
 
-  /// Construye una fila de información con etiqueta y valor
+  /// Widget de fila de información
   Widget _buildInfoRow(
       String label,
       String value,
@@ -470,19 +523,15 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
         bool canCopy = false,
         bool isEmail = false,
         bool isPhone = false,
-        bool isMonospace = false,
       }) {
-    final hasValue = value != 'No especificado' && value.isNotEmpty;
-
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
             size: 20,
-            color: hasValue ? AppColors.primary : Colors.grey,
+            color: AppColors.textSecondary,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -491,169 +540,221 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
               children: [
                 Text(
                   label,
-                  style: TextStyle(
-                    fontSize: 14,
+                  style: const TextStyle(
+                    fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 4),
-                SelectableText(
+                Text(
                   value,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    color: hasValue ? AppColors.primary : Colors.grey,
-                    fontFamily: isMonospace ? 'monospace' : null,
+                    fontWeight: FontWeight.w500,
+                    color: value == 'No especificado'
+                        ? AppColors.textSecondary
+                        : AppColors.primary,
                   ),
                 ),
               ],
             ),
           ),
-          if (canCopy && hasValue) ...[
-            const SizedBox(width: 8),
-            _buildActionButton(
-              icon: Icons.copy,
+          if (canCopy && value != 'No especificado')
+            IconButton(
+              onPressed: () => _copyToClipboard(value),
+              icon: const Icon(
+                Icons.copy_rounded,
+                size: 18,
+                color: AppColors.secondary,
+              ),
               tooltip: 'Copiar',
-              onPressed: () => _copyToClipboard(value, label),
             ),
-          ],
         ],
       ),
     );
   }
 
-  /// Construye un botón de acción pequeño
-  Widget _buildActionButton({
-    required IconData icon,
-    required String tooltip,
-    required VoidCallback onPressed,
-  }) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Icon(
-            icon,
-            size: 16,
-            color: AppColors.secondary,
-          ),
+  /// Estado de error mejorado
+  Widget _buildErrorState(ProfileError state) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.error.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 48,
+                color: AppColors.error,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Error al cargar la información',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              state.message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: _retryLoadProfile,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('Reintentar'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// Construye el botón flotante para editar
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: _navigateToEdit,
-      backgroundColor: AppColors.secondary,
-      foregroundColor: AppColors.white,
-      icon: const Icon(Icons.edit),
-      label: const Text(
-        'Editar perfil',
-        style: TextStyle(fontWeight: FontWeight.bold),
+  /// Estado inicial mejorado
+  Widget _buildInitialState() {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.6,
+      padding: const EdgeInsets.all(32),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: const Icon(
+                Icons.person_search_rounded,
+                size: 48,
+                color: AppColors.secondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Inicializando información...',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: AppColors.primary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: _initializeScreen,
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('Cargar información'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.secondary,
+                foregroundColor: AppColors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  // Utility methods
+  // ══════════════════════════════════════════════════════════════════════════════
+  // MÉTODOS AUXILIARES
+  // ══════════════════════════════════════════════════════════════════════════════
 
-  /// Obtiene la imagen de perfil de forma segura
-  ImageProvider? _getProfileImage(UserProfile userProfile) {
-    final imageUrl = userProfile.profileImageUrl;
-    if (imageUrl != null && imageUrl.isNotEmpty && Uri.tryParse(imageUrl) != null) {
-      return NetworkImage(imageUrl);
-    }
-    return null;
-  }
-
-  /// Calcula el porcentaje de completitud del perfil
-  double _calculateProfileCompletion(UserProfile userProfile) {
+  /// Calcula el porcentaje de completitud del perfil (sin imagen)
+  double _calculateProfileCompletion(UserProfile profile) {
     int completedFields = 0;
-    const totalFields = 6;
+    const int totalFields = 5; // Sin incluir la imagen
 
-    if (userProfile.name.isNotEmpty) completedFields++;
-    if (userProfile.phone.isNotEmpty) completedFields++;
-    if (userProfile.employment.isNotEmpty) completedFields++;
-    if (userProfile.city.isNotEmpty) completedFields++;
-    if (userProfile.district.isNotEmpty) completedFields++;
-    if (userProfile.profileImageUrl?.isNotEmpty == true) completedFields++;
+    if (profile.name.isNotEmpty) completedFields++;
+    if (profile.phone.isNotEmpty) completedFields++;
+    if (profile.employment.isNotEmpty) completedFields++;
+    if (profile.city.isNotEmpty) completedFields++;
+    if (profile.district.isNotEmpty) completedFields++;
 
     return (completedFields / totalFields) * 100;
   }
 
-  /// Obtiene el color de progreso según el porcentaje
+  /// Obtiene el color del progreso según el porcentaje
   Color _getProgressColor(double percentage) {
-    if (percentage <= 30) return Colors.red;
-    if (percentage <= 70) return Colors.orange;
-    return Colors.green;
+    if (percentage >= 80) return AppColors.success;
+    if (percentage >= 60) return AppColors.accent;
+    if (percentage >= 40) return AppColors.warning;
+    return AppColors.error;
   }
 
-  /// Obtiene el icono de completitud según el porcentaje
+  /// Obtiene el icono del progreso según el porcentaje
   IconData _getCompletionIcon(double percentage) {
-    if (percentage <= 30) return Icons.warning_amber;
-    if (percentage <= 70) return Icons.info;
-    return Icons.check_circle;
-  }
-
-  /// Copia texto al portapapeles
-  Future<void> _copyToClipboard(String text, String label) async {
-    await Clipboard.setData(ClipboardData(text: text));
-    if (_isMounted && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$label copiado al portapapeles'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-  }
-
-  /// Maneja el pull-to-refresh
-  Future<void> _handlePullToRefresh() async {
-    if (_isMounted && context.mounted) {
-      context.read<ProfileBloc>().add(LoadProfile());
-      await Future.delayed(const Duration(milliseconds: 500));
-    }
-  }
-
-  /// Reintenta cargar el perfil
-  void _retryLoadProfile() {
-    if (_isMounted && context.mounted) {
-      context.read<ProfileBloc>().add(LoadProfile());
-    }
+    if (percentage >= 80) return Icons.check_circle_rounded;
+    if (percentage >= 60) return Icons.thumb_up_rounded;
+    if (percentage >= 40) return Icons.info_rounded;
+    return Icons.warning_rounded;
   }
 
   /// Navega a la pantalla de edición
   void _navigateToEdit() {
-    if (_isMounted && context.mounted) {
-      context.pushNamed('profile-settings');
-    }
+    context.pushNamed('profile-settings');
   }
 
-  /// Muestra un mensaje de "próximamente"
-  void _showComingSoon(String feature) {
-    if (_isMounted && context.mounted) {
-      showSnackBar(
-        context,
-        '$feature estará disponible próximamente',
-      );
-    }
+  /// Reintenta cargar el perfil
+  void _retryLoadProfile() {
+    context.read<ProfileBloc>().add(LoadProfile());
   }
 
-  /// Muestra un mensaje de error de forma segura
+  /// Copia texto al portapapeles
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
+    _showSuccessMessage('Copiado al portapapeles');
+  }
+
+  /// Abre el cliente de email
+  void _openEmail(String email) {
+    // Implementar launch de email
+    _showSuccessMessage('Abriendo cliente de email...');
+  }
+
+  /// Inicia una llamada telefónica
+  void _callPhone(String phone) {
+    // Implementar launch de llamada
+    _showSuccessMessage('Iniciando llamada...');
+  }
+
+  /// Muestra mensaje de error
   void _showErrorMessage(String message) {
-    if (_isMounted && context.mounted) {
-      showSnackBar(context, message);
-    }
+    if (!_isMounted) return;
+    showSnackBar(context, message);
+  }
+
+  /// Muestra mensaje de éxito
+  void _showSuccessMessage(String message) {
+    if (!_isMounted) return;
+    showSnackBar(context, message);
   }
 }
