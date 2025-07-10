@@ -47,11 +47,11 @@ class FalsoPisoResult extends _$FalsoPisoResult {
 }
 
 @riverpod
-List<double> volumenFalsoPiso(VolumenFalsoPisoRef ref) {
+List<double> areaFalsoPiso(AreaFalsoPisoRef ref) {  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
   final pisoService = PisoService();
   final falsosPisos = ref.watch(falsoPisoResultProvider);
 
-  return falsosPisos.map((piso) => pisoService.calcularVolumen(piso) ?? 0.0).toList();
+  return falsosPisos.map((piso) => pisoService.calcularArea(piso) ?? 0.0).toList();  // ✅ Cambio: calcularVolumen → calcularArea
 }
 
 @riverpod
@@ -63,16 +63,23 @@ List<String> descriptionFalsoPiso(DescriptionFalsoPisoRef ref) {
 @riverpod
 String datosShareFalsoPiso(DatosShareFalsoPisoRef ref) {
   final description = ref.watch(descriptionFalsoPisoProvider);
-  final volumen = ref.watch(volumenFalsoPisoProvider);
+  final areas = ref.watch(areaFalsoPisoProvider);  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
 
   String datos = "";
-  if (description.length == volumen.length) {
+  if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m³\n";
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m²\n";  // ✅ Cambio: m³ → m²
     }
     datos = datos.substring(0, datos.length - 2);
   }
   return datos;
+}
+
+// 🆕 AGREGAR nuevo provider para área total
+@riverpod
+double areaTotalFalsoPiso(AreaTotalFalsoPisoRef ref) {
+  final areas = ref.watch(areaFalsoPisoProvider);
+  return areas.fold(0.0, (sum, area) => sum + area);
 }
 
 /// Provider para configuración de falso piso
@@ -133,31 +140,38 @@ FalsoPisoMaterials falsoPisoMaterials(FalsoPisoMaterialsRef ref) {
 
 /// Función auxiliar para calcular materiales basada en el Excel
 FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
-  // Factores basados en el Excel (líneas 15-226) - resistencia del concreto
+  // 🔥 FACTORES CORREGIDOS - EXACTOS DEL EXCEL (líneas 15-226)
   const Map<String, Map<String, double>> factoresConcreto = {
     '140': {
-      'cemento': 7.0,   // bolsas por m³
-      'arena': 0.54,    // m³ por m³
-      'piedra': 0.55,   // m³ por m³
-      'agua': 0.185,    // m³ por m³
+      'cemento': 7.01,  // ✅ Era 7.0, ahora 7.01
+      'arena': 0.56,    // ✅ Era 0.54, ahora 0.56
+      'piedra': 0.64,   // ✅ Era 0.55, ahora 0.64
+      'agua': 0.184,    // ✅ Era 0.185, ahora 0.184
     },
     '175': {
-      'cemento': 8.43,  // bolsas por m³
-      'arena': 0.54,    // m³ por m³
-      'piedra': 0.55,   // m³ por m³
-      'agua': 0.185,    // m³ por m³
+      'cemento': 8.43,  // ✅ Correcto
+      'arena': 0.54,    // ✅ Correcto
+      'piedra': 0.55,   // ✅ Correcto
+      'agua': 0.185,    // ✅ Correcto
     },
     '210': {
-      'cemento': 9.73,  // bolsas por m³
-      'arena': 0.52,    // m³ por m³
-      'piedra': 0.53,   // m³ por m³
-      'agua': 0.186,    // m³ por m³
+      'cemento': 9.73,  // ✅ Correcto
+      'arena': 0.52,    // ✅ Correcto
+      'piedra': 0.53,   // ✅ Correcto
+      'agua': 0.186,    // ✅ Correcto
     },
     '245': {
-      'cemento': 11.5,  // bolsas por m³
-      'arena': 0.5,     // m³ por m³
-      'piedra': 0.51,   // m³ por m³
-      'agua': 0.187,    // m³ por m³
+      'cemento': 11.50, // ✅ Era 11.5, ahora 11.50
+      'arena': 0.50,    // ✅ Era 0.5, ahora 0.50
+      'piedra': 0.51,   // ✅ Correcto
+      'agua': 0.187,    // ✅ Correcto
+    },
+    // 🆕 NUEVA RESISTENCIA - FALTABA EN TU CÓDIGO
+    '280': {
+      'cemento': 13.34, // 🆕 Nueva
+      'arena': 0.45,    // 🆕 Nueva
+      'piedra': 0.51,   // 🆕 Nueva
+      'agua': 0.189,    // 🆕 Nueva
     },
   };
 
@@ -166,6 +180,7 @@ FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
   double piedraTotal = 0.0;
   double aguaTotal = 0.0;
   double volumenTotal = 0.0;
+  double areaTotalCalculada = 0.0;
 
   for (var piso in pisos) {
     // Obtener valores del piso
@@ -178,6 +193,7 @@ FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
 
     // Calcular área
     final area = _obtenerAreaFalsoPiso(piso);
+    areaTotalCalculada += area;  // 🆕 SUMA área total
 
     // Calcular volumen de concreto
     final volumen = area * (espesor / 100); // convertir cm a metros
@@ -202,6 +218,7 @@ FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
     piedra: piedraTotal,
     agua: aguaTotal,
     volumenTotal: volumenTotal,
+    areaTotal: areaTotalCalculada,
   );
 }
 
@@ -209,7 +226,15 @@ FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
 String _extractResistenciaValue(String resistencia) {
   // Extrae solo los números de la resistencia
   final match = RegExp(r'\d+').firstMatch(resistencia);
-  return match?.group(0) ?? '175';
+  final valor = match?.group(0) ?? '175';
+
+  // ✅ Validar que la resistencia exista en la tabla (incluye 280)
+  const resistenciasValidas = ['140', '175', '210', '245', '280'];
+  if (!resistenciasValidas.contains(valor)) {
+    return '175'; // Valor por defecto
+  }
+
+  return valor;
 }
 
 double _obtenerAreaFalsoPiso(Piso piso) {
@@ -228,7 +253,8 @@ class FalsoPisoMaterials {
   final double arena;
   final double piedra;
   final double agua;
-  final double volumenTotal;
+  final double volumenTotal;  // Mantener para cálculos internos
+  final double areaTotal;     // 🆕 NUEVA propiedad
 
   const FalsoPisoMaterials({
     this.cemento = 0.0,
@@ -236,6 +262,7 @@ class FalsoPisoMaterials {
     this.piedra = 0.0,
     this.agua = 0.0,
     this.volumenTotal = 0.0,
+    this.areaTotal = 0.0,       // 🆕 NUEVA propiedad
   });
 
   FalsoPisoMaterials copyWith({
@@ -244,6 +271,7 @@ class FalsoPisoMaterials {
     double? piedra,
     double? agua,
     double? volumenTotal,
+    double? areaTotal,          // 🆕 NUEVA propiedad
   }) {
     return FalsoPisoMaterials(
       cemento: cemento ?? this.cemento,
@@ -251,41 +279,28 @@ class FalsoPisoMaterials {
       piedra: piedra ?? this.piedra,
       agua: agua ?? this.agua,
       volumenTotal: volumenTotal ?? this.volumenTotal,
+      areaTotal: areaTotal ?? this.areaTotal,  // 🆕 NUEVA propiedad
     );
   }
 
-  /// Convierte a Map para facilitar el uso
-  Map<String, dynamic> toMap() {
-    return {
-      'cemento': cemento,
-      'arena': arena,
-      'piedra': piedra,
-      'agua': agua,
-      'volumenTotal': volumenTotal,
-    };
-  }
+  /// Formatear cemento como entero (bolsas)
+  int get cementoBolsas => cemento.ceil();
 
-  /// Obtiene materiales como lista de strings formateados
-  List<String> toFormattedList() {
-    return [
-      'Cemento: ${cemento.ceil()} bls',
-      'Arena gruesa: ${arena.toStringAsFixed(2)} m³',
-      'Piedra chancada: ${piedra.toStringAsFixed(2)} m³',
-      'Agua: ${agua.toStringAsFixed(2)} m³',
-    ];
-  }
-
-  /// Obtiene string para compartir
-  String toShareString() {
-    return '''LISTA DE MATERIALES
-*Cemento: ${cemento.ceil()} bls
-*Arena gruesa: ${arena.toStringAsFixed(2)} m³
-*Piedra chancada: ${piedra.toStringAsFixed(2)} m³
-*Agua: ${agua.toStringAsFixed(2)} m³''';
-  }
+  /// Formatear materiales con 2 decimales
+  String get arenaFormateada => arena.toStringAsFixed(2);
+  String get piedraFormateada => piedra.toStringAsFixed(2);
+  String get aguaFormateada => agua.toStringAsFixed(2);
+  String get volumenFormateado => volumenTotal.toStringAsFixed(2);
+  String get areaTotalFormateada => areaTotal.toStringAsFixed(2);  // 🆕 NUEVO método
 
   @override
   String toString() {
-    return 'FalsoPisoMaterials(cemento: $cemento, arena: $arena, piedra: $piedra, agua: $agua, volumen: $volumenTotal)';
+    return 'FalsoPisoMaterials('
+        'cemento: $cementoBolsas bolsas, '
+        'arena: $arenaFormateada m³, '
+        'piedra: $piedraFormateada m³, '
+        'agua: $aguaFormateada m³, '
+        'volumen: $volumenFormateado m³, '
+        'área total: $areaTotalFormateada m²)';  // 🆕 NUEVO en toString
   }
 }

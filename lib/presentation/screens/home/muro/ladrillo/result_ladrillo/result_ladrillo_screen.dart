@@ -123,8 +123,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         children: [
           const SizedBox(height: 10),
           _buildSuccessIcon(),
-          const SizedBox(height: 20),
-          _buildProjectSummaryCard(materials),
+//          const SizedBox(height: 20),
+//          _buildProjectSummaryCard(materials),
           const SizedBox(height: 20),
           _buildMetradoDataCard(ladrillos),
           const SizedBox(height: 20),
@@ -257,8 +257,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       child: Column(
         children: [
           _buildMaterialTable(materials),
-          const SizedBox(height: 16),
-          _buildMaterialChips(materials),
+//          const SizedBox(height: 16),
+//          _buildMaterialChips(materials),
         ],
       ),
     );

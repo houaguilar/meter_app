@@ -225,7 +225,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       iconColor: AppColors.blueMetraShop,
       child: Column(
         children: [
-          _buildSummaryRow('Volumen Total', '${materials.volumenTotal.toStringAsFixed(2)} m³'),
+          _buildSummaryRow('Área Total', '${materials.areaTotalFormateada} m²'),  // ✅ Cambio: Volumen → Área
           const SizedBox(height: 12),
           _buildSummaryRow('Total de Áreas', '${pisos.length}'),
           const SizedBox(height: 12),
@@ -413,7 +413,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   }
 
   Widget _buildDataTable(List<Piso> pisos) {
-    final volumenes = ref.watch(volumenFalsoPisoProvider);
+    final areas = ref.watch(areaFalsoPisoProvider);  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
 
     return Table(
       columnWidths: const {
@@ -422,21 +422,21 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
         2: FlexColumnWidth(1.5),
       },
       children: [
-        _buildTableRow(['Descripción', 'Und.', 'Volumen'], isHeader: true),
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),  // ✅ Cambio: Volumen → Área
         ...pisos.asMap().entries.map((entry) {
           final index = entry.key;
           final piso = entry.value;
-          final volumen = index < volumenes.length ? volumenes[index] : 0.0;
+          final area = index < areas.length ? areas[index] : 0.0;  // ✅ Cambio: volumen → area
           return _buildTableRow([
             piso.description,
-            'm³',
-            volumen.toStringAsFixed(2),
+            'm²',  // ✅ Cambio: m³ → m²
+            area.toStringAsFixed(2),  // ✅ Cambio: volumen → area
           ]);
         }).toList(),
         _buildTableRow([
           'Total:',
-          'm³',
-          ref.watch(falsoPisoMaterialsProvider).volumenTotal.toStringAsFixed(2),
+          'm²',  // ✅ Cambio: m³ → m²
+          ref.watch(falsoPisoMaterialsProvider).areaTotalFormateada,  // ✅ Cambio: volumenTotal → areaTotalFormateada
         ], isTotal: true),
       ],
     );
@@ -812,14 +812,14 @@ DATOS DEL METRADO:
 $datosMetrado
 
 LISTA DE MATERIALES:
-• Cemento: ${materials.cemento.ceil()} bls
-• Arena gruesa: ${materials.arena.toStringAsFixed(2)} m³
-• Piedra chancada: ${materials.piedra.toStringAsFixed(2)} m³
-• Agua: ${materials.agua.toStringAsFixed(2)} m³
+• Cemento: ${materials.cementoBolsas} bls
+• Arena gruesa: ${materials.arenaFormateada} m³
+• Piedra chancada: ${materials.piedraFormateada} m³
+• Agua: ${materials.aguaFormateada} m³
 
 INFORMACIÓN DEL PROYECTO:
-• Volumen total: ${materials.volumenTotal.toStringAsFixed(2)} m³
-• Total de áreas: ${pisos.length}
+• Área total: ${materials.areaTotalFormateada} m²
+• Total de elementos: ${pisos.length}
 $configInfo
 
 Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
@@ -896,7 +896,7 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
             ),
             pw.SizedBox(height: 5),
             ...falsosPisos.map((piso) {
-              final volumen = _calcularVolumenPiso(piso);
+              final volumen = _calcularAreaPiso(piso);
               return pw.Text(
                 '• ${piso.description}: ${volumen.toStringAsFixed(2)} m³',
                 style: pw.TextStyle(fontSize: 12),
@@ -929,16 +929,13 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
     return file;
   }
 
-  double _calcularVolumenPiso(Piso piso) {
-    final espesor = (double.tryParse(piso.espesor) ?? 5.0) / 100; // convertir cm a metros
-
+  double _calcularAreaPiso(Piso piso) {
     if (piso.area != null && piso.area!.isNotEmpty) {
-      final area = double.tryParse(piso.area!) ?? 0.0;
-      return area * espesor;
+      return double.tryParse(piso.area!) ?? 0.0;
     } else {
       final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
       final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho * espesor;
+      return largo * ancho;
     }
   }
 

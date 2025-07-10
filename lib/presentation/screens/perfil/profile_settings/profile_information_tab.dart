@@ -151,7 +151,8 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         if (state is ProfileLoaded && !_formChanged) {
           _populateControllers(state.userProfile);
         }
-        if (state is ProfileLoading) {
+
+        if (state is ProfileLoading || (state is ProfileLoaded && state.isLoading)) {
           setState(() {
             _isLoading = true;
           });
@@ -159,6 +160,45 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           setState(() {
             _isLoading = false;
           });
+        }
+
+        // Manejar el éxito de la actualización
+        if (state is ProfileSuccess) {
+          setState(() {
+            _formChanged = false;
+            _isLoading = false;
+          });
+
+          // Mostrar mensaje de éxito
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Perfil actualizado correctamente'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+
+          // Volver al estado loaded de manera segura
+          Future.microtask(() {
+            if (mounted) {
+              context.read<ProfileBloc>().add(ReturnToLoadedState());
+            }
+          });
+        }
+
+        // Manejar errores
+        if (state is ProfileError) {
+          setState(() {
+            _isLoading = false;
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error: ${state.message}'),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 3),
+            ),
+          );
         }
       },
       builder: (context, state) {

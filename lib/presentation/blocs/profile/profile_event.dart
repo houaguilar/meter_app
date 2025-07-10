@@ -36,10 +36,8 @@ class UpdateProfile extends ProfileEvent {
 
 class SubmitProfile extends ProfileEvent {}
 
-class UpdateProfileImageEvent extends ProfileEvent {
-  final String filePath;
-
-  UpdateProfileImageEvent(this.filePath);
+class ReturnToLoadedState extends ProfileEvent {
+  ReturnToLoadedState();
 }
 
 class ChangePasswordEvent extends ProfileEvent {

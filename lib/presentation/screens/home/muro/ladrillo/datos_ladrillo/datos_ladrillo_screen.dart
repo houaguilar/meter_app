@@ -658,6 +658,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     try {
       await _createLadrilloData(tipoLadrillo);
       ref.watch(ladrilloResultProvider);
+      ref.watch(tipoLadrilloProvider);
       context.pushNamed('ladrillo_results');
       context.showCalculationLoader(
         message: 'Calculando materiales',
@@ -700,6 +701,9 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   }
 
   Future<void> _createLadrilloData(String tipoLadrillo) async {
+    final tipoLadrilloActual = ref.read(tipoLadrilloProvider); // ← Leer directo del provider
+    print('🔍 Tipo ladrillo del provider: "$tipoLadrilloActual"');
+
     final datosLadrillo = ref.read(ladrilloResultProvider.notifier);
     datosLadrillo.clearList();
 

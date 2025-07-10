@@ -37,6 +37,22 @@ class _PerfilScreenState extends State<PerfilScreen>
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      // Verificar si necesitamos recargar el perfil cuando la app vuelve al foreground
+      final profileBloc = context.read<ProfileBloc>();
+      final currentState = profileBloc.state;
+
+      // Si hay algún problema con el estado, forzar recarga
+      if (currentState is ProfileError || currentState is ProfileInitial) {
+        profileBloc.add(LoadProfile(forceReload: true));
+      }
+    }
+  }
+
   void _initializeScreen() {
     WidgetsBinding.instance.addObserver(this);
     _loadProfileIfNeeded();
@@ -49,7 +65,9 @@ class _PerfilScreenState extends State<PerfilScreen>
       final profileBloc = context.read<ProfileBloc>();
       final profileState = profileBloc.state;
 
-      if (profileState is! ProfileLoaded || _cachedProfile == null) {
+      // Modificación: Solo cargar si realmente no hay perfil cargado
+      // Remover la verificación de _cachedProfile que puede causar inconsistencias
+      if (profileState is ProfileInitial || profileState is ProfileError) {
         profileBloc.add(LoadProfile());
       }
     }
@@ -58,10 +76,33 @@ class _PerfilScreenState extends State<PerfilScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: _buildBody(),
+    return MultiBlocListener(
+      listeners: [
+        // Listener existente del ProfileBloc
+        BlocListener<ProfileBloc, ProfileState>(
+          listener: (context, state) {
+            if (state is ProfileError) {
+              _showErrorMessage(state.message);
+            }
+          },
+        ),
+        // NUEVO: Listener para manejar el logout
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is AuthInitial) {
+              // Logout exitoso - navegar a la pantalla de inicio
+              context.goNamed('metrashop');
+            } else if (state is AuthFailure) {
+              // Error en logout - mostrar mensaje
+              _showErrorMessage('Error al cerrar sesión: ${state.message}');
+            }
+          },
+        ),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: _buildBody(),
+      ),
     );
   }
 
@@ -77,6 +118,12 @@ class _PerfilScreenState extends State<PerfilScreen>
 
     if (state is ProfileError) {
       _showErrorMessage(state.message);
+    } else if (state is ProfileLoaded) {
+      // Actualizar cache cuando el perfil se carga exitosamente
+      _cachedProfile = state.userProfile;
+    } else if (state is ProfileSuccess) {
+      // Cuando se actualiza exitosamente, mostrar mensaje y mantener el perfil cargado
+      showSnackBar(context, 'Perfil actualizado correctamente');
     }
   }
 
@@ -812,7 +859,7 @@ class _PerfilScreenState extends State<PerfilScreen>
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () => context.pop(),
             child: const Text(
               'Cancelar',
               style: TextStyle(
@@ -820,21 +867,35 @@ class _PerfilScreenState extends State<PerfilScreen>
               ),
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              // Limpiar cache antes de cerrar sesión
-              _cachedProfile = null;
-              context.read<AuthBloc>().add(AuthLogout());
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              return ElevatedButton(
+                onPressed: authState is AuthLoading ? null : () {
+                  context.pop(); // Cerrar diálogo
+                  // Limpiar cache antes de cerrar sesión
+                  _cachedProfile = null;
+                  // Disparar evento de logout
+                  context.read<AuthBloc>().add(AuthLogout());
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.error,
+                  foregroundColor: AppColors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: authState is AuthLoading
+                    ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.white,
+                  ),
+                )
+                    : const Text('Cerrar sesión'),
+              );
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.error,
-              foregroundColor: AppColors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Cerrar sesión'),
           ),
         ],
       ),

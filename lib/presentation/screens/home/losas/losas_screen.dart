@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/losas/losas_screen_unified.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,10 +11,6 @@ import '../../../widgets/dialogs/unified_feature_disabled_dialog.dart';
 import '../../../widgets/shared/responsive_grid_builder.dart';
 import '../../../widgets/widgets.dart';
 
-/// LosasScreen unificada usando componentes genéricos reutilizables
-///
-/// Esta implementación utiliza los componentes unificados para crear
-/// una pantalla consistente, mantenible y escalable.
 class LosasScreen extends ConsumerStatefulWidget {
   const LosasScreen({super.key});
 
