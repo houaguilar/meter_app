@@ -23,10 +23,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   })  : _getUserProfile = getUserProfile,
         _updateUserProfile = updateUserProfile,
         _changePassword = changePassword,
-      super(ProfileInitial()) {
+        super(ProfileInitial()) {
     on<LoadProfile>(_onLoadProfile);
     on<UpdateProfile>(_onUpdateProfile);
     on<SubmitProfile>(_onSubmitProfile);
+    on<ReturnToLoadedState>(_onReturnToLoadedState);
     on<ChangePasswordEvent>(_onChangePassword);
   }
 
@@ -34,19 +35,23 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     if (event.forceReload) {
       _cachedProfile = null;
     }
-    // If we already have the profile in cache, don't make the request again
-    if (_cachedProfile != null) {
+
+    // Si ya tenemos el perfil en cache y no es una recarga forzada, usarlo
+    if (_cachedProfile != null && !event.forceReload) {
       emit(ProfileLoaded(userProfile: _cachedProfile!));
       return;
     }
 
-    // If no cached data, make the request to backend
-    emit(ProfileLoading());
+    // Solo mostrar loading si no hay perfil previo o es recarga forzada
+    if (_cachedProfile == null || event.forceReload) {
+      emit(ProfileLoading());
+    }
+
     final result = await _getUserProfile(NoParams());
     result.fold(
           (failure) => emit(ProfileError(failure.message)),
           (profile) {
-        _cachedProfile = profile; // Cache the profile
+        _cachedProfile = profile;
         emit(ProfileLoaded(userProfile: profile));
       },
     );
@@ -66,7 +71,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       );
 
       _cachedProfile = updatedProfile;
-
       emit(loadedState.copyWith(userProfile: updatedProfile, isValid: true));
     }
   }
@@ -74,20 +78,28 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   void _onSubmitProfile(SubmitProfile event, Emitter<ProfileState> emit) async {
     if (state is ProfileLoaded) {
       final loadedState = state as ProfileLoaded;
-      emit(ProfileLoading());
+      final profileToUpdate = loadedState.userProfile;
+
+      // Mostrar estado de carga
+      emit(loadedState.copyWith(isLoading: true));
+
       final result = await _updateUserProfile(
-          UpdateUserProfileParams(profile: loadedState.userProfile));
+          UpdateUserProfileParams(profile: profileToUpdate));
+
+      // Verificar si el emit sigue siendo válido antes de emitir
+      if (emit.isDone) return;
+
       result.fold(
-            (failure) => emit(ProfileError(failure.message)),
+            (failure) {
+          // En caso de error, emitir error inmediatamente
+          emit(ProfileError(failure.message));
+        },
             (_) {
-          _cachedProfile = loadedState.userProfile;
+          // Actualización exitosa
+          _cachedProfile = profileToUpdate;
+          // Emitir éxito primero
           emit(ProfileSuccess());
-          // Emitir un ProfileLoaded después para mostrar la UI actualizada
-          Future.delayed(Duration(milliseconds: 300), () {
-            if (!isClosed) {
-              emit(ProfileLoaded(userProfile: _cachedProfile!));
-            }
-          });
+          // NO usar Future.delayed, en su lugar agregar otro evento si necesitas volver al estado loaded
         },
       );
     }
@@ -99,7 +111,7 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     // Validate passwords match client-side first
     if (event.newPassword != event.confirmPassword) {
       emit(PasswordChangeError('Las contraseñas no coinciden'));
-      // Return to loaded state after error
+      // Return to loaded state immediately if we have cached profile
       if (_cachedProfile != null) {
         emit(ProfileLoaded(userProfile: _cachedProfile!));
       }
@@ -112,18 +124,21 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       confirmPassword: event.confirmPassword,
     ));
 
+    // Verificar si el emit sigue siendo válido
+    if (emit.isDone) return;
+
     result.fold(
           (failure) {
         emit(PasswordChangeError(failure.message));
         // Return to loaded state after error
-        if (_cachedProfile != null) {
+        if (_cachedProfile != null && !emit.isDone) {
           emit(ProfileLoaded(userProfile: _cachedProfile!));
         }
       },
           (_) {
         emit(PasswordChangeSuccess());
         // Return to loaded state after success
-        if (_cachedProfile != null) {
+        if (_cachedProfile != null && !emit.isDone) {
           emit(ProfileLoaded(userProfile: _cachedProfile!));
         }
       },
@@ -136,8 +151,26 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     emit(ProfileInitial());
   }
 
+  // Método para invalidar caché
+  void invalidateCache() {
+    _cachedProfile = null;
+  }
+
   /// Fuerza la recarga del perfil
   void forceReload() {
     add(LoadProfile(forceReload: true));
+  }
+
+  /// Método para volver al estado loaded después de success
+  void returnToLoaded() {
+    if (_cachedProfile != null) {
+      add(ReturnToLoadedState());
+    }
+  }
+
+  void _onReturnToLoadedState(ReturnToLoadedState event, Emitter<ProfileState> emit) {
+    if (_cachedProfile != null) {
+      emit(ProfileLoaded(userProfile: _cachedProfile!));
+    }
   }
 }

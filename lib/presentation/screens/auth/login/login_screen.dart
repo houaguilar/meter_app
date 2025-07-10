@@ -1,3 +1,4 @@
+// lib/presentation/screens/auth/login/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,10 +8,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
-import '../../../../config/utils/error_handler.dart';
 import '../../../../config/utils/validators.dart';
 import '../../../assets/images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
+import '../widgets/enhanced_auth_text_field.dart';
+import '../widgets/enhanced_register_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -54,6 +56,12 @@ class _LoginScreenState extends State<LoginScreen>
   bool _hasNavigated = false;
   bool _isFormValid = false;
 
+  // NUEVAS VARIABLES PARA MEJORAS UX
+  ValidationResult? _emailValidation;
+  bool _showValidationHints = false;
+  int _loginAttempts = 0;
+  DateTime? _lastAttemptTime;
+
   // Configuración de timeouts
   static const Duration _loginTimeout = Duration(seconds: 30);
   static const Duration _navigationDelay = Duration(milliseconds: 500);
@@ -76,7 +84,6 @@ class _LoginScreenState extends State<LoginScreen>
     super.didChangeAppLifecycleState(state);
 
     if (state == AppLifecycleState.paused) {
-      // Limpiar campos sensibles cuando la app se pausa
       _clearSensitiveData();
     }
   }
@@ -89,9 +96,9 @@ class _LoginScreenState extends State<LoginScreen>
     WidgetsBinding.instance.addObserver(this);
     _setupAnimations();
     _setupControllerListeners();
+    _setupRealTimeValidation(); // NUEVO
     _setupSystemUI();
 
-    // Iniciar animaciones después del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _startInitialAnimations();
@@ -153,6 +160,28 @@ class _LoginScreenState extends State<LoginScreen>
     _passwordController.addListener(_validateForm);
   }
 
+  // NUEVO: Validación en tiempo real
+  void _setupRealTimeValidation() {
+    _emailController.addListener(() {
+      if (_emailController.text.isNotEmpty) {
+        setState(() {
+          _emailValidation = Validators.validateEmailAdvanced(_emailController.text);
+          _showValidationHints = true;
+        });
+      }
+    });
+
+    // Auto-focus inteligente
+    _emailFocusNode.addListener(() {
+      if (!_emailFocusNode.hasFocus &&
+          _emailController.text.isNotEmpty &&
+          _emailValidation?.isValid == true &&
+          _passwordController.text.isEmpty) {
+        _passwordFocusNode.requestFocus();
+      }
+    });
+  }
+
   void _setupSystemUI() {
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -166,27 +195,29 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _startInitialAnimations() {
     _slideAnimationController.forward();
-    Future.delayed(const Duration(milliseconds: 200), () {
-      if (mounted) {
-        _fadeAnimationController.forward();
-      }
-    });
+    _fadeAnimationController.forward();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // VALIDACIÓN Y SEGURIDAD
+  // VALIDACIÓN
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _validateForm() {
-    final isValid = _emailController.text.trim().isNotEmpty &&
+    final isValid = _emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty &&
-        Validators.validateEmail(_emailController.text.trim());
+        (_emailValidation?.isValid != false);
 
     if (_isFormValid != isValid) {
       setState(() {
         _isFormValid = isValid;
       });
     }
+  }
+
+  bool _canSubmitForm() {
+    return _emailController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty &&
+        (_emailValidation?.isValid != false);
   }
 
   String? _validateEmail(String? value) {
@@ -231,20 +262,15 @@ class _LoginScreenState extends State<LoginScreen>
     if (input.isEmpty) return input;
 
     String cleaned = input.trim();
-
-    // Lista de caracteres peligrosos a remover
     final dangerousChars = ['<', '>', '"', "'", '`', '{', '}'];
 
-    // Remover caracteres peligrosos uno por uno
     for (String char in dangerousChars) {
       cleaned = cleaned.replaceAll(char, '');
     }
 
-    // Remover scripts básicos
     cleaned = cleaned.replaceAll('<script>', '');
     cleaned = cleaned.replaceAll('</script>', '');
 
-    // Normalizar espacios múltiples
     while (cleaned.contains('  ')) {
       cleaned = cleaned.replaceAll('  ', ' ');
     }
@@ -259,16 +285,12 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _handleLogin() async {
     if (!_isFormValid || _isLoading) return;
 
-    // Unfocus para ocultar teclado
     FocusScope.of(context).unfocus();
 
-    // Validar formulario
     if (!_formKey.currentState!.validate()) return;
 
-    // Feedback háptico
     HapticFeedback.lightImpact();
 
-    // Sanitizar inputs
     final email = _sanitizeInput(_emailController.text);
     final password = _passwordController.text;
 
@@ -282,7 +304,6 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      // Timeout de seguridad
       await Future.any([
         _performLogin(email, password),
         Future.delayed(_loginTimeout, () {
@@ -330,7 +351,6 @@ class _LoginScreenState extends State<LoginScreen>
       if (mounted) {
         AuthErrorHandler.handleGoogleSignInError(context, e.toString());
 
-        // Animar error
         _scaleAnimationController.forward().then((_) {
           _scaleAnimationController.reverse();
         });
@@ -349,13 +369,67 @@ class _LoginScreenState extends State<LoginScreen>
     authBloc.add(AuthLoginWithGoogle());
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MANEJO DE ERRORES MEJORADO
+  // ═══════════════════════════════════════════════════════════════════════════
+
   void _handleLoginError(dynamic error) {
-    String message = ErrorHandler.getErrorMessage(error.toString());
+    final errorString = error.toString().toLowerCase();
 
-    // Limpiar contraseña por seguridad
-    _passwordController.clear();
+    // Manejo inteligente según el tipo de error
+    if (errorString.contains('wrong-password') ||
+        errorString.contains('invalid-credential') ||
+        errorString.contains('incorrect password')) {
+      _passwordController.clear();
 
-    _showErrorMessage(message);
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _passwordFocusNode.requestFocus();
+        }
+      });
+
+    } else if (errorString.contains('user-not-found') ||
+        errorString.contains('user not found')) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _emailFocusNode.requestFocus();
+        }
+      });
+
+    } else if (errorString.contains('invalid-email')) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          _emailFocusNode.requestFocus();
+        }
+      });
+
+    } else if (errorString.contains('too-many-requests') ||
+        errorString.contains('too many attempts')) {
+      _passwordController.clear();
+
+    } else if (errorString.contains('network') ||
+        errorString.contains('connection') ||
+        errorString.contains('timeout')) {
+      // Para errores de red, no limpiar nada
+
+    } else {
+      _passwordController.clear();
+    }
+
+    // Usar AuthErrorHandler mejorado en lugar del genérico
+    AuthErrorHandler.handleLoginError(context, error.toString());
+
+    // Feedback háptico específico
+    if (errorString.contains('wrong-password') ||
+        errorString.contains('user-not-found')) {
+      HapticFeedback.mediumImpact();
+    } else if (errorString.contains('too-many-requests')) {
+      HapticFeedback.heavyImpact();
+    } else if (errorString.contains('network')) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
 
     // Animar error
     _scaleAnimationController.forward().then((_) {
@@ -400,8 +474,39 @@ class _LoginScreenState extends State<LoginScreen>
 
   void _showErrorMessage(String message) {
     if (mounted) {
-      ErrorHandler.showErrorSnackBar(context, message);
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
+  }
+
+  void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.check_circle, color: AppColors.white, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(message, style: const TextStyle(fontSize: 14)),
+            ),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 
   void _togglePasswordVisibility() {
@@ -409,6 +514,81 @@ class _LoginScreenState extends State<LoginScreen>
       _isPasswordVisible = !_isPasswordVisible;
     });
     HapticFeedback.selectionClick();
+  }
+
+  // NUEVO: Diálogo mejorado de recuperar contraseña
+  void _showForgotPasswordDialog() {
+    HapticFeedback.lightImpact();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final emailController = TextEditingController(
+          text: _emailValidation?.isValid == true ? _emailController.text : '',
+        );
+
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.lock_reset, color: AppColors.primary),
+              const SizedBox(width: 12),
+              Text('Recuperar contraseña'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Correo electrónico',
+                  hintText: 'ejemplo@correo.com',
+                  prefixIcon: Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _showSuccessSnackBar(
+                  'Si existe una cuenta con ese email, recibirás un enlace de recuperación.',
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text('Enviar enlace'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -468,12 +648,23 @@ class _LoginScreenState extends State<LoginScreen>
     switch (state.runtimeType) {
       case AuthSuccess:
         final successState = state as AuthSuccess;
-        // Mostrar mensaje de éxito antes de navegar
+
+        // Resetear intentos en caso de éxito
+        _loginAttempts = 0;
+
         AuthSuccessUtils.showLoginSuccess(context, successState.user.name);
         _navigateToWelcome();
         break;
+
       case AuthFailure:
         final failureState = state as AuthFailure;
+
+        // Incrementar contador de intentos
+        setState(() {
+          _loginAttempts++;
+          _lastAttemptTime = DateTime.now();
+        });
+
         _handleLoginError(failureState.message);
         break;
     }
@@ -496,7 +687,7 @@ class _LoginScreenState extends State<LoginScreen>
               child: Column(
                 children: [
                   _buildHeader(),
-                  _buildFormSection(),
+                  _buildEnhancedFormSection(),
                 ],
               ),
             ),
@@ -550,32 +741,23 @@ class _LoginScreenState extends State<LoginScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'METRASHOP',
+                        'Bienvenido',
                         style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
                           color: AppColors.white,
-                          letterSpacing: 2,
-                          shadows: [
-                            Shadow(
-                              offset: const Offset(0, 2),
-                              blurRadius: 8,
-                              color: Colors.black.withOpacity(0.3),
-                            ),
-                          ],
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Bienvenido de nuevo',
+                        'Inicia sesión para continuar',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          fontWeight: FontWeight.w500,
                           color: AppColors.white.withOpacity(0.9),
                         ),
                       ),
@@ -590,319 +772,274 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildFormSection() {
+  // NUEVO: Formulario completamente mejorado
+  Widget _buildEnhancedFormSection() {
     return SlideTransition(
       position: _formSlideAnimation,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Container(
-          width: double.infinity,
-          constraints: BoxConstraints(
-            minHeight: MediaQuery.of(context).size.height * 0.6,
+      child: Container(
+        margin: const EdgeInsets.only(top: 20),
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(30),
+            topRight: Radius.circular(30),
           ),
-          decoration: const BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(32),
-              topRight: Radius.circular(32),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -5),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFormHeader(),
-                  const SizedBox(height: 32),
-                  _buildEmailField(),
-                  const SizedBox(height: 20),
-                  _buildPasswordField(),
-                  const SizedBox(height: 16),
-                  _buildForgotPasswordButton(),
-                  const SizedBox(height: 32),
-                  _buildLoginButton(),
-                  const SizedBox(height: 24),
-                  _buildDivider(),
-                  const SizedBox(height: 24),
-                  _buildSocialLoginButtons(),
-                  const SizedBox(height: 32),
-                  _buildRegisterPrompt(),
-                ],
+          ],
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Título
+              Text(
+                'Iniciar Sesión',
+                style: GoogleFonts.poppins(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                'Bienvenido de vuelta. Ingresa tus credenciales para continuar.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+
+              const SizedBox(height: 32),
+
+              // Indicador de intentos
+              _buildLoginAttemptsIndicator(),
+
+              // Campo de email mejorado
+              _buildEnhancedEmailField(),
+
+              const SizedBox(height: 20),
+
+              // Campo de contraseña mejorado
+              _buildEnhancedPasswordField(),
+
+              const SizedBox(height: 32),
+
+              // Botón de login mejorado
+              _buildEnhancedLoginButton(),
+
+              const SizedBox(height: 24),
+
+              // Divider
+              _buildDivider(),
+
+              const SizedBox(height: 24),
+
+              // Botón de Google
+              _buildGoogleLoginButton(),
+
+              const SizedBox(height: 24),
+
+              // Link para registro
+              _buildRegisterLink(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFormHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Iniciar Sesión',
-          style: GoogleFonts.poppins(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: AppColors.primary,
-          ),
+  // NUEVO: Indicador de intentos de login
+  Widget _buildLoginAttemptsIndicator() {
+    if (_loginAttempts == 0) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _loginAttempts >= 3
+            ? AppColors.error.withOpacity(0.1)
+            : AppColors.warning.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: _loginAttempts >= 3
+              ? AppColors.error.withOpacity(0.3)
+              : AppColors.warning.withOpacity(0.3),
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Ingresa a tu cuenta para continuar',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _loginAttempts >= 3 ? Icons.warning : Icons.info_outline,
+            size: 16,
+            color: _loginAttempts >= 3 ? AppColors.error : AppColors.warning,
           ),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              _loginAttempts >= 3
+                  ? 'Múltiples intentos fallidos. ¿Olvidaste tu contraseña?'
+                  : 'Intento ${_loginAttempts} de inicio de sesión',
+              style: TextStyle(
+                fontSize: 12,
+                color: _loginAttempts >= 3 ? AppColors.error : AppColors.warning,
+              ),
+            ),
+          ),
+          if (_loginAttempts >= 3)
+            TextButton(
+              onPressed: _showForgotPasswordDialog,
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text(
+                'Recuperar',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildEmailField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Correo electrónico',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _emailController,
-          focusNode: _emailFocusNode,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autocorrect: false,
-          enableSuggestions: false,
-          validator: _validateEmail,
-          enabled: !_isLoading,
-          decoration: InputDecoration(
-            hintText: 'ejemplo@correo.com',
-            prefixIcon: Icon(
-              Icons.email_outlined,
-              color: _emailFocusNode.hasFocus
-                  ? AppColors.secondary
-                  : AppColors.textTertiary,
-            ),
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.secondary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.error,
-                width: 2,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
-            ),
-          ),
-          onFieldSubmitted: (_) {
-            _passwordFocusNode.requestFocus();
-          },
-        ),
-      ],
+  // NUEVO: Campos mejorados
+  Widget _buildEnhancedEmailField() {
+    return EnhancedAuthTextField(
+      controller: _emailController,
+      focusNode: _emailFocusNode,
+      label: 'Correo electrónico',
+      hint: 'ejemplo@correo.com',
+      prefixIcon: Icons.email_outlined,
+      isEmail: true,
+      enabled: !_isLoading,
+      textInputAction: TextInputAction.next,
+      showValidationInRealTime: _showValidationHints,
+      onChanged: (value) => _validateForm(),
     );
   }
 
-  Widget _buildPasswordField() {
+  Widget _buildEnhancedPasswordField() {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Contraseña',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
+        EnhancedAuthTextField(
           controller: _passwordController,
           focusNode: _passwordFocusNode,
-          obscureText: !_isPasswordVisible,
-          textInputAction: TextInputAction.done,
-          autocorrect: false,
-          enableSuggestions: false,
-          validator: _validatePassword,
+          label: 'Contraseña',
+          hint: 'Introduce tu contraseña',
+          prefixIcon: Icons.lock_outlined,
+          isPassword: true,
           enabled: !_isLoading,
-          decoration: InputDecoration(
-            hintText: 'Tu contraseña',
-            prefixIcon: Icon(
-              Icons.lock_outlined,
-              color: _passwordFocusNode.hasFocus
-                  ? AppColors.secondary
-                  : AppColors.textTertiary,
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible
-                    ? Icons.visibility_off_outlined
-                    : Icons.visibility_outlined,
-                color: AppColors.textTertiary,
+          textInputAction: TextInputAction.done,
+          showValidationInRealTime: false,
+          handleLogin: (_) => _handleLogin(),
+        ),
+
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _isLoading ? null : _showForgotPasswordDialog,
+            child: Text(
+              '¿Olvidaste tu contraseña?',
+              style: TextStyle(
+                color: _isLoading ? AppColors.textSecondary : AppColors.primary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
-              onPressed: _togglePasswordVisibility,
-            ),
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide.none,
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.secondary,
-                width: 2,
-              ),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(
-                color: AppColors.error,
-                width: 2,
-              ),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 16,
             ),
           ),
-          onFieldSubmitted: (_) => _handleLogin(),
         ),
       ],
     );
   }
 
-  Widget _buildForgotPasswordButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: TextButton(
-        onPressed: _isLoading ? null : () {
-          // TODO: Implementar recuperación de contraseña
-          _showErrorMessage('Función próximamente disponible');
-        },
-        child: Text(
-          '¿Olvidaste tu contraseña?',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: AppColors.secondary,
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildEnhancedLoginButton() {
+    final canLogin = _canSubmitForm();
 
-  Widget _buildLoginButton() {
-    return SizedBox(
-      width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _isFormValid && !_isLoading ? _handleLogin : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.secondary,
-          foregroundColor: AppColors.white,
-          disabledBackgroundColor: AppColors.neutral300,
-          elevation: 0,
-          shadowColor: Colors.transparent,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-        child: _isLoading
-            ? const SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-          ),
-        )
-            : Text(
-          'Iniciar Sesión',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
-        ),
-      ),
+    return EnhancedRegisterButton(
+      onPressed: canLogin ? _handleLogin : null,
+      isLoading: _isLoading,
+      isEnabled: canLogin,
+      text: 'Iniciar sesión',
+      loadingText: 'Iniciando sesión...',
+      icon: Icons.login,
+      backgroundColor: AppColors.primary,
     );
   }
 
   Widget _buildDivider() {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppColors.border)),
+        Expanded(
+          child: Divider(color: AppColors.textSecondary.withOpacity(0.3)),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'O continúa con',
-            style: GoogleFonts.poppins(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
+            'O',
+            style: TextStyle(
               color: AppColors.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppColors.border)),
+        Expanded(
+          child: Divider(color: AppColors.textSecondary.withOpacity(0.3)),
+        ),
       ],
     );
   }
 
-  Widget _buildSocialLoginButtons() {
+  Widget _buildGoogleLoginButton() {
     return SizedBox(
       width: double.infinity,
       height: 56,
       child: OutlinedButton.icon(
         onPressed: _isLoading ? null : _handleGoogleLogin,
-        icon: _isLoading
-            ? const SizedBox(
-          height: 20,
+        icon: Container(
           width: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
+          height: 20,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(4),
           ),
-        )
-            : const Icon(
-          Icons.g_mobiledata_rounded,
-          size: 24,
-          color: AppColors.secondary,
+          child: Center(
+            child: Text(
+              'G',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
+              ),
+            ),
+          ),
         ),
         label: Text(
           'Continuar con Google',
-          style: GoogleFonts.poppins(
+          style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: AppColors.primary,
+            color: _isLoading ? AppColors.textSecondary : AppColors.textPrimary,
           ),
         ),
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.border, width: 2),
+          side: BorderSide(
+            color: _isLoading
+                ? AppColors.textSecondary.withOpacity(0.3)
+                : AppColors.textSecondary.withOpacity(0.5),
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -911,31 +1048,28 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  Widget _buildRegisterPrompt() {
+  Widget _buildRegisterLink() {
     return Center(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '¿No tienes una cuenta? ',
-            style: GoogleFonts.poppins(
+      child: TextButton(
+        onPressed: _isLoading ? null : _navigateToRegister,
+        child: RichText(
+          text: TextSpan(
+            style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w400,
               color: AppColors.textSecondary,
             ),
-          ),
-          TextButton(
-            onPressed: _isLoading ? null : _navigateToRegister,
-            child: Text(
-              'Regístrate',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.secondary,
+            children: [
+              TextSpan(text: '¿No tienes una cuenta? '),
+              TextSpan(
+                text: 'Regístrate',
+                style: TextStyle(
+                  color: _isLoading ? AppColors.textSecondary : AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

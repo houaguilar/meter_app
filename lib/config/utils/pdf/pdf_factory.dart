@@ -138,6 +138,7 @@ class PDFFactory {
   static Future<File> generateFalsoPisoPDF(WidgetRef ref) async {
     final falsosPisos = ref.read(falsoPisoResultProvider);
     final materiales = ref.read(falsoPisoMaterialsProvider);
+    final areas = ref.watch(areaFalsoPisoProvider);
 
     if (falsosPisos.isEmpty) {
       throw Exception("No hay datos de falso piso para generar el PDF");
@@ -174,7 +175,7 @@ class PDFFactory {
       ],
       metrado: falsosPisos.map<MetradoItem>((piso) => MetradoItem(
         elemento: piso.description,
-        unidad: 'm³',
+        unidad: 'm²',
         medida: _calcularVolumenPiso(piso).toStringAsFixed(2),
       )).toList(),
       observaciones: [

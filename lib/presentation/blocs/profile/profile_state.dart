@@ -10,21 +10,28 @@ class ProfileLoading extends ProfileState {}
 class ProfileLoaded extends ProfileState {
   final UserProfile userProfile;
   final bool isValid;
+  final bool isLoading; // Agregar este campo
 
   ProfileLoaded({
     required this.userProfile,
     this.isValid = false,
+    this.isLoading = false, // Agregar este parámetro
   });
 
   ProfileLoaded copyWith({
     UserProfile? userProfile,
     bool? isValid,
+    bool? isLoading, // Agregar este parámetro
   }) {
     return ProfileLoaded(
       userProfile: userProfile ?? this.userProfile,
       isValid: isValid ?? this.isValid,
+      isLoading: isLoading ?? this.isLoading, // Agregar esta línea
     );
   }
+
+  @override
+  List<Object> get props => [userProfile, isValid, isLoading]; // Actualizar props
 }
 
 class ProfileError extends ProfileState {
