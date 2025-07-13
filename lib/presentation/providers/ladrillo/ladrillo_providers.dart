@@ -6,6 +6,7 @@ import '../../../domain/services/ladrillo_service.dart';
 
 part 'ladrillo_providers.g.dart';
 
+@Riverpod(keepAlive: true)
 @riverpod
 class TipoLadrillo extends _$TipoLadrillo {
   @override

@@ -69,116 +69,87 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   }
 
   void _hideLoaderAfterDelay() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          context.hideLoader();
-        }
-      });
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) {
+        context.hideLoader();
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        ref.read(contrapisoResultProvider.notifier).clearList();
-        return true;
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        appBar: _buildAppBar(),
-        body: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: _buildBody(),
-          ),
-        ),
-        bottomNavigationBar: _buildBottomActionBar(),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBarWidget(titleAppBar: 'Resultados');
-  }
-
-  Widget _buildBody() {
     final pisos = ref.watch(contrapisoResultProvider);
-    final resultados = pisos.isNotEmpty ? CalculadoraContrapiso.calcularMateriales(pisos) : null;
+    final materials = ref.watch(contrapisoMaterialsProvider);  // ✅ Cambio: usar materials
 
-    if (pisos.isEmpty) {
-      return _buildEmptyState();
-    }
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.only(
-        right: 24,
-        left: 24,
-        top: 10,
-        bottom: 20,
+    return Scaffold(
+      appBar: AppBarWidget(titleAppBar: 'Resultados'),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: pisos.isEmpty
+              ? _buildEmptyState()
+              : _buildResultsContent(pisos, materials),  // ✅ Pasar materials
+        ),
       ),
-      child: Column(
-        children: [
-          const SizedBox(height: 10),
-          _buildSuccessIcon(),
-          const SizedBox(height: 20),
-          _buildProjectSummaryCard(resultados!, pisos),
-          const SizedBox(height: 20),
-          _buildMetradoDataCard(pisos),
-          const SizedBox(height: 20),
-          _buildMaterialsCard(resultados),
-          const SizedBox(height: 20),
-          _buildConfigurationCard(pisos),
-          const SizedBox(height: 120),
-        ],
-      ),
+      bottomNavigationBar: _buildBottomActionBar(),  // ✅ Mantener tus botones originales
     );
   }
 
   Widget _buildEmptyState() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SvgPicture.asset(
+            AppIcons.infoIcon,
+            width: 120,
+            height: 120,
+            colorFilter: ColorFilter.mode(
+              AppColors.neutral400,
+              BlendMode.srcIn,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'No hay resultados',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Agrega datos de contrapiso para ver los resultados',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultsContent(List<Piso> pisos, ContrapisoMaterials materials) {  // ✅ Cambio de tipo
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: SlideTransition(
+        position: _slideAnimation,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              size: 64,
-              color: Colors.orange[400],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No hay datos de contrapiso',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Regresa y completa los datos para ver los resultados',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-            ),
+            _buildSuccessIcon(),
             const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Regresar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+            _buildProjectSummaryCard(materials, pisos),  // ✅ Pasar materials
+            const SizedBox(height: 16),
+            _buildMetradoDataCard(pisos),
+            const SizedBox(height: 16),
+            _buildMaterialsCard(materials),  // ✅ Pasar materials
+            const SizedBox(height: 16),
+            _buildConfigurationCard(pisos),
+            const SizedBox(height: 100), // Espacio para el bottom bar
           ],
         ),
       ),
@@ -186,45 +157,37 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   }
 
   Widget _buildSuccessIcon() {
-    return TweenAnimationBuilder<double>(
-      duration: const Duration(milliseconds: 1000),
-      tween: Tween(begin: 0.0, end: 1.0),
-      builder: (context, value, child) {
-        return Transform.scale(
-          scale: 0.5 + (value * 0.5),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: AppColors.success.withOpacity(0.3),
-                width: 2,
-              ),
-            ),
-            child: SvgPicture.asset(
-              AppIcons.checkmarkCircleIcon,
-              width: 48,
-              height: 48,
-              colorFilter: ColorFilter.mode(
-                AppColors.success,
-                BlendMode.srcIn,
-              ),
-            ),
-          ),
-        );
-      },
+    return Container(
+      width: 80,
+      height: 80,
+      decoration: BoxDecoration(
+        color: AppColors.success.withOpacity(0.1),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: AppColors.success.withOpacity(0.3),
+          width: 2,
+        ),
+      ),
+      child: SvgPicture.asset(
+        AppIcons.checkmarkCircleIcon,
+        width: 48,
+        height: 48,
+        colorFilter: ColorFilter.mode(
+          AppColors.success,
+          BlendMode.srcIn,
+        ),
+      ),
     );
   }
 
-  Widget _buildProjectSummaryCard(ResultadosContrapiso materiales, List<Piso> pisos) {
+  Widget _buildProjectSummaryCard(ContrapisoMaterials materials, List<Piso> pisos) {  // ✅ Cambio de tipo
     return _buildModernCard(
       title: 'Resumen del Proyecto',
       icon: Icons.summarize_outlined,
       iconColor: AppColors.blueMetraShop,
       child: Column(
         children: [
-          _buildSummaryRow('Volumen Total', '${materiales.volumenTotal.toStringAsFixed(2)} m³'),
+          _buildSummaryRow('Área Total', '${materials.areaTotalFormateada} m²'),  // ✅ Cambio: Volumen → Área
           const SizedBox(height: 12),
           _buildSummaryRow('Total de Contrapisos', '${pisos.length}'),
           const SizedBox(height: 12),
@@ -249,16 +212,16 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     );
   }
 
-  Widget _buildMaterialsCard(ResultadosContrapiso materiales) {
+  Widget _buildMaterialsCard(ContrapisoMaterials materials) {  // ✅ Cambio de tipo
     return _buildModernCard(
       title: 'Lista de Materiales',
       icon: Icons.inventory_2_outlined,
       iconColor: AppColors.success,
       child: Column(
         children: [
-          _buildMaterialTable(materiales),
+          _buildMaterialTable(materials),
           const SizedBox(height: 16),
-          _buildMaterialChips(materiales),
+          _buildMaterialChips(materials),
         ],
       ),
     );
@@ -296,18 +259,13 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: AppColors.neutral200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -412,6 +370,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   }
 
   Widget _buildDataTable(List<Piso> pisos) {
+    final areas = ref.watch(areaContrapisoProvider);  // ✅ Cambio: usar provider de áreas
+
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -419,25 +379,27 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
         2: FlexColumnWidth(1.5),
       },
       children: [
-        _buildTableRow(['Descripción', 'Und.', 'Volumen'], isHeader: true),
-        ...pisos.map((piso) {
-          final volumen = _calcularVolumenPiso(piso);
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),  // ✅ Cambio: Volumen → Área
+        ...pisos.asMap().entries.map((entry) {
+          final index = entry.key;
+          final piso = entry.value;
+          final area = index < areas.length ? areas[index] : 0.0;  // ✅ Cambio: usar área
           return _buildTableRow([
             piso.description,
-            'm³',
-            volumen.toStringAsFixed(2),
+            'm²',  // ✅ Cambio: m³ → m²
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
           'Total:',
-          'm³',
-          pisos.fold(0.0, (sum, piso) => sum + _calcularVolumenPiso(piso)).toStringAsFixed(2),
+          'm²',  // ✅ Cambio: m³ → m²
+          ref.watch(contrapisoMaterialsProvider).areaTotalFormateada,  // ✅ Cambio
         ], isTotal: true),
       ],
     );
   }
 
-  Widget _buildMaterialTable(ResultadosContrapiso materiales) {
+  Widget _buildMaterialTable(ContrapisoMaterials materials) {  // ✅ Cambio de tipo
     return Table(
       columnWidths: const {
         0: FlexColumnWidth(2),
@@ -446,18 +408,18 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'Bls', materiales.cementoTotal.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', materiales.arenaTotal.toStringAsFixed(2)]),
-        _buildTableRow(['Agua', 'm³', materiales.aguaTotal.toStringAsFixed(2)]),
+        _buildTableRow(['Cemento', 'Bls', materials.cementoBolsas.toString()]),  // ✅ Método formateado
+        _buildTableRow(['Arena gruesa', 'm³', materials.arenaFormateada]),  // ✅ Método formateado
+        _buildTableRow(['Agua', 'm³', materials.aguaFormateada]),  // ✅ Método formateado
       ],
     );
   }
 
-  Widget _buildMaterialChips(ResultadosContrapiso materiales) {
+  Widget _buildMaterialChips(ContrapisoMaterials materials) {  // ✅ Cambio de tipo
     final materials_list = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materiales.cementoTotal.ceil()} bls', 'color': AppColors.primary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materiales.arenaTotal.toStringAsFixed(2)} m³', 'color': AppColors.warning},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materiales.aguaTotal.toStringAsFixed(2)} m³', 'color': AppColors.info},
+      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materials.cementoBolsas} bls', 'color': AppColors.primary},
+      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materials.arenaFormateada} m³', 'color': AppColors.warning},
+      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materials.aguaFormateada} m³', 'color': AppColors.info},
     ];
 
     return Wrap(
@@ -522,6 +484,7 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     );
   }
 
+  // ✅ TUS BOTONES ORIGINALES MANTENIDOS EXACTAMENTE IGUAL
   Widget _buildBottomActionBar() {
     final pisos = ref.watch(contrapisoResultProvider);
 
@@ -616,15 +579,14 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     return pisos.isNotEmpty ? '1:${pisos.first.proporcionMortero ?? "5"}' : 'N/A';
   }
 
-  double _calcularVolumenPiso(Piso piso) {
-    final espesor = double.tryParse(piso.espesor) ?? 0.0;
+  // ✅ Método para calcular área (reemplaza _calcularVolumenPiso)
+  double _calcularAreaPiso(Piso piso) {
     if (piso.area != null && piso.area!.isNotEmpty) {
-      final area = double.tryParse(piso.area!) ?? 0.0;
-      return area * (espesor / 100);
+      return double.tryParse(piso.area!) ?? 0.0;
     } else {
       final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
       final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho * (espesor / 100);
+      return largo * ancho;
     }
   }
 
@@ -690,7 +652,6 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
               fontSize: 14,
               color: AppColors.textSecondary,
             ),
-            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
           Row(
@@ -698,37 +659,23 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
               Expanded(
                 child: _buildShareOption(
                   icon: Icons.picture_as_pdf,
-                  label: 'Compartir PDF',
-                  color: Colors.red,
-                  onTap: () => _sharePDF(),
+                  label: 'PDF',
+                  color: AppColors.error,
+                  onTap: _sharePDF,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: _buildShareOption(
-                  icon: Icons.text_fields,
-                  label: 'Compartir Texto',
-                  color: AppColors.blueMetraShop,
-                  onTap: () => _shareText(),
+                  icon: Icons.text_snippet,
+                  label: 'Texto',
+                  color: AppColors.info,
+                  onTap: _shareText,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancelar'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: BorderSide(color: AppColors.neutral400),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -740,10 +687,11 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(16),
@@ -797,10 +745,10 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     try {
       Navigator.of(context).pop();
       final pisos = ref.watch(contrapisoResultProvider);
-      final resultados = CalculadoraContrapiso.calcularMateriales(pisos);
+      final materials = ref.watch(contrapisoMaterialsProvider);  // ✅ Cambio aquí
       final datosMetrado = ref.watch(datosShareContrapisoProvider);
 
-      final shareText = _buildShareText(resultados, datosMetrado, pisos);
+      final shareText = _buildShareText(materials, datosMetrado, pisos);
 
       await Share.share(shareText);
     } catch (e) {
@@ -808,7 +756,7 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
     }
   }
 
-  String _buildShareText(ResultadosContrapiso resultados, String datosMetrado, List<Piso> pisos) {
+  String _buildShareText(ContrapisoMaterials materials, String datosMetrado, List<Piso> pisos) {  // ✅ Cambio de tipo
     final primerPiso = pisos.isNotEmpty ? pisos.first : null;
     final proporcion = primerPiso?.proporcionMortero ?? '5';
     final desperdicio = primerPiso != null ? double.tryParse(primerPiso.factorDesperdicio) ?? 5.0 : 5.0;
@@ -819,14 +767,14 @@ DATOS DEL METRADO:
 $datosMetrado
 
 LISTA DE MATERIALES:
-• Cemento: ${resultados.cementoTotal.ceil()} bls
-• Arena gruesa: ${resultados.arenaTotal.toStringAsFixed(2)} m³
-• Agua: ${resultados.aguaTotal.toStringAsFixed(2)} m³
+• Cemento: ${materials.cementoBolsas} bls
+• Arena gruesa: ${materials.arenaFormateada} m³
+• Agua: ${materials.aguaFormateada} m³
 
 INFORMACIÓN DEL PROYECTO:
 • Tipo: Contrapiso
 • Proporción Mortero: 1:$proporcion
-• Volumen total: ${resultados.volumenTotal.toStringAsFixed(2)} m³
+• Área total: ${materials.areaTotalFormateada} m²
 • Factor de desperdicio: ${desperdicio.toStringAsFixed(1)}%
 • Total de secciones: ${pisos.length}
 
@@ -836,7 +784,7 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
   Future<File> _generatePDF() async {
     final pdf = pw.Document();
     final pisos = ref.watch(contrapisoResultProvider);
-    final resultados = CalculadoraContrapiso.calcularMateriales(pisos);
+    final materials = ref.watch(contrapisoMaterialsProvider);  // ✅ Cambio aquí
 
     if (pisos.isEmpty) {
       throw Exception('No hay datos de contrapiso para generar PDF');
@@ -864,7 +812,7 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
             pw.SizedBox(height: 10),
             pw.Text('• Tipo: Contrapiso'),
             pw.Text('• Proporción Mortero: 1:${primerPiso.proporcionMortero ?? "5"}'),
-            pw.Text('• Volumen total: ${resultados.volumenTotal.toStringAsFixed(2)} m³'),
+            pw.Text('• Área total: ${materials.areaTotalFormateada} m²'),  // ✅ Cambio: Volumen → Área
             pw.Text('• Total de secciones: ${pisos.length}'),
             pw.SizedBox(height: 20),
 
@@ -874,9 +822,9 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
               style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${resultados.cementoTotal.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${resultados.arenaTotal.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${resultados.aguaTotal.toStringAsFixed(2)} m³'),
+            pw.Text('• Cemento: ${materials.cementoBolsas} bolsas'),
+            pw.Text('• Arena gruesa: ${materials.arenaFormateada} m³'),
+            pw.Text('• Agua: ${materials.aguaFormateada} m³'),
             pw.SizedBox(height: 20),
 
             // Configuración aplicada
@@ -889,16 +837,19 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
             pw.Text('• Espesor promedio: ${double.tryParse(primerPiso.espesor) ?? 5.0} cm'),
             pw.SizedBox(height: 20),
 
-            // Detalle de secciones
+            // Detalle de áreas - ✅ CAMBIADO DE "DETALLE DE SECCIONES"
             pw.Text(
-              'DETALLE DE SECCIONES:',
+              'DETALLE DE ÁREAS:',
               style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 5),
-            ...pisos.map((piso) => pw.Text(
-              '• ${piso.description}: ${_calcularVolumenPiso(piso).toStringAsFixed(2)} m³',
-              style: pw.TextStyle(fontSize: 12),
-            )),
+            ...pisos.map((piso) {
+              final area = _calcularAreaPiso(piso);  // ✅ Cambio: usar método de área
+              return pw.Text(
+                '• ${piso.description}: ${area.toStringAsFixed(2)} m²',  // ✅ Cambio: m³ → m²
+                style: pw.TextStyle(fontSize: 12),
+              );
+            }),
             pw.SizedBox(height: 20),
 
             // Información técnica
@@ -945,106 +896,4 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
       ),
     );
   }
-}
-
-/// Clase principal para cálculos de contrapiso basada en el Excel
-class CalculadoraContrapiso {
-  // Factores de materiales según proporción del mortero (líneas 15-164 del Excel)
-  static const Map<String, Map<String, double>> _factoresMortero = {
-    '3': {
-      'cemento': 10.5, // bolsas por m³
-      'arena': 0.95,   // m³ por m³
-      'agua': 0.285,   // m³ por m³
-    },
-    '4': {
-      'cemento': 8.9,  // bolsas por m³
-      'arena': 1.0,    // m³ por m³
-      'agua': 0.272,   // m³ por m³
-    },
-    '5': {
-      'cemento': 7.4,  // bolsas por m³
-      'arena': 1.05,   // m³ por m³
-      'agua': 0.268,   // m³ por m³
-    },
-    '6': {
-      'cemento': 6.3,  // bolsas por m³
-      'arena': 1.08,   // m³ por m³
-      'agua': 0.265,   // m³ por m³
-    },
-  };
-
-  static ResultadosContrapiso calcularMateriales(List<Piso> pisos) {
-    if (pisos.isEmpty) {
-      return const ResultadosContrapiso(
-        cementoTotal: 0,
-        arenaTotal: 0,
-        aguaTotal: 0,
-        volumenTotal: 0,
-      );
-    }
-
-    double cementoTotal = 0.0;
-    double arenaTotal = 0.0;
-    double aguaTotal = 0.0;
-    double volumenTotal = 0.0;
-
-    for (var piso in pisos) {
-      // Obtener valores del piso
-      final proporcion = piso.proporcionMortero ?? '5';
-      final espesor = double.tryParse(piso.espesor) ?? 5.0;
-      final desperdicio = (double.tryParse(piso.factorDesperdicio) ?? 5.0) / 100.0;
-
-      // Obtener factores de la proporción
-      final factores = _factoresMortero[proporcion] ?? _factoresMortero['5']!;
-
-      // Calcular área
-      final area = _obtenerArea(piso);
-
-      // Calcular volumen de mortero
-      final volumen = area * (espesor / 100); // convertir cm a metros
-
-      // Calcular materiales con desperdicio
-      final cemento = factores['cemento']! * volumen * (1 + desperdicio);
-      final arena = factores['arena']! * volumen * (1 + desperdicio);
-      final agua = factores['agua']! * volumen * (1 + desperdicio);
-
-      // Sumar a totales
-      cementoTotal += cemento;
-      arenaTotal += arena;
-      aguaTotal += agua;
-      volumenTotal += volumen;
-    }
-
-    return ResultadosContrapiso(
-      cementoTotal: cementoTotal,
-      arenaTotal: arenaTotal,
-      aguaTotal: aguaTotal,
-      volumenTotal: volumenTotal,
-    );
-  }
-
-  static double _obtenerArea(Piso piso) {
-    if (piso.area != null && piso.area!.isNotEmpty) {
-      return double.tryParse(piso.area!) ?? 0.0;
-    } else {
-      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho;
-    }
-  }
-}
-
-/// Clase para almacenar resultados de cálculos
-class ResultadosContrapiso {
-  final double cementoTotal;
-  final double arenaTotal;
-  final double aguaTotal;
-  final double volumenTotal;
-
-  const ResultadosContrapiso({
-    required this.cementoTotal,
-    required this.arenaTotal,
-    required this.aguaTotal,
-    required this.volumenTotal,
-  });
 }

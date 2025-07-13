@@ -129,7 +129,11 @@ class _WallScreenState extends ConsumerState<WallScreen>
   void _navigateToAvailableMaterial(WallMaterial material) {
     try {
       final materialType = _getMaterialType(material.id);
+      print('🔧 Estableciendo tipo: "$materialType"'); // Debug
       ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
+
+      final verificacion = ref.read(tipoLadrilloProvider);
+      print('🔍 Verificación: "$verificacion"'); // Debug
       context.pushNamed('ladrillo1');
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);

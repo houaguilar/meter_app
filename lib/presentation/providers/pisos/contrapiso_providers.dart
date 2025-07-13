@@ -25,7 +25,7 @@ class ContrapisoResult extends _$ContrapisoResult {
     final newPiso = Piso(
       idPiso: uuid.v4(),
       description: description,
-      tipo: 'contrapiso', // Tipo fijo
+      tipo: 'contrapiso',
       factorDesperdicio: factorDesperdicio,
       espesor: espesor,
       proporcionMortero: proporcionMortero,
@@ -46,12 +46,13 @@ class ContrapisoResult extends _$ContrapisoResult {
   }
 }
 
+// 🔄 CAMBIAR: De volumenContrapiso a areaContrapiso
 @riverpod
-List<double> volumenContrapiso(VolumenContrapisoRef ref) {
+List<double> areaContrapiso(AreaContrapisoRef ref) {
   final pisoService = PisoService();
   final contrapisos = ref.watch(contrapisoResultProvider);
 
-  return contrapisos.map((piso) => pisoService.calcularVolumen(piso) ?? 0.0).toList();
+  return contrapisos.map((piso) => pisoService.calcularArea(piso) ?? 0.0).toList();
 }
 
 @riverpod
@@ -60,19 +61,27 @@ List<String> descriptionContrapiso(DescriptionContrapisoRef ref) {
   return contrapisos.map((e) => e.description).toList();
 }
 
+// 🔄 ACTUALIZAR: datosShareContrapiso para usar áreas
 @riverpod
 String datosShareContrapiso(DatosShareContrapisoRef ref) {
   final description = ref.watch(descriptionContrapisoProvider);
-  final volumen = ref.watch(volumenContrapisoProvider);
+  final areas = ref.watch(areaContrapisoProvider);  // ✅ Cambio aquí
 
   String datos = "";
-  if (description.length == volumen.length) {
+  if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m³\n";
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m²\n";  // ✅ m² en lugar de m³
     }
     datos = datos.substring(0, datos.length - 2);
   }
   return datos;
+}
+
+// 🆕 NUEVO: Provider para área total
+@riverpod
+double areaTotalContrapiso(AreaTotalContrapisoRef ref) {
+  final areas = ref.watch(areaContrapisoProvider);
+  return areas.fold(0.0, (sum, area) => sum + area);
 }
 
 /// Provider para configuración de contrapiso
@@ -119,7 +128,7 @@ class ContrapisoConfiguration {
   }
 }
 
-/// Provider para cálculos de materiales usando la nueva lógica del Excel
+// 🔄 ACTUALIZAR: Provider para materiales con área total
 @riverpod
 ContrapisoMaterials contrapisoMaterials(ContrapisoMaterialsRef ref) {
   final contrapisos = ref.watch(contrapisoResultProvider);
@@ -128,7 +137,6 @@ ContrapisoMaterials contrapisoMaterials(ContrapisoMaterialsRef ref) {
     return const ContrapisoMaterials();
   }
 
-  // Usar la clase CalculadoraContrapiso del ResultPisosScreen
   return _calcularMaterialesContrapiso(contrapisos);
 }
 
@@ -162,21 +170,21 @@ ContrapisoMaterials _calcularMaterialesContrapiso(List<Piso> pisos) {
   double arenaTotal = 0.0;
   double aguaTotal = 0.0;
   double volumenTotal = 0.0;
+  double areaTotalCalculada = 0.0;  // 🆕 NUEVO
 
   for (var piso in pisos) {
-    // Obtener valores del piso
     final proporcion = piso.proporcionMortero ?? '5';
     final espesor = double.tryParse(piso.espesor) ?? 5.0;
     final desperdicio = (double.tryParse(piso.factorDesperdicio) ?? 5.0) / 100.0;
 
-    // Obtener factores de la proporción
     final factores = factoresMortero[proporcion] ?? factoresMortero['5']!;
 
     // Calcular área
     final area = _obtenerArea(piso);
+    areaTotalCalculada += area;  // 🆕 Sumar área
 
-    // Calcular volumen de mortero
-    final volumen = area * (espesor / 100); // convertir cm a metros
+    // Calcular volumen de mortero (para materiales)
+    final volumen = area * (espesor / 100);
 
     // Calcular materiales con desperdicio
     final cemento = factores['cemento']! * volumen * (1 + desperdicio);
@@ -195,6 +203,7 @@ ContrapisoMaterials _calcularMaterialesContrapiso(List<Piso> pisos) {
     arena: arenaTotal,
     agua: aguaTotal,
     volumenTotal: volumenTotal,
+    areaTotal: areaTotalCalculada,  // 🆕 NUEVO
   );
 }
 
@@ -214,12 +223,14 @@ class ContrapisoMaterials {
   final double arena;
   final double agua;
   final double volumenTotal;
+  final double areaTotal;  // 🆕 NUEVO
 
   const ContrapisoMaterials({
     this.cemento = 0.0,
     this.arena = 0.0,
     this.agua = 0.0,
     this.volumenTotal = 0.0,
+    this.areaTotal = 0.0,  // 🆕 NUEVO
   });
 
   ContrapisoMaterials copyWith({
@@ -227,36 +238,45 @@ class ContrapisoMaterials {
     double? arena,
     double? agua,
     double? volumenTotal,
+    double? areaTotal,  // 🆕 NUEVO
   }) {
     return ContrapisoMaterials(
       cemento: cemento ?? this.cemento,
       arena: arena ?? this.arena,
       agua: agua ?? this.agua,
       volumenTotal: volumenTotal ?? this.volumenTotal,
+      areaTotal: areaTotal ?? this.areaTotal,  // 🆕 NUEVO
     );
   }
 
-  /// Convierte a Map para facilitar el uso
+  // 🆕 MÉTODOS DE FORMATO (como en FalsoPisoMaterials)
+  int get cementoBolsas => cemento.ceil();
+  String get arenaFormateada => arena.toStringAsFixed(2);
+  String get aguaFormateada => agua.toStringAsFixed(2);
+  String get volumenFormateado => volumenTotal.toStringAsFixed(2);
+  String get areaTotalFormateada => areaTotal.toStringAsFixed(2);  // 🆕 ESTE ERA EL MÉTODO FALTANTE
+
+  // Métodos existentes mantenidos para compatibilidad
   Map<String, dynamic> toMap() {
     return {
       'cemento': cemento,
       'arena': arena,
       'agua': agua,
       'volumenTotal': volumenTotal,
+      'areaTotal': areaTotal,  // 🆕 NUEVO
     };
   }
 
-  /// Obtiene materiales como lista de strings formateados
   List<String> toFormattedList() {
     return [
-      'Cemento: ${cemento.ceil()} bls',
-      'Arena gruesa: ${arena.toStringAsFixed(2)} m³',
-      'Agua: ${agua.toStringAsFixed(2)} m³',
+      'Cemento: ${cementoBolsas} bls',
+      'Arena gruesa: ${arenaFormateada} m³',
+      'Agua: ${aguaFormateada} m³',
     ];
   }
 
   @override
   String toString() {
-    return 'ContrapisoMaterials(cemento: $cemento, arena: $arena, agua: $agua, volumen: $volumenTotal)';
+    return 'ContrapisoMaterials(cemento: $cemento, arena: $arena, agua: $agua, volumen: $volumenTotal, area: $areaTotal)';
   }
 }
