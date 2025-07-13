@@ -701,8 +701,12 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   }
 
   Future<void> _createLadrilloData(String tipoLadrillo) async {
-    final tipoLadrilloActual = ref.read(tipoLadrilloProvider); // ← Leer directo del provider
+    final tipoLadrilloActual = ref.read(tipoLadrilloProvider);
     print('🔍 Tipo ladrillo del provider: "$tipoLadrilloActual"');
+
+    // ✅ Si el provider está vacío, usar el parámetro como fallback
+    final tipoAUsar = tipoLadrilloActual.isNotEmpty ? tipoLadrilloActual : tipoLadrillo;
+    print('🔧 Tipo a usar para cálculos: "$tipoAUsar"');
 
     final datosLadrillo = ref.read(ladrilloResultProvider.notifier);
     datosLadrillo.clearList();
@@ -715,7 +719,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
           _areaTextController.text.isNotEmpty) {
         datosLadrillo.createLadrillo(
           _descriptionAreaController.text,
-          tipoLadrillo,
+          tipoAUsar,
           _factorController.text,
           _factorMorteroController.text,
           dosageSelection,
@@ -729,7 +733,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
             field['measure']!.text.isNotEmpty) {
           datosLadrillo.createLadrillo(
             field['description']!.text,
-            tipoLadrillo,
+            tipoAUsar,
             _factorController.text,
             _factorMorteroController.text,
             dosageSelection,
@@ -745,7 +749,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
           _heightTextController.text.isNotEmpty) {
         datosLadrillo.createLadrillo(
           _descriptionMedidasController.text,
-          tipoLadrillo,
+          tipoAUsar,
           _factorController.text,
           _factorMorteroController.text,
           dosageSelection,
@@ -761,7 +765,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
             field['heightMeasure']!.text.isNotEmpty) {
           datosLadrillo.createLadrillo(
             field['descriptionMeasure']!.text,
-            tipoLadrillo,
+            tipoAUsar,
             _factorController.text,
             _factorMorteroController.text,
             dosageSelection,

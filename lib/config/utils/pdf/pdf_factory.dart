@@ -137,8 +137,8 @@ class PDFFactory {
   /// Genera PDF para resultados de falso piso
   static Future<File> generateFalsoPisoPDF(WidgetRef ref) async {
     final falsosPisos = ref.read(falsoPisoResultProvider);
-    final materiales = ref.read(falsoPisoMaterialsProvider);
-    final areas = ref.watch(areaFalsoPisoProvider);
+    final materials = ref.read(falsoPisoMaterialsProvider);  // ✅ Usar provider correcto
+    final areas = ref.read(areaFalsoPisoProvider);  // ✅ Nuevo provider para áreas
 
     if (falsosPisos.isEmpty) {
       throw Exception("No hay datos de falso piso para generar el PDF");
@@ -155,33 +155,39 @@ class PDFFactory {
         MaterialItem(
           descripcion: 'Cemento',
           unidad: 'bls',
-          cantidad: materiales.cemento.ceil().toString(),
+          cantidad: materials.cementoBolsas.toString(),  // ✅ Usar método formateado
         ),
         MaterialItem(
           descripcion: 'Arena gruesa',
           unidad: 'm³',
-          cantidad: materiales.arena.toStringAsFixed(2),
+          cantidad: materials.arenaFormateada,  // ✅ Usar método formateado
         ),
         MaterialItem(
           descripcion: 'Piedra chancada',
           unidad: 'm³',
-          cantidad: materiales.piedra.toStringAsFixed(2),
+          cantidad: materials.piedraFormateada,  // ✅ Usar método formateado
         ),
         MaterialItem(
           descripcion: 'Agua',
           unidad: 'm³',
-          cantidad: materiales.agua.toStringAsFixed(2),
+          cantidad: materials.aguaFormateada,  // ✅ Usar método formateado
         ),
       ],
-      metrado: falsosPisos.map<MetradoItem>((piso) => MetradoItem(
-        elemento: piso.description,
-        unidad: 'm²',
-        medida: _calcularVolumenPiso(piso).toStringAsFixed(2),
-      )).toList(),
+      metrado: falsosPisos.asMap().entries.map<MetradoItem>((entry) {
+        final index = entry.key;
+        final piso = entry.value;
+        final area = index < areas.length ? areas[index] : 0.0;  // ✅ Usar área del provider
+
+        return MetradoItem(
+          elemento: piso.description,
+          unidad: 'm²',  // ✅ Cambio: m³ → m²
+          medida: area.toStringAsFixed(2),  // ✅ Mostrar área en lugar de volumen
+        );
+      }).toList(),
       observaciones: [
-        'Volumen total: ${materiales.volumenTotal.toStringAsFixed(2)} m³',
+        'Área total: ${materials.areaTotalFormateada} m²',  // ✅ Cambio: Volumen → Área
         'Espesor: ${falsosPisos.first.espesor} cm',
-        'Resistencia: ${falsosPisos.first.resistencia ?? "175 kg/cm²"}',
+        'Resistencia concreto: ${falsosPisos.first.resistencia ?? "175 kg/cm²"}',
         'Factor de desperdicio: ${falsosPisos.first.factorDesperdicio}%',
       ],
     );
@@ -191,11 +197,11 @@ class PDFFactory {
       customFileName: 'lista_materiales_falso_piso_${DateTime.now().millisecondsSinceEpoch}.pdf',
     );
   }
-
   /// Genera PDF para resultados de contrapiso
   static Future<File> generateContrapisoPDF(WidgetRef ref) async {
     final contrapisos = ref.read(contrapisoResultProvider);
-    final materiales = ref.read(contrapisoMaterialsProvider);
+    final materials = ref.read(contrapisoMaterialsProvider);  // ✅ Usar el provider correcto
+    final areas = ref.read(areaContrapisoProvider);  // ✅ Nuevo provider para áreas
 
     if (contrapisos.isEmpty) {
       throw Exception("No hay datos de contrapiso para generar el PDF");
@@ -212,26 +218,32 @@ class PDFFactory {
         MaterialItem(
           descripcion: 'Cemento',
           unidad: 'bls',
-          cantidad: materiales.cemento.ceil().toString(),
+          cantidad: materials.cementoBolsas.toString(),  // ✅ Usar método formateado
         ),
         MaterialItem(
           descripcion: 'Arena gruesa',
           unidad: 'm³',
-          cantidad: materiales.arena.toStringAsFixed(2),
+          cantidad: materials.arenaFormateada,  // ✅ Usar método formateado
         ),
         MaterialItem(
           descripcion: 'Agua',
           unidad: 'm³',
-          cantidad: materiales.agua.toStringAsFixed(2),
+          cantidad: materials.aguaFormateada,  // ✅ Usar método formateado
         ),
       ],
-      metrado: contrapisos.map<MetradoItem>((piso) => MetradoItem(
-        elemento: piso.description,
-        unidad: 'm³',
-        medida: _calcularVolumenPiso(piso).toStringAsFixed(2),
-      )).toList(),
+      metrado: contrapisos.asMap().entries.map<MetradoItem>((entry) {
+        final index = entry.key;
+        final piso = entry.value;
+        final area = index < areas.length ? areas[index] : 0.0;  // ✅ Usar área del provider
+
+        return MetradoItem(
+          elemento: piso.description,
+          unidad: 'm²',  // ✅ Cambio: m³ → m²
+          medida: area.toStringAsFixed(2),  // ✅ Mostrar área en lugar de volumen
+        );
+      }).toList(),
       observaciones: [
-        'Volumen total: ${materiales.volumenTotal.toStringAsFixed(2)} m³',
+        'Área total: ${materials.areaTotalFormateada} m²',  // ✅ Cambio: Volumen → Área
         'Espesor: ${contrapisos.first.espesor} cm',
         'Proporción mortero: 1:${contrapisos.first.proporcionMortero ?? "5"}',
         'Factor de desperdicio: ${contrapisos.first.factorDesperdicio}%',
@@ -442,15 +454,13 @@ class PDFFactory {
     }
   }
 
-  static double _calcularVolumenPiso(dynamic piso) {
-    final espesor = double.tryParse(piso.espesor) ?? 0.0;
+  static double _calcularAreaPiso(dynamic piso) {
     if (piso.area != null && piso.area!.isNotEmpty) {
-      final area = double.tryParse(piso.area!) ?? 0.0;
-      return area * (espesor / 100);
+      return double.tryParse(piso.area!) ?? 0.0;
     } else {
       final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
       final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho * (espesor / 100);
+      return largo * ancho;
     }
   }
 

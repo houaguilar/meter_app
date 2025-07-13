@@ -43,7 +43,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   bool _isLocationLoading = true;
   String? _locationError;
   int _currentProviderIndex = 0;
-  bool _isCarouselExpanded = true; // Nueva variable para carrusel colapsible
 
   // Configuración de mapa
   static const CameraPosition _defaultPosition = CameraPosition(
@@ -134,7 +133,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     }
   }
 
-  // MÉTODO BUILD ACTUALIZADO CON SOLUCIÓN UX
+  // MÉTODO BUILD PRINCIPAL
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -169,15 +168,19 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
             ),
           ),
 
-          // FAB adaptivo
-          _buildAdaptiveFAB(),
+          // FAB de ubicación
+          Positioned(
+            bottom: 280,
+            right: 16,
+            child: _buildEnhancedLocationFAB(),
+          ),
 
-          // Carrusel colapsible
+          // Carrusel de proveedores (SIN expandir/colapsar)
           Positioned(
             bottom: 0,
             left: 0,
             right: 0,
-            child: _buildCollapsibleCarousel(),
+            child: _buildProvidersCarousel(),
           ),
 
           if (!_isMapReady || _isLocationLoading)
@@ -187,249 +190,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  // FAB ADAPTIVO QUE RESPONDE AL ESTADO DEL CARRUSEL
-  Widget _buildAdaptiveFAB() {
-    double bottomPosition = _isCarouselExpanded ? 240 : 100;
-
-    return AnimatedPositioned(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      bottom: bottomPosition,
-      right: 16,
-      child: _buildEnhancedLocationFAB(),
-    );
-  }
-
-  // FAB MEJORADO CON ESTADOS VISUALES
-  Widget _buildEnhancedLocationFAB() {
-    return Hero(
-      tag: 'location_fab',
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Material(
-          borderRadius: BorderRadius.circular(16),
-          color: AppColors.primary,
-          elevation: 0,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(16),
-            onTap: _isLocationLoading ? null : _goToCurrentLocation,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                border: _currentPosition != null
-                    ? Border.all(color: AppColors.white.withOpacity(0.3), width: 2)
-                    : null,
-              ),
-              child: _buildFABContent(),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // CONTENIDO DEL FAB SEGÚN ESTADO
-  Widget _buildFABContent() {
-    if (_isLocationLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-        ),
-      );
-    }
-
-    if (_locationError != null) {
-      return const Icon(
-        Icons.location_off,
-        color: AppColors.white,
-        size: 24,
-      );
-    }
-
-    return Icon(
-      _currentPosition != null ? Icons.my_location : Icons.location_searching,
-      color: AppColors.white,
-      size: 24,
-    );
-  }
-
-  // CARRUSEL COLAPSIBLE
-  Widget _buildCollapsibleCarousel() {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      height: _isCarouselExpanded ? 220 : 80,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildCarouselHandle(),
-          if (_isCarouselExpanded)
-            Expanded(child: _buildProvidersCarousel()),
-          if (!_isCarouselExpanded)
-            _buildCollapsedCarousel(),
-        ],
-      ),
-    );
-  }
-
-  // HANDLE PARA COLAPSAR/EXPANDIR
-  Widget _buildCarouselHandle() {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _isCarouselExpanded = !_isCarouselExpanded;
-        });
-      },
-      child: Container(
-        height: 40,
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.neutral300,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 4),
-            if (!_isCarouselExpanded)
-              Text(
-                'Ver proveedores',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.neutral600,
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // VISTA COLAPSADA DEL CARRUSEL
-  Widget _buildCollapsedCarousel() {
-    return Container(
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: [
-          Icon(
-            Icons.store_rounded,
-            color: AppColors.primary,
-            size: 20,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '${_providers.length} proveedores disponibles',
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Spacer(),
-          Icon(
-            Icons.keyboard_arrow_up,
-            color: AppColors.neutral600,
-            size: 20,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // MÉTODO MEJORADO PARA IR A UBICACIÓN ACTUAL
-  void _goToCurrentLocation() {
-    if (_currentPosition != null && _mapController != null) {
-      _animateToPosition(_currentPosition!);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              Icon(Icons.check_circle, color: AppColors.white, size: 20),
-              SizedBox(width: 8),
-              Text('Mostrando tu ubicación'),
-            ],
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.success,
-          margin: EdgeInsets.only(
-            bottom: _isCarouselExpanded ? 240 : 100,
-            left: 16,
-            right: 16,
-          ),
-        ),
-      );
-    } else if (!_isLocationLoading) {
-      _initializeLocation();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Row(
-            children: [
-              SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                ),
-              ),
-              SizedBox(width: 8),
-              Text('Obteniendo ubicación...'),
-            ],
-          ),
-          duration: const Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.primary,
-          margin: EdgeInsets.only(
-            bottom: _isCarouselExpanded ? 240 : 100,
-            left: 16,
-            right: 16,
-          ),
-        ),
-      );
-    }
-  }
-
-  void _navigateToSearch() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const OptimizedPlaceSearchScreen(),
-        settings: const RouteSettings(name: '/place-search'),
-      ),
-    );
-  }
-
+  // INICIALIZACIÓN DE UBICACIÓN
   Future<void> _initializeLocation() async {
     try {
       setState(() {
@@ -450,35 +211,15 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         _isLocationPermissionGranted = true;
       });
 
-      try {
-        final position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-          timeLimit: const Duration(seconds: 10),
-        );
+      await _getCurrentLocation();
+      _startLocationUpdates();
 
-        if (mounted) {
-          setState(() {
-            _currentPosition = position;
-            _isLocationLoading = false;
-          });
-
-          _startLocationUpdates();
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() {
-            _isLocationLoading = false;
-            _locationError = 'No se pudo obtener la ubicación: $e';
-          });
-        }
-      }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLocationLoading = false;
-          _locationError = 'Error al verificar ubicación: $e';
-        });
-      }
+      debugPrint('Error initializing location: $e');
+      setState(() {
+        _locationError = e.toString();
+        _isLocationLoading = false;
+      });
     }
   }
 
@@ -503,6 +244,33 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     return true;
   }
 
+  Future<void> _getCurrentLocation() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: _locationSettings,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+          _isLocationLoading = false;
+        });
+
+        if (_mapController != null) {
+          _animateToPosition(position);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error getting current location: $e');
+      if (mounted) {
+        setState(() {
+          _locationError = e.toString();
+          _isLocationLoading = false;
+        });
+      }
+    }
+  }
+
   void _startLocationUpdates() {
     _positionStream = Geolocator.getPositionStream(
       locationSettings: _locationSettings,
@@ -515,9 +283,10 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         }
       },
       onError: (e) {
+        debugPrint('Location stream error: $e');
         if (mounted) {
           setState(() {
-            _locationError = 'Error en actualizaciones de ubicación: $e';
+            _locationError = e.toString();
           });
         }
       },
@@ -529,9 +298,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   }
 
   void _resumeLocationUpdates() {
-    if (_isLocationPermissionGranted) {
-      _positionStream?.resume();
-    }
+    _positionStream?.resume();
   }
 
   void _stopLocationUpdates() {
@@ -539,12 +306,41 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     _positionStream = null;
   }
 
+  // NAVEGACIÓN Y BÚSQUEDA
+  void _navigateToSearch() {
+    context.push('/optimized-place-search').then((result) {
+      if (result != null && result is PlaceEntity) {
+        context.read<PlaceBloc>().add(SelectOptimizedPlace(result.placeId));
+      }
+    });
+  }
+
+  // CONTROL DEL MAPA
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _applyMapTheme();
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _isMapReady = true;
+        });
+
+        if (_currentPosition != null) {
+          _animateToPosition(_currentPosition!);
+        } else if (_selectedPlace != null) {
+          _animateToPlace(_selectedPlace!);
+        }
+      }
+    });
+  }
+
   void _animateToPosition(Position position) {
     _mapController?.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(position.latitude, position.longitude),
-          zoom: 15.0,
+          zoom: 16.0,
         ),
       ),
     );
@@ -561,16 +357,9 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    setState(() {
-      _isMapReady = true;
-    });
-
-    _applyMapTheme();
-
-    if (_selectedPlace != null) {
-      _animateToPlace(_selectedPlace!);
+  void _goToCurrentLocation() {
+    if (_currentPosition != null && _mapController != null) {
+      _animateToPosition(_currentPosition!);
     } else if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
     }
@@ -584,6 +373,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     }
   }
 
+  // CONTENIDO DEL MAPA
   Widget _buildMapContent() {
     if (!_isLocationPermissionGranted && !_isLocationLoading) {
       return LocationPermissionDialog(
@@ -771,8 +561,82 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  // CARRUSEL DE PROVEEDORES OPTIMIZADO
+  // FAB MEJORADO CON ESTADOS VISUALES
+  Widget _buildEnhancedLocationFAB() {
+    return Hero(
+      tag: 'location_fab',
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.15),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          borderRadius: BorderRadius.circular(16),
+          color: AppColors.primary,
+          elevation: 0,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: _isLocationLoading ? null : _goToCurrentLocation,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: _currentPosition != null
+                    ? Border.all(color: AppColors.white.withOpacity(0.3), width: 2)
+                    : null,
+              ),
+              child: _buildFABContent(),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFABContent() {
+    if (_isLocationLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(16),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+        ),
+      );
+    }
+
+    if (_locationError != null) {
+      return const Icon(
+        Icons.location_off,
+        color: AppColors.white,
+        size: 24,
+      );
+    }
+
+    return Icon(
+      _currentPosition != null ? Icons.my_location : Icons.location_searching,
+      color: AppColors.white,
+      size: 24,
+    );
+  }
+
+  // CARRUSEL DE PROVEEDORES ESTILO INMOBILIARIA (SIN BOTTOM SHEET)
   Widget _buildProvidersCarousel() {
+    return Container(
+      height: 260, // Aumenté la altura para evitar overflow
+      color: Colors.transparent,
+      child: _buildCarouselContent(),
+    );
+  }
+
+  Widget _buildCarouselContent() {
     if (_providers.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -796,324 +660,213 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       );
     }
 
-    return Column(
-      children: [
-        Container(
-          height: 60,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.store_rounded,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Proveedores cercanos',
-                    style: AppTypography.h6.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_selectedPlace != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: AppColors.success.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14,
-                            color: AppColors.success,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              _selectedPlace!.description,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedPlace = null;
-                              });
-                              if (_currentPosition != null && _mapController != null) {
-                                _animateToPosition(_currentPosition!);
-                              }
-                            },
-                            child: Icon(
-                              Icons.close,
-                              size: 14,
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
-
-        Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            onPageChanged: (index) {
-              setState(() {
-                _currentProviderIndex = index;
-              });
-            },
-            itemCount: _providers.length,
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                child: _buildProviderCard(_providers[index], index == _currentProviderIndex),
-              );
-            },
-          ),
-        ),
-
-        if (_providers.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _providers.length,
-                    (index) => Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentProviderIndex == index
-                        ? AppColors.primary
-                        : AppColors.neutral300,
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+    return PageView.builder(
+      controller: _pageController,
+      onPageChanged: (index) {
+        setState(() {
+          _currentProviderIndex = index;
+        });
+      },
+      itemCount: _providers.length,
+      itemBuilder: (context, index) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: _buildProviderCard(_providers[index]),
+        );
+      },
     );
   }
 
-  Widget _buildProviderCard(ProviderModel provider, bool isActive) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOutCubic,
-      transform: Matrix4.identity()..scale(isActive ? 1.0 : 0.95),
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+  // TARJETA DE PROVEEDOR SIN OVERFLOW
+  Widget _buildProviderCard(ProviderModel provider) {
+    return Container(
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
-        border: isActive ? Border.all(color: AppColors.primary, width: 2) : null,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isActive ? 0.15 : 0.1),
-            blurRadius: isActive ? 12 : 8,
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 12,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(16),
-          onTap: () => _launchWhatsApp(provider.phone),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: AppColors.neutral100,
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          provider.imageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.store,
-                              color: AppColors.neutral400,
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            provider.name,
-                            style: AppTypography.h6.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.star,
-                                size: 14,
-                                color: Colors.orange,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                provider.rating.toString(),
-                                style: AppTypography.bodySmall.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '(${provider.salesCount} ventas)',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.neutral600,
-                                ),
-                              ),
-                            ],
-                          ),
+      child: Column(
+        children: [
+          // IMAGEN DEL PROVEEDOR
+          Flexible(
+            flex: 3, // 60% del espacio para la imagen
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                image: DecorationImage(
+                  image: AssetImage(provider.imageUrl),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Overlay gradient
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.3),
                         ],
                       ),
                     ),
-                    Container(
+                  ),
+                  // Botón favorito
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.favorite_border,
+                        size: 18,
+                        color: AppColors.neutral600,
+                      ),
+                    ),
+                  ),
+                  // Badge de categoría
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         provider.category,
-                        style: AppTypography.labelSmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w500,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.white,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  provider.description,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.neutral700,
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: AppColors.neutral600,
+                ],
+              ),
+            ),
+          ),
+
+          // INFORMACIÓN DEL PROVEEDOR
+          Flexible(
+            flex: 2, // 40% del espacio para la información
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Fila superior: Rating y ventas
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.star,
+                        size: 16,
+                        color: Colors.amber,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${provider.rating}',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.success.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          '${provider.salesCount}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Nombre del proveedor
+                  Text(
+                    provider.name,
+                    style: AppTypography.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      provider.distance,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Descripción
+                  Flexible(
+                    child: Text(
+                      provider.description,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.neutral600,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppColors.success,
-                        borderRadius: BorderRadius.circular(20),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Distancia
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 14,
+                        color: AppColors.neutral600,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.chat,
-                            size: 14,
-                            color: AppColors.white,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Contactar',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 4),
+                      Text(
+                        provider.distance,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.neutral600,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
-
-  // Método para lanzar WhatsApp
-  void _launchWhatsApp(String phone) async {
-    final message = 'Hola, me interesa conocer más sobre sus productos y servicios.';
-    final whatsappUri = Uri.parse('https://wa.me/$phone?text=${Uri.encodeComponent(message)}');
-
-    try {
-      if (await canLaunchUrl(whatsappUri)) {
-        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
-      }
-    } catch (e) {
-      debugPrint('Error launching WhatsApp: $e');
-      // Mostrar snackbar de error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('No se pudo abrir WhatsApp'),
-          backgroundColor: AppColors.error,
-          margin: EdgeInsets.only(
-            bottom: _isCarouselExpanded ? 240 : 100,
-            left: 16,
-            right: 16,
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 }
 
-// MODELO DE DATOS PARA PROVEEDORES
+// Modelo de datos para proveedores
 class ProviderModel {
   final String name;
   final String description;
