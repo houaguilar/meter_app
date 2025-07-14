@@ -1,13 +1,11 @@
-// lib/presentation/screens/projects/result/result_screens_improved.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:cross_file/cross_file.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/error_handler.dart';
@@ -15,7 +13,6 @@ import '../../../../domain/services/shared/UnifiedMaterialsCalculator.dart';
 import '../../../assets/icons.dart';
 import '../../../blocs/projects/metrados/result/result_bloc.dart';
 import '../../../widgets/app_bar/app_bar_projects_widget.dart';
-import 'services/share_service.dart';
 
 class ResultScreen extends StatefulWidget {
   final String metradoId;
@@ -114,6 +111,8 @@ class _ResultScreenState extends State<ResultScreen>
           builder: _buildContent,
         ),
       ),
+      floatingActionButton: _buildFloatingActionButtons(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 
@@ -155,15 +154,15 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _buildLoadingIndicator() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(
+          CircularProgressIndicator(
             valueColor: AlwaysStoppedAnimation<Color>(AppColors.secondary),
           ),
-          const SizedBox(height: 16),
-          const Text(
+          SizedBox(height: 16),
+          Text(
             'Cargando resultados guardados...',
             style: TextStyle(
               fontSize: 16,
@@ -182,7 +181,7 @@ class _ResultScreenState extends State<ResultScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.error_outline,
               color: AppColors.error,
               size: 48,
@@ -213,9 +212,6 @@ class _ResultScreenState extends State<ResultScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.secondary,
                 foregroundColor: AppColors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
               ),
             ),
           ],
@@ -225,51 +221,34 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SvgPicture.asset(
-              AppIcons.archiveProjectIcon,
-              width: 64,
-              height: 64,
-              colorFilter: const ColorFilter.mode(
-                AppColors.accent,
-                BlendMode.srcIn,
-              ),
+    return const Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.inbox_outlined,
+            size: 64,
+            color: AppColors.textSecondary,
+          ),
+          SizedBox(height: 16),
+          Text(
+            'No hay resultados disponibles',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
             ),
-            const SizedBox(height: 24),
-            const Text(
-              'No hay resultados disponibles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Realiza un cálculo para ver los resultados aquí',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Este metrado no tiene cálculos guardados todavía.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 24),
-            OutlinedButton.icon(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Volver'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.secondary,
-                side: const BorderSide(color: AppColors.secondary),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -280,6 +259,7 @@ class _ResultScreenState extends State<ResultScreen>
     }
 
     try {
+      // Usar la calculadora unificada actualizada para procesar los resultados
       final calculationResult = UnifiedMaterialsCalculator.calculateMaterials(results);
 
       if (calculationResult.hasError) {
@@ -298,7 +278,7 @@ class _ResultScreenState extends State<ResultScreen>
         right: 24,
         left: 24,
         top: 10,
-        bottom: 20,
+        bottom: 120, // Espacio para los botones flotantes
       ),
       child: Column(
         children: [
@@ -307,8 +287,7 @@ class _ResultScreenState extends State<ResultScreen>
           const SizedBox(height: 20),
           _buildResultTypeHeader(result.type),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(result),
-          const SizedBox(height: 20),
+          // ❌ ELIMINADO: _buildProjectSummaryCard(result),
           _buildMetradoDataCard(result),
           const SizedBox(height: 20),
           _buildMaterialsCard(result),
@@ -316,7 +295,7 @@ class _ResultScreenState extends State<ResultScreen>
             const SizedBox(height: 20),
             _buildConfigurationCard(result),
           ],
-          const SizedBox(height: 120), // Espacio para los botones de abajo
+          const SizedBox(height: 32),
         ],
       ),
     );
@@ -343,7 +322,7 @@ class _ResultScreenState extends State<ResultScreen>
               AppIcons.checkmarkCircleIcon,
               width: 48,
               height: 48,
-              colorFilter: ColorFilter.mode(
+              colorFilter: const ColorFilter.mode(
                 AppColors.success,
                 BlendMode.srcIn,
               ),
@@ -359,7 +338,7 @@ class _ResultScreenState extends State<ResultScreen>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 0),
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
       decoration: BoxDecoration(
         color: typeColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(30),
@@ -370,42 +349,18 @@ class _ResultScreenState extends State<ResultScreen>
         children: [
           Icon(
             _getTypeIcon(type),
-            size: 18,
+            size: 20,
             color: typeColor,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 12),
           Text(
-            type.displayName,
+            _getTypeDisplayName(type),
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: typeColor,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProjectSummaryCard(CalculationResult result) {
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.blueMetraShop,
-      child: Column(
-        children: [
-          _buildSummaryRow('Total ${result.totalUnit}', result.totalValue.toStringAsFixed(2)),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Total de Elementos', '${result.measurements.length}'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Cálculo', result.type.displayName),
-          if (result.additionalInfo.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            _buildSummaryRow(
-              'Configuración',
-              '${result.additionalInfo.length} parámetros',
-            ),
-          ],
         ],
       ),
     );
@@ -441,20 +396,162 @@ class _ResultScreenState extends State<ResultScreen>
 
   Widget _buildConfigurationCard(CalculationResult result) {
     return _buildModernCard(
-      title: 'Configuración Aplicada',
+      title: 'Configuración',
       icon: Icons.settings_outlined,
-      iconColor: AppColors.warning,
+      iconColor: AppColors.blueMetraShop,
       child: Column(
         children: result.additionalInfo.entries.map((entry) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _buildConfigRow(
-              _formatInfoKey(entry.key),
-              entry.value,
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  _formatConfigKey(entry.key),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.blueMetraShop.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    entry.value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.blueMetraShop,
+                    ),
+                  ),
+                ),
+              ],
             ),
           );
         }).toList(),
       ),
+    );
+  }
+
+  Widget _buildDataTable(CalculationResult result) {
+    if (result.measurements.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Text(
+            'No hay mediciones disponibles',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+      );
+    }
+
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(3),
+        1: FlexColumnWidth(2),
+        2: FlexColumnWidth(1),
+      },
+      children: [
+        _buildTableHeader(['Descripción', 'Medida', 'Und.']),
+        ...result.measurements.map((measurement) {
+          return _buildTableRow([
+            measurement.description,
+            measurement.value.toStringAsFixed(2),
+            measurement.unit,
+          ]);
+        }),
+        // Fila de total
+        TableRow(
+          decoration: BoxDecoration(
+            color: AppColors.accent.withOpacity(0.1),
+            border: const Border(
+              top: BorderSide(color: AppColors.accent, width: 2),
+            ),
+          ),
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(12.0),
+              child: Text(
+                'TOTAL',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Text(
+                result.totalValue.toStringAsFixed(2),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accent,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Text(
+                result.totalUnit,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.accent,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMaterialTable(CalculationResult result) {
+    if (result.materials.isEmpty) {
+      return const Center(
+        child: Text('No hay materiales disponibles'),
+      );
+    }
+
+    return Table(
+      columnWidths: const {
+        0: FlexColumnWidth(3),
+        1: FlexColumnWidth(1),
+        2: FlexColumnWidth(2),
+      },
+      children: [
+        _buildTableHeader(['Material', 'Und.', 'Cantidad']),
+        ...result.materials.map((material) {
+          return _buildTableRow([
+            material.description,
+            material.unit,
+            material.quantity,
+          ]);
+        }),
+      ],
+    );
+  }
+
+  Widget _buildMaterialChips(CalculationResult result) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: result.materials.map((material) {
+        return Chip(
+          label: Text(
+            '${material.description}: ${material.quantity} ${material.unit}',
+            style: const TextStyle(fontSize: 12),
+          ),
+          backgroundColor: AppColors.success.withOpacity(0.1),
+          side: const BorderSide(color: AppColors.success),
+        );
+      }).toList(),
     );
   }
 
@@ -467,20 +564,19 @@ class _ResultScreenState extends State<ResultScreen>
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            spreadRadius: 1,
             offset: const Offset(0, 4),
           ),
         ],
+        border: Border.all(
+          color: Colors.grey.withOpacity(0.1),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -511,10 +607,10 @@ class _ResultScreenState extends State<ResultScreen>
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: iconColor,
                   ),
                 ),
               ],
@@ -529,577 +625,302 @@ class _ResultScreenState extends State<ResultScreen>
     );
   }
 
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildConfigRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
+  TableRow _buildTableHeader(List<String> cells) {
+    return TableRow(
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+      ),
+      children: cells.map((cell) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
           child: Text(
-            label,
+            cell,
             style: const TextStyle(
+              fontWeight: FontWeight.bold,
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: AppColors.textPrimary,
             ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.warning.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            value,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppColors.warning,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDataTable(CalculationResult result) {
-    if (result.measurements.isEmpty) {
-      return const Center(
-        child: Text('No hay datos de medición disponibles'),
-      );
-    }
-
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(3),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(2),
-      },
-      children: [
-        _buildTableRow(['Descripción', 'Und.', result.totalUnit], isHeader: true),
-        ...result.measurements.map((measurement) {
-          return _buildTableRow([
-            measurement.description,
-            measurement.unit,
-            measurement.value.toStringAsFixed(2),
-          ]);
-        }).toList(),
-        _buildTableRow([
-          'Total:',
-          result.totalUnit,
-          result.totalValue.toStringAsFixed(2),
-        ], isTotal: true),
-      ],
-    );
-  }
-
-  Widget _buildMaterialTable(CalculationResult result) {
-    if (result.materials.isEmpty) {
-      return const Center(
-        child: Text('No hay materiales disponibles'),
-      );
-    }
-
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(1.5),
-      },
-      children: [
-        _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        ...result.materials.map((material) {
-          return _buildTableRow([
-            material.description,
-            material.unit,
-            material.quantity,
-          ]);
-        }).toList(),
-      ],
-    );
-  }
-
-  Widget _buildMaterialChips(CalculationResult result) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: result.materials.map((material) {
-        final color = _getMaterialColor(material.description);
-        final icon = _getMaterialIcon(material.description);
-
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: color.withOpacity(0.3),
-              width: 1,
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 16,
-                color: color,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '${material.quantity} ${material.unit}',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
           ),
         );
       }).toList(),
     );
   }
 
-  TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
-
+  TableRow _buildTableRow(List<String> cells) {
     return TableRow(
-      decoration: isTotal ? BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-      ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.map((cell) {
+        return Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Text(
+            cell,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
-  // Helper methods para colores e iconos
+  Widget _buildFloatingActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        FloatingActionButton.extended(
+          onPressed: _shareResults,
+          backgroundColor: AppColors.blueMetraShop,
+          foregroundColor: AppColors.white,
+          icon: const Icon(Icons.share),
+          label: const Text('Compartir'),
+          heroTag: 'share',
+        ),
+        FloatingActionButton.extended(
+          onPressed: _generatePDF,
+          backgroundColor: AppColors.secondary,
+          foregroundColor: AppColors.white,
+          icon: const Icon(Icons.picture_as_pdf),
+          label: const Text('PDF'),
+          heroTag: 'pdf',
+        ),
+      ],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTODOS AUXILIARES
+  // ═══════════════════════════════════════════════════════════════════════════
+
   Color _getTypeColor(CalculationType type) {
     switch (type) {
       case CalculationType.ladrillo:
-        return Colors.brown;
+        return AppColors.error;
       case CalculationType.piso:
-        return Colors.teal;
+        return AppColors.blueMetraShop;
       case CalculationType.losaAligerada:
-        return Colors.deepPurple;
+        return AppColors.success;
       case CalculationType.tarrajeo:
-        return Colors.amber.shade700;
+        return AppColors.accent;
       case CalculationType.columna:
+        return Colors.orange;
       case CalculationType.viga:
-        return Colors.blue.shade800;
+        return Colors.purple;
+      default:
+        return AppColors.textSecondary;
     }
   }
 
   IconData _getTypeIcon(CalculationType type) {
     switch (type) {
       case CalculationType.ladrillo:
-        return Icons.grid_view;
+        return Icons.view_module_outlined;
       case CalculationType.piso:
-        return Icons.grid_on;
+        return Icons.layers_outlined;
       case CalculationType.losaAligerada:
-        return Icons.layers;
+        return Icons.foundation_outlined;
       case CalculationType.tarrajeo:
-        return Icons.brush;
+        return Icons.format_paint_outlined;
       case CalculationType.columna:
-        return Icons.view_column;
+        return Icons.view_column_outlined;
       case CalculationType.viga:
-        return Icons.horizontal_rule;
+        return Icons.horizontal_rule_outlined;
+      default:
+        return Icons.calculate_outlined;
     }
   }
 
-  Color _getMaterialColor(String materialName) {
-    final name = materialName.toLowerCase();
-    if (name.contains('cemento')) return AppColors.secondary;
-    if (name.contains('arena')) return AppColors.warning;
-    if (name.contains('agua')) return AppColors.info;
-    if (name.contains('piedra')) return AppColors.neutral500;
-    if (name.contains('ladrillo')) return AppColors.primary;
-    return AppColors.accent;
+  String _getTypeDisplayName(CalculationType type) {
+    switch (type) {
+      case CalculationType.ladrillo:
+        return 'Muro de Ladrillos';
+      case CalculationType.piso:
+        return 'Piso';
+      case CalculationType.losaAligerada:
+        return 'Losa Aligerada';
+      case CalculationType.tarrajeo:
+        return 'Tarrajeo';
+      case CalculationType.columna:
+        return 'Columna';
+      case CalculationType.viga:
+        return 'Viga';
+      default:
+        return 'Cálculo';
+    }
   }
 
-  IconData _getMaterialIcon(String materialName) {
-    final name = materialName.toLowerCase();
-    if (name.contains('cemento')) return Icons.inventory;
-    if (name.contains('arena')) return Icons.grain;
-    if (name.contains('agua')) return Icons.water_drop;
-    if (name.contains('piedra')) return Icons.terrain;
-    if (name.contains('ladrillo')) return Icons.construction;
-    return Icons.category;
-  }
-
-  String _formatInfoKey(String key) {
+  String _formatConfigKey(String key) {
     switch (key) {
-      case 'tipoLadrillo':
-        return 'Tipo de ladrillo';
       case 'tipoAsentado':
-        return 'Tipo de asentado';
+        return 'Tipo de Asentado';
       case 'proporcionMortero':
-        return 'Proporción mortero';
+        return 'Proporción Mortero';
       case 'desperdicioLadrillo':
-        return 'Desperdicio ladrillo';
+        return 'Desperdicio Ladrillo';
       case 'desperdicioMortero':
-        return 'Desperdicio mortero';
+        return 'Desperdicio Mortero';
+      case 'tipoPiso':
+        return 'Tipo de Piso';
       case 'resistencia':
         return 'Resistencia';
       case 'espesor':
         return 'Espesor';
+      case 'desperdicio':
+        return 'Desperdicio';
       case 'altura':
         return 'Altura';
+      case 'materialAligerado':
+        return 'Material Aligerado';
+      case 'resistenciaConcreto':
+        return 'Resistencia Concreto';
+      case 'desperdicioConcreto':
+        return 'Desperdicio Concreto';
+      case 'tipo':
+        return 'Tipo';
       default:
-        return key.replaceAllMapped(
-          RegExp(r'([A-Z])'),
-              (match) => ' ${match.group(1)!.toLowerCase()}',
-        ).trim();
+        return key;
     }
   }
 
-  void _handleSaveAction(CalculationResult result) {
-    // Como ya está guardado, mostrar mensaje informativo
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.info_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text('Este metrado ya está guardado en el proyecto'),
-            ),
-          ],
-        ),
-        backgroundColor: AppColors.info,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
-  }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ACCIONES DE COMPARTIR Y PDF
+  // ═══════════════════════════════════════════════════════════════════════════
 
-  void _showShareOptions(CalculationResult result) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _buildShareBottomSheet(result),
-    );
-  }
-
-  Widget _buildShareBottomSheet(CalculationResult result) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.neutral300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Compartir Resultados',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Elige el formato para compartir tus resultados',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: _buildShareOption(
-                  icon: Icons.picture_as_pdf,
-                  label: 'Compartir PDF',
-                  color: Colors.red,
-                  onTap: () => _generateAndSharePDF(result),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildShareOption(
-                  icon: Icons.text_fields,
-                  label: 'Compartir Texto',
-                  color: AppColors.blueMetraShop,
-                  onTap: () => _shareText(result),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close),
-            label: const Text('Cancelar'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
-              side: BorderSide(color: AppColors.neutral400),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildShareOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _generateAndSharePDF(CalculationResult result) async {
+  Future<void> _shareResults() async {
     try {
+      final state = context.read<ResultBloc>().state;
+      if (state is! ResultSuccess) return;
+
+      final result = UnifiedMaterialsCalculator.calculateMaterials(state.results);
+      if (result.hasError) return;
+
+      final shareText = _generateShareText(result);
+      await Share.share(shareText, subject: 'Resultados de MetraShop');
+    } catch (e) {
+      _handleError('Error al compartir: $e');
+    }
+  }
+
+  Future<void> _generatePDF() async {
+    try {
+      final state = context.read<ResultBloc>().state;
+      if (state is! ResultSuccess) return;
+
+      final result = UnifiedMaterialsCalculator.calculateMaterials(state.results);
+      if (result.hasError) return;
+
       // Mostrar indicador de carga
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => const Center(
+            child: CircularProgressIndicator(),
+          ),
+        );
+      }
 
-      final pdfFile = await _generatePDF(result);
-      final xFile = XFile(pdfFile.path);
+      final pdf = await _createPDF(result);
+      final directory = await getApplicationDocumentsDirectory();
+      final file = File('${directory.path}/resultados_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await file.writeAsBytes(await pdf.save());
 
-      // Cerrar el diálogo de carga
-      if (mounted) Navigator.of(context).pop();
-
-      await Share.shareXFiles(
-        [xFile],
-        text: 'Resultados de ${result.type.displayName} - METRASHOP',
-      );
+      if (mounted) {
+        Navigator.of(context).pop(); // Cerrar indicador de carga
+        await Share.shareXFiles([XFile(file.path)], text: 'Resultados de MetraShop');
+      }
     } catch (e) {
-      if (mounted) Navigator.of(context).pop();
-      _showErrorSnackBar('Error al generar PDF: $e');
+      if (mounted) {
+        Navigator.of(context).pop(); // Cerrar indicador de carga
+      }
+      _handleError('Error al generar PDF: $e');
     }
   }
 
-  Future<void> _shareText(CalculationResult result) async {
-    try {
-      final shareText = ShareService.generateShareText(result);
-      await Share.share(shareText);
-    } catch (e) {
-      _showErrorSnackBar('Error al compartir: $e');
-    }
-  }
+  String _generateShareText(CalculationResult result) {
+    final buffer = StringBuffer();
+    buffer.writeln('📋 RESULTADOS DE METRASHOP');
+    buffer.writeln('');
+    buffer.writeln('🏗️ TIPO: ${_getTypeDisplayName(result.type)}');
+    buffer.writeln('📐 TOTAL: ${result.totalValue.toStringAsFixed(2)} ${result.totalUnit}');
+    buffer.writeln('');
+    buffer.writeln('📊 MATERIALES NECESARIOS:');
 
-  void _navigateToProviders(CalculationResult result) {
-    // Navegar según el tipo de resultado
-    String routeName = 'map-screen-projects'; // Default
-
-    switch (result.type) {
-      case CalculationType.ladrillo:
-        routeName = 'map-screen-2';
-        break;
-      case CalculationType.piso:
-        routeName = 'map-screen-pisos';
-        break;
-      case CalculationType.losaAligerada:
-        routeName = 'map-screen-losas';
-        break;
-      case CalculationType.tarrajeo:
-        routeName = 'map-screen-tarrajeo';
-        break;
-      case CalculationType.columna:
-      case CalculationType.viga:
-        routeName = 'map-screen-structural';
-        break;
+    for (final material in result.materials) {
+      buffer.writeln('• ${material.description}: ${material.quantity} ${material.unit}');
     }
 
-    // Por ahora mostrar mensaje hasta que implementes las rutas
-    _showErrorSnackBar('Funcionalidad de proveedores próximamente disponible');
+    if (result.additionalInfo.isNotEmpty) {
+      buffer.writeln('');
+      buffer.writeln('⚙️ CONFIGURACIÓN:');
+      for (final entry in result.additionalInfo.entries) {
+        buffer.writeln('• ${_formatConfigKey(entry.key)}: ${entry.value}');
+      }
+    }
 
-    // Cuando tengas las rutas implementadas, descomenta:
-    // context.pushNamed(routeName);
+    buffer.writeln('');
+    buffer.writeln('📱 Generado con MetraShop');
+    return buffer.toString();
   }
 
-  Future<File> _generatePDF(CalculationResult result) async {
+  Future<pw.Document> _createPDF(CalculationResult result) async {
     final pdf = pw.Document();
 
     pdf.addPage(
       pw.Page(
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Título
-            pw.Text(
-              'METRASHOP - ${result.type.displayName.toUpperCase()}',
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Información del proyecto
-            if (result.additionalInfo.isNotEmpty) ...[
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Header(
+                level: 0,
+                child: pw.Text(
+                  'Resultados de MetraShop',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+              ),
+              pw.SizedBox(height: 20),
               pw.Text(
-                'INFORMACIÓN DEL PROYECTO:',
+                'Tipo: ${_getTypeDisplayName(result.type)}',
+                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+              ),
+              pw.Text('Total: ${result.totalValue.toStringAsFixed(2)} ${result.totalUnit}'),
+              pw.SizedBox(height: 20),
+              pw.Text(
+                'Materiales:',
                 style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
               ),
               pw.SizedBox(height: 10),
-              ...result.additionalInfo.entries.map((entry) =>
-                  pw.Text('• ${_formatInfoKey(entry.key)}: ${entry.value}')
+              pw.Table.fromTextArray(
+                headers: ['Material', 'Cantidad', 'Unidad'],
+                data: result.materials.map((material) => [
+                  material.description,
+                  material.quantity,
+                  material.unit,
+                ]).toList(),
               ),
-              pw.SizedBox(height: 20),
+              if (result.additionalInfo.isNotEmpty) ...[
+                pw.SizedBox(height: 20),
+                pw.Text(
+                  'Configuración:',
+                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 10),
+                ...result.additionalInfo.entries.map((entry) => pw.Text(
+                  '• ${_formatConfigKey(entry.key)}: ${entry.value}',
+                )),
+              ],
+              pw.Spacer(),
+              pw.Text(
+                'Generado el ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
+                style: const pw.TextStyle(fontSize: 10),
+              ),
             ],
-
-            // Datos del metrado
-            pw.Text(
-              'DATOS DEL METRADO:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            ...result.measurements.map((measurement) =>
-                pw.Text('• ${measurement.description}: ${measurement.value.toStringAsFixed(2)} ${measurement.unit}')
-            ),
-            pw.Text('Total: ${result.totalValue.toStringAsFixed(2)} ${result.totalUnit}'),
-            pw.SizedBox(height: 20),
-
-            // Lista de materiales
-            pw.Text(
-              'LISTA DE MATERIALES:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            ...result.materials.map((material) =>
-                pw.Text('• ${material.description}: ${material.quantity} ${material.unit}')
-            ),
-            pw.SizedBox(height: 20),
-
-            // Pie de página
-            pw.Text(
-              'NOTAS:',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            pw.Text(
-              '• Cálculos realizados con fórmulas de ingeniería actualizadas',
-              style: const pw.TextStyle(fontSize: 10),
-            ),
-            pw.Text(
-              '• Los factores de desperdicio están incluidos en las cantidades',
-              style: const pw.TextStyle(fontSize: 10),
-            ),
-            pw.Text(
-              '• Generado por METRASHOP - ${_getCurrentDate()}',
-              style: const pw.TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
 
-    final output = await getTemporaryDirectory();
-    final timestamp = DateTime.now().millisecondsSinceEpoch;
-    final file = File('${output.path}/resultados_${result.type.name}_$timestamp.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
-  }
-
-  String _getCurrentDate() {
-    final now = DateTime.now();
-    return "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
-  }
-
-  void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    return pdf;
   }
 }

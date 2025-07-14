@@ -42,56 +42,16 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   bool _isLocationPermissionGranted = false;
   bool _isLocationLoading = true;
   String? _locationError;
+
+  // Lista de proveedores simulada (reemplazar con tu fuente de datos real)
+  List<ProviderModel> _providers = [];
   int _currentProviderIndex = 0;
 
-  // Configuración de mapa
+  // Configuración del mapa
   static const CameraPosition _defaultPosition = CameraPosition(
-    target: LatLng(-12.0464, -77.0428), // Lima, Perú
-    zoom: 11.0,
+    target: LatLng(-12.046374, -77.042793), // Lima, Perú
+    zoom: 12.0,
   );
-
-  // Configuración de ubicación optimizada
-  static const LocationSettings _locationSettings = LocationSettings(
-    accuracy: LocationAccuracy.high,
-    distanceFilter: 50,
-  );
-
-  // Lista de proveedores
-  final List<ProviderModel> _providers = [
-    ProviderModel(
-      name: 'SIDEREXPRESS',
-      description: 'Venta de materiales de construcción online, cotiza y compra desde tu celular',
-      imageUrl: 'assets/images/express_img.png',
-      salesCount: 567,
-      rating: 4.8,
-      phone: '51943529146',
-      category: 'Ferretería',
-      distance: '2.3 km',
-      pdfUrl: 'https://yndbqhfzxxoxsnxizoab.supabase.co/storage/v1/object/public/pdf/materiales.pdf?t=2024-11-12T23%3A20%3A58.916Z',
-    ),
-    ProviderModel(
-      name: 'EQUIPCONSTRUYE',
-      description: 'Venta de materiales de construcción online, cotiza y compra desde tu celular',
-      imageUrl: 'assets/images/equip_img.png',
-      salesCount: 432,
-      rating: 4.6,
-      phone: '51912188792',
-      category: 'Equipos',
-      distance: '3.7 km',
-      pdfUrl: 'https://yndbqhfzxxoxsnxizoab.supabase.co/storage/v1/object/public/pdf/materiales.pdf?t=2024-11-12T23%3A20%3A58.916Z',
-    ),
-    ProviderModel(
-      name: 'MATERIALES LIMA',
-      description: 'Especialistas en cemento, ladrillos y agregados para construcción',
-      imageUrl: 'assets/images/materials_img.png',
-      salesCount: 289,
-      rating: 4.4,
-      phone: '51987654321',
-      category: 'Materiales',
-      distance: '5.1 km',
-      pdfUrl: 'https://yndbqhfzxxoxsnxizoab.supabase.co/storage/v1/object/public/pdf/materiales.pdf?t=2024-11-12T23%3A20%3A58.916Z',
-    ),
-  ];
 
   @override
   bool get wantKeepAlive => true;
@@ -102,6 +62,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController(viewportFraction: 0.85);
     _initializeLocation();
+    _loadProviders(); // Cargar proveedores
   }
 
   @override
@@ -247,48 +208,43 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   Future<void> _getCurrentLocation() async {
     try {
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: _locationSettings,
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 10),
       );
 
-      if (mounted) {
-        setState(() {
-          _currentPosition = position;
-          _isLocationLoading = false;
-        });
+      setState(() {
+        _currentPosition = position;
+        _isLocationLoading = false;
+      });
 
-        if (_mapController != null) {
-          _animateToPosition(position);
-        }
+      if (_isMapReady && _mapController != null) {
+        await _animateToPosition(position);
       }
     } catch (e) {
       debugPrint('Error getting current location: $e');
-      if (mounted) {
-        setState(() {
-          _locationError = e.toString();
-          _isLocationLoading = false;
-        });
-      }
+      setState(() {
+        _locationError = 'No se pudo obtener la ubicación actual';
+        _isLocationLoading = false;
+      });
     }
   }
 
   void _startLocationUpdates() {
+    const locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10, // Actualizar cada 10 metros
+    );
+
     _positionStream = Geolocator.getPositionStream(
-      locationSettings: _locationSettings,
+      locationSettings: locationSettings,
     ).listen(
           (Position position) {
-        if (mounted) {
-          setState(() {
-            _currentPosition = position;
-          });
-        }
+        setState(() {
+          _currentPosition = position;
+        });
       },
-      onError: (e) {
-        debugPrint('Location stream error: $e');
-        if (mounted) {
-          setState(() {
-            _locationError = e.toString();
-          });
-        }
+      onError: (error) {
+        debugPrint('Error in location stream: $error');
       },
     );
   }
@@ -306,48 +262,15 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     _positionStream = null;
   }
 
-  // NAVEGACIÓN Y BÚSQUEDA
+  // NAVEGACIÓN Y ANIMACIONES DEL MAPA
   void _navigateToSearch() {
-    context.push('/optimized-place-search').then((result) {
-      if (result != null && result is PlaceEntity) {
-        context.read<PlaceBloc>().add(SelectOptimizedPlace(result.placeId));
-      }
-    });
+    context.pushNamed('optimized_place_search');
   }
 
-  // CONTROL DEL MAPA
-  void _onMapCreated(GoogleMapController controller) {
-    _mapController = controller;
-    _applyMapTheme();
+  Future<void> _animateToPlace(PlaceEntity place) async {
+    if (_mapController == null) return;
 
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) {
-        setState(() {
-          _isMapReady = true;
-        });
-
-        if (_currentPosition != null) {
-          _animateToPosition(_currentPosition!);
-        } else if (_selectedPlace != null) {
-          _animateToPlace(_selectedPlace!);
-        }
-      }
-    });
-  }
-
-  void _animateToPosition(Position position) {
-    _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: LatLng(position.latitude, position.longitude),
-          zoom: 16.0,
-        ),
-      ),
-    );
-  }
-
-  void _animateToPlace(PlaceEntity place) {
-    _mapController?.animateCamera(
+    await _mapController!.animateCamera(
       CameraUpdate.newCameraPosition(
         CameraPosition(
           target: LatLng(place.lat, place.lng),
@@ -357,8 +280,21 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  void _goToCurrentLocation() {
-    if (_currentPosition != null && _mapController != null) {
+  Future<void> _animateToPosition(Position position) async {
+    if (_mapController == null) return;
+
+    await _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(position.latitude, position.longitude),
+          zoom: 15.0,
+        ),
+      ),
+    );
+  }
+
+  void _goToCurrentLocation() async {
+    if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
     } else if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
@@ -432,19 +368,18 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     for (final location in locations) {
       markers.add(
         Marker(
-          markerId: MarkerId(location.id ?? location.title),
+          markerId: MarkerId(location.id ?? ''),
           position: LatLng(location.latitude, location.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
           infoWindow: InfoWindow(
             title: location.title,
             snippet: location.description,
-            onTap: () => _showLocationDetails(location),
           ),
-          onTap: () => _showLocationDetails(location),
+          onTap: () => _showLocationBottomSheet(location),
         ),
       );
     }
 
+    // Agregar marker de ubicación actual si existe
     if (_currentPosition != null) {
       markers.add(
         Marker(
@@ -453,21 +388,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
           infoWindow: const InfoWindow(
             title: 'Mi ubicación',
-            snippet: 'Tu ubicación actual',
-          ),
-        ),
-      );
-    }
-
-    if (_selectedPlace != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('selected_place'),
-          position: LatLng(_selectedPlace!.lat, _selectedPlace!.lng),
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-          infoWindow: InfoWindow(
-            title: 'Lugar seleccionado',
-            snippet: _selectedPlace!.description,
+            snippet: 'Ubicación actual',
           ),
         ),
       );
@@ -476,24 +397,40 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     return markers;
   }
 
-  void _showLocationDetails(LocationMap location) {
+  void _onMapCreated(GoogleMapController controller) {
+    _mapController = controller;
+    _applyMapTheme();
+
+    setState(() {
+      _isMapReady = true;
+    });
+
+    // Animar a la ubicación actual si ya la tenemos
+    if (_currentPosition != null) {
+      _animateToPosition(_currentPosition!);
+    }
+  }
+
+  // BOTTOM SHEET DE UBICACIÓN
+  void _showLocationBottomSheet(LocationMap location) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildLocationDetailsSheet(location),
+      builder: (context) => _buildLocationBottomSheet(location),
     );
   }
 
-  Widget _buildLocationDetailsSheet(LocationMap location) {
+  Widget _buildLocationBottomSheet(LocationMap location) {
     return Container(
-      margin: const EdgeInsets.only(top: 50),
+      height: MediaQuery.of(context).size.height * 0.5,
       decoration: const BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: Column(
         children: [
+          // Handle superior
           Container(
             margin: const EdgeInsets.only(top: 12),
             width: 40,
@@ -503,19 +440,36 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
               borderRadius: BorderRadius.circular(2),
             ),
           ),
+          // Contenido
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Text(
-                    location.title,
-                    style: AppTypography.h4,
+                Text(
+                  location.title,
+                  style: AppTypography.h3.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: AppColors.neutral500,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.neutral500,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -593,7 +547,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                     ? Border.all(color: AppColors.white.withOpacity(0.3), width: 2)
                     : null,
               ),
-              child: _buildFABContent(),
+              child: _buildLocationIcon(),
             ),
           ),
         ),
@@ -601,38 +555,48 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  Widget _buildFABContent() {
-    if (_isLocationLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-        ),
-      );
-    }
-
-    if (_locationError != null) {
-      return const Icon(
-        Icons.location_off,
-        color: AppColors.white,
-        size: 24,
-      );
-    }
-
+  Widget _buildLocationIcon() {
     return Icon(
-      _currentPosition != null ? Icons.my_location : Icons.location_searching,
+      _isLocationLoading
+          ? Icons.hourglass_empty
+          : _currentPosition != null
+          ? Icons.my_location
+          : Icons.location_searching,
       color: AppColors.white,
       size: 24,
     );
   }
 
-  // CARRUSEL DE PROVEEDORES ESTILO INMOBILIARIA (SIN BOTTOM SHEET)
+  // CARRUSEL DE PROVEEDORES OPTIMIZADO PARA TODOS LOS TAMAÑOS DE PANTALLA
   Widget _buildProvidersCarousel() {
-    return Container(
-      height: 260, // Aumenté la altura para evitar overflow
-      color: Colors.transparent,
-      child: _buildCarouselContent(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final screenHeight = MediaQuery.of(context).size.height;
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // Calculamos la altura del carrusel basada en el tamaño de pantalla
+        double carouselHeight;
+
+        if (screenHeight <= 667) {
+          // iPhone SE, iPhone 8 y pantallas pequeñas
+          carouselHeight = 240;
+        } else if (screenHeight <= 736) {
+          // iPhone 8 Plus
+          carouselHeight = 250;
+        } else if (screenHeight <= 812) {
+          // iPhone X, iPhone 11 Pro
+          carouselHeight = 260;
+        } else {
+          // Pantallas más grandes
+          carouselHeight = 280;
+        }
+
+        return Container(
+          height: carouselHeight,
+          color: Colors.transparent,
+          child: _buildCarouselContent(),
+        );
+      },
     );
   }
 
@@ -669,224 +633,318 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       },
       itemCount: _providers.length,
       itemBuilder: (context, index) {
+        final screenWidth = MediaQuery.of(context).size.width;
+
+        // Márgenes adaptativos basados en el ancho de pantalla
+        double horizontalMargin;
+        if (screenWidth <= 375) {
+          horizontalMargin = 12; // Pantallas muy pequeñas
+        } else if (screenWidth <= 414) {
+          horizontalMargin = 16; // Pantallas medianas
+        } else {
+          horizontalMargin = 20; // Pantallas grandes
+        }
+
         return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          margin: EdgeInsets.symmetric(
+            horizontal: horizontalMargin,
+            vertical: 8,
+          ),
           child: _buildProviderCard(_providers[index]),
         );
       },
     );
   }
 
-  // TARJETA DE PROVEEDOR SIN OVERFLOW
+  // TARJETA DE PROVEEDOR OPTIMIZADA PARA TODOS LOS TAMAÑOS DE PANTALLA
   Widget _buildProviderCard(ProviderModel provider) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 2),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Calculamos las dimensiones basadas en el tamaño disponible
+        final cardHeight = constraints.maxHeight;
+        final cardWidth = constraints.maxWidth;
+
+        // Altura dinámica para la imagen basada en el tamaño de la tarjeta
+        final imageHeight = (cardHeight * 0.55).clamp(120.0, 160.0);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // IMAGEN DEL PROVEEDOR
-          Flexible(
-            flex: 3, // 60% del espacio para la imagen
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                image: DecorationImage(
-                  image: AssetImage(provider.imageUrl),
-                  fit: BoxFit.cover,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // IMAGEN DEL PROVEEDOR CON ALTURA FIJA RESPONSIVA
+              Container(
+                height: imageHeight,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Imagen principal
+                      Image.network(
+                        provider.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            color: AppColors.neutral100,
+                            child: const Icon(
+                              Icons.image_not_supported,
+                              size: 48,
+                              color: AppColors.neutral400,
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: AppColors.neutral100,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                    : null,
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      // Gradiente overlay
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(0.3),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Badge de categoría
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            provider.category,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-              child: Stack(
-                children: [
-                  // Overlay gradient
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withOpacity(0.3),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Botón favorito
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
+
+              // INFORMACIÓN DEL PROVEEDOR - USANDO ESPACIO RESTANTE
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Fila superior: Rating y ventas
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.star,
+                            size: 16,
+                            color: Colors.amber,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${provider.rating}',
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              '${provider.salesCount}',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.success,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ],
                       ),
-                      child: Icon(
-                        Icons.favorite_border,
-                        size: 18,
-                        color: AppColors.neutral600,
-                      ),
-                    ),
-                  ),
-                  // Badge de categoría
-                  Positioned(
-                    top: 8,
-                    left: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        provider.category,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
 
-          // INFORMACIÓN DEL PROVEEDOR
-          Flexible(
-            flex: 2, // 40% del espacio para la información
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Fila superior: Rating y ventas
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.star,
-                        size: 16,
-                        color: Colors.amber,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${provider.rating}',
-                        style: AppTypography.bodyMedium.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
+                      const SizedBox(height: 8),
+
+                      // Nombre del proveedor
+                      Flexible(
                         child: Text(
-                          '${provider.salesCount}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.success,
-                            fontWeight: FontWeight.w600,
+                          provider.name,
+                          style: AppTypography.h3.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
+                      ),
+
+                      const SizedBox(height: 4),
+
+                      // Descripción del proveedor
+                      Flexible(
+                        child: Text(
+                          provider.description,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.neutral600,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Información adicional
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 14,
+                            color: AppColors.neutral500,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '${provider.distance.toStringAsFixed(1)} km',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.neutral500,
+                              ),
+                            ),
+                          ),
+                          Icon(
+                            Icons.access_time,
+                            size: 14,
+                            color: AppColors.neutral500,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            provider.isOpen ? 'Abierto' : 'Cerrado',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: provider.isOpen
+                                  ? AppColors.success
+                                  : AppColors.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: 8),
-
-                  // Nombre del proveedor
-                  Text(
-                    provider.name,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Descripción
-                  Flexible(
-                    child: Text(
-                      provider.description,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.neutral600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // Distancia
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 14,
-                        color: AppColors.neutral600,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        provider.distance,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.neutral600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  // CARGAR PROVEEDORES (simulado - reemplazar con tu lógica real)
+  void _loadProviders() {
+    // Datos simulados - reemplazar con tu fuente de datos real
+    setState(() {
+      _providers = [
+        ProviderModel(
+          id: '1',
+          name: 'Ferretería Central',
+          description: 'Materiales de construcción y herramientas',
+          category: 'Ferretería',
+          imageUrl: 'assets/images/express_img.png',
+          rating: 4.8,
+          salesCount: 1250,
+          distance: 0.8,
+          isOpen: true,
+        ),
+        ProviderModel(
+          id: '2',
+          name: 'Cemento & Agregados SAC',
+          description: 'Venta de cemento, arena, piedra y agregados',
+          category: 'Cemento',
+          imageUrl: 'assets/images/equip_img.png',
+          rating: 4.6,
+          salesCount: 890,
+          distance: 1.2,
+          isOpen: false,
+        ),
+        // Agregar más proveedores según necesites
+      ];
+    });
   }
 }
 
-// Modelo de datos para proveedores
+// Modelo de proveedor (agregar a tu archivo de modelos)
 class ProviderModel {
+  final String id;
   final String name;
   final String description;
-  final String imageUrl;
-  final int salesCount;
-  final double rating;
-  final String phone;
   final String category;
-  final String distance;
-  final String pdfUrl;
+  final String imageUrl;
+  final double rating;
+  final int salesCount;
+  final double distance;
+  final bool isOpen;
 
   ProviderModel({
+    required this.id,
     required this.name,
     required this.description,
-    required this.imageUrl,
-    required this.salesCount,
-    required this.rating,
-    required this.phone,
     required this.category,
+    required this.imageUrl,
+    required this.rating,
+    required this.salesCount,
     required this.distance,
-    required this.pdfUrl,
+    required this.isOpen,
   });
 }

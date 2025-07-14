@@ -255,7 +255,7 @@ class _HomeViewState extends State<HomeView>
                 ),
               ),
               const SizedBox(width: 20),
-              Expanded(
+            /*  Expanded(
                 child: GestureDetector(
                   onTap:() {
 
@@ -265,7 +265,7 @@ class _HomeViewState extends State<HomeView>
                     imageAssetPath: AppImages.materialesHomeCardImg,
                   ),
                 ),
-              ),
+              ),*/
             ],
           ),
         ),

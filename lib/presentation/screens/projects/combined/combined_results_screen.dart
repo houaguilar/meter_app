@@ -1,3 +1,4 @@
+// lib/presentation/screens/projects/combined/combined_results_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -171,7 +172,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             'Procesando ${widget.selectedMetradoIds.length} metrados',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.textTertiary,
+              color: AppColors.textSecondary,
             ),
           ),
         ],
@@ -180,43 +181,123 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
   }
 
   Widget _buildSuccessState(CombinedResultsSuccess state) {
+    final result = state.combinedResult;
+
     return FadeTransition(
       opacity: _fadeAnimation,
       child: SlideTransition(
         position: _slideAnimation,
-        child: RefreshIndicator(
-          onRefresh: () async {
-            context.read<CombinedResultsBloc>().add(RefreshCombinedResultsEvent());
-          },
-          color: AppColors.secondary,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildProjectSummaryCard(state.combinedResult),
-                const SizedBox(height: 16),
-                _buildMaterialsOverviewCard(state.combinedResult),
-                const SizedBox(height: 16),
-                _buildMetradosBreakdownCard(state.combinedResult),
-                const SizedBox(height: 16),
-                _buildStatsCard(state.combinedResult),
-                const SizedBox(height: 80), // Espacio para bottom navigation
-              ],
-            ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildProjectHeaderCard(result),
+              const SizedBox(height: 16),
+              _buildStatsOverviewCard(result),
+              const SizedBox(height: 16),
+              _buildMaterialsOverviewCard(result),
+              const SizedBox(height: 16),
+              _buildMetradoSummariesCard(result),
+              const SizedBox(height: 100), // Espacio para el bottom bar
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildProjectSummaryCard(CombinedCalculationResult result) {
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.secondary,
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              size: 64,
+              color: AppColors.error,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error al combinar resultados',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16,
+                color: AppColors.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back),
+                  label: const Text('Volver'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                ElevatedButton.icon(
+                  onPressed: _loadCombinedResults,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Reintentar'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.secondary,
+                    foregroundColor: AppColors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInitialState() {
+    return Center(
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.assessment_outlined,
+            size: 64,
+            color: AppColors.textSecondary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Preparando combinación',
+            style: TextStyle(
+              fontSize: 18,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProjectHeaderCard(CombinedCalculationResult result) {
+    return _buildModernCard(
+      title: 'Información del Proyecto',
+      icon: Icons.folder_outlined,
+      iconColor: AppColors.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSummaryRow('Proyecto', result.projectName),
           const SizedBox(height: 12),
@@ -224,11 +305,45 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
           const SizedBox(height: 12),
           _buildSummaryRow('Área Total', '${result.totalArea.toStringAsFixed(2)} m²'),
           const SizedBox(height: 12),
-          _buildSummaryRow('Costo Estimado', 'S/. ${result.totalCost.toStringAsFixed(2)}'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Costo por m²', 'S/. ${result.stats.averageCostPerM2.toStringAsFixed(2)}'),
-          const SizedBox(height: 12),
           _buildSummaryRow('Fecha de Combinación', _formatDate(result.combinationDate)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsOverviewCard(CombinedCalculationResult result) {
+    return _buildModernCard(
+      title: 'Estadísticas Generales',
+      icon: Icons.analytics_outlined,
+      iconColor: AppColors.secondary,
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatItem(
+              'Materiales',
+              '${result.stats.totalMaterials}',
+              Icons.inventory_2_outlined,
+              AppColors.success,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatItem(
+              'Metrados',
+              '${result.stats.totalMetrados}',
+              Icons.assignment_outlined,
+              AppColors.warning,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildStatItem(
+              'Área Total',
+              '${result.totalArea.toStringAsFixed(1)} m²',
+              Icons.square_foot_outlined,
+              AppColors.info,
+            ),
+          ),
         ],
       ),
     );
@@ -293,13 +408,17 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
           ),
           const SizedBox(height: 16),
           ...sortedMaterials.take(5).map((material) =>
-              _buildMaterialRow(material, result.metradoSummaries),
-          ),
+              _buildMaterialRow(material)
+          ).toList(),
           if (sortedMaterials.length > 5) ...[
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: () => _showDetailedMaterialsDialog(result),
-              child: Text('Ver ${sortedMaterials.length - 5} materiales más'),
+            Text(
+              'Y ${sortedMaterials.length - 5} materiales más...',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppColors.textSecondary,
+                fontStyle: FontStyle.italic,
+              ),
             ),
           ],
         ],
@@ -307,72 +426,15 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
     );
   }
 
-  Widget _buildMetradosBreakdownCard(CombinedCalculationResult result) {
+  Widget _buildMetradoSummariesCard(CombinedCalculationResult result) {
     return _buildModernCard(
-      title: 'Desglose por Metrado',
+      title: 'Resumen por Metrado',
       icon: Icons.view_list_outlined,
       iconColor: AppColors.accent,
       child: Column(
-        children: result.metradoSummaries.map((summary) =>
-            _buildMetradoSummaryRow(summary),
-        ).toList(),
-      ),
-    );
-  }
-
-  Widget _buildStatsCard(CombinedCalculationResult result) {
-    final stats = result.stats;
-
-    return _buildModernCard(
-      title: 'Estadísticas',
-      icon: Icons.analytics_outlined,
-      iconColor: AppColors.info,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  'Metrados',
-                  '${stats.totalMetrados}',
-                  Icons.assessment_outlined,
-                  AppColors.secondary,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatItem(
-                  'Materiales',
-                  '${stats.totalMaterials}',
-                  Icons.inventory_outlined,
-                  AppColors.success,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  'Área Total',
-                  '${stats.totalArea.toStringAsFixed(1)} m²',
-                  Icons.square_foot_outlined,
-                  AppColors.accent,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _buildStatItem(
-                  'Costo Total',
-                  'S/. ${stats.totalCost.toStringAsFixed(0)}',
-                  Icons.attach_money_outlined,
-                  AppColors.warning,
-                ),
-              ),
-            ],
-          ),
-        ],
+        children: result.metradoSummaries
+            .map((summary) => _buildMetradoSummaryRow(summary))
+            .toList(),
       ),
     );
   }
@@ -385,6 +447,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
     Widget? action,
   }) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
@@ -400,26 +463,26 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
+          Padding(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
-              ),
-            ),
             child: Row(
               children: [
-                Icon(icon, color: iconColor, size: 24),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: iconColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 20),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: iconColor,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                 ),
@@ -428,7 +491,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: child,
           ),
         ],
@@ -459,31 +522,11 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
     );
   }
 
-  Widget _buildMaterialRow(CombinedMaterial material, List<MetradoSummary> summaries) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.neutral200),
-      ),
+  Widget _buildMaterialRow(CombinedMaterial material) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getMaterialColor(material.name).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              _getMaterialIcon(material.name),
-              color: _getMaterialColor(material.name),
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -496,13 +539,16 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
                     color: AppColors.textPrimary,
                   ),
                 ),
-                Text(
-                  'Principal: ${material.topContributor}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
+                if (material.contributions.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    'Aporte principal: ${material.topContributor}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -510,7 +556,9 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '${material.totalQuantity.toStringAsFixed(2)}',
+                material.totalQuantity < 1
+                    ? material.totalQuantity.toStringAsFixed(3)
+                    : material.totalQuantity.toStringAsFixed(0),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -612,7 +660,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
                 ),
               ),
               Text(
-                'Costo: S/. ${summary.cost.toStringAsFixed(2)}',
+                'Material principal: ${summary.primaryMaterial}',
                 style: TextStyle(
                   fontSize: 12,
                   color: AppColors.textSecondary,
@@ -704,18 +752,9 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: state.isProcessing ? null : () => _generatePdf(),
-                    icon: state.isGeneratingPdf
-                        ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                        : const Icon(Icons.picture_as_pdf_outlined),
-                    label: Text(state.isGeneratingPdf ? 'Generando...' : 'PDF'),
+                    onPressed: state.isProcessing ? null : () => _showDetailedMaterialsDialog(state.combinedResult),
+                    icon: const Icon(Icons.visibility),
+                    label: const Text('Ver Detalle'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
                       foregroundColor: AppColors.white,
@@ -734,101 +773,146 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
     );
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MÉTODOS DE ACCIÓN
-  // ═══════════════════════════════════════════════════════════════════════════
+  // Métodos auxiliares para diálogos y SnackBars
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
 
-  void _generatePdf() {
-    context.read<CombinedResultsBloc>().add(GenerateCombinedPdfEvent());
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  void _showInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Información de Combinación'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Esta pantalla combina los resultados de múltiples metrados seleccionados.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 16),
+            const Text('Características:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Text('• Consolida materiales de diferentes metrados', style: TextStyle(color: AppColors.textSecondary)),
+            Text('• Calcula totales por tipo de material', style: TextStyle(color: AppColors.textSecondary)),
+            Text('• Muestra estadísticas generales del proyecto', style: TextStyle(color: AppColors.textSecondary)),
+            Text('• Permite exportar resultados', style: TextStyle(color: AppColors.textSecondary)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showShareOptions() {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => _buildShareBottomSheet(),
-    );
-  }
-
-  Widget _buildShareBottomSheet() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.neutral300,
-              borderRadius: BorderRadius.circular(2),
-            ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          const SizedBox(height: 20),
-          const Text(
-            'Compartir Resultados',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Elige el formato para compartir los resultados combinados',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildShareOption(
-                icon: Icons.picture_as_pdf,
-                label: 'PDF',
-                color: AppColors.error,
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<CombinedResultsBloc>().add(
-                    ShareCombinedResultsEvent(format: ShareFormat.pdf),
-                  );
-                },
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.neutral300,
+                borderRadius: BorderRadius.circular(2),
               ),
-              _buildShareOption(
-                icon: Icons.table_chart,
-                label: 'Excel',
-                color: AppColors.success,
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<CombinedResultsBloc>().add(
-                    ShareCombinedResultsEvent(format: ShareFormat.excel),
-                  );
-                },
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Compartir Resultados',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
-              _buildShareOption(
-                icon: Icons.text_snippet,
-                label: 'Texto',
-                color: AppColors.secondary,
-                onTap: () {
-                  Navigator.pop(context);
-                  context.read<CombinedResultsBloc>().add(
-                    ShareCombinedResultsEvent(format: ShareFormat.text),
-                  );
-                },
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Selecciona el formato para exportar los resultados combinados',
+              style: TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
               ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildShareOption(
+                  icon: Icons.picture_as_pdf,
+                  label: 'PDF',
+                  color: AppColors.error,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.read<CombinedResultsBloc>().add(
+                      ShareCombinedResultsEvent(format: ShareFormat.pdf),
+                    );
+                  },
+                ),
+                _buildShareOption(
+                  icon: Icons.table_chart,
+                  label: 'Excel',
+                  color: AppColors.success,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.read<CombinedResultsBloc>().add(
+                      ShareCombinedResultsEvent(format: ShareFormat.excel),
+                    );
+                  },
+                ),
+                _buildShareOption(
+                  icon: Icons.text_snippet,
+                  label: 'Texto',
+                  color: AppColors.secondary,
+                  onTap: () {
+                    Navigator.pop(context);
+                    context.read<CombinedResultsBloc>().add(
+                      ShareCombinedResultsEvent(format: ShareFormat.text),
+                    );
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
@@ -858,8 +942,9 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             Text(
               label,
               style: TextStyle(
-                color: color,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
+                color: color,
               ),
             ),
           ],
@@ -871,345 +956,140 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
   void _showDetailedMaterialsDialog(CombinedCalculationResult result) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: const Text('Detalle de Materiales'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: result.sortedMaterials.length,
-            itemBuilder: (context, index) {
-              final material = result.sortedMaterials[index];
-              return _buildDetailedMaterialItem(material);
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailedMaterialItem(CombinedMaterial material) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ExpansionTile(
-        leading: Icon(
-          _getMaterialIcon(material.name),
-          color: _getMaterialColor(material.name),
-        ),
-        title: Text(
-          material.name,
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        subtitle: Text(
-          '${material.totalQuantity.toStringAsFixed(2)} ${material.unit}',
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Contribuciones por metrado:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                ...material.contributions.entries.map((entry) =>
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 2),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Text(
-                              entry.key,
-                              style: const TextStyle(fontSize: 13),
-                            ),
-                          ),
-                          Text(
-                            '${entry.value.toStringAsFixed(2)} ${material.unit}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          Text(
-                            ' (${material.getContributionPercentage(entry.key).toStringAsFixed(1)}%)',
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.inventory_2, color: AppColors.secondary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Detalle de Materiales',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: result.sortedMaterials.length,
+                  itemBuilder: (context, index) {
+                    final material = result.sortedMaterials[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ExpansionTile(
+                        leading: CircleAvatar(
+                          backgroundColor: AppColors.secondary.withOpacity(0.1),
+                          child: Text(
+                            '${index + 1}',
                             style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.textSecondary,
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        title: Text(
+                          material.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          '${material.totalQuantity < 1 ? material.totalQuantity.toStringAsFixed(3) : material.totalQuantity.toStringAsFixed(0)} ${material.unit}',
+                          style: TextStyle(color: AppColors.secondary),
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Contribuciones por metrado:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...material.contributions.entries.map((entry) {
+                                  final percentage = material.getContributionPercentage(entry.key);
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            entry.key,
+                                            style: TextStyle(color: AppColors.textSecondary),
+                                          ),
+                                        ),
+                                        Text(
+                                          '${entry.value < 1 ? entry.value.toStringAsFixed(3) : entry.value.toStringAsFixed(0)} ${material.unit} (${percentage.toStringAsFixed(1)}%)',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.textPrimary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                }).toList(),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
+                    );
+                  },
                 ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showInfoDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.info_outline, color: AppColors.secondary),
-            const SizedBox(width: 8),
-            const Text('Información'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Resultados Combinados',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Esta pantalla muestra la combinación de materiales y costos de múltiples metrados seleccionados.',
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Características:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            _buildInfoBullet('Suma materiales iguales automáticamente'),
-            _buildInfoBullet('Agrega materiales únicos de cada metrado'),
-            _buildInfoBullet('Calcula costos totales estimados'),
-            _buildInfoBullet('Muestra contribución por metrado'),
-            _buildInfoBullet('Genera reportes PDF personalizados'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoBullet(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 16,
-            color: AppColors.success,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // ESTADOS DE ERROR E INICIAL
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: AppColors.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Error al combinar resultados',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Volver'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textSecondary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                ElevatedButton.icon(
-                  onPressed: _loadCombinedResults,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Reintentar'),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.secondary,
-                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cerrar',
+                    style: TextStyle(color: AppColors.white),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  Widget _buildInitialState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.merge_type,
-            size: 64,
-            color: AppColors.neutral300,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Preparando combinación',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MÉTODOS AUXILIARES
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  Color _getMaterialColor(String materialName) {
-    switch (materialName.toLowerCase()) {
-      case 'cemento':
-        return AppColors.neutral600;
-      case 'arena':
-        return AppColors.accent;
-      case 'agua':
-        return AppColors.info;
-      case 'ladrillos':
-      case 'ladrillo hueco':
-      case 'ladrillo sólido':
-        return AppColors.error;
-      case 'concreto':
-        return AppColors.neutral500;
-      case 'acero':
-        return AppColors.neutral700;
-      default:
-        return AppColors.secondary;
-    }
-  }
-
-  IconData _getMaterialIcon(String materialName) {
-    switch (materialName.toLowerCase()) {
-      case 'cemento':
-        return Icons.science_outlined;
-      case 'arena':
-        return Icons.grain_outlined;
-      case 'agua':
-        return Icons.water_drop_outlined;
-      case 'ladrillos':
-      case 'ladrillo hueco':
-      case 'ladrillo sólido':
-        return Icons.grid_view_rounded;
-      case 'concreto':
-        return Icons.foundation_outlined;
-      case 'acero':
-        return Icons.straighten_outlined;
-      default:
-        return Icons.category_outlined;
-    }
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
-  }
+    final months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // SNACKBARS
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: AppColors.success,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.white),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
+    return '${date.day} de ${months[date.month - 1]} de ${date.year}';
   }
 }
