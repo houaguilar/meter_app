@@ -125,8 +125,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(materials, falsosPisos),
-          const SizedBox(height: 20),
+ //         _buildProjectSummaryCard(materials, falsosPisos),
+ //         const SizedBox(height: 20),
           _buildMetradoDataCard(falsosPisos),
           const SizedBox(height: 20),
           _buildMaterialsCard(materials),
@@ -258,8 +258,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       child: Column(
         children: [
           _buildMaterialTable(materials),
-          const SizedBox(height: 16),
-          _buildMaterialChips(materials),
+//          const SizedBox(height: 16),
+ //         _buildMaterialChips(materials),
         ],
       ),
     );

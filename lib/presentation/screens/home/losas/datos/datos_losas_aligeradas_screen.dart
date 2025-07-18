@@ -349,7 +349,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   }
 
   Widget _buildResistenciaSelection() {
-    const resistencias = ["175 kg/cm²", "210 kg/cm²", "245 kg/cm²"];
+    const resistencias = ["210 kg/cm²", "280 kg/cm²"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

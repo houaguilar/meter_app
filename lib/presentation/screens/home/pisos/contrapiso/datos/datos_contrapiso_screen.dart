@@ -302,7 +302,7 @@ class _DatosContrapisoScreenState extends ConsumerState<DatosContrapisoScreen>
   }
 
   Widget _buildProporcionSelection() {
-    const List<String> proporciones = ["1 : 3", "1 : 4", "1 : 5", "1 : 6"];
+    const List<String> proporciones = ["1 : 3", "1 : 4"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

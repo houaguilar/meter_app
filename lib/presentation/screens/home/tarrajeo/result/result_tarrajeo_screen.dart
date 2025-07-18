@@ -125,8 +125,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(materiales),
-          const SizedBox(height: 20),
+  //        _buildProjectSummaryCard(materiales),
+  //        const SizedBox(height: 20),
           _buildMetradoDataCard(),
           const SizedBox(height: 20),
           _buildMaterialsCard(materiales),
@@ -261,8 +261,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
       child: Column(
         children: [
           _buildMaterialTable(materiales),
-          const SizedBox(height: 16),
-          _buildMaterialChips(materiales),
+  //        const SizedBox(height: 16),
+  //        _buildMaterialChips(materiales),
         ],
       ),
     );

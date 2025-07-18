@@ -1,3 +1,5 @@
+// lib/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart
+
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
@@ -15,10 +17,10 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
   CombinedResultsBloc({
     required GetAllMetrados getAllMetrados,
     required LoadResultsUseCase loadResults,
-  })  : _getAllMetrados = getAllMetrados,
+  })
+      : _getAllMetrados = getAllMetrados,
         _loadResults = loadResults,
         super(CombinedResultsInitial()) {
-
     on<LoadCombinedResultsEvent>(_onLoadCombinedResults);
     on<RefreshCombinedResultsEvent>(_onRefreshCombinedResults);
     on<GenerateCombinedPdfEvent>(_onGenerateCombinedPdf);
@@ -26,13 +28,14 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
     on<UpdateSelectedMetradosEvent>(_onUpdateSelectedMetrados);
   }
 
-  Future<void> _onLoadCombinedResults(
-      LoadCombinedResultsEvent event,
-      Emitter<CombinedResultsState> emit,
-      ) async {
+  Future<void> _onLoadCombinedResults(LoadCombinedResultsEvent event,
+      Emitter<CombinedResultsState> emit,) async {
+    print('🔄 Iniciando carga de resultados combinados...');
     emit(CombinedResultsLoading());
 
     try {
+      print('📂 Cargando metrados del proyecto ${event.projectId}...');
+
       // Cargar metrados del proyecto
       final metradosResult = await _getAllMetrados(
         GetAllMetradosParams(projectId: event.projectId),
@@ -40,15 +43,22 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
 
       await metradosResult.fold(
             (failure) async {
+          print('❌ Error al cargar metrados: ${failure.message}');
           emit(CombinedResultsError(
             message: 'Error al cargar metrados: ${failure.message}',
           ));
         },
             (allMetrados) async {
+          print('✅ Metrados cargados: ${allMetrados.length} total');
+
           // Filtrar solo los metrados seleccionados
           final selectedMetrados = allMetrados
               .where((metrado) => event.selectedMetradoIds.contains(metrado.id))
               .toList();
+
+          print('🎯 Metrados seleccionados: ${selectedMetrados.length}');
+          selectedMetrados.forEach((m) =>
+              print('   - ${m.name} (ID: ${m.id})'));
 
           if (selectedMetrados.isEmpty) {
             emit(CombinedResultsError(
@@ -61,16 +71,22 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
           final metradosWithResults = <MetradoWithResults>[];
 
           for (final metrado in selectedMetrados) {
+            print('📊 Cargando resultados para: ${metrado.name}...');
+
             final resultsResult = await _loadResults(
               LoadResultsParams(metradoId: metrado.id.toString()),
             );
 
             await resultsResult.fold(
                   (failure) async {
-                // Log error but continue with other metrados
-                print('Error loading results for metrado ${metrado.id}: ${failure.message}');
+                print('⚠️ Error loading results for metrado ${metrado
+                    .name}: ${failure.message}');
+                // Continuar con otros metrados en caso de error
               },
                   (results) async {
+                print('✅ Resultados cargados para ${metrado.name}: ${results
+                    .length} items');
+
                 if (results.isNotEmpty) {
                   metradosWithResults.add(
                     MetradoWithResults(
@@ -78,6 +94,8 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
                       results: results,
                     ),
                   );
+                } else {
+                  print('⚠️ Metrado ${metrado.name} no tiene resultados');
                 }
               },
             );
@@ -90,32 +108,50 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
             return;
           }
 
-          // Combinar resultados usando el servicio (sin precios)
+          print('🔗 Iniciando combinación de ${metradosWithResults
+              .length} metrados con resultados...');
+          print('📋 Metrados a combinar:');
+          metradosWithResults.forEach((mwr) {
+            print('   🏗️ ${mwr.metrado.name}: ${mwr.results.length} elementos');
+          });
+
+          // Combinar resultados usando el servicio mejorado
           final combinedResult = UnifiedResultsCombiner.combineMetrados(
             metradosWithResults: metradosWithResults,
             projectName: event.projectName,
           );
 
+          print('🎉 Combinación exitosa:');
+          print('   📦 ${combinedResult.combinedMaterials
+              .length} tipos de materiales únicos');
+          print('   📏 Área total: ${combinedResult.totalArea.toStringAsFixed(
+              2)} m²');
+          print('   🏗️ ${combinedResult.metradoCount} metrados procesados');
+
           emit(CombinedResultsSuccess(
             combinedResult: combinedResult,
             selectedMetradoIds: event.selectedMetradoIds,
             projectId: event.projectId,
+            message: 'Resultados combinados exitosamente',
           ));
         },
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Error inesperado en combinación: $e');
+      print('Stack trace: $stackTrace');
+
       emit(CombinedResultsError(
-        message: 'Error inesperado: ${e.toString()}',
+        message: 'Error inesperado al combinar resultados: ${e.toString()}',
       ));
     }
   }
 
-  Future<void> _onRefreshCombinedResults(
-      RefreshCombinedResultsEvent event,
-      Emitter<CombinedResultsState> emit,
-      ) async {
+  Future<void> _onRefreshCombinedResults(RefreshCombinedResultsEvent event,
+      Emitter<CombinedResultsState> emit,) async {
     if (state is CombinedResultsSuccess) {
       final currentState = state as CombinedResultsSuccess;
+
+      print('🔄 Refrescando resultados combinados...');
 
       // Recargar con los mismos parámetros
       add(LoadCombinedResultsEvent(
@@ -126,28 +162,33 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
     }
   }
 
-  Future<void> _onGenerateCombinedPdf(
-      GenerateCombinedPdfEvent event,
-      Emitter<CombinedResultsState> emit,
-      ) async {
+  Future<void> _onGenerateCombinedPdf(GenerateCombinedPdfEvent event,
+      Emitter<CombinedResultsState> emit,) async {
     if (state is! CombinedResultsSuccess) return;
 
     final currentState = state as CombinedResultsSuccess;
     emit(currentState.copyWith(isGeneratingPdf: true));
 
     try {
-      // TODO: Implementar generación de PDF con materiales sin precios
+      print('📄 Generando PDF de materiales combinados...');
+
+      // TODO: Implementar generación de PDF con materiales combinados
       // final pdfFile = await CombinedPdfGenerator.generateMaterialsPdf(
       //   currentState.combinedResult,
       // );
 
-      await Future.delayed(const Duration(seconds: 2)); // Simulación
+      // Simulación por ahora
+      await Future.delayed(const Duration(seconds: 2));
+
+      print('✅ PDF generado exitosamente');
 
       emit(currentState.copyWith(
         isGeneratingPdf: false,
         message: 'PDF de materiales generado exitosamente',
       ));
     } catch (e) {
+      print('❌ Error al generar PDF: $e');
+
       emit(currentState.copyWith(
         isGeneratingPdf: false,
         error: 'Error al generar PDF: ${e.toString()}',
@@ -155,167 +196,61 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
     }
   }
 
-  Future<void> _onShareCombinedResults(
-      ShareCombinedResultsEvent event,
-      Emitter<CombinedResultsState> emit,
-      ) async {
+  Future<void> _onShareCombinedResults(ShareCombinedResultsEvent event,
+      Emitter<CombinedResultsState> emit,) async {
     if (state is! CombinedResultsSuccess) return;
 
     final currentState = state as CombinedResultsSuccess;
     emit(currentState.copyWith(isSharing: true));
 
     try {
-      // Generar contenido según el formato solicitado
-      String shareContent;
+      print('📤 Compartiendo resultados en formato ${event.format}...');
 
+      // TODO: Implementar compartir según el formato
       switch (event.format) {
         case ShareFormat.pdf:
-          shareContent = _generatePdfContent(currentState.combinedResult);
+        // await ShareService.sharePdf(currentState.combinedResult);
           break;
         case ShareFormat.excel:
-          shareContent = _generateExcelContent(currentState.combinedResult);
+        // await ShareService.shareExcel(currentState.combinedResult);
           break;
         case ShareFormat.text:
-          shareContent = _generateTextContent(currentState.combinedResult);
+        // await ShareService.shareText(currentState.combinedResult);
           break;
       }
 
-      // TODO: Implementar compartir real
-      // await ShareService.shareCombinedResults(
-      //   content: shareContent,
-      //   format: event.format,
-      // );
+      // Simulación por ahora
+      await Future.delayed(const Duration(seconds: 1));
 
-      await Future.delayed(const Duration(seconds: 1)); // Simulación
+      print('✅ Resultados compartidos exitosamente');
 
       emit(currentState.copyWith(
         isSharing: false,
-        message: 'Materiales compartidos exitosamente como ${event.format.name.toUpperCase()}',
+        message: 'Resultados compartidos exitosamente',
       ));
     } catch (e) {
+      print('❌ Error al compartir: $e');
+
       emit(currentState.copyWith(
         isSharing: false,
-        error: 'Error al compartir: ${e.toString()}',
+        error: 'Error al compartir resultados: ${e.toString()}',
       ));
     }
   }
 
-  Future<void> _onUpdateSelectedMetrados(
-      UpdateSelectedMetradosEvent event,
-      Emitter<CombinedResultsState> emit,
-      ) async {
+  Future<void> _onUpdateSelectedMetrados(UpdateSelectedMetradosEvent event,
+      Emitter<CombinedResultsState> emit,) async {
     if (state is CombinedResultsSuccess) {
       final currentState = state as CombinedResultsSuccess;
 
-      // Recargar con nuevos metrados seleccionados
+      print('🔄 Actualizando metrados seleccionados...');
+
+      // Recargar con los nuevos metrados seleccionados
       add(LoadCombinedResultsEvent(
         projectId: currentState.projectId,
         selectedMetradoIds: event.newSelectedMetradoIds,
         projectName: currentState.combinedResult.projectName,
       ));
     }
-  }
-
-  /// Genera contenido para PDF (solo materiales)
-  String _generatePdfContent(CombinedCalculationResult result) {
-    final buffer = StringBuffer();
-
-    buffer.writeln('LISTA DE MATERIALES COMBINADOS');
-    buffer.writeln('Proyecto: ${result.projectName}');
-    buffer.writeln('Fecha: ${_formatDate(result.combinationDate)}');
-    buffer.writeln('Metrados incluidos: ${result.metradoCount}');
-    buffer.writeln('Área total: ${result.totalArea.toStringAsFixed(2)} m²');
-    buffer.writeln('');
-
-    buffer.writeln('MATERIALES:');
-    buffer.writeln('═══════════════════════════════════════');
-
-    for (int i = 0; i < result.sortedMaterials.length; i++) {
-      final material = result.sortedMaterials[i];
-      buffer.writeln('${i + 1}. ${material.name}');
-      buffer.writeln('   Cantidad: ${material.totalQuantity < 1 ? material.totalQuantity.toStringAsFixed(3) : material.totalQuantity.toStringAsFixed(0)} ${material.unit}');
-
-      if (material.contributions.isNotEmpty) {
-        buffer.writeln('   Aportes por metrado:');
-        material.contributions.forEach((metrado, cantidad) {
-          final porcentaje = material.getContributionPercentage(metrado);
-          buffer.writeln('   - $metrado: ${cantidad < 1 ? cantidad.toStringAsFixed(3) : cantidad.toStringAsFixed(0)} ${material.unit} (${porcentaje.toStringAsFixed(1)}%)');
-        });
-      }
-      buffer.writeln('');
-    }
-
-    return buffer.toString();
-  }
-
-  /// Genera contenido para Excel (CSV)
-  String _generateExcelContent(CombinedCalculationResult result) {
-    final buffer = StringBuffer();
-
-    // Encabezados
-    buffer.writeln('Material,Cantidad,Unidad,Metrado Principal,% Principal');
-
-    // Datos de materiales
-    for (final material in result.sortedMaterials) {
-      final topContributor = material.topContributor;
-      final topPercentage = material.getContributionPercentage(topContributor);
-
-      buffer.writeln('${material.name},${material.totalQuantity < 1 ? material.totalQuantity.toStringAsFixed(3) : material.totalQuantity.toStringAsFixed(0)},${material.unit},$topContributor,${topPercentage.toStringAsFixed(1)}%');
-    }
-
-    return buffer.toString();
-  }
-
-  /// Genera contenido para texto plano
-  String _generateTextContent(CombinedCalculationResult result) {
-    final buffer = StringBuffer();
-
-    buffer.writeln('📋 MATERIALES COMBINADOS - ${result.projectName.toUpperCase()}');
-    buffer.writeln('');
-    buffer.writeln('🏗️ INFORMACIÓN GENERAL:');
-    buffer.writeln('• Metrados incluidos: ${result.metradoCount}');
-    buffer.writeln('• Área total: ${result.totalArea.toStringAsFixed(2)} m²');
-    buffer.writeln('• Tipos de materiales: ${result.combinedMaterials.length}');
-    buffer.writeln('• Fecha de combinación: ${_formatDate(result.combinationDate)}');
-    buffer.writeln('');
-
-    buffer.writeln('📊 LISTA DE MATERIALES:');
-    buffer.writeln('─────────────────────────────────────');
-
-    for (int i = 0; i < result.sortedMaterials.length; i++) {
-      final material = result.sortedMaterials[i];
-      buffer.writeln('${i + 1}. ${material.name}');
-      buffer.writeln('   📦 Cantidad: ${material.totalQuantity < 1 ? material.totalQuantity.toStringAsFixed(3) : material.totalQuantity.toStringAsFixed(0)} ${material.unit}');
-
-      if (material.contributions.isNotEmpty) {
-        buffer.writeln('   🔍 Principal contribuyente: ${material.topContributor}');
-      }
-      buffer.writeln('');
-    }
-
-    buffer.writeln('📋 RESUMEN POR METRADO:');
-    buffer.writeln('─────────────────────────────────────');
-
-    for (final summary in result.metradoSummaries) {
-      buffer.writeln('• ${summary.metradoName}');
-      buffer.writeln('  - Área: ${summary.area.toStringAsFixed(2)} m²');
-      buffer.writeln('  - Items: ${summary.itemCount}');
-      buffer.writeln('  - Tipos: ${summary.resultTypes.join(', ')}');
-      buffer.writeln('');
-    }
-
-    buffer.writeln('📱 Generado con MetraShop');
-
-    return buffer.toString();
-  }
-
-  /// Formatea una fecha para mostrar
-  String _formatDate(DateTime date) {
-    final months = [
-      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-    ];
-
-    return '${date.day} de ${months[date.month - 1]} de ${date.year}';
   }
 }

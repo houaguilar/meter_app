@@ -142,8 +142,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
           children: [
             _buildSuccessIcon(),
             const SizedBox(height: 24),
-            _buildProjectSummaryCard(materials, pisos),  // ✅ Pasar materials
-            const SizedBox(height: 16),
+  //          _buildProjectSummaryCard(materials, pisos),  // ✅ Pasar materials
+  //          const SizedBox(height: 16),
             _buildMetradoDataCard(pisos),
             const SizedBox(height: 16),
             _buildMaterialsCard(materials),  // ✅ Pasar materials
@@ -220,8 +220,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
       child: Column(
         children: [
           _buildMaterialTable(materials),
-          const SizedBox(height: 16),
-          _buildMaterialChips(materials),
+//          const SizedBox(height: 16),
+//          _buildMaterialChips(materials),
         ],
       ),
     );

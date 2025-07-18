@@ -123,8 +123,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(),
-          const SizedBox(height: 20),
           _buildMetradoDataCard(losasAligeradas),
           const SizedBox(height: 20),
           _buildMaterialsCard(),
@@ -216,29 +214,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     );
   }
 
-  Widget _buildProjectSummaryCard() {
-    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-    final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider);
-    final areaTotal = _calcularAreaTotal(losasAligeradas);
-
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.blueMetraShop,
-      child: Column(
-        children: [
-          _buildSummaryRow('Área Total', '${areaTotal.toStringAsFixed(2)} m²'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Total de Losas', '${losasAligeradas.length}'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Volumen Concreto', '${volumenConcreto.toStringAsFixed(2)} m³'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Material Aligerado', _getMaterialAligerado(losasAligeradas)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetradoDataCard(List<LosaAligerada> losasAligeradas) {
     return _buildModernCard(
       title: 'Datos del Metrado',
@@ -265,8 +240,8 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
       child: Column(
         children: [
           _buildMaterialTable(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
-          const SizedBox(height: 16),
-          _buildMaterialChips(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
+ //         const SizedBox(height: 16),
+ //         _buildMaterialChips(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
         ],
       ),
     );

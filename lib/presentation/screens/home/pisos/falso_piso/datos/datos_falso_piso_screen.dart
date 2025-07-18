@@ -302,7 +302,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
   }
 
   Widget _buildResistenciaSelection() {
-    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²", "210 kg/cm²", "245 kg/cm²"];
+    final List<String> resistencias = ["140 kg/cm²", "175 kg/cm²", "210 kg/cm²"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

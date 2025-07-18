@@ -446,7 +446,7 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Ladrillos', 'Und', materials.ladrillos.toStringAsFixed(0)]),
+        _buildTableRow([_getTipoLadrilloDisplay(), 'Und', materials.ladrillos.toStringAsFixed(0)]),
         _buildTableRow(['Cemento', 'Bls', materials.cemento.ceil().toString()]),
         _buildTableRow(['Arena gruesa', 'm³', materials.arena.toStringAsFixed(2)]),
         _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
@@ -618,6 +618,22 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   String _getTipoLadrillo() {
     final ladrillos = ref.watch(ladrilloResultProvider);
     return ladrillos.isNotEmpty ? ladrillos.first.tipoLadrillo : 'N/A';
+  }
+
+  String _getTipoLadrilloDisplay() {
+    final tipoLadrilloId = ref.watch(tipoLadrilloProvider);
+
+    // Convertir el ID del tipo de ladrillo a un nombre legible
+    switch (tipoLadrilloId) {
+      case 'Pandereta1':
+      case 'Pandereta2':
+        return 'Ladrillos Pandereta';
+      case 'Kingkong1':
+      case 'Kingkong2':
+        return 'Ladrillos King Kong';
+      default:
+        return 'Ladrillos';
+    }
   }
 
   String _getTipoAsentado() {
