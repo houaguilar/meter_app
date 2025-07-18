@@ -145,8 +145,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-          _buildProjectSummaryCard(tipoElemento),
-          const SizedBox(height: 20),
           _buildMetradoDataCard(tipoElemento),
           const SizedBox(height: 20),
           _buildMaterialsCard(tipoElemento),
@@ -190,29 +188,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     );
   }
 
-  Widget _buildProjectSummaryCard(String tipoElemento) {
-    final totalVolumen = _getTotalVolumen(tipoElemento);
-    final totalElementos = _getTotalElementos(tipoElemento);
-    final resistencia = _getResistencia(tipoElemento);
-
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.blueMetraShop,
-      child: Column(
-        children: [
-          _buildSummaryRow('Volumen Total', '${totalVolumen.toStringAsFixed(2)} m³'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Total de ${tipoElemento.capitalize()}s', '$totalElementos'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Elemento', tipoElemento.capitalize()),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Resistencia', resistencia),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetradoDataCard(String tipoElemento) {
     return _buildModernCard(
       title: 'Datos del Metrado',
@@ -234,8 +209,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       child: Column(
         children: [
           _buildMaterialTable(tipoElemento),
-          const SizedBox(height: 16),
-          _buildMaterialChips(tipoElemento),
+ //         const SizedBox(height: 16),
+   //       _buildMaterialChips(tipoElemento),
         ],
       ),
     );

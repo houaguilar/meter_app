@@ -387,8 +387,8 @@ class _ResultScreenState extends State<ResultScreen>
       child: Column(
         children: [
           _buildMaterialTable(result),
-          const SizedBox(height: 16),
-          _buildMaterialChips(result),
+//          const SizedBox(height: 16),
+//          _buildMaterialChips(result),
         ],
       ),
     );

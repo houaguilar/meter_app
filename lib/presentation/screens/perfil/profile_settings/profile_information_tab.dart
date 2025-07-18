@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:country_state_city_pro/country_state_city_pro.dart'; // Librería actualizada y estable
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import '../../../../config/theme/theme.dart';
 
@@ -15,10 +16,12 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _employmentController;
-  late TextEditingController _nationalityController;
-  late TextEditingController _cityController;
-  late TextEditingController _provinceController;
-  late TextEditingController _districtController;
+  late TextEditingController _districtController; // Mantenemos distrito por separado
+
+  // Controllers para country_state_city_pro
+  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _stateController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
 
   final List<String> _occupations = [
     'Seleccione una ocupación',
@@ -48,9 +51,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _employmentController = TextEditingController();
-    _nationalityController = TextEditingController();
-    _cityController = TextEditingController();
-    _provinceController = TextEditingController();
     _districtController = TextEditingController();
 
     // Initialize from bloc state if available
@@ -64,20 +64,22 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _nameController.text = profile.name ?? '';
     _phoneController.text = profile.phone ?? '';
     _employmentController.text = profile.employment ?? '';
-    _nationalityController.text = profile.nationality ?? '';
-    _cityController.text = profile.city ?? '';
-    _provinceController.text = profile.province ?? '';
     _districtController.text = profile.district ?? '';
+
+    // Inicializar valores de ubicación
+    _countryController.text = profile.nationality ?? '';
+    _stateController.text = profile.province ?? '';
+    _cityController.text = profile.city ?? '';
   }
 
   void _setupListeners() {
     _nameController.addListener(_onFormChanged);
     _phoneController.addListener(_onFormChanged);
     _employmentController.addListener(_onFormChanged);
-    _nationalityController.addListener(_onFormChanged);
-    _cityController.addListener(_onFormChanged);
-    _provinceController.addListener(_onFormChanged);
     _districtController.addListener(_onFormChanged);
+    _countryController.addListener(_onFormChanged);
+    _stateController.addListener(_onFormChanged);
+    _cityController.addListener(_onFormChanged);
   }
 
   void _onFormChanged() {
@@ -98,10 +100,10 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _nameController.dispose();
     _phoneController.dispose();
     _employmentController.dispose();
-    _nationalityController.dispose();
-    _cityController.dispose();
-    _provinceController.dispose();
     _districtController.dispose();
+    _countryController.dispose();
+    _stateController.dispose();
+    _cityController.dispose();
   }
 
   void _saveChanges() {
@@ -112,147 +114,78 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
 
       final profileBloc = context.read<ProfileBloc>();
 
-      // Update profile with individual field updates to avoid null issues
+      // Update profile con los valores de los controllers
       profileBloc.add(UpdateProfile(
         name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
         phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
         employment: _employmentController.text.trim().isNotEmpty && _employmentController.text.trim() != 'Seleccione una ocupación'
             ? _employmentController.text.trim() : null,
-        nationality: _nationalityController.text.trim().isNotEmpty ? _nationalityController.text.trim() : null,
+        nationality: _countryController.text.trim().isNotEmpty ? _countryController.text.trim() : null,
+        province: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
         city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
-        province: _provinceController.text.trim().isNotEmpty ? _provinceController.text.trim() : null,
         district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
       ));
-
-      // Submit the profile changes
-      profileBloc.add(SubmitProfile());
 
       setState(() {
         _formChanged = false;
         _isLoading = false;
       });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Perfil actualizado correctamente'),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
-  void _resetForm() {
+  void _discardChanges() {
+    setState(() {
+      _formChanged = false;
+    });
+
+    // Restaurar valores originales
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
       _populateControllers(state.userProfile);
-      setState(() {
-        _formChanged = false;
-      });
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Cambios descartados'),
+        backgroundColor: AppColors.neutral600,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<ProfileBloc, ProfileState>(
+    return BlocListener<ProfileBloc, ProfileState>(
       listener: (context, state) {
-        if (state is ProfileLoaded && !_formChanged) {
-          _populateControllers(state.userProfile);
-        }
-
-        if (state is ProfileLoading || (state is ProfileLoaded && state.isLoading)) {
-          setState(() {
-            _isLoading = true;
-          });
-        } else {
+        if (state is ProfileLoaded) {
           setState(() {
             _isLoading = false;
           });
-        }
-
-        // Manejar el éxito de la actualización
-        if (state is ProfileSuccess) {
+        } else if (state is ProfileError) {
           setState(() {
-            _formChanged = false;
             _isLoading = false;
           });
-
-          // Mostrar mensaje de éxito
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Perfil actualizado correctamente'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
-            ),
-          );
-
-          // Volver al estado loaded de manera segura
-          Future.microtask(() {
-            if (mounted) {
-              context.read<ProfileBloc>().add(ReturnToLoadedState());
-            }
-          });
-        }
-
-        // Manejar errores
-        if (state is ProfileError) {
-          setState(() {
-            _isLoading = false;
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${state.message}'),
-              backgroundColor: Colors.red,
-              duration: Duration(seconds: 3),
+              content: Text(state.message),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
       },
-      builder: (context, state) {
-        if (state is ProfileLoading && !_formChanged) {
-          return _buildLoadingState();
-        }
-
-        return _buildForm();
-      },
-    );
-  }
-
-  Widget _buildLoadingState() {
-    return Container(
-      padding: EdgeInsets.all(24),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-              strokeWidth: 3,
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Cargando información del perfil...',
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildForm() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            AppColors.background,
-            AppColors.surfaceVariant,
-          ],
-        ),
-      ),
       child: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.all(24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -274,11 +207,11 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               SizedBox(height: 32),
               _buildSectionHeader(
                 'Ubicación',
-                'Información sobre tu lugar de residencia',
+                'Selecciona tu ubicación paso a paso',
                 Icons.location_on_outlined,
               ),
               SizedBox(height: 24),
-              _buildLocationSection(),
+              _buildLocationSectionWithCountryStateCityPro(), // Nueva sección actualizada
               SizedBox(height: 40),
               _buildActionButtons(),
               SizedBox(height: 32),
@@ -310,12 +243,12 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             padding: EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               icon,
               color: AppColors.primary,
-              size: 24,
+              size: 20,
             ),
           ),
           SizedBox(width: 16),
@@ -326,7 +259,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
@@ -335,9 +268,8 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 12,
                     color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
@@ -367,15 +299,15 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         children: [
           _buildTextFormField(
             controller: _nameController,
-            label: 'Nombre completo',
+            label: 'Nombre Completo',
             hint: 'Ingresa tu nombre completo',
-            icon: Icons.badge_outlined,
+            icon: Icons.person_outline_rounded,
             validator: (value) {
-              if (value?.trim().isEmpty ?? true) {
+              if (value == null || value.trim().isEmpty) {
                 return 'El nombre es requerido';
               }
-              if (value!.trim().length < 2) {
-                return 'El nombre debe tener al menos 2 caracteres';
+              if (value.trim().length < 2) {
+                return 'Ingresa un nombre válido';
               }
               return null;
             },
@@ -384,24 +316,17 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           _buildTextFormField(
             controller: _phoneController,
             label: 'Teléfono',
-            hint: 'Ejemplo: +51 999 999 999',
+            hint: 'Ejemplo: +51 987 654 321',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
             validator: (value) {
-              if (value?.trim().isNotEmpty ?? false) {
-                if (value!.trim().length < 8) {
+              if (value != null && value.isNotEmpty) {
+                if (value.trim().length < 8) {
                   return 'Ingresa un número de teléfono válido';
                 }
               }
               return null;
             },
-          ),
-          SizedBox(height: 20),
-          _buildTextFormField(
-            controller: _nationalityController,
-            label: 'Nacionalidad',
-            hint: 'Ejemplo: Peruana',
-            icon: Icons.flag_outlined,
           ),
         ],
       ),
@@ -442,7 +367,8 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     );
   }
 
-  Widget _buildLocationSection() {
+  // Nueva sección de ubicación con country_state_city_pro
+  Widget _buildLocationSectionWithCountryStateCityPro() {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -459,25 +385,115 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       ),
       child: Column(
         children: [
-          _buildTextFormField(
-            controller: _cityController,
-            label: 'Ciudad',
-            hint: 'Ejemplo: Lima',
-            icon: Icons.location_city_outlined,
+          // CountryStateCityPicker Widget - MÁS ESTABLE
+          CountryStateCityPicker(
+            country: _countryController,
+            state: _stateController,
+            city: _cityController,
+
+            // Color del diálogo de selección
+            dialogColor: AppColors.surface,
+
+            // Decoración personalizada de los campos
+            textFieldDecoration: InputDecoration(
+              fillColor: AppColors.neutral50,
+              filled: true,
+              suffixIcon: Icon(
+                Icons.arrow_drop_down_rounded,
+                color: AppColors.primary,
+                size: 28,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppColors.border.withOpacity(0.5),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppColors.primary,
+                  width: 2,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: AppColors.border.withOpacity(0.5),
+                ),
+              ),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              labelStyle: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 14,
+              ),
+              hintStyle: TextStyle(
+                color: AppColors.textSecondary.withOpacity(0.7),
+                fontSize: 14,
+              ),
+            ),
           ),
+
           SizedBox(height: 20),
-          _buildTextFormField(
-            controller: _provinceController,
-            label: 'Provincia/Departamento',
-            hint: 'Ejemplo: Lima',
-            icon: Icons.map_outlined,
-          ),
-          SizedBox(height: 20),
+
+          // Campo adicional para distrito
           _buildTextFormField(
             controller: _districtController,
             label: 'Distrito',
-            hint: 'Ejemplo: Miraflores',
+            hint: 'Ejemplo: Miraflores, San Isidro, Surco',
             icon: Icons.place_outlined,
+          ),
+
+          SizedBox(height: 16),
+
+          // Información adicional
+          Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.info.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.info.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 16,
+                  color: AppColors.info,
+                ),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Funcionalidad de búsqueda',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppColors.info,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Toca cada campo para seleccionar. Puedes buscar escribiendo el nombre. Si no encuentras tu ciudad, puedes escribirla manualmente.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.info,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -492,67 +508,25 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
         ),
-        SizedBox(height: 8),
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          validator: validator,
-          style: TextStyle(
-            fontSize: 16,
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w500,
-          ),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: TextStyle(
-              color: AppColors.textSecondary.withOpacity(0.7),
-              fontWeight: FontWeight.w400,
-            ),
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.error, width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.primary),
         ),
-      ],
+        filled: true,
+        fillColor: AppColors.neutral50,
+      ),
+      validator: validator,
     );
   }
 
@@ -561,166 +535,153 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     required List<String> items,
     required String label,
     required IconData icon,
-    required void Function(String?) onChanged,
+    required Function(String?) onChanged,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: AppColors.primary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
         ),
-        SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: items.contains(value) ? value : items.first,
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(
-                item,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: item == items.first ? AppColors.textSecondary : AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            prefixIcon: Container(
-              margin: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-            filled: true,
-            fillColor: AppColors.surfaceVariant,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primary, width: 2),
-            ),
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.primary),
         ),
-      ],
+        filled: true,
+        fillColor: AppColors.neutral50,
+      ),
+      items: items.map((item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(
+            item,
+            style: TextStyle(
+              color: item == items.first ? AppColors.textSecondary : AppColors.textPrimary,
+            ),
+          ),
+        );
+      }).toList(),
+      onChanged: onChanged,
+      validator: (value) {
+        if (value == null || value == items.first) {
+          return 'Por favor selecciona una opción';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildActionButtons() {
-    return Container(
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
-            blurRadius: 10,
-            offset: Offset(0, 4),
+    return Column(
+      children: [
+        // Botón principal - Guardar cambios
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: ElevatedButton(
+            onPressed: _formChanged && !_isLoading ? _saveChanges : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: _formChanged ? 2 : 0,
+            ),
+            child: _isLoading
+                ? SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+              ),
+            )
+                : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.save_outlined, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Guardar Cambios',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-      child: Column(
-        children: [
+        ),
+
+        if (_formChanged) ...[
+          SizedBox(height: 12),
+          // Botón secundario - Descartar cambios
           SizedBox(
             width: double.infinity,
-            height: 56,
-            child: ElevatedButton(
-              onPressed: _formChanged && !_isLoading ? _saveChanges : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _formChanged ? AppColors.primary : AppColors.border,
-                foregroundColor: AppColors.white,
-                elevation: _formChanged ? 4 : 0,
-                shadowColor: AppColors.primary.withOpacity(0.3),
+            height: 45,
+            child: OutlinedButton(
+              onPressed: _isLoading ? null : _discardChanges,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.textSecondary,
+                side: BorderSide(color: AppColors.border.withOpacity(0.5)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: _isLoading
-                  ? SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-                  strokeWidth: 2,
-                ),
-              )
-                  : Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.save_outlined,
-                    size: 22,
-                  ),
-                  SizedBox(width: 12),
+                  Icon(Icons.refresh_outlined, size: 18),
+                  SizedBox(width: 8),
                   Text(
-                    'Guardar cambios',
+                    'Descartar Cambios',
                     style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
           ),
-          if (_formChanged) ...[
-            SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: TextButton(
-                onPressed: _isLoading ? null : _resetForm,
-                style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: AppColors.border),
+        ],
+
+        // Indicador visual de estado
+        if (_formChanged) ...[
+          SizedBox(height: 16),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.edit_outlined,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
+                SizedBox(width: 6),
+                Text(
+                  'Hay cambios sin guardar',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.refresh_outlined,
-                      size: 20,
-                    ),
-                    SizedBox(width: 8),
-                    Text(
-                      'Deshacer cambios',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              ],
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 }

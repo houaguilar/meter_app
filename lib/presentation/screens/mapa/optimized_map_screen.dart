@@ -12,9 +12,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/place_entity.dart';
+import '../../assets/images.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/map/place/place_bloc.dart';
 import '../../widgets/app_bar/app_bar_widget.dart';
+import 'detail/location_detail_hardcoded_screen.dart';
 import 'widgets/optimized_search_bar.dart';
 import 'widgets/location_permission_dialog.dart';
 import 'widgets/map_loading_overlay.dart';
@@ -264,7 +266,26 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
   // NAVEGACIÓN Y ANIMACIONES DEL MAPA
   void _navigateToSearch() {
-    context.pushNamed('optimized_place_search');
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+        const OptimizedPlaceSearchScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+
+          var tween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: curve),
+          );
+
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _animateToPlace(PlaceEntity place) async {
@@ -374,7 +395,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
             title: location.title,
             snippet: location.description,
           ),
-          onTap: () => _showLocationBottomSheet(location),
+          onTap: () => _navigateToLocationDetail(location),
         ),
       );
     }
@@ -395,6 +416,16 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     }
 
     return markers;
+  }
+
+  void _navigateToLocationDetail(LocationMap location) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LocationDetailHardcodedScreen(
+          locationId: location.id ?? '1', // Default ID si no tiene
+        ),
+      ),
+    );
   }
 
   void _onMapCreated(GoogleMapController controller) {
@@ -633,6 +664,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       },
       itemCount: _providers.length,
       itemBuilder: (context, index) {
+        final provider = _providers[index];
         final screenWidth = MediaQuery.of(context).size.width;
 
         // Márgenes adaptativos basados en el ancho de pantalla
@@ -645,15 +677,70 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           horizontalMargin = 20; // Pantallas grandes
         }
 
-        return Container(
-          margin: EdgeInsets.symmetric(
-            horizontal: horizontalMargin,
-            vertical: 8,
+        return GestureDetector(
+          onTap: () => _navigateToProviderDetail(provider), // Cambio aquí
+          child: Container(
+            margin: EdgeInsets.symmetric(
+              horizontal: horizontalMargin,
+              vertical: 8,
+            ),
+            child: _buildProviderCard(_providers[index]),
           ),
-          child: _buildProviderCard(_providers[index]),
         );
       },
     );
+  }
+
+  Widget _buildImage(String imageUrl) {
+    // Si la URL empieza con http/https, es una imagen de red
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
+      return Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.neutral100,
+            child: const Icon(
+              Icons.image_not_supported,
+              size: 48,
+              color: AppColors.neutral400,
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: AppColors.neutral100,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                    loadingProgress.expectedTotalBytes!
+                    : null,
+                strokeWidth: 2,
+                color: AppColors.primary,
+              ),
+            ),
+          );
+        },
+      );
+    } else {
+      // Es un asset local
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.neutral100,
+            child: const Icon(
+              Icons.image_not_supported,
+              size: 48,
+              color: AppColors.neutral400,
+            ),
+          );
+        },
+      );
+    }
   }
 
   // TARJETA DE PROVEEDOR OPTIMIZADA PARA TODOS LOS TAMAÑOS DE PANTALLA
@@ -701,73 +788,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                     fit: StackFit.expand,
                     children: [
                       // Imagen principal
-                      Image.network(
-                        provider.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: AppColors.neutral100,
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 48,
-                              color: AppColors.neutral400,
-                            ),
-                          );
-                        },
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Container(
-                            color: AppColors.neutral100,
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                value: loadingProgress.expectedTotalBytes != null
-                                    ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                                    : null,
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                      // Gradiente overlay
-                      Positioned.fill(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Colors.transparent,
-                                Colors.black.withOpacity(0.3),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Badge de categoría
-                      Positioned(
-                        top: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            provider.category,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildImage(provider.imageUrl)
                     ],
                   ),
                 ),
@@ -891,6 +912,16 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
+  void _navigateToProviderDetail(ProviderModel provider) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => LocationDetailHardcodedScreen(
+          locationId: provider.id, // Usa el ID del proveedor
+        ),
+      ),
+    );
+  }
+
   // CARGAR PROVEEDORES (simulado - reemplazar con tu lógica real)
   void _loadProviders() {
     // Datos simulados - reemplazar con tu fuente de datos real
@@ -901,7 +932,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           name: 'Ferretería Central',
           description: 'Materiales de construcción y herramientas',
           category: 'Ferretería',
-          imageUrl: 'assets/images/express_img.png',
+          imageUrl: AppImages.expressImg,
           rating: 4.8,
           salesCount: 1250,
           distance: 0.8,
@@ -912,7 +943,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           name: 'Cemento & Agregados SAC',
           description: 'Venta de cemento, arena, piedra y agregados',
           category: 'Cemento',
-          imageUrl: 'assets/images/equip_img.png',
+          imageUrl: AppImages.equipImg,
           rating: 4.6,
           salesCount: 890,
           distance: 1.2,

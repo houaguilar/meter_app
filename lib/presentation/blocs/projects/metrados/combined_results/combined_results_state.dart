@@ -1,3 +1,5 @@
+// lib/presentation/blocs/projects/metrados/combined_results/combined_results_state.dart
+
 part of 'combined_results_bloc.dart';
 
 @immutable
@@ -6,10 +8,14 @@ abstract class CombinedResultsState {}
 /// Estado inicial
 class CombinedResultsInitial extends CombinedResultsState {}
 
-/// Estado de carga
-class CombinedResultsLoading extends CombinedResultsState {}
+/// Estado de carga con mensaje específico
+class CombinedResultsLoading extends CombinedResultsState {
+  final String? message;
 
-/// Estado de éxito con resultados combinados (sin precios)
+  CombinedResultsLoading({this.message});
+}
+
+/// Estado de éxito con resultados combinados
 class CombinedResultsSuccess extends CombinedResultsState {
   final CombinedCalculationResult combinedResult;
   final List<int> selectedMetradoIds;
@@ -58,15 +64,48 @@ class CombinedResultsSuccess extends CombinedResultsState {
     if (isSharing) return 'Compartiendo resultados...';
     return message;
   }
+
+  /// Resumen rápido de los resultados
+  String get quickSummary {
+    final materialCount = combinedResult.combinedMaterials.length;
+    final metradoCount = combinedResult.metradoCount;
+    return '$materialCount materiales de $metradoCount metrados';
+  }
+
+  /// Información detallada de la combinación
+  String get detailedInfo {
+    final stats = combinedResult.stats;
+    return '''
+Proyecto: ${combinedResult.projectName}
+Metrados combinados: ${stats.totalMetrados}
+Materiales únicos: ${stats.totalMaterials}
+Área total: ${stats.totalArea.toStringAsFixed(2)} m²
+Fecha de combinación: ${_formatDate(combinedResult.combinationDate)}
+''';
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
+  }
 }
 
 /// Estado de error
 class CombinedResultsError extends CombinedResultsState {
   final String message;
+  final String? technicalDetails;
 
   CombinedResultsError({
     required this.message,
+    this.technicalDetails,
   });
+
+  /// Mensaje completo del error
+  String get fullMessage {
+    if (technicalDetails != null) {
+      return '$message\n\nDetalles técnicos: $technicalDetails';
+    }
+    return message;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -97,112 +136,31 @@ extension CombinedResultsStateExtensions on CombinedResultsState {
     if (this is CombinedResultsError) {
       return (this as CombinedResultsError).message;
     }
-    if (this is CombinedResultsSuccess) {
-      return (this as CombinedResultsSuccess).error;
+    return null;
+  }
+
+  /// Obtiene el mensaje de carga si está disponible
+  String? get loadingMessage {
+    if (this is CombinedResultsLoading) {
+      return (this as CombinedResultsLoading).message;
     }
     return null;
   }
-}
 
-/// Parámetros para cargar resultados combinados
-class LoadCombinedResultsParams {
-  final int projectId;
-  final List<int> selectedMetradoIds;
-  final String projectName;
-
-  const LoadCombinedResultsParams({
-    required this.projectId,
-    required this.selectedMetradoIds,
-    required this.projectName,
-  });
-}
-
-/// Resultado de validación de metrados
-class MetradoValidationResult {
-  final bool isValid;
-  final String? errorMessage;
-  final List<int> validMetradoIds;
-  final List<int> invalidMetradoIds;
-
-  const MetradoValidationResult({
-    required this.isValid,
-    this.errorMessage,
-    required this.validMetradoIds,
-    required this.invalidMetradoIds,
-  });
-
-  /// Crea un resultado válido
-  factory MetradoValidationResult.valid(List<int> metradoIds) {
-    return MetradoValidationResult(
-      isValid: true,
-      validMetradoIds: metradoIds,
-      invalidMetradoIds: [],
-    );
-  }
-
-  /// Crea un resultado inválido
-  factory MetradoValidationResult.invalid(String message) {
-    return MetradoValidationResult(
-      isValid: false,
-      errorMessage: message,
-      validMetradoIds: [],
-      invalidMetradoIds: [],
-    );
-  }
-
-  /// Crea un resultado parcialmente válido
-  factory MetradoValidationResult.partial({
-    required List<int> validIds,
-    required List<int> invalidIds,
-    required String message,
-  }) {
-    return MetradoValidationResult(
-      isValid: validIds.isNotEmpty,
-      errorMessage: message,
-      validMetradoIds: validIds,
-      invalidMetradoIds: invalidIds,
-    );
-  }
-}
-
-/// Estadísticas de rendimiento de la combinación
-class CombinationPerformanceStats {
-  final Duration processingTime;
-  final int totalCalculations;
-  final int successfulCalculations;
-  final int failedCalculations;
-  final List<String> warnings;
-
-  const CombinationPerformanceStats({
-    required this.processingTime,
-    required this.totalCalculations,
-    required this.successfulCalculations,
-    required this.failedCalculations,
-    required this.warnings,
-  });
-
-  /// Porcentaje de éxito en los cálculos
-  double get successRate {
-    if (totalCalculations == 0) return 0.0;
-    return (successfulCalculations / totalCalculations) * 100;
-  }
-
-  /// Indica si hubo problemas durante el procesamiento
-  bool get hasIssues => failedCalculations > 0 || warnings.isNotEmpty;
-
-  /// Resumen textual del rendimiento
-  String get summaryText {
-    if (successRate == 100.0 && warnings.isEmpty) {
-      return 'Procesamiento exitoso sin problemas';
-    } else if (successRate >= 80.0) {
-      return 'Procesamiento completado con advertencias menores';
-    } else {
-      return 'Procesamiento completado con errores significativos';
+  /// Indica si se puede interactuar con la UI
+  bool get canInteract {
+    if (this is CombinedResultsSuccess) {
+      return !(this as CombinedResultsSuccess).isProcessing;
     }
+    return this is! CombinedResultsLoading;
   }
 }
 
-/// Estado de configuración para la combinación
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN PARA COMBINACIÓN AVANZADA (FUTURO)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/// Configuración para la combinación de resultados
 class CombinationConfiguration {
   final bool includeAllMaterials;
   final bool groupSimilarMaterials;
@@ -214,7 +172,7 @@ class CombinationConfiguration {
     this.includeAllMaterials = true,
     this.groupSimilarMaterials = true,
     this.applyTolerances = false,
-    this.materialTolerance = 0.05, // 5% por defecto
+    this.materialTolerance = 0.05, // 5% de tolerancia
     this.excludedMaterialTypes = const [],
   });
 
@@ -288,5 +246,21 @@ class MetradoUIInfo {
       return 'floor';
     }
     return 'construction';
+  }
+
+  /// Categoría principal del metrado
+  String get primaryCategory {
+    if (resultTypes.contains('Columna') || resultTypes.contains('Viga')) {
+      return 'Estructural';
+    } else if (resultTypes.contains('Losa')) {
+      return 'Losas';
+    } else if (resultTypes.contains('Ladrillo')) {
+      return 'Albañilería';
+    } else if (resultTypes.contains('Tarrajeo')) {
+      return 'Acabados';
+    } else if (resultTypes.contains('Piso')) {
+      return 'Pisos';
+    }
+    return 'General';
   }
 }
