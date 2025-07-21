@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -14,7 +11,6 @@ import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../../data/models/models.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../widgets/widgets.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 class ResultLadrilloScreen extends ConsumerStatefulWidget {
   const ResultLadrilloScreen({super.key});
@@ -117,21 +113,21 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         right: 24,
         left: 24,
         top: 10,
-        bottom: 20, // Reducido para que no interfiera con bottomNavigationBar
+        bottom: 20,
       ),
       child: Column(
         children: [
           const SizedBox(height: 10),
           _buildSuccessIcon(),
-//          const SizedBox(height: 20),
-//          _buildProjectSummaryCard(materials),
           const SizedBox(height: 20),
           _buildMetradoDataCard(ladrillos),
           const SizedBox(height: 20),
           _buildMaterialsCard(materials),
           const SizedBox(height: 20),
           _buildConfigurationCard(ladrillos),
-          const SizedBox(height: 120), // Espacio para los botones de abajo
+          const SizedBox(height: 20),
+          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -140,44 +136,32 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.warning_amber_rounded,
-              size: 64,
-              color: Colors.orange[400],
+              Icons.info_outline,
+              size: 80,
+              color: AppColors.neutral400,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No hay datos de ladrillos',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Regresa y completa los datos para ver los resultados',
-              textAlign: TextAlign.center,
+            Text(
+              'Regresa y agrega información de ladrillos',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: AppColors.textSecondary,
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Regresar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -217,25 +201,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
     );
   }
 
-  Widget _buildProjectSummaryCard(LadrilloMaterials materials) {
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.blueMetraShop,
-      child: Column(
-        children: [
-          _buildSummaryRow('Área Total', '${materials.areaTotal.toStringAsFixed(2)} m²'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Total de Muros', '${ref.watch(ladrilloResultProvider).length}'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Ladrillo', _getTipoLadrillo()),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Asentado', _getTipoAsentado()),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetradoDataCard(List<Ladrillo> ladrillos) {
     return _buildModernCard(
       title: 'Datos del Metrado',
@@ -257,8 +222,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       child: Column(
         children: [
           _buildMaterialTable(materials),
-//          const SizedBox(height: 16),
-//          _buildMaterialChips(materials),
         ],
       ),
     );
@@ -269,7 +232,7 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
 
     final primerLadrillo = ladrillos.first;
     final desperdicioLadrillo = double.tryParse(primerLadrillo.factorDesperdicio) ?? 5.0;
-    final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0;
+    final desperdicioMortero = double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 5.0;
 
     return _buildModernCard(
       title: 'Configuración Aplicada',
@@ -277,13 +240,93 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Desperdicio de Ladrillo', '${desperdicioLadrillo.toStringAsFixed(1)}%'),
+          _buildConfigRow('Factor de Desperdicio de Ladrillo', '${desperdicioLadrillo.toStringAsFixed(1)}%'),
           const SizedBox(height: 12),
-          _buildConfigRow('Desperdicio de Mortero', '${desperdicioMortero.toStringAsFixed(1)}%'),
+          _buildConfigRow('Factor de Desperdicio de Mortero', '${desperdicioMortero.toStringAsFixed(1)}%'),
           const SizedBox(height: 12),
-          _buildConfigRow('Proporción Mortero', '1:${primerLadrillo.proporcionMortero}'),
+          _buildConfigRow('Tipo de Ladrillo', _getTipoLadrillo()),
+          const SizedBox(height: 12),
+          _buildConfigRow('Tipo de Asentado', _getTipoAsentado()),
         ],
       ),
+    );
+  }
+
+  // ✅ NUEVA SECCIÓN: Leyenda de unidades
+  Widget _buildLegend() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Leyenda de Unidades:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
+          const SizedBox(height: 8),
+          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
+          const SizedBox(height: 8),
+          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
+          const SizedBox(height: 8),
+          _buildLegendItem('und', 'Unidades - Cantidad individual'),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NUEVO: Widget para cada item de la leyenda
+  Widget _buildLegendItem(String unit, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -294,20 +337,15 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
     required Widget child,
   }) {
     return Container(
-      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: AppColors.neutral200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -325,23 +363,12 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 20,
-                  ),
-                ),
+                Icon(icon, color: iconColor, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -355,29 +382,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
     );
   }
 
@@ -446,85 +450,81 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow([_getTipoLadrilloDisplay(), 'Und', materials.ladrillos.toStringAsFixed(0)]),
-        _buildTableRow(['Cemento', 'Bls', materials.cemento.ceil().toString()]),
+        _buildTableRow([_getTipoLadrilloDisplay(), 'und', materials.ladrillos.toStringAsFixed(0)]),
+        _buildTableRow(['Cemento', 'bls', materials.cemento.ceil().toString()]),
         _buildTableRow(['Arena gruesa', 'm³', materials.arena.toStringAsFixed(2)]),
         _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
       ],
     );
   }
 
-  Widget _buildMaterialChips(LadrilloMaterials materials) {
-    final materials_list = [
-      {'icon': Icons.construction, 'label': 'Ladrillos', 'value': '${materials.ladrillos.toStringAsFixed(0)} und', 'color': AppColors.primary},
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materials.cemento.ceil()} bls', 'color': AppColors.secondary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materials.arena.toStringAsFixed(2)} m³', 'color': AppColors.warning},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materials.agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
-    ];
+  // ✅ NUEVO: Widget con tooltip para unidades
+  Widget _buildUnitWithTooltip(String unit) {
+    String tooltip = unit == 'm²' ? 'Metros cuadrados (área)' :
+    unit == 'm³' ? 'Metros cúbicos (volumen)' :
+    unit == 'bls' ? 'Bolsas de cemento' :
+    unit == 'und' ? 'Unidades individuales' : unit;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: materials_list.map((material) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: (material['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: (material['color'] as Color).withOpacity(0.3),
-              width: 1,
-            ),
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 16, // ✅ Aumentado
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                material['icon'] as IconData,
-                size: 16,
-                color: material['color'] as Color,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                material['value'] as String,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: material['color'] as Color,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
+  // ✅ MEJORADO: Filas de tabla con tooltips y mayor tamaño de fuente
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
-
     return TableRow(
       decoration: isTotal ? BoxDecoration(
         color: AppColors.blueMetraShop.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.asMap().entries.map((entry) {
+        int index = entry.key;
+        String cell = entry.value;
+
+        // ✅ Para la columna de unidades (índice 1), usar tooltips
+        Widget cellContent;
+        if (index == 1 && !isHeader) {
+          cellContent = _buildUnitWithTooltip(cell);
+        } else {
+          final textStyle = TextStyle(
+            fontSize: isHeader ? 14 : 16, // ✅ Aumentado de 12 a 16
+            fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHeader ? AppColors.textPrimary :
+            isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+          );
+
+          cellContent = Text(
+            cell,
+            style: textStyle,
+            textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: cellContent,
+        );
+      }).toList(),
     );
   }
 
-  // CORREGIDO: bottomNavigationBar simplificado usando Container
   Widget _buildBottomActionBar() {
     final ladrillos = ref.watch(ladrilloResultProvider);
 
@@ -549,7 +549,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Botones de acción principales en fila
               Row(
                 children: [
                   Expanded(
@@ -586,7 +585,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
                 ],
               ),
               const SizedBox(height: 12),
-              // Botón principal de proveedores
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -623,7 +621,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   String _getTipoLadrilloDisplay() {
     final tipoLadrilloId = ref.watch(tipoLadrilloProvider);
 
-    // Convertir el ID del tipo de ladrillo a un nombre legible
     switch (tipoLadrilloId) {
       case 'Pandereta1':
       case 'Pandereta2':
@@ -751,7 +748,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -763,17 +759,15 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           children: [
@@ -782,9 +776,11 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
             Text(
               label,
               style: TextStyle(
-                color: color,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: color,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -794,26 +790,22 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
 
   Future<void> _sharePDF() async {
     try {
-      Navigator.of(context).pop();
-
+      Navigator.pop(context);
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
       );
 
       final pdfFile = await PDFFactory.generateLadrilloPDF(ref);
+      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
-      final xFile = XFile(pdfFile.path);
-
-      context.hideLoader();
-
-      await Share.shareXFiles(
-        [xFile],
-        text: 'Resultados del metrado de ladrillos - METRASHOP',
-      );
+      if (result.status == ShareResultStatus.success) {
+        _showSuccessSnackBar('PDF compartido exitosamente');
+      }
     } catch (e) {
-      context.hideLoader();
       _showErrorSnackBar('Error al generar PDF: $e');
+    } finally {
+      context.hideLoader();
     }
   }
 
@@ -833,109 +825,43 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
     }
   }
 
-  Future<File> _generatePDF() async {
-    final pdf = pw.Document();
-    final ladrillos = ref.watch(ladrilloResultProvider);
-    final materials = ref.watch(ladrilloMaterialsProvider);
-
-    if (ladrillos.isEmpty) {
-      throw Exception('No hay datos de ladrillos para generar PDF');
-    }
-
-    final primerLadrillo = ladrillos.first;
-
-    pdf.addPage(
-      pw.Page(
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Título
-            pw.Text(
-              'RESULTADOS DE MUROS DE LADRILLOS',
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Información del proyecto
-            pw.Text(
-              'INFORMACIÓN DEL PROYECTO:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Tipo de Ladrillo: ${primerLadrillo.tipoLadrillo}'),
-            pw.Text('• Tipo de Asentado: ${primerLadrillo.tipoAsentado}'),
-            pw.Text('• Proporción Mortero: 1:${primerLadrillo.proporcionMortero}'),
-            pw.Text('• Área total: ${materials.areaTotal.toStringAsFixed(2)} m²'),
-            pw.Text('• Total de muros: ${ladrillos.length}'),
-            pw.SizedBox(height: 20),
-
-            // Materiales calculados
-            pw.Text(
-              'MATERIALES CALCULADOS:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Ladrillos: ${materials.ladrillos.toStringAsFixed(0)} unidades'),
-            pw.Text('• Cemento: ${materials.cemento.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${materials.arena.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${materials.agua.toStringAsFixed(2)} m³'),
-            pw.SizedBox(height: 20),
-
-            // Configuración aplicada
-            pw.Text(
-              'CONFIGURACIÓN APLICADA:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Desperdicio de Mortero: ${double.tryParse(primerLadrillo.factorDesperdicioMortero) ?? 10.0}%'),
-            pw.SizedBox(height: 20),
-
-            // Detalle de muros
-            pw.Text(
-              'DETALLE DE MUROS:',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            ...ladrillos.map((ladrillo) => pw.Text(
-              '• ${ladrillo.description}: ${_calcularAreaLadrillo(ladrillo).toStringAsFixed(2)} m²',
-              style: pw.TextStyle(fontSize: 12),
-            )),
-            pw.SizedBox(height: 20),
-
-            // Información técnica
-            pw.Text(
-              'INFORMACIÓN TÉCNICA:',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en fórmulas de ingeniería actualizadas',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Incluye juntas de mortero de 1.5 cm horizontales y verticales',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores de desperdicio aplicados de forma independiente',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-          ],
-        ),
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
       ),
     );
-
-    final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_ladrillos_${DateTime.now().millisecondsSinceEpoch}.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
   }
 
-  void _showErrorSnackBar(String message) {
-    if (!mounted) return;
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 
+  void _showInfoSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.blueMetraShop,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
+            const Icon(Icons.error, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),

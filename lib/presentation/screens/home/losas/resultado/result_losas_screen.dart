@@ -128,7 +128,9 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
           _buildMaterialsCard(),
           const SizedBox(height: 20),
           _buildConfigurationCard(losasAligeradas),
-          const SizedBox(height: 120), // Espacio para los botones de abajo
+          const SizedBox(height: 20),
+          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
+          const SizedBox(height: 120),
         ],
       ),
     );
@@ -137,44 +139,32 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              Icons.warning_amber_rounded,
-              size: 64,
-              color: Colors.orange[400],
+              Icons.info_outline,
+              size: 80,
+              color: AppColors.neutral400,
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No hay datos de losas aligeradas',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Regresa y completa los datos para ver los resultados',
-              textAlign: TextAlign.center,
+            Text(
+              'Regresa y agrega información de losas',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey,
+                color: AppColors.textSecondary,
               ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => context.pop(),
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Regresar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -240,8 +230,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
       child: Column(
         children: [
           _buildMaterialTable(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
- //         const SizedBox(height: 16),
- //         _buildMaterialChips(cantidadCemento, cantidadArena, cantidadPiedra, cantidadAgua),
         ],
       ),
     );
@@ -260,17 +248,91 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Altura de Losa', primeraLosa.altura),
-          const SizedBox(height: 12),
-          _buildConfigRow('Material Aligerado', primeraLosa.materialAligerado),
-          const SizedBox(height: 12),
-          _buildConfigRow('Resistencia Concreto', primeraLosa.resistenciaConcreto),
-          const SizedBox(height: 12),
           _buildConfigRow('Desperdicio Ladrillo', '${desperdicioLadrillo.toStringAsFixed(1)}%'),
           const SizedBox(height: 12),
           _buildConfigRow('Desperdicio Concreto', '${desperdicioConcreto.toStringAsFixed(1)}%'),
+          const SizedBox(height: 12),
+          _buildConfigRow('Material Aligerado', _getMaterialAligerado(losasAligeradas)),
         ],
       ),
+    );
+  }
+
+  // ✅ NUEVA SECCIÓN: Leyenda de unidades
+  Widget _buildLegend() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Leyenda de Unidades:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
+          const SizedBox(height: 8),
+          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
+          const SizedBox(height: 8),
+          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
+          const SizedBox(height: 8),
+          _buildLegendItem('und', 'Unidades - Cantidad individual'),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NUEVO: Widget para cada item de la leyenda
+  Widget _buildLegendItem(String unit, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -281,20 +343,15 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     required Widget child,
   }) {
     return Container(
-      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: AppColors.neutral200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -312,23 +369,12 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 20,
-                  ),
-                ),
+                Icon(icon, color: iconColor, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -342,29 +388,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
     );
   }
 
@@ -435,7 +458,7 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'Bls', cemento.ceil().toString()]),
+        _buildTableRow(['Cemento', 'bls', cemento.ceil().toString()]),
         _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(2)]),
         _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(2)]),
         _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
@@ -443,73 +466,70 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     );
   }
 
-  Widget _buildMaterialChips(double cemento, double arena, double piedra, double agua) {
-    final materialsList = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${cemento.ceil()} bls', 'color': AppColors.secondary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${arena.toStringAsFixed(2)} m³', 'color': AppColors.warning},
-      {'icon': Icons.landscape, 'label': 'Piedra', 'value': '${piedra.toStringAsFixed(2)} m³', 'color': AppColors.primary},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
-    ];
+  // ✅ NUEVO: Widget con tooltip para unidades
+  Widget _buildUnitWithTooltip(String unit) {
+    String tooltip = unit == 'm²' ? 'Metros cuadrados (área)' :
+    unit == 'm³' ? 'Metros cúbicos (volumen)' :
+    unit == 'bls' ? 'Bolsas de cemento' :
+    unit == 'und' ? 'Unidades individuales' : unit;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: materialsList.map((material) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: (material['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: (material['color'] as Color).withOpacity(0.3),
-              width: 1,
-            ),
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 16, // ✅ Aumentado
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                material['icon'] as IconData,
-                size: 16,
-                color: material['color'] as Color,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                material['value'] as String,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: material['color'] as Color,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
+  // ✅ MEJORADO: Filas de tabla con tooltips y mayor tamaño de fuente
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
-
     return TableRow(
       decoration: isTotal ? BoxDecoration(
         color: AppColors.blueMetraShop.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.asMap().entries.map((entry) {
+        int index = entry.key;
+        String cell = entry.value;
+
+        // ✅ Para la columna de unidades (índice 1), usar tooltips
+        Widget cellContent;
+        if (index == 1 && !isHeader) {
+          cellContent = _buildUnitWithTooltip(cell);
+        } else {
+          final textStyle = TextStyle(
+            fontSize: isHeader ? 14 : 16, // ✅ Aumentado de 12 a 16
+            fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHeader ? AppColors.textPrimary :
+            isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+          );
+
+          cellContent = Text(
+            cell,
+            style: textStyle,
+            textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: cellContent,
+        );
+      }).toList(),
     );
   }
 
@@ -537,7 +557,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Botones de acción principales en fila
               Row(
                 children: [
                   Expanded(
@@ -574,7 +593,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
                 ],
               ),
               const SizedBox(height: 12),
-              // Botón principal de proveedores
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -725,7 +743,6 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -737,17 +754,15 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           children: [
@@ -756,9 +771,11 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
             Text(
               label,
               style: TextStyle(
-                color: color,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: color,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -768,25 +785,22 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
 
   Future<void> _sharePDF() async {
     try {
-      Navigator.of(context).pop();
-
+      Navigator.pop(context);
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
       );
 
       final pdfFile = await PDFFactory.generateLosaAligeradaPDF(ref);
-      final xFile = XFile(pdfFile.path);
+      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
-      context.hideLoader();
-
-      await Share.shareXFiles(
-        [xFile],
-        text: 'Resultados del metrado de losas aligeradas - METRASHOP',
-      );
+      if (result.status == ShareResultStatus.success) {
+        _showSuccessSnackBar('PDF compartido exitosamente');
+      }
     } catch (e) {
-      context.hideLoader();
       _showErrorSnackBar('Error al generar PDF: $e');
+    } finally {
+      context.hideLoader();
     }
   }
 
@@ -847,127 +861,27 @@ class _ResultLosasScreenState extends ConsumerState<ResultLosasScreen>
     return buffer.toString();
   }
 
-  Future<File> _generatePDF() async {
-    final pdf = pw.Document();
-    final losasAligeradas = ref.watch(losaAligeradaResultProvider);
-    final cantidadCemento = ref.watch(cantidadCementoLosaAligeradaProvider);
-    final cantidadArena = ref.watch(cantidadArenaGruesaLosaAligeradaProvider);
-    final cantidadPiedra = ref.watch(cantidadPiedraChancadaLosaAligeradaProvider);
-    final cantidadAgua = ref.watch(cantidadAguaLosaAligeradaProvider);
-    final volumenConcreto = ref.watch(volumenConcretoLosaAligeradaProvider);
-
-    if (losasAligeradas.isEmpty) {
-      throw Exception('No hay datos de losas para generar PDF');
-    }
-
-    final primeraLosa = losasAligeradas.first;
-
-    pdf.addPage(
-      pw.Page(
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Título
-            pw.Text(
-              'RESULTADOS DE LOSAS ALIGERADAS',
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Información del proyecto
-            pw.Text(
-              'INFORMACIÓN DEL PROYECTO:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Altura de losa: ${primeraLosa.altura}'),
-            pw.Text('• Material aligerado: ${primeraLosa.materialAligerado}'),
-            pw.Text('• Resistencia concreto: ${primeraLosa.resistenciaConcreto}'),
-            pw.Text('• Área total: ${_calcularAreaTotal(losasAligeradas).toStringAsFixed(2)} m²'),
-            pw.Text('• Total de losas: ${losasAligeradas.length}'),
-            pw.Text('• Volumen total concreto: ${volumenConcreto.toStringAsFixed(2)} m³'),
-            pw.SizedBox(height: 20),
-
-            // Materiales calculados
-            pw.Text(
-              'MATERIALES CALCULADOS:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${cantidadCemento.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³'),
-            pw.Text('• Piedra chancada: ${cantidadPiedra.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³'),
-            pw.SizedBox(height: 20),
-
-            // Configuración aplicada
-            pw.Text(
-              'CONFIGURACIÓN APLICADA:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Desperdicio de ladrillo: ${double.tryParse(primeraLosa.desperdicioLadrillo) ?? 5.0}%'),
-            pw.Text('• Desperdicio de concreto: ${double.tryParse(primeraLosa.desperdicioConcreto) ?? 5.0}%'),
-            pw.SizedBox(height: 20),
-
-            // Detalle de losas
-            pw.Text(
-              'DETALLE DE LOSAS:',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            ...losasAligeradas.map((losa) => pw.Text(
-              '• ${losa.description}: ${_calcularAreaLosa(losa).toStringAsFixed(2)} m²',
-              style: pw.TextStyle(fontSize: 12),
-            )),
-            pw.SizedBox(height: 20),
-
-            // Información técnica
-            pw.Text(
-              'INFORMACIÓN TÉCNICA:',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en fórmulas de ingeniería actualizadas',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• El volumen de concreto se calcula según el tipo de material aligerado',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores de desperdicio aplicados de forma independiente',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-          ],
-        ),
-      ),
-    );
-
-    final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_losas_aligeradas_${DateTime.now().millisecondsSinceEpoch}.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
-  }
-
   String _getCurrentDate() {
     final now = DateTime.now();
     return "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
   }
 
   void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
+        content: Text(message),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccessSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

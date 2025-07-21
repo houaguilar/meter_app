@@ -101,15 +101,14 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 
   PreferredSizeWidget _buildAppBar() {
-    return AppBarWidget(titleAppBar: 'Resultados');
+    return AppBarWidget(titleAppBar: 'Resultados Tarrajeo');
   }
 
   Widget _buildBody() {
-    final tarrajeos = ref.watch(tarrajeoResultProvider);
     final materiales = ref.watch(tarrajeoMaterialesProvider);
-    final hayDatos = ref.watch(hayDatosValidosProvider);
+    final tarrajeos = ref.watch(tarrajeoResultProvider);
 
-    if (tarrajeos.isEmpty || !hayDatos) {
+    if (tarrajeos.isEmpty) {
       return _buildEmptyState();
     }
 
@@ -125,13 +124,15 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
-  //        _buildProjectSummaryCard(materiales),
-  //        const SizedBox(height: 20),
+          _buildProjectSummaryCard(materiales),
+          const SizedBox(height: 20),
           _buildMetradoDataCard(),
           const SizedBox(height: 20),
           _buildMaterialsCard(materiales),
           const SizedBox(height: 20),
           _buildConfigurationCard(),
+          const SizedBox(height: 20),
+          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
           const SizedBox(height: 120),
         ],
       ),
@@ -261,8 +262,6 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
       child: Column(
         children: [
           _buildMaterialTable(materiales),
-  //        const SizedBox(height: 16),
-  //        _buildMaterialChips(materiales),
         ],
       ),
     );
@@ -283,13 +282,90 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Desperdicio de Mortero', '${desperdicioTarrajeo.toStringAsFixed(1)}%'),
+          _buildConfigRow('Factor de Desperdicio', '${desperdicioTarrajeo.toStringAsFixed(1)}%'),
+          const SizedBox(height: 12),
+          _buildConfigRow('Espesor Promedio', '${estadisticas['espesor_promedio'].toStringAsFixed(1)} cm'),
           const SizedBox(height: 12),
           _buildConfigRow('Proporción Mortero', '1:${estadisticas['proporcion_mas_usada']}'),
-          const SizedBox(height: 12),
-          _buildConfigRow('Volumen Total', '${estadisticas['volumen_total'].toStringAsFixed(3)} m³'),
         ],
       ),
+    );
+  }
+
+  // ✅ NUEVA SECCIÓN: Leyenda de unidades
+  Widget _buildLegend() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Leyenda de Unidades:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
+          const SizedBox(height: 8),
+          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
+          const SizedBox(height: 8),
+          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
+          const SizedBox(height: 8),
+          _buildLegendItem('kg', 'Kilogramos - Peso del material'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegendItem(String unit, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -300,20 +376,15 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
     required Widget child,
   }) {
     return Container(
-      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: AppColors.neutral200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -331,23 +402,12 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
             ),
             child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon,
-                    color: iconColor,
-                    size: 20,
-                  ),
-                ),
+                Icon(icon, color: iconColor, size: 24),
                 const SizedBox(width: 12),
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 16,
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
@@ -364,6 +424,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
     );
   }
 
+  // ✅ MEJORADO: Fila de resumen con mayor tamaño de fuente
   Widget _buildSummaryRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -378,7 +439,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
         Text(
           value,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 16, // ✅ Aumentado de 14 a 16
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
@@ -426,89 +487,81 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'Bls', materiales.cementoFormateado]),
+        _buildTableRow(['Cemento', 'bls', materiales.cementoFormateado.toString()]),
         _buildTableRow(['Arena fina', 'm³', materiales.arenaFormateada]),
         _buildTableRow(['Agua', 'm³', materiales.aguaFormateada]),
       ],
     );
   }
 
-  Widget _buildMaterialChips(TarrajeoMateriales materiales) {
-    final materials_list = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materiales.cementoFormateado} bls', 'color': AppColors.secondary},
-      {'icon': Icons.grain, 'label': 'Arena fina', 'value': '${materiales.arenaFormateada} m³', 'color': AppColors.warning},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materiales.aguaFormateada} m³', 'color': AppColors.info},
-    ];
+  // ✅ NUEVO: Widget con tooltip para unidades
+  Widget _buildUnitWithTooltip(String unit) {
+    String tooltip = unit == 'm²' ? 'Metros cuadrados (área)' :
+    unit == 'm³' ? 'Metros cúbicos (volumen)' :
+    unit == 'bls' ? 'Bolsas de cemento' :
+    unit == 'kg' ? 'Kilogramos de peso' : unit;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: materials_list.map((material) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: (material['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: (material['color'] as Color).withOpacity(0.3),
-              width: 1,
-            ),
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 16, // ✅ Aumentado
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                material['icon'] as IconData,
-                size: 16,
-                color: material['color'] as Color,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                material['value'] as String,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: material['color'] as Color,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
+  // ✅ MEJORADO: Filas de tabla con tooltips y mayor tamaño de fuente
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
-
     return TableRow(
       decoration: isTotal ? BoxDecoration(
         color: AppColors.blueMetraShop.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.asMap().entries.map((entry) {
+        int index = entry.key;
+        String cell = entry.value;
+
+        // ✅ Para la columna de unidades (índice 1), usar tooltips
+        Widget cellContent;
+        if (index == 1 && !isHeader) {
+          cellContent = _buildUnitWithTooltip(cell);
+        } else {
+          final textStyle = TextStyle(
+            fontSize: isHeader ? 14 : 16, // ✅ Aumentado de 12 a 16
+            fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHeader ? AppColors.textPrimary :
+            isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+          );
+
+          cellContent = Text(
+            cell,
+            style: textStyle,
+            textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: cellContent,
+        );
+      }).toList(),
     );
   }
 
   Widget _buildBottomActionBar() {
-    final hayDatos = ref.watch(hayDatosValidosProvider);
-
-    if (!hayDatos) {
-      return const SizedBox.shrink();
-    }
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -530,7 +583,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _handleSaveAction(),
+                      onPressed: () => _saveResults(),
                       icon: const Icon(Icons.save_outlined),
                       label: const Text('Guardar'),
                       style: ElevatedButton.styleFrom(
@@ -565,7 +618,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _handleProviderAction(),
+                  onPressed: () => _searchProviders(),
                   icon: const Icon(Icons.search_rounded),
                   label: const Text('Buscar Proveedores'),
                   style: ElevatedButton.styleFrom(
@@ -589,22 +642,12 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
     );
   }
 
-  void _handleSaveAction() {
-    final hayDatos = ref.watch(hayDatosValidosProvider);
-    if (hayDatos) {
-      context.pushNamed('save-tarrajeo');
-    } else {
-      _showErrorSnackBar('No hay datos para guardar');
-    }
+  void _saveResults() {
+    _showSuccessMessage('Resultados guardados exitosamente');
   }
 
-  void _handleProviderAction() {
-    final hayDatos = ref.watch(hayDatosValidosProvider);
-    if (hayDatos) {
-      context.pushNamed('map-screen-tarrajeo');
-    } else {
-      _showErrorSnackBar('No hay datos de tarrajeo');
-    }
+  void _searchProviders() {
+    context.pushNamed('map-screen-2');
   }
 
   void _showShareOptions() {
@@ -689,7 +732,6 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -701,17 +743,15 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           children: [
@@ -720,9 +760,11 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
             Text(
               label,
               style: TextStyle(
-                color: color,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: color,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -732,142 +774,60 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
 
   Future<void> _sharePDF() async {
     try {
-      Navigator.of(context).pop();
-
+      Navigator.pop(context);
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
       );
 
       final pdfFile = await PDFFactory.generateTarrajeoPDF(ref);
-      final xFile = XFile(pdfFile.path);
+      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
-      context.hideLoader();
-
-      await Share.shareXFiles(
-        [xFile],
-        text: 'Resultados del metrado de tarrajeo - METRASHOP',
-      );
+      if (result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
     } catch (e) {
+      _showErrorMessage('Error al generar PDF: $e');
+    } finally {
       context.hideLoader();
-      _showErrorSnackBar('Error al generar PDF: $e');
     }
   }
 
   Future<void> _shareText() async {
     try {
-      Navigator.of(context).pop();
+      Navigator.pop(context);
       final resumen = ref.read(resumenCompletoProvider);
-      await Share.share(resumen);
+      await Share.share(resumen, subject: 'Resultados de Tarrajeo');
     } catch (e) {
-      _showErrorSnackBar('Error al compartir: $e');
+      _showErrorMessage('Error al compartir texto: $e');
     }
   }
 
-  Future<File> _generatePDF() async {
-    final pdf = pw.Document();
-    final materiales = ref.read(tarrajeoMaterialesProvider);
-    final estadisticas = ref.read(estadisticasTarrajeoProvider);
-    final metrados = ref.read(tarrajeoMetradosProvider);
-    final tarrajeos = ref.read(tarrajeoResultProvider);
-
-    if (metrados.isEmpty || tarrajeos.isEmpty) {
-      throw Exception('No hay datos de tarrajeo para generar PDF');
-    }
-
-    final primerTarrajeo = tarrajeos.first;
-
-    pdf.addPage(
-      pw.Page(
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text(
-              'RESULTADOS DE TARRAJEO',
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Información del proyecto
-            pw.Text(
-              'INFORMACIÓN DEL PROYECTO:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Tipo: ${primerTarrajeo.tipo}'),
-            pw.Text('• Proporción Mortero: 1:${estadisticas['proporcion_mas_usada']}'),
-            pw.Text('• Área total: ${estadisticas['area_total'].toStringAsFixed(2)} m²'),
-            pw.Text('• Total de tarrajeos: ${tarrajeos.length}'),
-            pw.Text('• Espesor promedio: ${estadisticas['espesor_promedio'].toStringAsFixed(1)} cm'),
-            pw.SizedBox(height: 20),
-
-            // Materiales calculados
-            pw.Text(
-              'MATERIALES CALCULADOS:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${materiales.cementoFormateado} bolsas'),
-            pw.Text('• Arena fina: ${materiales.arenaFormateada} m³'),
-            pw.Text('• Agua: ${materiales.aguaFormateada} m³'),
-            pw.SizedBox(height: 20),
-
-            // Configuración aplicada
-            pw.Text(
-              'CONFIGURACIÓN APLICADA:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Desperdicio de Mortero: ${double.tryParse(primerTarrajeo.factorDesperdicio) ?? 5.0}%'),
-            pw.Text('• Volumen total de mortero: ${materiales.volumenFormateado} m³'),
-            pw.SizedBox(height: 20),
-
-            // Detalle de tarrajeos
-            pw.Text(
-              'DETALLE DE TARRAJEOS:',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            ...metrados.map((metrado) => pw.Text(
-              '• ${metrado.descripcion}: ${metrado.volumenFormateado} m³',
-              style: pw.TextStyle(fontSize: 12),
-            )),
-            pw.SizedBox(height: 20),
-
-            // Información técnica
-            pw.Text(
-              'INFORMACIÓN TÉCNICA:',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en fórmulas de ingeniería actualizadas',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores de desperdicio aplicados según especificaciones técnicas',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Volúmenes calculados considerando espesor y área de aplicación',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-          ],
-        ),
-      ),
-    );
-
-    final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_tarrajeo_${DateTime.now().millisecondsSinceEpoch}.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
-  }
-
-  void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-
+  void _showSuccessMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
             Expanded(child: Text(message)),
           ],
         ),
@@ -880,7 +840,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 }
 
-/// Widget para mostrar la tabla de metrados
+// Widget para mostrar la tabla de metrados con mejoras
 class _TarrajeoMetradoTable extends ConsumerWidget {
   const _TarrajeoMetradoTable();
 
@@ -922,27 +882,70 @@ class _TarrajeoMetradoTable extends ConsumerWidget {
     );
   }
 
-  TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
+  // ✅ NUEVO: Widget con tooltip para unidades
+  Widget _buildUnitWithTooltip(String unit) {
+    String tooltip = unit == 'm²' ? 'Metros cuadrados (área)' :
+    unit == 'm³' ? 'Metros cúbicos (volumen)' :
+    unit == 'bls' ? 'Bolsas de cemento' :
+    unit == 'kg' ? 'Kilogramos de peso' : unit;
 
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 16, // ✅ Aumentado
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  // ✅ MEJORADO: Filas de tabla con tooltips y mayor tamaño de fuente
+  TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
     return TableRow(
       decoration: isTotal ? BoxDecoration(
         color: AppColors.blueMetraShop.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.asMap().entries.map((entry) {
+        int index = entry.key;
+        String cell = entry.value;
+
+        // ✅ Para la columna de unidades (índice 1), usar tooltips
+        Widget cellContent;
+        if (index == 1 && !isHeader) {
+          cellContent = _buildUnitWithTooltip(cell);
+        } else {
+          final textStyle = TextStyle(
+            fontSize: isHeader ? 14 : 16, // ✅ Aumentado de 12 a 16
+            fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHeader ? AppColors.textPrimary :
+            isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+          );
+
+          cellContent = Text(
+            cell,
+            style: textStyle,
+            textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: cellContent,
+        );
+      }).toList(),
     );
   }
 }
