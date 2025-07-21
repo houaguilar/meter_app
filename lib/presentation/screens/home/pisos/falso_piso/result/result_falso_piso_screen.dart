@@ -125,13 +125,13 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           const SizedBox(height: 10),
           _buildSuccessIcon(),
           const SizedBox(height: 20),
- //         _buildProjectSummaryCard(materials, falsosPisos),
- //         const SizedBox(height: 20),
           _buildMetradoDataCard(falsosPisos),
           const SizedBox(height: 20),
           _buildMaterialsCard(materials),
           const SizedBox(height: 20),
           _buildConfigurationCard(falsosPisos),
+          const SizedBox(height: 20),
+          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
           const SizedBox(height: 120),
         ],
       ),
@@ -218,25 +218,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     );
   }
 
-  Widget _buildProjectSummaryCard(FalsoPisoMaterials materials, List<Piso> pisos) {
-    return _buildModernCard(
-      title: 'Resumen del Proyecto',
-      icon: Icons.summarize_outlined,
-      iconColor: AppColors.blueMetraShop,
-      child: Column(
-        children: [
-          _buildSummaryRow('Área Total', '${materials.areaTotalFormateada} m²'),  // ✅ Cambio: Volumen → Área
-          const SizedBox(height: 12),
-          _buildSummaryRow('Total de Áreas', '${pisos.length}'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Tipo de Piso', 'Falso Piso'),
-          const SizedBox(height: 12),
-          _buildSummaryRow('Resistencia', _getResistencia(pisos)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMetradoDataCard(List<Piso> pisos) {
     return _buildModernCard(
       title: 'Datos del Metrado',
@@ -258,8 +239,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       child: Column(
         children: [
           _buildMaterialTable(materials),
-//          const SizedBox(height: 16),
- //         _buildMaterialChips(materials),
         ],
       ),
     );
@@ -269,8 +248,9 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     if (pisos.isEmpty) return const SizedBox.shrink();
 
     final primerPiso = pisos.first;
-    final desperdicio = double.tryParse(primerPiso.factorDesperdicio) ?? 5.0;
     final espesor = double.tryParse(primerPiso.espesor) ?? 5.0;
+    final desperdicio = double.tryParse(primerPiso.factorDesperdicio) ?? 5.0;
+    final resistencia = primerPiso.resistencia ?? '175 kg/cm²';
 
     return _buildModernCard(
       title: 'Configuración Aplicada',
@@ -278,13 +258,89 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       iconColor: AppColors.warning,
       child: Column(
         children: [
-          _buildConfigRow('Desperdicio Aplicado', '${desperdicio.toStringAsFixed(1)}%'),
+          _buildConfigRow('Espesor', '${espesor.toStringAsFixed(1)} cm'),
           const SizedBox(height: 12),
-          _buildConfigRow('Espesor Promedio', '${espesor.toStringAsFixed(1)} cm'),
+          _buildConfigRow('Factor de Desperdicio', '${desperdicio.toStringAsFixed(1)}%'),
           const SizedBox(height: 12),
-          _buildConfigRow('Resistencia Concreto', primerPiso.resistencia ?? '175 kg/cm²'),
+          _buildConfigRow('Resistencia del Concreto', resistencia),
         ],
       ),
+    );
+  }
+
+  // ✅ NUEVA SECCIÓN: Leyenda de unidades
+  Widget _buildLegend() {
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: AppColors.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Leyenda de Unidades:',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
+          const SizedBox(height: 8),
+          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
+          const SizedBox(height: 8),
+          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
+        ],
+      ),
+    );
+  }
+
+  // ✅ NUEVO: Widget para cada item de la leyenda
+  Widget _buildLegendItem(String unit, String description) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            unit,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            description,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -295,20 +351,15 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     required Widget child,
   }) {
     return Container(
-      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 0),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
-          width: 1,
-        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 1,
-            offset: const Offset(0, 4),
+            color: AppColors.neutral200.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -318,7 +369,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withOpacity(0.2),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -359,6 +410,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     );
   }
 
+  // ✅ MEJORADO: Fila de resumen con mayor tamaño de fuente
   Widget _buildSummaryRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -373,7 +425,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
         Text(
           value,
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 16, // ✅ Aumentado de 14 a 16
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
           ),
@@ -413,7 +465,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   }
 
   Widget _buildDataTable(List<Piso> pisos) {
-    final areas = ref.watch(areaFalsoPisoProvider);  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
+    final areas = ref.watch(areaFalsoPisoProvider);
 
     return Table(
       columnWidths: const {
@@ -422,21 +474,21 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
         2: FlexColumnWidth(1.5),
       },
       children: [
-        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),  // ✅ Cambio: Volumen → Área
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),
         ...pisos.asMap().entries.map((entry) {
           final index = entry.key;
           final piso = entry.value;
-          final area = index < areas.length ? areas[index] : 0.0;  // ✅ Cambio: volumen → area
+          final area = index < areas.length ? areas[index] : 0.0;
           return _buildTableRow([
             piso.description,
-            'm²',  // ✅ Cambio: m³ → m²
-            area.toStringAsFixed(2),  // ✅ Cambio: volumen → area
+            'm²',
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
           'Total:',
-          'm²',  // ✅ Cambio: m³ → m²
-          ref.watch(falsoPisoMaterialsProvider).areaTotalFormateada,  // ✅ Cambio: volumenTotal → areaTotalFormateada
+          'm²',
+          ref.watch(falsoPisoMaterialsProvider).areaTotalFormateada,
         ], isTotal: true),
       ],
     );
@@ -451,81 +503,77 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       },
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'Bls', materials.cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', materials.arena.toStringAsFixed(2)]),
-        _buildTableRow(['Piedra chancada', 'm³', materials.piedra.toStringAsFixed(2)]),
-        _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
+        _buildTableRow(['Cemento', 'bls', materials.cementoBolsas.toString()]),
+        _buildTableRow(['Arena gruesa', 'm³', materials.arenaFormateada]),
+        _buildTableRow(['Piedra chancada', 'm³', materials.piedraFormateada]),
+        _buildTableRow(['Agua', 'm³', materials.aguaFormateada]),
       ],
     );
   }
 
-  Widget _buildMaterialChips(FalsoPisoMaterials materials) {
-    final materialsList = [
-      {'icon': Icons.inventory, 'label': 'Cemento', 'value': '${materials.cemento.ceil()} bls', 'color': AppColors.secondary},
-      {'icon': Icons.grain, 'label': 'Arena', 'value': '${materials.arena.toStringAsFixed(2)} m³', 'color': AppColors.warning},
-      {'icon': Icons.landscape, 'label': 'Piedra', 'value': '${materials.piedra.toStringAsFixed(2)} m³', 'color': AppColors.neutral600},
-      {'icon': Icons.water_drop, 'label': 'Agua', 'value': '${materials.agua.toStringAsFixed(2)} m³', 'color': AppColors.info},
-    ];
+  // ✅ NUEVO: Widget con tooltip para unidades
+  Widget _buildUnitWithTooltip(String unit) {
+    String tooltip = unit == 'm²' ? 'Metros cuadrados (área)' :
+    unit == 'm³' ? 'Metros cúbicos (volumen)' :
+    unit == 'bls' ? 'Bolsas de cemento' : unit;
 
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: materialsList.map((material) {
-        return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: (material['color'] as Color).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: (material['color'] as Color).withOpacity(0.3),
-              width: 1,
-            ),
+    return Tooltip(
+      message: tooltip,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.primary.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        ),
+        child: Text(
+          unit,
+          style: const TextStyle(
+            fontSize: 16, // ✅ Aumentado
+            fontWeight: FontWeight.bold,
+            color: AppColors.primary,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                material['icon'] as IconData,
-                size: 16,
-                color: material['color'] as Color,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                material['value'] as String,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: material['color'] as Color,
-                ),
-              ),
-            ],
-          ),
-        );
-      }).toList(),
+          textAlign: TextAlign.center,
+        ),
+      ),
     );
   }
 
+  // ✅ MEJORADO: Filas de tabla con tooltips y mayor tamaño de fuente
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
-    final textStyle = TextStyle(
-      fontSize: isHeader ? 14 : 12,
-      fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
-      color: isHeader ? AppColors.textPrimary :
-      isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
-    );
-
     return TableRow(
       decoration: isTotal ? BoxDecoration(
         color: AppColors.blueMetraShop.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
-      children: cells.map((cell) => Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Text(
-          cell,
-          style: textStyle,
-          textAlign: cells.indexOf(cell) == 0 ? TextAlign.left : TextAlign.center,
-        ),
-      )).toList(),
+      children: cells.asMap().entries.map((entry) {
+        int index = entry.key;
+        String cell = entry.value;
+
+        // ✅ Para la columna de unidades (índice 1), usar tooltips
+        Widget cellContent;
+        if (index == 1 && !isHeader) {
+          cellContent = _buildUnitWithTooltip(cell);
+        } else {
+          final textStyle = TextStyle(
+            fontSize: isHeader ? 14 : 16, // ✅ Aumentado de 12 a 16
+            fontWeight: isHeader || isTotal ? FontWeight.bold : FontWeight.normal,
+            color: isHeader ? AppColors.textPrimary :
+            isTotal ? AppColors.blueMetraShop : AppColors.textSecondary,
+          );
+
+          cellContent = Text(
+            cell,
+            style: textStyle,
+            textAlign: index == 0 ? TextAlign.left : TextAlign.center,
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: cellContent,
+        );
+      }).toList(),
     );
   }
 
@@ -553,7 +601,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Botones de acción principales en fila
               Row(
                 children: [
                   Expanded(
@@ -590,7 +637,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
                 ],
               ),
               const SizedBox(height: 12),
-              // Botón principal de proveedores
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -723,7 +769,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
               ),
             ),
           ),
-          const SizedBox(height: 8),
         ],
       ),
     );
@@ -735,17 +780,15 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           children: [
@@ -754,9 +797,11 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
             Text(
               label,
               style: TextStyle(
-                color: color,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: color,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -832,129 +877,12 @@ Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}''';
 • Desperdicio: ${double.tryParse(primer.factorDesperdicio) ?? 5.0}%''';
   }
 
-  Future<File> _generatePDF() async {
-    final pdf = pw.Document();
-    final falsosPisos = ref.watch(falsoPisoResultProvider);
-    final materials = ref.watch(falsoPisoMaterialsProvider);
-
-    if (falsosPisos.isEmpty) {
-      throw Exception('No hay datos de falso piso para generar PDF');
-    }
-
-    final primerPiso = falsosPisos.first;
-
-    pdf.addPage(
-      pw.Page(
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Título
-            pw.Text(
-              'RESULTADOS DE FALSO PISO',
-              style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 20),
-
-            // Información del proyecto
-            pw.Text(
-              'INFORMACIÓN DEL PROYECTO:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Tipo: Falso Piso'),
-            pw.Text('• Resistencia: ${primerPiso.resistencia ?? '175 kg/cm²'}'),
-            pw.Text('• Espesor: ${double.tryParse(primerPiso.espesor) ?? 5.0} cm'),
-            pw.Text('• Volumen total: ${materials.volumenTotal.toStringAsFixed(2)} m³'),
-            pw.Text('• Total de áreas: ${falsosPisos.length}'),
-            pw.SizedBox(height: 20),
-
-            // Materiales calculados
-            pw.Text(
-              'MATERIALES CALCULADOS:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Cemento: ${materials.cemento.ceil()} bolsas'),
-            pw.Text('• Arena gruesa: ${materials.arena.toStringAsFixed(2)} m³'),
-            pw.Text('• Piedra chancada: ${materials.piedra.toStringAsFixed(2)} m³'),
-            pw.Text('• Agua: ${materials.agua.toStringAsFixed(2)} m³'),
-            pw.SizedBox(height: 20),
-
-            // Configuración aplicada
-            pw.Text(
-              'CONFIGURACIÓN APLICADA:',
-              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 10),
-            pw.Text('• Desperdicio aplicado: ${double.tryParse(primerPiso.factorDesperdicio) ?? 5.0}%'),
-            pw.SizedBox(height: 20),
-
-            // Detalle de áreas
-            pw.Text(
-              'DETALLE DE ÁREAS:',
-              style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            ...falsosPisos.map((piso) {
-              final volumen = _calcularAreaPiso(piso);
-              return pw.Text(
-                '• ${piso.description}: ${volumen.toStringAsFixed(2)} m³',
-                style: pw.TextStyle(fontSize: 12),
-              );
-            }),
-            pw.SizedBox(height: 20),
-
-            // Información técnica
-            pw.Text(
-              'INFORMACIÓN TÉCNICA:',
-              style: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold),
-            ),
-            pw.SizedBox(height: 5),
-            pw.Text('• Cálculos basados en factores de resistencia del concreto',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factores aplicados según resistencia seleccionada',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Factor de desperdicio aplicado de forma independiente',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-            pw.Text('• Generado por METRASHOP - ${DateTime.now().toString().split(' ')[0]}',
-                style: pw.TextStyle(fontSize: 10, fontStyle: pw.FontStyle.italic)),
-          ],
-        ),
-      ),
-    );
-
-    final output = await getTemporaryDirectory();
-    final file = File('${output.path}/resultados_falso_piso_${DateTime.now().millisecondsSinceEpoch}.pdf');
-    await file.writeAsBytes(await pdf.save());
-    return file;
-  }
-
-  double _calcularAreaPiso(Piso piso) {
-    if (piso.area != null && piso.area!.isNotEmpty) {
-      return double.tryParse(piso.area!) ?? 0.0;
-    } else {
-      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho;
-    }
-  }
-
   void _showErrorSnackBar(String message) {
-    if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 12),
-            Expanded(child: Text(message)),
-          ],
-        ),
+        content: Text(message),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
       ),
     );
   }

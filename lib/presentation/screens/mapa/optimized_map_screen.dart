@@ -133,14 +133,14 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
           // FAB de ubicación
           Positioned(
-            bottom: 280,
+            bottom: 310,
             right: 16,
             child: _buildEnhancedLocationFAB(),
           ),
 
           // Carrusel de proveedores (SIN expandir/colapsar)
           Positioned(
-            bottom: 0,
+            bottom: 15,
             left: 0,
             right: 0,
             child: _buildProvidersCarousel(),
@@ -610,13 +610,13 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
         if (screenHeight <= 667) {
           // iPhone SE, iPhone 8 y pantallas pequeñas
-          carouselHeight = 240;
+          carouselHeight = 270;
         } else if (screenHeight <= 736) {
           // iPhone 8 Plus
-          carouselHeight = 250;
+          carouselHeight = 270;
         } else if (screenHeight <= 812) {
           // iPhone X, iPhone 11 Pro
-          carouselHeight = 260;
+          carouselHeight = 280;
         } else {
           // Pantallas más grandes
           carouselHeight = 280;
@@ -752,7 +752,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         final cardWidth = constraints.maxWidth;
 
         // Altura dinámica para la imagen basada en el tamaño de la tarjeta
-        final imageHeight = (cardHeight * 0.55).clamp(120.0, 160.0);
+        final imageHeight = (cardHeight * 0.30).clamp(120.0, 160.0);
 
         return Container(
           decoration: BoxDecoration(

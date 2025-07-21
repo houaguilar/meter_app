@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:country_state_city_pro/country_state_city_pro.dart'; // Librería actualizada y estable
+import 'package:country_state_city_pro/country_state_city_pro.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import '../../../../config/theme/theme.dart';
 
@@ -16,7 +16,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _employmentController;
-  late TextEditingController _districtController; // Mantenemos distrito por separado
+  late TextEditingController _districtController;
 
   // Controllers para country_state_city_pro
   final TextEditingController _countryController = TextEditingController();
@@ -47,13 +47,27 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _setupListeners();
   }
 
+  // =============== AGREGADO: Para refrescar cuando vuelves a la pantalla ===============
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _refreshControllersFromBlocState();
+  }
+
+  void _refreshControllersFromBlocState() {
+    final state = context.read<ProfileBloc>().state;
+    if (state is ProfileLoaded) {
+      _populateControllers(state.userProfile);
+    }
+  }
+  // ==================================================================================
+
   void _initializeControllers() {
     _nameController = TextEditingController();
     _phoneController = TextEditingController();
     _employmentController = TextEditingController();
     _districtController = TextEditingController();
 
-    // Initialize from bloc state if available
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
       _populateControllers(state.userProfile);
@@ -61,15 +75,29 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _populateControllers(dynamic profile) {
-    _nameController.text = profile.name ?? '';
-    _phoneController.text = profile.phone ?? '';
-    _employmentController.text = profile.employment ?? '';
-    _districtController.text = profile.district ?? '';
-
-    // Inicializar valores de ubicación
-    _countryController.text = profile.nationality ?? '';
-    _stateController.text = profile.province ?? '';
-    _cityController.text = profile.city ?? '';
+    // =============== MEJORADO: Solo actualizar si es diferente ===============
+    if (_nameController.text != (profile.name ?? '')) {
+      _nameController.text = profile.name ?? '';
+    }
+    if (_phoneController.text != (profile.phone ?? '')) {
+      _phoneController.text = profile.phone ?? '';
+    }
+    if (_employmentController.text != (profile.employment ?? '')) {
+      _employmentController.text = profile.employment ?? '';
+    }
+    if (_districtController.text != (profile.district ?? '')) {
+      _districtController.text = profile.district ?? '';
+    }
+    if (_countryController.text != (profile.nationality ?? '')) {
+      _countryController.text = profile.nationality ?? '';
+    }
+    if (_stateController.text != (profile.province ?? '')) {
+      _stateController.text = profile.province ?? '';
+    }
+    if (_cityController.text != (profile.city ?? '')) {
+      _cityController.text = profile.city ?? '';
+    }
+    // =========================================================================
   }
 
   void _setupListeners() {
@@ -107,119 +135,123 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _saveChanges() {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      final profileBloc = context.read<ProfileBloc>();
-
-      // Update profile con los valores de los controllers
-      profileBloc.add(UpdateProfile(
-        name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
-        phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-        employment: _employmentController.text.trim().isNotEmpty && _employmentController.text.trim() != 'Seleccione una ocupación'
-            ? _employmentController.text.trim() : null,
-        nationality: _countryController.text.trim().isNotEmpty ? _countryController.text.trim() : null,
-        province: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
-        city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
-        district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
-      ));
-
-      setState(() {
-        _formChanged = false;
-        _isLoading = false;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Perfil actualizado correctamente'),
-          backgroundColor: AppColors.success,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _discardChanges() {
+    // =============== QUITADO: Validación obligatoria ===============
+    // No validamos el formulario para que los campos sean opcionales
     setState(() {
-      _formChanged = false;
+      _isLoading = true;
     });
 
-    // Restaurar valores originales
+    final profileBloc = context.read<ProfileBloc>();
+
+    profileBloc.add(UpdateProfile(
+      name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
+      phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
+      employment: _employmentController.text.trim().isNotEmpty && _employmentController.text.trim() != 'Seleccione una ocupación'
+          ? _employmentController.text.trim() : null,
+      nationality: _countryController.text.trim().isNotEmpty ? _countryController.text.trim() : null,
+      province: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
+      city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
+      district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
+    ));
+
+    setState(() {
+      _isLoading = false;
+      _formChanged = false;
+    });
+  }
+
+  // =============== AGREGADO: Método para descartar cambios ===============
+  void _discardChanges() {
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
       _populateControllers(state.userProfile);
+      setState(() {
+        _formChanged = false;
+      });
     }
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Cambios descartados'),
-        backgroundColor: AppColors.neutral600,
-        behavior: SnackBarBehavior.floating,
+  // =============== AGREGADO: Confirmación al salir ===============
+  Future<bool> _onWillPop() async {
+    if (!_formChanged) return true;
+
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('¿Salir sin guardar?'),
+        content: Text('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('Salir sin guardar'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+          ),
+        ],
       ),
     );
+
+    return shouldPop ?? false;
   }
+  // =====================================================================
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ProfileBloc, ProfileState>(
-      listener: (context, state) {
-        if (state is ProfileLoaded) {
-          setState(() {
-            _isLoading = false;
-          });
-        } else if (state is ProfileError) {
-          setState(() {
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.message),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
+    // =============== AGREGADO: WillPopScope para confirmación ===============
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: BlocListener<ProfileBloc, ProfileState>(
+        listener: (context, state) {
+          if (state is ProfileLoaded) {
+            _populateControllers(state.userProfile);
+          }
+        },
+        child: Scaffold(
+          backgroundColor: AppColors.background,
+          body: Form(
+            key: _formKey,
+            child: SingleChildScrollView(
+              padding: EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSectionHeader(
+                    'Información Personal',
+                    'Completa tu perfil para una mejor experiencia',
+                    Icons.person_outline_rounded,
+                  ),
+                  SizedBox(height: 24),
+                  _buildPersonalInfoSection(),
+                  SizedBox(height: 32),
+                  _buildSectionHeader(
+                    'Información Profesional',
+                    'Detalles sobre tu actividad laboral',
+                    Icons.work_outline_rounded,
+                  ),
+                  SizedBox(height: 24),
+                  _buildProfessionalInfoSection(),
+                  SizedBox(height: 32),
+                  _buildSectionHeader(
+                    'Ubicación',
+                    'Selecciona tu ubicación paso a paso',
+                    Icons.location_on_outlined,
+                  ),
+                  SizedBox(height: 24),
+                  _buildLocationSectionWithCountryStateCityPro(),
+                  SizedBox(height: 40),
+                  _buildActionButtons(),
+                  SizedBox(height: 32),
+                ],
+              ),
             ),
-          );
-        }
-      },
-      child: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildSectionHeader(
-                'Información Personal',
-                'Completa tu perfil para una mejor experiencia',
-                Icons.person_outline_rounded,
-              ),
-              SizedBox(height: 24),
-              _buildPersonalInfoSection(),
-              SizedBox(height: 32),
-              _buildSectionHeader(
-                'Información Profesional',
-                'Detalles sobre tu actividad laboral',
-                Icons.work_outline_rounded,
-              ),
-              SizedBox(height: 24),
-              _buildProfessionalInfoSection(),
-              SizedBox(height: 32),
-              _buildSectionHeader(
-                'Ubicación',
-                'Selecciona tu ubicación paso a paso',
-                Icons.location_on_outlined,
-              ),
-              SizedBox(height: 24),
-              _buildLocationSectionWithCountryStateCityPro(), // Nueva sección actualizada
-              SizedBox(height: 40),
-              _buildActionButtons(),
-              SizedBox(height: 32),
-            ],
           ),
         ),
       ),
     );
+    // ===================================================================
   }
 
   Widget _buildSectionHeader(String title, String subtitle, IconData icon) {
@@ -248,7 +280,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             child: Icon(
               icon,
               color: AppColors.primary,
-              size: 20,
+              size: 24,
             ),
           ),
           SizedBox(width: 16),
@@ -259,7 +291,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                 Text(
                   title,
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
@@ -268,7 +300,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                 Text(
                   subtitle,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 14,
                     color: AppColors.textSecondary,
                   ),
                 ),
@@ -299,34 +331,19 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         children: [
           _buildTextFormField(
             controller: _nameController,
-            label: 'Nombre Completo',
+            label: 'Nombre completo',
             hint: 'Ingresa tu nombre completo',
             icon: Icons.person_outline_rounded,
-            validator: (value) {
-              if (value == null || value.trim().isEmpty) {
-                return 'El nombre es requerido';
-              }
-              if (value.trim().length < 2) {
-                return 'Ingresa un nombre válido';
-              }
-              return null;
-            },
+            // =============== QUITADO: validator obligatorio ===============
           ),
           SizedBox(height: 20),
           _buildTextFormField(
             controller: _phoneController,
             label: 'Teléfono',
-            hint: 'Ejemplo: +51 987 654 321',
+            hint: 'Ingresa tu número de teléfono',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
-            validator: (value) {
-              if (value != null && value.isNotEmpty) {
-                if (value.trim().length < 8) {
-                  return 'Ingresa un número de teléfono válido';
-                }
-              }
-              return null;
-            },
+            // =============== QUITADO: validator obligatorio ===============
           ),
         ],
       ),
@@ -351,7 +368,8 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       child: Column(
         children: [
           _buildDropdownField(
-            value: _employmentController.text.isEmpty ? _occupations.first : _employmentController.text,
+            value: _employmentController.text.isEmpty || !_occupations.contains(_employmentController.text)
+                ? _occupations.first : _employmentController.text,
             items: _occupations,
             label: 'Ocupación',
             icon: Icons.work_outline_rounded,
@@ -367,7 +385,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     );
   }
 
-  // Nueva sección de ubicación con country_state_city_pro
   Widget _buildLocationSectionWithCountryStateCityPro() {
     return Container(
       padding: EdgeInsets.all(20),
@@ -385,16 +402,12 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       ),
       child: Column(
         children: [
-          // CountryStateCityPicker Widget - MÁS ESTABLE
+          // =============== CORREGIDO: Sin parámetros que no existen en v0.0.6 ===============
           CountryStateCityPicker(
             country: _countryController,
             state: _stateController,
             city: _cityController,
-
-            // Color del diálogo de selección
             dialogColor: AppColors.surface,
-
-            // Decoración personalizada de los campos
             textFieldDecoration: InputDecoration(
               fillColor: AppColors.neutral50,
               filled: true,
@@ -436,64 +449,15 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               ),
             ),
           ),
+          // ===============================================================================
 
           SizedBox(height: 20),
 
-          // Campo adicional para distrito
           _buildTextFormField(
             controller: _districtController,
             label: 'Distrito',
-            hint: 'Ejemplo: Miraflores, San Isidro, Surco',
-            icon: Icons.place_outlined,
-          ),
-
-          SizedBox(height: 16),
-
-          // Información adicional
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.info.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: AppColors.info.withOpacity(0.3),
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 16,
-                  color: AppColors.info,
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Funcionalidad de búsqueda',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.info,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Toca cada campo para seleccionar. Puedes buscar escribiendo el nombre. Si no encuentras tu ciudad, puedes escribirla manualmente.',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.info,
-                          height: 1.3,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            hint: 'Ingresa tu distrito',
+            icon: Icons.location_city_outlined,
           ),
         ],
       ),
@@ -565,12 +529,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         );
       }).toList(),
       onChanged: onChanged,
-      validator: (value) {
-        if (value == null || value == items.first) {
-          return 'Por favor selecciona una opción';
-        }
-        return null;
-      },
+      // =============== QUITADO: validator obligatorio ===============
     );
   }
 
@@ -626,8 +585,8 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             child: OutlinedButton(
               onPressed: _isLoading ? null : _discardChanges,
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.textSecondary,
-                side: BorderSide(color: AppColors.border.withOpacity(0.5)),
+                foregroundColor: AppColors.error,
+                side: BorderSide(color: AppColors.error),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -635,10 +594,10 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.refresh_outlined, size: 18),
+                  Icon(Icons.restore_outlined, size: 18),
                   SizedBox(width: 8),
                   Text(
-                    'Descartar Cambios',
+                    'Descartar cambios',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -646,38 +605,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-
-        // Indicador visual de estado
-        if (_formChanged) ...[
-          SizedBox(height: 16),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: AppColors.warning.withOpacity(0.3)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.edit_outlined,
-                  size: 16,
-                  color: AppColors.warning,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'Hay cambios sin guardar',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
             ),
           ),
         ],

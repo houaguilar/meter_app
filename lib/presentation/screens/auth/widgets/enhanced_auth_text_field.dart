@@ -1,4 +1,4 @@
-// lib/presentation/widgets/auth/enhanced_auth_text_field.dart
+// lib/presentation/screens/auth/widgets/enhanced_auth_text_field.dart
 import 'dart:ffi';
 
 import 'package:flutter/material.dart';
@@ -139,6 +139,19 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // SOLUCIÓN: Label EXTERNO para evitar el problema del texto "tachado"
+        Text(
+          widget.label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: widget.focusNode.hasFocus
+                ? AppColors.secondary // Cambiar a secondary como RegisterScreen
+                : AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 8),
+
         // Campo de texto principal con animación
         AnimatedBuilder(
           animation: _focusAnimation,
@@ -149,15 +162,11 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _getBorderColor(),
-                    width: widget.focusNode.hasFocus ? 2 : 1,
-                  ),
                   color: widget.enabled ? AppColors.white : AppColors.textSecondary.withOpacity(0.1),
                   boxShadow: widget.focusNode.hasFocus
                       ? [
                     BoxShadow(
-                      color: _getBorderColor().withOpacity(0.2),
+                      color: AppColors.secondary.withOpacity(0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -182,22 +191,53 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                     color: widget.enabled ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
                   decoration: InputDecoration(
-                    labelText: widget.label,
+                    // NO usar labelText - esto causa el problema del texto "tachado"
                     hintText: widget.hint,
                     prefixIcon: Icon(
                       widget.prefixIcon,
                       color: _getIconColor(),
                     ),
                     suffixIcon: _buildSuffixIcon(),
-                    border: InputBorder.none,
+                    filled: true,
+                    fillColor: Colors.transparent, // Transparente para usar el color del Container
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: AppColors.textSecondary.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide(
+                        color: _getBorderColor(),
+                        width: 1,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppColors.secondary, // Mismo color que RegisterScreen
+                        width: 2,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppColors.error,
+                        width: 2,
+                      ),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppColors.error,
+                        width: 2,
+                      ),
+                    ),
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 16,
-                    ),
-                    labelStyle: TextStyle(
-                      color: widget.focusNode.hasFocus
-                          ? _getBorderColor()
-                          : AppColors.textSecondary,
                     ),
                     hintStyle: TextStyle(
                       color: AppColors.textSecondary.withOpacity(0.6),
@@ -400,11 +440,8 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
   }
 
   Widget _buildPasswordSuggestions() {
-    final suggestions = Validators.getPasswordSuggestions(_passwordResult!);
-    if (suggestions.isEmpty) return const SizedBox.shrink();
-
     return Container(
-      margin: const EdgeInsets.only(top: 12),
+      margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.warning.withOpacity(0.1),
@@ -413,38 +450,24 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
           color: AppColors.warning.withOpacity(0.3),
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.lightbulb_outline,
-                size: 16,
-                color: AppColors.warning,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Sugerencias:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.warning,
-                ),
-              ),
-            ],
+          Icon(
+            Icons.lightbulb_outline,
+            size: 16,
+            color: AppColors.warning,
           ),
-          const SizedBox(height: 6),
-          ...suggestions.take(3).map((suggestion) => Padding(
-            padding: const EdgeInsets.only(bottom: 2),
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
-              '• $suggestion',
+              'Sugerencia: Combina letras, números y símbolos para mayor seguridad',
               style: TextStyle(
                 fontSize: 11,
-                color: AppColors.warning.withOpacity(0.8),
+                color: AppColors.warning,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -486,10 +509,6 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
       return AppColors.textSecondary.withOpacity(0.3);
     }
 
-    if (widget.focusNode.hasFocus) {
-      return AppColors.primary;
-    }
-
     if (_validationResult?.isValid == true && widget.controller.text.isNotEmpty) {
       return AppColors.success;
     }
@@ -507,7 +526,7 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
     }
 
     if (widget.focusNode.hasFocus) {
-      return AppColors.primary;
+      return AppColors.secondary; // Cambiar a secondary como en RegisterScreen
     }
 
     if (_validationResult?.isValid == true && widget.controller.text.isNotEmpty) {
