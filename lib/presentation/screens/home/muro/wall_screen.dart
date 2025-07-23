@@ -98,7 +98,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
     return WallMaterialCard(
       wallMaterial: material,
       onTap: () => _handleMaterialSelection(material),
-      enabled: true,
+      enabled: _isMaterialAvailable(material.id),
     );
   }
 
@@ -130,6 +130,12 @@ class _WallScreenState extends ConsumerState<WallScreen>
     try {
       final materialType = _getMaterialType(material.id);
       print('🔧 Estableciendo tipo: "$materialType"'); // Debug
+
+      if (material.id == 'custom') {
+        context.pushNamed('custom-brick-config');
+        return;
+      }
+
       ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
 
       final verificacion = ref.read(tipoLadrilloProvider);
@@ -152,7 +158,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
 
   /// Determina si un material está disponible
   bool _isMaterialAvailable(String materialId) {
-    const availableIds = ['1', '2', '3', '4']; // Panderetas y King Kong
+    const availableIds = ['1', '2', '3', '4', 'custom']; // Panderetas y King Kong
     return availableIds.contains(materialId);
   }
 
@@ -167,6 +173,8 @@ class _WallScreenState extends ConsumerState<WallScreen>
         return 'Kingkong1';
       case '4':
         return 'Kingkong2';
+      case 'custom':
+        return 'Custom';
       default:
         return 'Pandereta1';
     }
@@ -257,7 +265,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
 extension WallMaterialUI on WallMaterial {
   /// Determina si el material está disponible
   bool get isAvailable {
-    const availableIds = ['1', '2', '3', '4'];
+    const availableIds = ['1', '2', '3', '4', 'custom'];
     return availableIds.contains(id);
   }
 

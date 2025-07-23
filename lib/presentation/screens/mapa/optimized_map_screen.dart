@@ -442,110 +442,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     }
   }
 
-  // BOTTOM SHEET DE UBICACIÓN
-  void _showLocationBottomSheet(LocationMap location) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => _buildLocationBottomSheet(location),
-    );
-  }
-
-  Widget _buildLocationBottomSheet(LocationMap location) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.5,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
-          // Handle superior
-          Container(
-            margin: const EdgeInsets.only(top: 12),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.neutral300,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          // Contenido
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  location.title,
-                  style: AppTypography.h3.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.location_on,
-                      size: 16,
-                      color: AppColors.neutral500,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        '${location.latitude.toStringAsFixed(6)}, ${location.longitude.toStringAsFixed(6)}',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.neutral500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (location.imageUrl != null)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        location.imageUrl!,
-                        height: 200,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            height: 200,
-                            color: AppColors.neutral100,
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 64,
-                              color: AppColors.neutral400,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  const SizedBox(height: 16),
-                  Text(
-                    location.description ?? 'Sin descripción disponible',
-                    style: AppTypography.bodyMedium,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // FAB MEJORADO CON ESTADOS VISUALES
   Widget _buildEnhancedLocationFAB() {
     return Hero(
@@ -752,7 +648,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         final cardWidth = constraints.maxWidth;
 
         // Altura dinámica para la imagen basada en el tamaño de la tarjeta
-        final imageHeight = (cardHeight * 0.30).clamp(120.0, 160.0);
+        final imageHeight = (cardHeight * 0.35).clamp(70.0, 160.0);
 
         return Container(
           decoration: BoxDecoration(

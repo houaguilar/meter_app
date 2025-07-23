@@ -8,6 +8,7 @@ import 'package:meter_app/presentation/screens/articles/article_detail_screen.da
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
+import 'package:meter_app/presentation/screens/home/muro/ladrillo/custom_brick_config_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/datos/datos_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/result_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
@@ -140,7 +141,14 @@ class AppRouter {
                 name: 'muro',
                 builder: (context, state) => const WallScreen(),
                 routes: [
-                          GoRoute(
+
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'custom-brick-config',
+                    name: 'custom-brick-config',
+                    builder: (context, state) => const CustomBrickConfigScreen(),
+                  ),
+                  GoRoute(
                             parentNavigatorKey: _rootNavigator,
                             path: 'ladrillo1',
                             name: 'ladrillo1',
