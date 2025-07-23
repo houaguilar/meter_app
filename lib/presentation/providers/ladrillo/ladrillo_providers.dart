@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../config/constants/constant.dart';
 import '../../../data/models/models.dart';
 import '../../../domain/services/ladrillo_service.dart';
+import '../home/muro/custom_brick_providers.dart';
 
 part 'ladrillo_providers.g.dart';
 
@@ -152,13 +153,13 @@ LadrilloMaterials ladrilloMaterials(LadrilloMaterialsRef ref) {
     return const LadrilloMaterials();
   }
 
-  return _calcularMaterialesLadrillo(ladrillos);
+  return _calcularMaterialesLadrillo(ladrillos, ref);
 }
 
 /// Función auxiliar para calcular materiales basada en el análisis 100% validado vs Excel
-LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos) {
+LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, LadrilloMaterialsRef ref) {
   // Especificaciones EXACTAS validadas contra Excel
-  const Map<String, Map<String, double>> especificacionesLadrillos = {
+  Map<String, Map<String, double>> especificacionesLadrillos = {
     "King Kong": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
     "Pandereta": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
     "Artesanal": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
@@ -168,7 +169,8 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos) {
     "Kingkong2": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
     "Pandereta1": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
     "Pandereta2": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-    "Común": {"largo": 22.0, "ancho": 12.5, "alto": 7.5}, // Mapear a Artesanal
+    "Común": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
+    "Custom": _obtenerDimensionesCustom(ref),
   };
 
   // Factores EXACTOS validados contra Excel para TODAS las proporciones
@@ -283,7 +285,10 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos) {
 String _normalizarTipoLadrillo(String tipo) {
   final tipoLower = tipo.toLowerCase();
 
-  if (tipoLower.contains('king') || tipoLower.contains('kong') ) {
+  // ✅ NUEVO: Detectar custom
+  if (tipoLower.contains('custom') || tipoLower.contains('personalizado')) {
+    return 'Custom';
+  } else if (tipoLower.contains('king') || tipoLower.contains('kong')) {
     return 'King Kong';
   } else if (tipoLower.contains('pandereta')) {
     return 'Pandereta';
@@ -384,5 +389,21 @@ $datosMetrado
 
 📱 Generado con MetraShop
 ''';
+  }
+}
+
+/// Obtiene dimensiones custom dinámicamente del provider
+Map<String, double> _obtenerDimensionesCustom(LadrilloMaterialsRef ref) {
+  try {
+    final customConfig = ref.read(customBrickDimensionsProvider);
+    return {
+      "largo": customConfig.length,
+      "ancho": customConfig.width,
+      "alto": customConfig.height,
+    };
+  } catch (e) {
+    // Si falla, usar valores por defecto
+    print('⚠️ Error leyendo dimensiones custom: $e');
+    return {"largo": 24.0, "ancho": 13.0, "alto": 9.0};
   }
 }

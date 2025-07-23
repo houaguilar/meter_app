@@ -168,25 +168,29 @@ class PlaceBloc extends Bloc<PlaceEvent, PlaceState> {
     emit(OptimizedPlaceInitial());
   }
 
-  // Métodos de cache
+  // MÉTODOS DE CACHE MEJORADOS
 
   List<PlaceEntity>? _getCachedSuggestions(String query) {
-    // Buscar coincidencia exacta primero
-    if (_suggestionsCache.containsKey(query)) {
-      return _suggestionsCache[query];
-    }
+    // Normalizar query para comparación
+    final normalizedQuery = _normalizeQuery(query);
 
-    // Buscar coincidencias parciales para queries más largos
-    if (query.length > 3) {
-      for (final cachedQuery in _suggestionsCache.keys) {
-        if (query.toLowerCase().startsWith(cachedQuery.toLowerCase()) &&
-            cachedQuery.length >= 3) {
-          return _suggestionsCache[cachedQuery];
-        }
+    // Buscar coincidencia exacta primero
+    for (final entry in _suggestionsCache.entries) {
+      if (_normalizeQuery(entry.key) == normalizedQuery) {
+        return entry.value;
       }
     }
 
+    // REMOVIDO: El sistema de búsqueda con startsWith que causaba problemas
+    // Ya no buscamos coincidencias parciales porque interfiere con búsquedas específicas
+    // como "Los Flamencos, Santa Anita"
+
     return null;
+  }
+
+  // Método para normalizar queries (eliminar espacios extra, convertir a lowercase)
+  String _normalizeQuery(String query) {
+    return query.toLowerCase().trim().replaceAll(RegExp(r'\s+'), ' ');
   }
 
   void _cacheSuggestions(String query, List<PlaceEntity> suggestions) {
@@ -195,7 +199,8 @@ class PlaceBloc extends Bloc<PlaceEvent, PlaceState> {
       _cleanOldCacheEntries();
     }
 
-    _suggestionsCache[query] = suggestions;
+    // Usar query normalizado como key
+    _suggestionsCache[_normalizeQuery(query)] = suggestions;
   }
 
   PlaceEntity? _getCachedPlaceDetails(String placeId) {

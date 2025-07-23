@@ -1,7 +1,7 @@
 /// Clase de configuración para funcionalidades del módulo
 class WallModuleConfig {
   /// Configuración de materiales disponibles
-  static const List<String> availableMaterialIds = ['1', '2', '3', '4'];
+  static const List<String> availableMaterialIds = ['1', '2', '3', '4', 'custom'];
 
   /// Configuración de materiales próximamente
   static const List<String> comingSoonMaterialIds = ['5', '6', '7', '8'];

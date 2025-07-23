@@ -55,50 +55,15 @@ class WallMaterialRepositoryImpl implements WallMaterialRepository {
         details: '· Ladrillo resistente para muros portantes.\n· Absorción de agua máx. 22%.\n· Dimensiones: 24×13×9 cm.\n· Rendimiento: 47 u/m² en soga.',
       ),
 
-      // ✅ TABICÓN - No disponible pero con datos correctos
       WallMaterial(
-        id: '5',
-        name: 'Tabicón',
-        image: AppImages.tabiconImg,
-        size: '20cm x 15cm x 25cm', // Dimensiones típicas de tabicón
-        lengthBrick: 25,
-        widthBrick: 15,
-        heightBrick: 20,
-        details: '· Bloque hueco para muros divisorios.\n· Construcción rápida y eficiente.\n· Próximamente disponible en la app.\n· Contacta soporte para más información.',
-      ),
-
-      // ✅ BLOQUETAS - Mantener como están (no disponibles)
-      WallMaterial(
-        id: '6',
-        name: 'Bloque de P14',
-        image: AppImages.bloquetap14Img,
-        size: '39cm x 19cm x 14cm', // Orden corregido: largo x ancho x alto
-        lengthBrick: 39,
-        widthBrick: 19,
-        heightBrick: 14,
-        details: '· Bloque de concreto para muros de carga.\n· Resistencia estructural alta.\n· Próximamente disponible en la app.\n· Contacta soporte para más información.',
-      ),
-
-      WallMaterial(
-        id: '7',
-        name: 'Bloque de P10',
-        image: AppImages.bloquetap10Img,
-        size: '39cm x 19cm x 10cm', // Orden corregido
-        lengthBrick: 39,
-        widthBrick: 19,
-        heightBrick: 10,
-        details: '· Bloque de concreto para muros medianos.\n· Balance entre resistencia y peso.\n· Próximamente disponible en la app.\n· Contacta soporte para más información.',
-      ),
-
-      WallMaterial(
-        id: '8',
-        name: 'Bloque de P7',
-        image: AppImages.bloquetap7Img,
-        size: '37cm x 19cm x 7cm', // Orden corregido
-        lengthBrick: 37,
-        widthBrick: 19,
-        heightBrick: 7,
-        details: '· Bloque de concreto liviano.\n· Para muros no estructurales.\n· Próximamente disponible en la app.\n· Contacta soporte para más información.',
+        id: 'custom',
+        name: 'Ladrillo Personalizado',
+        image: AppImages.tabiconImg, // Necesitarás agregar esta imagen
+        size: 'Configurable',
+        lengthBrick: null, // Se configurará dinámicamente
+        widthBrick: null,
+        heightBrick: null,
+        details: '· Personaliza las dimensiones según tu proyecto.\n· Largo, ancho y alto configurables.\n· Cálculos precisos con tus medidas exactas.\n· Ideal para proyectos especiales.',
       ),
     ];
   }

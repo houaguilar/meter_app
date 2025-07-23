@@ -636,18 +636,6 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     });
   }
 
-  /*void _showTutorial() {
-    showDialog(
-      context: context,
-      builder: (context) => TutorialOverlay(
-        onSkip: () {
-          sharedPreferencesHelper.setTutorialShown(true);
-          context.pop();
-        },
-      ),
-    );
-  }*/
-
   Future<void> _processCalculation(String tipoLadrillo) async {
     if (!_validateForm()) return;
 

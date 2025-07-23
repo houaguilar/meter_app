@@ -403,7 +403,7 @@ class WallMaterialCard extends StatelessWidget {
   }
 
   bool _isWallMaterialAvailable(String id) {
-    const availableIds = ['1', '2', '3', '4'];
+    const availableIds = ['1', '2', '3', '4', 'custom'];
     return availableIds.contains(id);
   }
 }
