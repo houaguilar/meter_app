@@ -44,17 +44,20 @@ import 'config/constants/secrets/app_secrets.dart';
 import 'config/network/connection_checker.dart';
 import 'data/datasources/auth/auth_remote_data_source_impl.dart';
 import 'data/datasources/home/inicio/article_remote_data_source_impl.dart';
+import 'data/datasources/home/muro/custom_brick_isar_data_source.dart';
 import 'data/datasources/projects/metrado/metrados_isar_data_source.dart';
 import 'data/datasources/projects/metrado/result/result_isar_data_source.dart';
 import 'data/local/shared_preferences_helper.dart';
 import 'data/repositories/auth/auth_repository_impl.dart';
 import 'data/repositories/home/inicio/article_repository_impl.dart';
 import 'data/repositories/home/inicio/measurement_repository_impl.dart';
+import 'data/repositories/home/muro/custom_brick_repository_impl.dart';
 import 'data/repositories/map/place_repository_impl.dart';
 import 'data/repositories/projects/metrados/metrados_local_repository_impl.dart';
 import 'data/repositories/projects/metrados/result/result_local_repository_impl.dart';
 import 'domain/datasources/auth/auth_remote_data_source.dart';
 import 'domain/datasources/home/inicio/article_remote_data_source.dart';
+import 'domain/datasources/home/muro/custom_brick_local_data_source.dart';
 import 'domain/datasources/map/location_data_source.dart';
 import 'domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'domain/datasources/projects/metrados/result/result_local_data_source.dart';
@@ -62,15 +65,22 @@ import 'domain/entities/entities.dart';
 import 'domain/entities/home/estructuras/columna/columna.dart';
 import 'domain/entities/home/estructuras/viga/viga.dart';
 import 'domain/entities/home/losas/losas.dart';
+import 'domain/entities/home/muro/custom_brick.dart';
 import 'domain/repositories/auth/auth_repository.dart';
 import 'domain/repositories/home/inicio/article_repository.dart';
 import 'domain/repositories/home/inicio/measurement_repository.dart';
+import 'domain/repositories/home/muro/custom_brick_repository.dart';
 import 'domain/repositories/map/place_repository.dart';
 import 'domain/repositories/projects/metrados/metrados_local_repository.dart';
 import 'domain/repositories/projects/metrados/result/result_local_repository.dart';
 import 'domain/usecases/auth/change_password.dart';
 import 'domain/usecases/home/inicio/get_articles_usecase.dart';
 import 'domain/usecases/home/inicio/get_measurement_items.dart';
+import 'domain/usecases/home/muro/custom_brick/check_custom_brick_name.dart';
+import 'domain/usecases/home/muro/custom_brick/delete_custom_brick.dart';
+import 'domain/usecases/home/muro/custom_brick/get_all_custom_bricks.dart';
+import 'domain/usecases/home/muro/custom_brick/save_custom_brick.dart';
+import 'domain/usecases/home/muro/custom_brick/update_custom_brick.dart';
 import 'domain/usecases/map/get_place_details.dart';
 import 'domain/usecases/map/get_place_suggestions.dart';
 import 'domain/usecases/map/upload_image.dart';
@@ -119,6 +129,7 @@ Future<void> initDependencies() async {
     LosaAligeradaSchema,
     ColumnaSchema,
     VigaSchema,
+    CustomBrickSchema,
   ],
     directory: isarDirectory,
     inspector: true,
@@ -156,6 +167,8 @@ Future<void> initDependencies() async {
 
   print('Inicializando proyectos...');
   _initProjects();
+
+  _initCustomBricks();
 
   _initLocations();
 
@@ -448,4 +461,41 @@ Future<void> _initMapAndSearch() async {
     getPlaceSuggestions: serviceLocator(),
     getPlaceDetails: serviceLocator(),
   ));
+}
+
+void _initCustomBricks() {
+  print('Inicializando ladrillos personalizados...');
+
+  // DataSource
+  serviceLocator.registerFactory<CustomBrickLocalDataSource>(
+        () => CustomBrickIsarDataSource(serviceLocator<Isar>()),
+  );
+
+  // Repository
+  serviceLocator.registerFactory<CustomBrickRepository>(
+        () => CustomBrickRepositoryImpl(serviceLocator<CustomBrickLocalDataSource>()),
+  );
+
+  // Use Cases
+  serviceLocator.registerFactory(
+        () => GetAllCustomBricks(serviceLocator<CustomBrickRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+        () => SaveCustomBrick(serviceLocator<CustomBrickRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+        () => UpdateCustomBrick(serviceLocator<CustomBrickRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+        () => DeleteCustomBrick(serviceLocator<CustomBrickRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+        () => CheckCustomBrickName(serviceLocator<CustomBrickRepository>()),
+  );
+
+  print('CustomBrick dependencies registrados exitosamente');
 }
