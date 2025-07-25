@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/muro/wall_material.dart';
+import '../../../providers/home/muro/custom_brick_providers.dart';
 import '../../../providers/home/muro/wall_material_providers_improved.dart';
+import '../../../providers/home/muro/custom_brick_isar_providers.dart';
 import '../../../providers/providers.dart';
 import '../../../widgets/cards/generic_item_card.dart';
 import '../../../widgets/config/generic_module_config.dart';
@@ -64,7 +66,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
     super.build(context);
 
     return Scaffold(
-      appBar: AppBarWidget(titleAppBar: 'Tipos de Muro'),
+      appBar: AppBarWidget(titleAppBar: 'Materiales de Muro'),
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: FadeTransition(
@@ -76,29 +78,124 @@ class _WallScreenState extends ConsumerState<WallScreen>
   }
 
   Widget _buildBody() {
+    // CAMBIO: Usar el provider que combina ladrillos guardados con predefinidos
+    final materialsAsync = ref.watch(wallMaterialsWithCustomProvider);
+
     return WallMaterialGridBuilder<WallMaterial>(
-      asyncValue: ref.watch(wallMaterialsProvider),
-      itemBuilder: _buildMaterialCard,
-      onRetry: () => ref.invalidate(wallMaterialsProvider),
+      asyncValue: materialsAsync,
+      onRetry: () {
+        ref.invalidate(wallMaterialsWithCustomProvider);
+      },
+      itemBuilder: (material, index) => WallMaterialCard(
+        wallMaterial: material,
+        onTap: () => _handleMaterialSelection(material),
+      ),
       header: _buildHeader(),
     );
   }
 
   Widget _buildHeader() {
-    return ResponsiveHeader(
-      title: 'Selecciona el tipo de material',
-      subtitle: 'Elige el material que utilizarás para tu proyecto',
-      headerSize: HeaderSize.h2,
-      titleColor: AppColors.textPrimary,
-      subtitleColor: AppColors.textSecondary,
-    );
-  }
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.blueMetraShop.withOpacity(0.2),
+                      AppColors.blueMetraShop.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  Icons.construction,
+                  color: AppColors.blueMetraShop,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Materiales de Muro',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Selecciona el tipo de ladrillo para tu proyecto',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
 
-  Widget _buildMaterialCard(WallMaterial material, int index) {
-    return WallMaterialCard(
-      wallMaterial: material,
-      onTap: () => _handleMaterialSelection(material),
-      // REMOVIDO: enabled parameter que dependía de available logic
+          const SizedBox(height: 16),
+
+          // Contador de ladrillos personalizados
+          Consumer(
+            builder: (context, ref, child) {
+              final customBricksAsync = ref.watch(customBricksProvider);
+
+              return customBricksAsync.when(
+                data: (customBricks) {
+                  if (customBricks.isNotEmpty) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.success.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.favorite,
+                            color: AppColors.success,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${customBricks.length} ladrillo${customBricks.length != 1 ? 's' : ''} personalizado${customBricks.length != 1 ? 's' : ''}',
+                            style: TextStyle(
+                              color: AppColors.success,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -114,7 +211,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
       // Actualizar selección
       ref.read(selectedMaterialProvider.notifier).state = material;
 
-      // Navegar directamente (REMOVIDO: check de disponibilidad)
+      // Navegar según el tipo de material
       _navigateToMaterial(material);
     } catch (e, stackTrace) {
       _handleSelectionError(e, stackTrace);
@@ -124,19 +221,38 @@ class _WallScreenState extends ConsumerState<WallScreen>
   /// Navega según el tipo de material
   void _navigateToMaterial(WallMaterial material) {
     try {
-      final materialType = _getMaterialType(material.id);
-      print('🔧 Estableciendo tipo: "$materialType"');
+      // NUEVO: Verificar si es un ladrillo personalizado guardado
+      if (material.id.startsWith('saved_')) {
+        // Para ladrillos guardados, usar las dimensiones directamente
+        ref.read(customBrickDimensionsProvider.notifier).updateDimensions(
+          length: material.lengthBrick,
+          width: material.widthBrick,
+          height: material.heightBrick,
+          name: material.name.replaceFirst('⭐ ', ''), // Quitar la estrella
+        );
 
+        // Establecer tipo Custom y continuar flujo
+        ref.read(tipoLadrilloProvider.notifier).selectLadrillo('Custom');
+        context.pushNamed('ladrillo1');
+        return;
+      }
+
+      // Para el ladrillo personalizable (crear nuevo)
       if (material.id == 'custom') {
         context.pushNamed('custom-brick-config');
         return;
       }
+
+      // Para ladrillos predefinidos (lógica existente)
+      final materialType = _getMaterialType(material.id);
+      print('🔧 Estableciendo tipo: "$materialType"');
 
       ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
 
       final verificacion = ref.read(tipoLadrilloProvider);
       print('🔍 Verificación: "$verificacion"');
       context.pushNamed('ladrillo1');
+
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);
     }
@@ -220,6 +336,3 @@ class _WallScreenState extends ConsumerState<WallScreen>
     }());
   }
 }
-
-// REMOVIDO: Extension WallMaterialUI con lógica de available
-// REMOVIDO: Toda lógica relacionada con disponibilidad

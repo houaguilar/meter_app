@@ -13,12 +13,6 @@ class CoatingRepositoryImpl implements CoatingRepository {
           image: AppImages.mezclaCementoImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),
-      Coating(
-        id: '2',
-        name: 'Yeso',
-        image: AppImages.yeseroImg,
-        details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
-      ),
     ];
   }
   
