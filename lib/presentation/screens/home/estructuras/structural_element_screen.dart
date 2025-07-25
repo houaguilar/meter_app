@@ -292,19 +292,12 @@ class StructuralElementCard extends StatelessWidget {
     return GenericItemCard<StructuralElement>(
       item: structuralElement,
       onTap: onTap,
-      enabled: enabled,
       getId: (item) => item.id,
       getName: (item) => item.name,
       getImage: (item) => item.image,
-      isAvailable: (item) => _isStructuralElementAvailable(item.id),
       imageType: ImageType.svg,
       primaryColor: AppColors.primary,
     );
-  }
-
-  bool _isStructuralElementAvailable(String id) {
-    const availableIds = ['1', '2']; // Columna y Viga disponibles
-    return availableIds.contains(id);
   }
 }
 

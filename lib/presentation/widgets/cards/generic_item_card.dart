@@ -16,9 +16,6 @@ class GenericItemCard<T> extends StatefulWidget {
   /// Callback cuando se toca la tarjeta
   final VoidCallback onTap;
 
-  /// Si la tarjeta está habilitada
-  final bool enabled;
-
   /// Función para obtener el ID del item
   final String Function(T) getId;
 
@@ -28,14 +25,7 @@ class GenericItemCard<T> extends StatefulWidget {
   /// Función para obtener la imagen del item
   final String Function(T) getImage;
 
-  /// Función para obtener información adicional (opcional)
   final String? Function(T)? getSubtitle;
-
-  /// Función para determinar si el item está disponible
-  final bool Function(T) isAvailable;
-
-  /// Función para obtener el mensaje de no disponible
-  final String Function(T)? getUnavailableMessage;
 
   /// Color primario del módulo
   final Color? primaryColor;
@@ -50,10 +40,7 @@ class GenericItemCard<T> extends StatefulWidget {
     required this.getId,
     required this.getName,
     required this.getImage,
-    required this.isAvailable,
-    this.enabled = true,
     this.getSubtitle,
-    this.getUnavailableMessage,
     this.primaryColor,
     this.imageType = ImageType.svg,
   });
@@ -108,43 +95,36 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
 
   @override
   Widget build(BuildContext context) {
-    final isItemAvailable = widget.isAvailable(widget.item);
-    final isCardEnabled = widget.enabled && isItemAvailable;
 
     return GestureDetector(
-      onTapDown: isCardEnabled ? (_) => _handlePress(true) : null,
-      onTapUp: isCardEnabled ? (_) => _handlePress(false) : null,
-      onTapCancel: isCardEnabled ? () => _handlePress(false) : null,
-      onTap: isCardEnabled ? _handleTap : null,
+      onTapDown: (_) => _handlePress(true),
+      onTapUp: (_) => _handlePress(false),
+      onTapCancel: () => _handlePress(false),
+      onTap: _handleTap,
       child: AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
           return Transform.scale(
             scale: _isPressed ? _scaleAnimation.value : 1.0,
-            child: _buildCard(isItemAvailable),
+            child: _buildCard(),
           );
         },
       ),
     );
   }
 
-  Widget _buildCard(bool isItemAvailable) {
+  Widget _buildCard() {
     final isSmallScreen = _isSmallScreen();
-    final isDisabled = !widget.enabled || !isItemAvailable;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: Card(
         elevation: _isPressed ? _elevationAnimation.value : 2.0,
-        color: isDisabled
-            ? AppColors.neutral100
-            : AppColors.white,
+        color: AppColors.white,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
           side: BorderSide(
-            color: isDisabled
-                ? AppColors.neutral300
-                : Colors.transparent,
+            color: Colors.transparent,
             width: 1.0,
           ),
         ),
@@ -153,16 +133,12 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildImage(isSmallScreen, isDisabled),
+              _buildImage(isSmallScreen),
               SizedBox(height: isSmallScreen ? 8 : 12),
-              _buildTitle(isSmallScreen, isDisabled),
+              _buildTitle(isSmallScreen),
               if (widget.getSubtitle != null) ...[
                 const SizedBox(height: 4),
-                _buildSubtitle(isSmallScreen, isDisabled),
-              ],
-              if (isDisabled) ...[
-                const SizedBox(height: 8),
-                _buildDisabledBadge(),
+                _buildSubtitle(isSmallScreen),
               ],
             ],
           ),
@@ -171,7 +147,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     );
   }
 
-  Widget _buildImage(bool isSmallScreen, bool isDisabled) {
+  Widget _buildImage(bool isSmallScreen) {
     final size = isSmallScreen ? 50.0 : 65.0;
     final imagePath = widget.getImage(widget.item);
 
@@ -182,7 +158,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
         height: size,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          boxShadow: isDisabled ? null : [
+          boxShadow: [
             BoxShadow(
               color: AppColors.neutral300.withOpacity(0.3),
               blurRadius: 4,
@@ -193,14 +169,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
         child: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: ColorFiltered(
-            colorFilter: isDisabled
-                ? const ColorFilter.matrix([
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0.2126, 0.7152, 0.0722, 0, 0,
-              0, 0, 0, 1, 0,
-            ])
-                : const ColorFilter.matrix([
+            colorFilter: const ColorFilter.matrix([
               1, 0, 0, 0, 0,
               0, 1, 0, 0, 0,
               0, 0, 1, 0, 0,
@@ -259,15 +228,13 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     );
   }
 
-  Widget _buildTitle(bool isSmallScreen, bool isDisabled) {
+  Widget _buildTitle(bool isSmallScreen) {
     return Text(
       widget.getName(widget.item),
       style: TextStyle(
-        fontSize: isSmallScreen ? 12 : 14,
+        fontSize: isSmallScreen ? 14 : 16,
         fontWeight: FontWeight.bold,
-        color: isDisabled
-            ? AppColors.textTertiary
-            : AppColors.textPrimary,
+        color: AppColors.textPrimary,
       ),
       textAlign: TextAlign.center,
       maxLines: 2,
@@ -275,43 +242,19 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     );
   }
 
-  Widget _buildSubtitle(bool isSmallScreen, bool isDisabled) {
+  Widget _buildSubtitle(bool isSmallScreen) {
     final subtitle = widget.getSubtitle?.call(widget.item);
     if (subtitle == null || subtitle.isEmpty) return const SizedBox.shrink();
 
     return Text(
       subtitle,
       style: TextStyle(
-        fontSize: isSmallScreen ? 9 : 11,
-        color: isDisabled
-            ? AppColors.textTertiary
-            : AppColors.textSecondary,
+        fontSize: isSmallScreen ? 11 : 13,
+        color: AppColors.textSecondary,
       ),
       textAlign: TextAlign.center,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  Widget _buildDisabledBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Text(
-        'Próximamente',
-        style: TextStyle(
-          fontSize: 10,
-          color: AppColors.warning,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
     );
   }
 
@@ -320,7 +263,6 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
   }
 
   void _handlePress(bool isPressed) {
-    if (!mounted || !widget.enabled) return;
 
     setState(() {
       _isPressed = isPressed;
@@ -335,8 +277,6 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
   }
 
   void _handleTap() {
-    if (!widget.enabled) return;
-
     try {
       HapticFeedback.selectionClick();
       widget.onTap();
@@ -391,20 +331,13 @@ class WallMaterialCard extends StatelessWidget {
     return GenericItemCard(
       item: wallMaterial,
       onTap: onTap,
-      enabled: enabled,
       getId: (item) => item.id,
       getName: (item) => item.name,
       getImage: (item) => item.image,
-      getSubtitle: (item) => item.size,
-      isAvailable: (item) => _isWallMaterialAvailable(item.id),
       imageType: ImageType.asset,
+      getSubtitle: (item) => item.size,
       primaryColor: AppColors.success,
     );
-  }
-
-  bool _isWallMaterialAvailable(String id) {
-    const availableIds = ['1', '2', '3', '4', 'custom'];
-    return availableIds.contains(id);
   }
 }
 
@@ -426,11 +359,9 @@ class SlabCard extends StatelessWidget {
     return GenericItemCard(
       item: slab,
       onTap: onTap,
-      enabled: enabled,
       getId: (item) => item.id,
       getName: (item) => item.name,
       getImage: (item) => item.image,
-      isAvailable: (item) => true, // Por ahora todas las losas están disponibles
       imageType: ImageType.svg,
       primaryColor: AppColors.secondary,
     );
@@ -455,11 +386,9 @@ class FloorCard extends StatelessWidget {
     return GenericItemCard(
       item: floor,
       onTap: onTap,
-      enabled: enabled,
       getId: (item) => item.id,
       getName: (item) => item.name,
       getImage: (item) => item.image,
-      isAvailable: (item) => true, // Por ahora todos los pisos están disponibles
       imageType: ImageType.svg,
       primaryColor: AppColors.blueMetraShop,
     );
@@ -484,11 +413,9 @@ class CoatingCard extends StatelessWidget {
     return GenericItemCard(
       item: coating,
       onTap: onTap,
-      enabled: enabled,
       getId: (item) => item.id,
       getName: (item) => item.name,
       getImage: (item) => item.image,
-      isAvailable: (item) => true, // Por ahora todos los revestimientos están disponibles
       imageType: ImageType.svg,
       primaryColor: AppColors.yellowMetraShop,
     );

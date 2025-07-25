@@ -141,9 +141,6 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
         case '1': // Tarrajeo normal
           context.pushNamed('tarrajeo-muro');
           break;
-        case '2': // Yeso
-          context.pushNamed('tarrajeo-yeso');
-          break;
         default:
           context.pushNamed('tarrajeo-muro');
       }
@@ -164,7 +161,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
 
   /// Determina si un revestimiento está disponible
   bool _isCoatingAvailable(String coatingId) {
-    const availableIds = ['1', '2']; // Tarrajeo normal y Yeso
+    const availableIds = ['1']; // Tarrajeo normal y Yeso
     return availableIds.contains(coatingId);
   }
 
@@ -173,8 +170,6 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
     switch (coatingId) {
       case '1':
         return 'Tarrajeo Normal';
-      case '2':
-        return 'Yeso';
       default:
         return 'Tarrajeo Normal';
     }
@@ -264,7 +259,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
 extension CoatingUI on Coating {
   /// Determina si el revestimiento está disponible
   bool get isAvailable {
-    const availableIds = ['1', '2']; // Tarrajeo normal y Yeso
+    const availableIds = ['1']; // Tarrajeo normal y Yeso
     return availableIds.contains(id);
   }
 
@@ -273,8 +268,6 @@ extension CoatingUI on Coating {
     switch (id) {
       case '1': // Tarrajeo normal
         return AppColors.blueMetraShop;
-      case '2': // Yeso
-        return AppColors.yellowMetraShop;
       default:
         if (isAvailable) {
           return AppColors.success;

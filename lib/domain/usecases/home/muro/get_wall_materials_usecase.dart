@@ -8,6 +8,6 @@ class GetWallMaterialsUseCase {
   GetWallMaterialsUseCase(this.repository);
 
   Future<List<WallMaterial>> call() async {
-    return await repository.fetchWallMaterials();
+    return await repository.getWallMaterials();
   }
 }
