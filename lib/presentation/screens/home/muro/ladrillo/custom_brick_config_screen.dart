@@ -1,4 +1,6 @@
+// lib/presentation/screens/home/muro/ladrillo/custom_brick_config_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +22,12 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
   final _lengthController = TextEditingController(text: '24.0');
   final _widthController = TextEditingController(text: '13.0');
   final _heightController = TextEditingController(text: '9.0');
+
+  // AGREGADO: Focus nodes para gestión del teclado
+  final _nameFocus = FocusNode();
+  final _lengthFocus = FocusNode();
+  final _widthFocus = FocusNode();
+  final _heightFocus = FocusNode();
 
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
@@ -59,6 +67,11 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     _widthController.dispose();
     _heightController.dispose();
     _nameController.dispose();
+    // AGREGADO: Cleanup focus nodes
+    _nameFocus.dispose();
+    _lengthFocus.dispose();
+    _widthFocus.dispose();
+    _heightFocus.dispose();
     super.dispose();
   }
 
@@ -66,33 +79,55 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
   double get _currentWidth => double.tryParse(_widthController.text) ?? 13.0;
   double get _currentHeight => double.tryParse(_heightController.text) ?? 9.0;
 
+  // AGREGADO: Método para ocultar teclado
+  void _hideKeyboard() {
+    FocusScope.of(context).unfocus();
+  }
+
+  // AGREGADO: Navegación entre campos
+  void _focusNextField(FocusNode currentFocus) {
+    if (currentFocus == _lengthFocus) {
+      _widthFocus.requestFocus();
+    } else if (currentFocus == _widthFocus) {
+      _heightFocus.requestFocus();
+    } else if (currentFocus == _heightFocus) {
+      _nameFocus.requestFocus();
+    } else {
+      _hideKeyboard();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        title: const Text(
-          'Configurar Ladrillo',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    return GestureDetector(
+      // AGREGADO: Ocultar teclado al tocar cualquier parte
+      onTap: () => _hideKeyboard(),
+      child: Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          title: const Text(
+            'Configurar Ladrillo',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: AppColors.blueMetraShop,
+          iconTheme: const IconThemeData(color: Colors.white),
+          elevation: 0,
         ),
-        backgroundColor: AppColors.blueMetraShop,
-        iconTheme: const IconThemeData(color: Colors.white),
-        elevation: 0,
-      ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 32),
-              _buildBrickVisualizationSection(),
-              const SizedBox(height: 32),
-              _buildNameInput(),
-              const SizedBox(height: 32),
-              _buildActions(),
-            ],
+        body: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 32),
+                _buildBrickVisualizationSection(),
+                const SizedBox(height: 32),
+                _buildNameInput(),
+                const SizedBox(height: 32),
+                _buildActions(),
+              ],
+            ),
           ),
         ),
       ),
@@ -198,71 +233,62 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
             child: Stack(
               alignment: Alignment.center,
               children: [
-                // Ladrillo 3D en el centro
-                AnimatedBuilder(
-                  animation: _scaleAnimation,
-                  builder: (context, child) {
-                    return Transform.scale(
-                      scale: _scaleAnimation.value,
-                      child: _buildBrick3D(),
-                    );
-                  },
-                ),
+                // Ladrillo 3D central
+                _build3DBrick(),
 
-                // Control de Largo (arriba)
+                // Controles de dimensiones
                 Positioned(
                   top: 20,
+                  right: 20,
                   child: _buildDimensionControl(
                     'Largo',
                     _lengthController,
+                    _lengthFocus,
                     _currentLength,
-                    5,
-                    50,
-                    Icons.swap_horiz,
-                    AppColors.success,
+                    5.0,
+                    50.0,
+                    Icons.straighten,
+                    AppColors.primary,
                   ),
                 ),
-
-                // Control de Ancho (derecha)
                 Positioned(
-                  right: 20,
+                  bottom: 80,
+                  left: 20,
                   child: _buildDimensionControl(
                     'Ancho',
                     _widthController,
+                    _widthFocus,
                     _currentWidth,
-                    5,
-                    30,
-                    Icons.swap_vert,
-                    AppColors.warning,
+                    5.0,
+                    30.0,
+                    Icons.height,
+                    AppColors.success,
                   ),
                 ),
-
-                // Control de Alto (abajo)
                 Positioned(
                   bottom: 20,
+                  right: 20,
                   child: _buildDimensionControl(
                     'Alto',
                     _heightController,
+                    _heightFocus,
                     _currentHeight,
-                    3,
-                    20,
-                    Icons.height,
-                    AppColors.error,
+                    3.0,
+                    20.0,
+                    Icons.arrow_upward,
+                    AppColors.warning,
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 20),
-          _buildDimensionsInfo(),
         ],
       ),
     );
   }
 
-  Widget _buildBrick3D() {
-    // Escalar las dimensiones para la visualización (mantener proporciones)
+  Widget _build3DBrick() {
+    // Calcular escala para visualización
     final maxDim = [_currentLength, _currentWidth, _currentHeight].reduce((a, b) => a > b ? a : b);
     final scale = 120 / maxDim; // Escalar a un máximo de 120px
 
@@ -287,6 +313,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
   Widget _buildDimensionControl(
       String label,
       TextEditingController controller,
+      FocusNode focusNode,
       double currentValue,
       double min,
       double max,
@@ -325,43 +352,52 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           SizedBox(
             width: 80,
             child: TextFormField(
               controller: controller,
-              keyboardType: TextInputType.number,
-              textAlign: TextAlign.center,
+              focusNode: focusNode,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              // MEJORADO: Input formatters más robustos
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')), // Máximo 2 decimales
+                LengthLimitingTextInputFormatter(6), // Máximo 6 caracteres
+              ],
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
+              textAlign: TextAlign.center,
               decoration: InputDecoration(
-                suffixText: 'cm',
-                suffixStyle: TextStyle(color: color.withOpacity(0.7), fontSize: 12),
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: color.withOpacity(0.3)),
+                  borderSide: BorderSide(color: color),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: BorderSide(color: color, width: 2),
                 ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                suffixText: 'cm',
+                suffixStyle: TextStyle(color: color, fontSize: 12),
               ),
-              validator: (value) => _validateDimension(value, min, max),
+              // MEJORADO: Validación más robusta
+              validator: (value) => _validateDimension(value, min, max, label),
+              onFieldSubmitted: (_) => _focusNextField(focusNode),
               onChanged: (value) {
-                setState(() {}); // Rebuild para actualizar el ladrillo
+                setState(() {}); // Actualizar vista 3D en tiempo real
               },
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             '${min.toInt()}-${max.toInt()}cm',
             style: TextStyle(
               color: color.withOpacity(0.7),
-              fontSize: 10,
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -370,57 +406,12 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     );
   }
 
-  Widget _buildDimensionsInfo() {
-    final volume = (_currentLength * _currentWidth * _currentHeight) / 1000; // cm³ a litros
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.backgroundLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.neutral200),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildInfoItem('Dimensiones', '${_currentLength.toStringAsFixed(1)} × ${_currentWidth.toStringAsFixed(1)} × ${_currentHeight.toStringAsFixed(1)} cm'),
-          Container(width: 1, height: 30, color: AppColors.neutral300),
-          _buildInfoItem('Volumen', '${volume.toStringAsFixed(2)} L'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildNameInput() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -446,22 +437,40 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _nameController,
+            focusNode: _nameFocus,
+            textCapitalization: TextCapitalization.words,
+            maxLength: 50,
+            // MEJORADO: Input formatters para nombre
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9\s\-_áéíóúÁÉÍÓÚñÑ]')),
+            ],
             decoration: InputDecoration(
-              hintText: 'Ej: Ladrillo especial para fachada',
-              prefixIcon: Icon(Icons.label_outline, color: AppColors.blueMetraShop),
+              hintText: 'Ej: Mi Ladrillo Especial',
+              hintStyle: TextStyle(
+                color: AppColors.textSecondary.withOpacity(0.6),
+              ),
+              filled: true,
+              fillColor: AppColors.blueMetraShop.withOpacity(0.05),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: AppColors.neutral300),
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(color: AppColors.blueMetraShop.withOpacity(0.3)),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 borderSide: BorderSide(color: AppColors.blueMetraShop, width: 2),
               ),
+              prefixIcon: Icon(
+                Icons.label_outline,
+                color: AppColors.blueMetraShop,
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             ),
-            validator: (value) => value?.trim().isEmpty == true ? 'Ingresa un nombre descriptivo' : null,
+            // MEJORADO: Validación más robusta para nombre
+            validator: _validateName,
+            onFieldSubmitted: (_) => _hideKeyboard(),
           ),
         ],
       ),
@@ -525,18 +534,67 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     );
   }
 
-  String? _validateDimension(String? value, double min, double max) {
-    if (value?.trim().isEmpty == true) return 'Requerido';
+  // MEJORADO: Validaciones más robustas
+  String? _validateDimension(String? value, double min, double max, String fieldName) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName requerido';
+    }
 
-    final number = double.tryParse(value!);
-    if (number == null) return 'Número inválido';
-    if (number < min || number > max) return '${min.toInt()}-${max.toInt()}cm';
+    final number = double.tryParse(value.trim());
+    if (number == null) {
+      return 'Número inválido';
+    }
+
+    if (number < min) {
+      return 'Mín: ${min.toStringAsFixed(1)}cm';
+    }
+
+    if (number > max) {
+      return 'Máx: ${max.toStringAsFixed(1)}cm';
+    }
+
+    // Validar que no tenga más de 2 decimales
+    if (value.contains('.') && value.split('.')[1].length > 2) {
+      return 'Máx 2 decimales';
+    }
+
+    return null;
+  }
+
+  String? _validateName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Nombre requerido';
+    }
+
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.length < 3) {
+      return 'Mínimo 3 caracteres';
+    }
+
+    if (trimmedValue.length > 50) {
+      return 'Máximo 50 caracteres';
+    }
+
+    // Validar que solo contenga caracteres permitidos
+    if (!RegExp(r'^[a-zA-Z0-9\s\-_áéíóúÁÉÍÓÚñÑ]+$').hasMatch(trimmedValue)) {
+      return 'Solo letras, números, espacios y guiones permitidos';
+    }
 
     return null;
   }
 
   void _saveAndContinue() {
-    if (!_formKey.currentState!.validate()) return;
+    _hideKeyboard(); // Ocultar teclado antes de validar
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // MEJORADO: Validaciones adicionales de negocio
+    if (!_validateBusinessRules()) {
+      return;
+    }
 
     // Guardar dimensiones en provider
     ref.read(customBrickDimensionsProvider.notifier).updateDimensions(
@@ -551,6 +609,44 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
 
     // Navegar a datos normalmente
     context.pushNamed('ladrillo1');
+  }
+
+  // AGREGADO: Validaciones de reglas de negocio
+  bool _validateBusinessRules() {
+    // Validar proporciones razonables
+    final ratio = _currentLength / _currentWidth;
+    if (ratio < 1.0 || ratio > 4.0) {
+      _showErrorMessage('Las proporciones del ladrillo no son recomendadas (ratio largo/ancho: 1.0-4.0)');
+      return false;
+    }
+
+    // Validar que la altura no sea excesivamente pequeña
+    if (_currentHeight < 3.0) {
+      _showErrorMessage('La altura mínima recomendada es 3.0 cm');
+      return false;
+    }
+
+    // Validar volumen mínimo
+    final volume = _currentLength * _currentWidth * _currentHeight;
+    if (volume < 100) {
+      _showErrorMessage('El volumen del ladrillo es muy pequeño (mínimo 100 cm³)');
+      return false;
+    }
+
+    return true;
+  }
+
+  void _showErrorMessage(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 3),
+      ),
+    );
   }
 }
 
@@ -615,46 +711,19 @@ class Brick3DPainter extends CustomPainter {
       ..close();
     canvas.drawPath(rightPath, paint);
 
-    // Bordes y líneas de detalle
+    // Contornos
     canvas.drawRRect(
       RRect.fromRectAndRadius(frontRect, const Radius.circular(4)),
       strokePaint,
     );
     canvas.drawPath(topPath, strokePaint);
     canvas.drawPath(rightPath, strokePaint);
-
-    // Líneas de conexión
-    canvas.drawLine(
-      Offset(frontRect.left, frontRect.top),
-      Offset(frontRect.left + offsetX, frontRect.top - offsetY),
-      strokePaint,
-    );
-    canvas.drawLine(
-      Offset(frontRect.right, frontRect.top),
-      Offset(frontRect.right + offsetX, frontRect.top - offsetY),
-      strokePaint,
-    );
-    canvas.drawLine(
-      Offset(frontRect.right, frontRect.bottom),
-      Offset(frontRect.right + offsetX, frontRect.bottom - offsetY),
-      strokePaint,
-    );
-
-    // Textura del ladrillo (líneas horizontales)
-    final texturePaint = Paint()
-      ..color = Colors.black.withOpacity(0.1)
-      ..strokeWidth = 1;
-
-    for (int i = 1; i < 3; i++) {
-      final y = frontRect.top + (frontRect.height / 3) * i;
-      canvas.drawLine(
-        Offset(frontRect.left + 4, y),
-        Offset(frontRect.right - 4, y),
-        texturePaint,
-      );
-    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(Brick3DPainter oldDelegate) {
+    return length != oldDelegate.length ||
+        width != oldDelegate.width ||
+        height != oldDelegate.height;
+  }
 }
