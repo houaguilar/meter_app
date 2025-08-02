@@ -125,8 +125,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
           _buildMaterialsCard(materials),
           const SizedBox(height: 20),
           _buildConfigurationCard(ladrillos),
-          const SizedBox(height: 20),
-          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
           const SizedBox(height: 120),
         ],
       ),
@@ -249,84 +247,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
           _buildConfigRow('Tipo de Asentado', _getTipoAsentado()),
         ],
       ),
-    );
-  }
-
-  // ✅ NUEVA SECCIÓN: Leyenda de unidades
-  Widget _buildLegend() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Leyenda de Unidades:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
-          const SizedBox(height: 8),
-          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
-          const SizedBox(height: 8),
-          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
-          const SizedBox(height: 8),
-          _buildLegendItem('und', 'Unidades - Cantidad individual'),
-        ],
-      ),
-    );
-  }
-
-  // ✅ NUEVO: Widget para cada item de la leyenda
-  Widget _buildLegendItem(String unit, String description) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -841,34 +761,6 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         content: Text(message),
         backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _showInfoSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.blueMetraShop,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 3),
       ),
     );
   }

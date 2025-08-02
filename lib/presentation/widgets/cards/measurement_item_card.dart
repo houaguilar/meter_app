@@ -6,14 +6,12 @@ import '../../../config/theme/theme.dart';
 
 class MeasurementItemCard extends StatelessWidget {
   final String title;
-  final String description;
   final String imageAsset;
   final VoidCallback onTap;
 
   const MeasurementItemCard({
     super.key,
     required this.title,
-    required this.description,
     required this.imageAsset,
     required this.onTap,
   });
@@ -64,16 +62,6 @@ class MeasurementItemCard extends StatelessWidget {
                           color: AppColors.textPrimary,
                         ),
                         maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        description,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],

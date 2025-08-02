@@ -1,7 +1,5 @@
-// lib/config/utils/auth/auth_success_utils.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:confetti/confetti.dart'; // Añadir esta dependencia en pubspec.yaml
 
 import '../../theme/theme.dart';
 

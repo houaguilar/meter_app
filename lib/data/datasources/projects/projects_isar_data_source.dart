@@ -4,7 +4,6 @@ import 'package:meter_app/domain/entities/entities.dart';
 import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 import 'package:meter_app/domain/entities/home/losas/losas.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../config/constants/error/exceptions.dart';
 import '../../../config/constants/error/failures.dart';

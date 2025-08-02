@@ -184,8 +184,8 @@ class UnifiedMaterialsCalculator {
       totalValue: areaTotal,
       totalUnit: 'm²',
       additionalInfo: {
-        'tipoAsentado': ladrillos.first.tipoAsentado ?? 'soga',
-        'proporcionMortero': '1:${ladrillos.first.proporcionMortero ?? '4'}',
+        'tipoAsentado': ladrillos.first.tipoAsentado,
+        'proporcionMortero': '1:${ladrillos.first.proporcionMortero}',
         'desperdicioLadrillo': '${double.tryParse(ladrillos.first.factorDesperdicio) ?? 5}%',
         'desperdicioMortero': '${double.tryParse(ladrillos.first.factorDesperdicioMortero) ?? 10}%',
       },
@@ -199,7 +199,7 @@ class UnifiedMaterialsCalculator {
   static CalculationResult _calculatePisoMaterials(List<Piso> pisos) {
     // Determinar si son falsos pisos o contrapisos basado en el tipo
     final primerPiso = pisos.first;
-    final esFalsoPiso = primerPiso.tipo?.toLowerCase().contains('falso') ?? false;
+    final esFalsoPiso = primerPiso.tipo.toLowerCase().contains('falso');
 
     if (esFalsoPiso) {
       return _calculateFalsoPisoMaterials(pisos);
@@ -290,7 +290,7 @@ class UnifiedMaterialsCalculator {
       additionalInfo: {
         'tipoPiso': 'Falso Piso',
         'resistencia': pisos.first.resistencia ?? '175 kg/cm²',
-        'espesor': '${pisos.first.espesor ?? '5'} cm',
+        'espesor': '${pisos.first.espesor} cm',
         'desperdicio': '${double.tryParse(pisos.first.factorDesperdicio) ?? 5}%',
       },
     );
@@ -365,7 +365,7 @@ class UnifiedMaterialsCalculator {
       additionalInfo: {
         'tipoPiso': 'Contrapiso',
         'proporcionMortero': '1:${pisos.first.proporcionMortero ?? '5'}',
-        'espesor': '${pisos.first.espesor ?? '5'} cm',
+        'espesor': '${pisos.first.espesor} cm',
         'desperdicio': '${double.tryParse(pisos.first.factorDesperdicio) ?? 5}%',
       },
     );
@@ -452,11 +452,11 @@ class UnifiedMaterialsCalculator {
       totalValue: totalArea,
       totalUnit: 'm²',
       additionalInfo: {
-        'altura': losas.first.altura ?? '20 cm',
-        'materialAligerado': losas.first.materialAligerado ?? 'Ladrillo Hueco',
-        'resistenciaConcreto': losas.first.resistenciaConcreto ?? '175 kg/cm²',
-        'desperdicioConcreto': '${losas.first.desperdicioConcreto ?? '5'}%',
-        'desperdicioLadrillo': '${losas.first.desperdicioLadrillo ?? '5'}%',
+        'altura': losas.first.altura,
+        'materialAligerado': losas.first.materialAligerado,
+        'resistenciaConcreto': losas.first.resistenciaConcreto,
+        'desperdicioConcreto': '${losas.first.desperdicioConcreto}%',
+        'desperdicioLadrillo': '${losas.first.desperdicioLadrillo}%',
       },
     );
   }
@@ -530,9 +530,9 @@ class UnifiedMaterialsCalculator {
       totalValue: totalArea,
       totalUnit: 'm²',
       additionalInfo: {
-        'tipo': tarrajeos.first.tipo ?? 'Primario',
-        'espesor': '${tarrajeos.first.espesor ?? '1.5'} cm',
-        'proporcionMortero': '1:${tarrajeos.first.proporcionMortero ?? '5'}',
+        'tipo': tarrajeos.first.tipo,
+        'espesor': '${tarrajeos.first.espesor} cm',
+        'proporcionMortero': '1:${tarrajeos.first.proporcionMortero}',
         'desperdicio': '${double.tryParse(tarrajeos.first.factorDesperdicio) ?? 5}%',
       },
     );
@@ -607,7 +607,7 @@ class UnifiedMaterialsCalculator {
       totalValue: totalVolumen,
       totalUnit: 'm³',
       additionalInfo: {
-        'resistencia': columnas.first.resistencia ?? '210 kg/cm²',
+        'resistencia': columnas.first.resistencia,
         'desperdicio': '${double.tryParse(columnas.first.factorDesperdicio) ?? 5}%',
       },
     );
@@ -682,7 +682,7 @@ class UnifiedMaterialsCalculator {
       totalValue: totalVolumen,
       totalUnit: 'm³',
       additionalInfo: {
-        'resistencia': vigas.first.resistencia ?? '210 kg/cm²',
+        'resistencia': vigas.first.resistencia,
         'desperdicio': '${double.tryParse(vigas.first.factorDesperdicio) ?? 5}%',
       },
     );

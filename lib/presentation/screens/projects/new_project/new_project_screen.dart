@@ -1,4 +1,3 @@
-// lib/presentation/screens/projects/new_project/new_project_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +8,6 @@ import '../../../../config/utils/error_handler.dart';
 import '../../../../config/utils/validators.dart';
 import '../../../../domain/entities/projects/project.dart';
 import '../../../blocs/projects/projects_bloc.dart';
-import '../../../widgets/widgets.dart';
 
 /// Pantalla para crear un nuevo proyecto
 class NewProjectScreen extends StatefulWidget {

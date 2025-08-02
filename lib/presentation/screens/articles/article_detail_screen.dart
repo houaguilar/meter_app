@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../config/theme/theme.dart';
@@ -31,7 +30,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   bool _isFullScreen = false;
   bool _isVideoLoading = true;
   bool _hasVideoError = false;
-  int _selectedIndex = 0;
   late TabController _tabController;
   ArticleEntity? _currentArticle;
 

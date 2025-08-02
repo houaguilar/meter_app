@@ -295,7 +295,7 @@ String _normalizarTipoLadrillo(String tipo) {
   } else if (tipoLower.contains('artesanal') || tipoLower.contains('común') || tipoLower.contains('comun')) {
     return 'Artesanal';
   } else {
-    return 'Pandereta'; // Default
+    return 'Custom'; // Default
   }
 }
 

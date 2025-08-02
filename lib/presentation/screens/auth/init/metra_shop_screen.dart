@@ -7,12 +7,7 @@ import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/error_handler.dart';
 import '../../../assets/images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
-import '../../../widgets/widgets.dart';
 
-/// Pantalla inicial de la aplicación que maneja el estado de autenticación
-///
-/// Esta pantalla verifica el estado de autenticación del usuario y navega
-/// automáticamente a la pantalla correspondiente según el resultado.
 class MetraShopScreen extends StatefulWidget {
   const MetraShopScreen({super.key});
 

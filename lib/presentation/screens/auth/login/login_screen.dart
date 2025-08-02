@@ -509,13 +509,6 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  void _togglePasswordVisibility() {
-    setState(() {
-      _isPasswordVisible = !_isPasswordVisible;
-    });
-    HapticFeedback.selectionClick();
-  }
-
   // NUEVO: Diálogo mejorado de recuperar contraseña
   void _showForgotPasswordDialog() {
     HapticFeedback.lightImpact();

@@ -1,8 +1,6 @@
-// lib/presentation/providers/losas/losas_aligeradas_providers.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
-import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/losas/losas.dart';
 import '../../../domain/services/losa_aligerada_service.dart';
 

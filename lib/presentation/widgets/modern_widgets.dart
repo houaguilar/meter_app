@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../config/theme/theme.dart';
 
-/// Card moderna con diseño mejorado
 class ModernCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
@@ -46,7 +44,6 @@ class ModernCard extends StatelessWidget {
   }
 }
 
-/// Header de sección moderno
 class ModernSectionHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -111,7 +108,6 @@ class ModernSectionHeader extends StatelessWidget {
   }
 }
 
-/// TextField moderno con mejor diseño
 class ModernTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;

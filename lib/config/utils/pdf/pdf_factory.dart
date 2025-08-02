@@ -454,16 +454,6 @@ class PDFFactory {
     }
   }
 
-  static double _calcularAreaPiso(dynamic piso) {
-    if (piso.area != null && piso.area!.isNotEmpty) {
-      return double.tryParse(piso.area!) ?? 0.0;
-    } else {
-      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho;
-    }
-  }
-
   static double _calcularVolumenElemento(dynamic elemento) {
     if (elemento.volumen != null && elemento.volumen!.isNotEmpty) {
       return double.tryParse(elemento.volumen!) ?? 0.0;

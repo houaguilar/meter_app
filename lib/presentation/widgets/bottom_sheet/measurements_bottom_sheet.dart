@@ -61,7 +61,6 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                     final item = items[index];
                     return MeasurementItemCard(
                       title: item.title,
-                      description: item.description,
                       imageAsset: item.imageAsset,
                       onTap: () {
                         Navigator.of(context).pop();

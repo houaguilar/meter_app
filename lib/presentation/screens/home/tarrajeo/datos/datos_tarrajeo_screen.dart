@@ -8,11 +8,9 @@ import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dar
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../../init_dependencies.dart';
 import '../../../../widgets/modern_widgets.dart';
 import '../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../widgets/widgets.dart';
-import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosTarrajeoScreen extends ConsumerStatefulWidget {
   const DatosTarrajeoScreen({super.key});
@@ -303,7 +301,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
   }
 
   Widget _buildProporcionSelection() {
-    const proporciones = ["1 : 4", "1 : 5", "1 : 6"];
+    const proporciones = ["1 : 4", "1 : 5"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

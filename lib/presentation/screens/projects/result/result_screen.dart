@@ -538,23 +538,6 @@ class _ResultScreenState extends State<ResultScreen>
     );
   }
 
-  Widget _buildMaterialChips(CalculationResult result) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: result.materials.map((material) {
-        return Chip(
-          label: Text(
-            '${material.description}: ${material.quantity} ${material.unit}',
-            style: const TextStyle(fontSize: 12),
-          ),
-          backgroundColor: AppColors.success.withOpacity(0.1),
-          side: const BorderSide(color: AppColors.success),
-        );
-      }).toList(),
-    );
-  }
-
   Widget _buildModernCard({
     required String title,
     required IconData icon,
@@ -706,9 +689,7 @@ class _ResultScreenState extends State<ResultScreen>
         return Colors.orange;
       case CalculationType.viga:
         return Colors.purple;
-      default:
-        return AppColors.textSecondary;
-    }
+      }
   }
 
   IconData _getTypeIcon(CalculationType type) {
@@ -725,9 +706,7 @@ class _ResultScreenState extends State<ResultScreen>
         return Icons.view_column_outlined;
       case CalculationType.viga:
         return Icons.horizontal_rule_outlined;
-      default:
-        return Icons.calculate_outlined;
-    }
+      }
   }
 
   String _getTypeDisplayName(CalculationType type) {
@@ -744,9 +723,7 @@ class _ResultScreenState extends State<ResultScreen>
         return 'Columna';
       case CalculationType.viga:
         return 'Viga';
-      default:
-        return 'Cálculo';
-    }
+      }
   }
 
   String _formatConfigKey(String key) {

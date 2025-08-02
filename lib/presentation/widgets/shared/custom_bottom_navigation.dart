@@ -46,14 +46,14 @@ class CustomBottomNavigation extends StatelessWidget {
       backgroundColor: AppColors.white,
       icon: Container(
         decoration: BoxDecoration(
-          color: isSelected ? Colors.black : Colors.transparent,
+          color: isSelected ? AppColors.secondary : Colors.transparent,
           shape: BoxShape.rectangle,
           borderRadius: BorderRadius.circular(10),
         ),
         padding: const EdgeInsets.all(8),
         child: Icon(
           icon,
-          color: isSelected ? AppColors.yellowMetraShop : Colors.black,
+          color: isSelected ? AppColors.white : Colors.black,
           size: isSelected ? 30 : 26,
         ),
       ),

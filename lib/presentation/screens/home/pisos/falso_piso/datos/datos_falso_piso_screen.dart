@@ -7,12 +7,10 @@ import 'package:meter_app/presentation/assets/icons.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../../init_dependencies.dart';
 import '../../../../../providers/pisos/falso_piso_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';
-import '../../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosFalsoPisoScreen extends ConsumerStatefulWidget {
   const DatosFalsoPisoScreen({super.key});

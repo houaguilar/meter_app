@@ -1,4 +1,3 @@
-// lib/presentation/screens/perfil/register_location/register_location_screen.dart
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -9,7 +8,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:meter_app/domain/entities/map/location.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/show_snackbar.dart';

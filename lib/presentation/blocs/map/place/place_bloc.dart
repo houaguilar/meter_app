@@ -25,7 +25,6 @@ class PlaceBloc extends Bloc<PlaceEvent, PlaceState> {
 
   // Configuración de optimización
   static const Duration _rateLimitDuration = Duration(milliseconds: 300);
-  static const Duration _cacheValidDuration = Duration(minutes: 10);
   static const int _maxCacheSize = 50;
 
   PlaceBloc({

@@ -15,7 +15,6 @@ class MeasurementSection extends StatelessWidget {
       children: items.map((item) {
         return MeasurementItemCard(
           title: item.title,
-          description: item.description,
           imageAsset: item.imageAsset,
           onTap: () {
             context.pushNamed(item.location);

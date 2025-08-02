@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,14 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/presentation/assets/icons.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/home/losas/losas.dart';
 import '../../../../providers/providers.dart';
 import '../../../../widgets/widgets.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 class ResultLosasScreen extends ConsumerStatefulWidget {
   const ResultLosasScreen({super.key});
