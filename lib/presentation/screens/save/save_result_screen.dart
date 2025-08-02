@@ -11,10 +11,7 @@ import '../../../domain/entities/home/losas/losas.dart';
 import '../../blocs/projects/metrados/metrados_bloc.dart';
 import '../../blocs/projects/metrados/result/result_bloc.dart';
 import '../../blocs/projects/projects_bloc.dart';
-import '../../providers/home/estructuras/structural_element_providers.dart';
 import '../../providers/providers.dart';
-import '../../providers/losas/losas_aligeradas_providers.dart';
-import '../../providers/tarrajeo/tarrajeo_providers.dart';
 
 class SaveResultScreen extends ConsumerStatefulWidget {
   const SaveResultScreen({super.key});
@@ -29,7 +26,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   String? selectedProjectId;
   bool _isLoading = false;
   bool _shouldClearResults = false;
-  List<Project> _currentProjects = []; // Para validar el dropdown
+  List<Project> _currentProjects = [];
 
   @override
   void initState() {
@@ -605,16 +602,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       });
       _showError(state.message);
     }
-  }
-
-  void _clearResults() {
-    // Limpiar todos los providers de resultados
-    ref.read(ladrilloResultProvider.notifier).clearList();
-    ref.read(pisosResultProvider.notifier).clearList();
-    ref.read(tarrajeoResultProvider.notifier).clearList();
-    ref.read(losaAligeradaResultProvider.notifier).clearList();
-    ref.read(columnaResultProvider.notifier).clearList();
-    ref.read(vigaResultProvider.notifier).clearList();
   }
 
   void _showError(String message) {

@@ -8,11 +8,9 @@ import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart
 
 import '../../../../../../../config/theme/theme.dart';
 import '../../../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../../../init_dependencies.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';
-import '../../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosContrapisoScreen extends ConsumerStatefulWidget {
   const DatosContrapisoScreen({super.key});
@@ -302,7 +300,7 @@ class _DatosContrapisoScreenState extends ConsumerState<DatosContrapisoScreen>
   }
 
   Widget _buildProporcionSelection() {
-    const List<String> proporciones = ["1 : 3", "1 : 4"];
+    const List<String> proporciones = ["1 : 4", "1 : 5"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -206,9 +206,7 @@ class UnifiedResultsCombiner {
         return 'Columna';
       case CalculationType.viga:
         return 'Viga';
-      default:
-        return 'Cálculo';
-    }
+      }
   }
 }
 

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,14 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/entities.dart';
 import '../../../../../assets/icons.dart';
 import '../../../../../widgets/widgets.dart';
-import 'package:pdf/widgets.dart' as pw;
 
 class ResultContrapisoScreen extends ConsumerStatefulWidget {
   const ResultContrapisoScreen({super.key});
@@ -147,8 +143,6 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
             _buildMaterialsCard(materials),
             const SizedBox(height: 16),
             _buildConfigurationCard(pisos),
-            const SizedBox(height: 20),
-            _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
             const SizedBox(height: 100),
           ],
         ),
@@ -229,84 +223,6 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
           _buildConfigRow('Proporción Mortero', '1:$proporcion'),
         ],
       ),
-    );
-  }
-
-  // ✅ NUEVA SECCIÓN: Leyenda de unidades
-  Widget _buildLegend() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Leyenda de Unidades:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
-          const SizedBox(height: 8),
-          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
-          const SizedBox(height: 8),
-          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
-          const SizedBox(height: 8),
-          _buildLegendItem('cm', 'Centímetros - Medida de espesor'),
-        ],
-      ),
-    );
-  }
-
-  // ✅ NUEVO: Widget para cada item de la leyenda
-  Widget _buildLegendItem(String unit, String description) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -591,17 +507,6 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
         ),
       ),
     );
-  }
-
-  // Métodos auxiliares
-  double _calcularAreaPiso(Piso piso) {
-    if (piso.area != null && piso.area!.isNotEmpty) {
-      return double.tryParse(piso.area!) ?? 0.0;
-    } else {
-      final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-      final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-      return largo * ancho;
-    }
   }
 
   void _handleSaveAction() {

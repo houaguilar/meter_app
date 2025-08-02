@@ -239,7 +239,7 @@ class _HomeViewState extends State<HomeView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Te puede interesar'),
+        _buildSectionTitle('Red de proveedores'),
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),

@@ -1,9 +1,6 @@
-// lib/config/utils/error_handler.dart
-
 import 'package:flutter/material.dart';
 import 'package:meter_app/config/utils/security_service.dart';
 import '../constants/error/failures.dart';
-import 'security_service.dart';
 
 /// Utilidad centralizada para manejo de errores en la aplicación
 class ErrorHandlerIsar {
@@ -231,9 +228,8 @@ class ErrorHandlerIsar {
             ? failure.message
             : 'Ha ocurrido un error inesperado.';
       case FailureType.unknown:
-      default:
         return 'Error desconocido. Por favor intenta nuevamente.';
-    }
+      }
   }
 
   /// Maneja errores de conectividad

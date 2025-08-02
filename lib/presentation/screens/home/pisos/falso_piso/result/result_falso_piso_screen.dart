@@ -1,15 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-
-import 'package:pdf/widgets.dart' as pw;
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/piso/piso.dart';
@@ -130,8 +125,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           _buildMaterialsCard(materials),
           const SizedBox(height: 20),
           _buildConfigurationCard(falsosPisos),
-          const SizedBox(height: 20),
-          _buildLegend(), // ✅ NUEVA SECCIÓN DE LEYENDA
           const SizedBox(height: 120),
         ],
       ),
@@ -268,82 +261,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
     );
   }
 
-  // ✅ NUEVA SECCIÓN: Leyenda de unidades
-  Widget _buildLegend() {
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.info_outline,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Leyenda de Unidades:',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _buildLegendItem('m²', 'Metros cuadrados - Medida de área'),
-          const SizedBox(height: 8),
-          _buildLegendItem('m³', 'Metros cúbicos - Medida de volumen'),
-          const SizedBox(height: 8),
-          _buildLegendItem('bls', 'Bolsas - Unidad para cemento'),
-        ],
-      ),
-    );
-  }
-
-  // ✅ NUEVO: Widget para cada item de la leyenda
-  Widget _buildLegendItem(String unit, String description) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            unit,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            description,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildModernCard({
     required String title,
     required IconData icon,
@@ -407,30 +324,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           ),
         ],
       ),
-    );
-  }
-
-  // ✅ MEJORADO: Fila de resumen con mayor tamaño de fuente
-  Widget _buildSummaryRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
-        ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 16, // ✅ Aumentado de 14 a 16
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ],
     );
   }
 
@@ -662,11 +555,6 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
         ),
       ),
     );
-  }
-
-  // Métodos auxiliares
-  String _getResistencia(List<Piso> pisos) {
-    return pisos.isNotEmpty ? (pisos.first.resistencia ?? '175 kg/cm²') : 'N/A';
   }
 
   void _handleSaveAction() {

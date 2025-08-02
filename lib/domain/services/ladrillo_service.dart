@@ -77,7 +77,7 @@ Proporción mortero: 1:${ladrillo.proporcionMortero}
 
     // Validar área si se proporciona
     if (tieneArea) {
-      final areaNum = double.tryParse(area!);
+      final areaNum = double.tryParse(area);
       if (areaNum == null || areaNum <= 0) {
         errores.add('El área debe ser un número mayor a 0');
       }
@@ -85,8 +85,8 @@ Proporción mortero: 1:${ladrillo.proporcionMortero}
 
     // Validar medidas si se proporcionan
     if (tieneMedidas) {
-      final largoNum = double.tryParse(largo!);
-      final alturaNum = double.tryParse(altura!);
+      final largoNum = double.tryParse(largo);
+      final alturaNum = double.tryParse(altura);
 
       if (largoNum == null || largoNum <= 0) {
         errores.add('El largo debe ser un número mayor a 0');

@@ -734,18 +734,6 @@ class _ProfileInfoScreenState extends State<ProfileInfoScreen>
     _showSuccessMessage('Copiado al portapapeles');
   }
 
-  /// Abre el cliente de email
-  void _openEmail(String email) {
-    // Implementar launch de email
-    _showSuccessMessage('Abriendo cliente de email...');
-  }
-
-  /// Inicia una llamada telefónica
-  void _callPhone(String phone) {
-    // Implementar launch de llamada
-    _showSuccessMessage('Iniciando llamada...');
-  }
-
   /// Muestra mensaje de error
   void _showErrorMessage(String message) {
     if (!_isMounted) return;

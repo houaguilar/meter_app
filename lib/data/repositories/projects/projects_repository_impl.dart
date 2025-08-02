@@ -3,9 +3,7 @@ import 'package:meter_app/config/constants/error/failures.dart';
 import 'package:meter_app/domain/datasources/projects/projects_local_data_source.dart';
 import 'package:meter_app/domain/datasources/projects/projects_remote_data_source.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../../config/constants/error/exceptions.dart';
 import '../../../config/network/connection_checker.dart';
 import '../../../domain/repositories/projects/projects_repository.dart';
 import '../../datasources/projects/projects_isar_data_source.dart';

@@ -36,13 +36,11 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       _cachedProfile = null;
     }
 
-    // Si ya tenemos el perfil en cache y no es una recarga forzada, usarlo
     if (_cachedProfile != null && !event.forceReload) {
       emit(ProfileLoaded(userProfile: _cachedProfile!));
       return;
     }
 
-    // Solo mostrar loading si no hay perfil previo o es recarga forzada
     if (_cachedProfile == null || event.forceReload) {
       emit(ProfileLoading());
     }
@@ -156,7 +154,6 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     _cachedProfile = null;
   }
 
-  /// Fuerza la recarga del perfil
   void forceReload() {
     add(LoadProfile(forceReload: true));
   }

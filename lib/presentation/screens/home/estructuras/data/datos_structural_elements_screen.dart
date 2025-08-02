@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -8,12 +7,10 @@ import 'package:meter_app/presentation/assets/icons.dart';
 
 import '../../../../../config/theme/theme.dart';
 import '../../../../../data/local/shared_preferences_helper.dart';
-import '../../../../../init_dependencies.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
 import '../../../../widgets/modern_widgets.dart';
 import '../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../widgets/widgets.dart';
-import '../../muro/ladrillo/tutorial/tutorial_ladrillo_screen.dart';
 
 class DatosStructuralElementsScreen extends ConsumerStatefulWidget {
   const DatosStructuralElementsScreen({super.key});
@@ -319,7 +316,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   }
 
   Widget _buildResistenciaSelection() {
-    final opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "245 kg/cm²"];
+    final opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "280 kg/cm²"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

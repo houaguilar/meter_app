@@ -152,59 +152,6 @@ class FeatureDisabledDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildMaterialInfo() {
-    String infoText;
-    IconData iconData;
-    Color iconColor;
-
-    switch (materialType.toLowerCase()) {
-      case 'tabicón':
-        infoText = 'El cálculo para Tabicón requiere algoritmos especializados que estamos desarrollando.';
-        iconData = Icons.construction;
-        iconColor = AppColors.warning;
-        break;
-      case 'bloquetas':
-        infoText = 'Los cálculos para Bloquetas necesitan validaciones adicionales de ingeniería.';
-        iconData = Icons.view_module;
-        iconColor = AppColors.secondary;
-        break;
-      default:
-        infoText = 'Esta funcionalidad está en desarrollo activo.';
-        iconData = Icons.build;
-        iconColor = AppColors.neutral400;
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: AppColors.border,
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            iconData,
-            color: iconColor,
-            size: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              infoText,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildActions(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),

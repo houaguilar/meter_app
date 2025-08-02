@@ -385,28 +385,6 @@ class ResultValidationService {
     return cleaned;
   }
 
-  /// Valida rangos numéricos según el tipo de medición
-  static bool _isValidNumericRange(double value, String measurementType) {
-    switch (measurementType.toLowerCase()) {
-      case 'area':
-        return value > 0 && value <= 10000; // 0 - 10,000 m²
-      case 'largo':
-      case 'ancho':
-      case 'longitud':
-        return value > 0 && value <= 1000; // 0 - 1,000 m
-      case 'altura':
-        return value > 0 && value <= 100; // 0 - 100 m
-      case 'espesor':
-        return value > 0 && value <= 100; // 0 - 100 cm
-      case 'volumen':
-        return value > 0 && value <= 100000; // 0 - 100,000 m³
-      case 'desperdicio':
-        return value >= 0 && value <= 100; // 0% - 100%
-      default:
-        return value > 0; // Por defecto, solo positivos
-    }
-  }
-
   /// Valida ID de metrado
   static bool isValidMetradoId(String metradoId) {
     final trimmed = metradoId.trim();

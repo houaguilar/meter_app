@@ -1,13 +1,9 @@
-// lib/presentation/screens/mapa/optimized_map_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:meter_app/presentation/screens/mapa/widgets/optimized_place_search_screen.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
@@ -45,7 +41,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   bool _isLocationLoading = true;
   String? _locationError;
 
-  // Lista de proveedores simulada (reemplazar con tu fuente de datos real)
   List<ProviderModel> _providers = [];
   int _currentProviderIndex = 0;
 
@@ -499,22 +494,16 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenHeight = MediaQuery.of(context).size.height;
-        final screenWidth = MediaQuery.of(context).size.width;
 
-        // Calculamos la altura del carrusel basada en el tamaño de pantalla
         double carouselHeight;
 
         if (screenHeight <= 667) {
-          // iPhone SE, iPhone 8 y pantallas pequeñas
           carouselHeight = 270;
         } else if (screenHeight <= 736) {
-          // iPhone 8 Plus
           carouselHeight = 270;
         } else if (screenHeight <= 812) {
-          // iPhone X, iPhone 11 Pro
           carouselHeight = 280;
         } else {
-          // Pantallas más grandes
           carouselHeight = 280;
         }
 
@@ -645,7 +634,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       builder: (context, constraints) {
         // Calculamos las dimensiones basadas en el tamaño disponible
         final cardHeight = constraints.maxHeight;
-        final cardWidth = constraints.maxWidth;
 
         // Altura dinámica para la imagen basada en el tamaño de la tarjeta
         final imageHeight = (cardHeight * 0.35).clamp(70.0, 160.0);
