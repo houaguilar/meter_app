@@ -629,164 +629,258 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   }
 
   // TARJETA DE PROVEEDOR OPTIMIZADA PARA TODOS LOS TAMAÑOS DE PANTALLA
+// TARJETA DE PROVEEDOR MEJORADA INSPIRADA EN EQUIPCONSTRUYE
   Widget _buildProviderCard(ProviderModel provider) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Calculamos las dimensiones basadas en el tamaño disponible
         final cardHeight = constraints.maxHeight;
-
-        // Altura dinámica para la imagen basada en el tamaño de la tarjeta
-        final imageHeight = (cardHeight * 0.35).clamp(70.0, 160.0);
+        final screenWidth = MediaQuery.of(context).size.width;
 
         return Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20), // Bordes más redondeados
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+                spreadRadius: 0,
+              ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
                 offset: const Offset(0, 2),
+                spreadRadius: 0,
               ),
             ],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // IMAGEN DEL PROVEEDOR CON ALTURA FIJA RESPONSIVA
+              // HEADER CON LOGO Y RATING
               Container(
-                height: imageHeight,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Logo del proveedor
+                    Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        color: AppColors.neutral100,
+                        border: Border.all(
+                          color: AppColors.neutral200,
+                          width: 1,
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: _buildImage(provider.imageUrl),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    // Información del proveedor
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Nombre del proveedor
+                          Text(
+                            provider.name,
+                            style: AppTypography.h3.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.neutral900,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+
+                          const SizedBox(height: 4),
+
+                          // Rating con estrellas
+                          Row(
+                            children: [
+                              ...List.generate(5, (index) {
+                                double fillAmount = (provider.rating - index).clamp(0.0, 1.0);
+                                return Container(
+                                  margin: const EdgeInsets.only(right: 2),
+                                  child: Stack(
+                                    children: [
+                                      Icon(
+                                        Icons.star_outline,
+                                        size: 16,
+                                        color: AppColors.warning.withOpacity(0.3),
+                                      ),
+                                      ClipRect(
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          widthFactor: fillAmount,
+                                          child: Icon(
+                                            Icons.star,
+                                            size: 16,
+                                            color: AppColors.warning,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+
+                              const SizedBox(width: 6),
+
+                              Text(
+                                provider.rating.toString(),
+                                style: AppTypography.bodySmall.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.neutral700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
+              ),
+
+              // DESCRIPCIÓN
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  provider.description,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.neutral600,
+                    height: 1.4,
                   ),
-                  child: Stack(
-                    fit: StackFit.expand,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // STATS ROW (Ventas realizadas)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.neutral50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: AppColors.neutral200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Imagen principal
-                      _buildImage(provider.imageUrl)
+                      Icon(
+                        Icons.shopping_cart_outlined,
+                        size: 16,
+                        color: AppColors.neutral600,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Ventas realizadas (${provider.salesCount})',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.neutral700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
 
-              // INFORMACIÓN DEL PROVEEDOR - USANDO ESPACIO RESTANTE
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Fila superior: Rating y ventas
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.star,
-                            size: 16,
-                            color: Colors.amber,
+              const SizedBox(height: 16),
+
+              // BOTONES DE ACCIÓN
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    // Botón Ver Productos
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${provider.rating}',
-                            style: AppTypography.bodyMedium.copyWith(
-                              fontWeight: FontWeight.w600,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              '${provider.salesCount}',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.success,
-                                fontWeight: FontWeight.w600,
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _navigateToProviderDetail(provider),
+                            child: Center(
+                              child: Text(
+                                'Ver Productos',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Nombre del proveedor
-                      Flexible(
-                        child: Text(
-                          provider.name,
-                          style: AppTypography.h3.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                    ),
 
-                      const SizedBox(height: 4),
+                    const SizedBox(width: 12),
 
-                      // Descripción del proveedor
-                      Flexible(
-                        child: Text(
-                          provider.description,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.neutral600,
+                    // Botón Cotizar
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
                           ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      // Información adicional
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.location_on,
-                            size: 14,
-                            color: AppColors.neutral500,
-                          ),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              '${provider.distance.toStringAsFixed(1)} km',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.neutral500,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => {}, //_showQuoteDialog(provider),
+                            child: Center(
+                              child: Text(
+                                'Cotizar',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: AppColors.neutral500,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            provider.isOpen ? 'Abierto' : 'Cerrado',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: provider.isOpen
-                                  ? AppColors.success
-                                  : AppColors.error,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ],

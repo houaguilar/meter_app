@@ -129,8 +129,6 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       // Determinar navegación basada en disponibilidad
       if (_isStructuralElementAvailable(element.id)) {
         _navigateToAvailableElement(element);
-      } else {
-        _showStructuralElementNotAvailable(element);
       }
     } catch (e, stackTrace) {
       _handleSelectionError(e, stackTrace);
@@ -165,19 +163,9 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
     }
   }
 
-  /// Muestra dialog para elemento estructural no disponible
-  void _showStructuralElementNotAvailable(StructuralElement element) {
-    showStructuralElementNotAvailable(
-      context,
-      elementName: element.name,
-      customMessage: _getUnavailableMessage(element),
-      onContactSupport: () => _contactSupport(),
-    );
-  }
-
   /// Determina si un elemento estructural está disponible
   bool _isStructuralElementAvailable(String elementId) {
-    const availableIds = ['1', '2']; // Columna y Viga disponibles
+    const availableIds = ['1', '2','3', '4']; // Columna y Viga disponibles
     return availableIds.contains(elementId);
   }
 
@@ -190,21 +178,15 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       case '2':
         print('🌉 Seleccionando VIGA para ID: $elementId');
         return 'viga';
+      case '3':
+        print('🌉 Seleccionando VIGA para ID: $elementId');
+        return 'Zapata';
+      case '4':
+        print('🌉 Seleccionando VIGA para ID: $elementId');
+        return 'Cimiento corrido';
       default:
         print('❓ ID no reconocido: $elementId, usando columna por defecto');
         return 'columna';
-    }
-  }
-
-  /// Obtiene mensaje personalizado para elemento no disponible
-  String _getUnavailableMessage(StructuralElement element) {
-    switch (element.id) {
-      case '3': // Zapata (ejemplo)
-        return 'Los cálculos para zapatas requieren análisis geotécnico especializado.';
-      case '4': // Cimentación (ejemplo)
-        return 'Los cálculos de cimentación necesitan estudios de suelo específicos.';
-      default:
-        return 'Este elemento estructural está en desarrollo y estará disponible próximamente.';
     }
   }
 

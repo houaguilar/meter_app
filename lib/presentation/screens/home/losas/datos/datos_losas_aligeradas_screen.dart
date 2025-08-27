@@ -321,7 +321,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   }
 
   Widget _buildMaterialSelection() {
-    const materiales = ["Ladrillo Hueco", "Bovedillas"];
+    const materiales = ["Ladrillo Hueco", "Poliestireno"];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

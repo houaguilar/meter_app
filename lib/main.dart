@@ -9,6 +9,7 @@ import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
 import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
@@ -116,6 +117,10 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
         BlocProvider(
           create: (_) => combinedResultsBloc,
+        ),
+        BlocProvider(
+          create: (context) => serviceLocator<PremiumBloc>()
+            ..add(LoadPremiumStatus()),
         ),
       ],
       child: MultiBlocListener(

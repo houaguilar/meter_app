@@ -29,6 +29,7 @@ import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
 import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
@@ -38,6 +39,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'config/app_config.dart';
 import 'config/common/cubits/app_user/app_user_cubit.dart';
 import 'config/common/cubits/shimmer/loader_cubit.dart';
 import 'config/constants/secrets/app_secrets.dart';
@@ -45,20 +47,29 @@ import 'config/network/connection_checker.dart';
 import 'data/datasources/auth/auth_remote_data_source_impl.dart';
 import 'data/datasources/home/inicio/article_remote_data_source_impl.dart';
 import 'data/datasources/home/muro/custom_brick_isar_data_source.dart';
+import 'data/datasources/premium/mock_premium_service_impl.dart';
+import 'data/datasources/premium/premium_local_data_source_impl.dart';
+import 'data/datasources/premium/premium_remote_data_source_impl.dart';
+import 'data/datasources/premium/revenuecat_service_impl.dart';
 import 'data/datasources/projects/metrado/metrados_isar_data_source.dart';
 import 'data/datasources/projects/metrado/result/result_isar_data_source.dart';
 import 'data/local/shared_preferences_helper.dart';
+import 'data/models/premium/premium_status_model.dart';
 import 'data/repositories/auth/auth_repository_impl.dart';
 import 'data/repositories/home/inicio/article_repository_impl.dart';
 import 'data/repositories/home/inicio/measurement_repository_impl.dart';
 import 'data/repositories/home/muro/custom_brick_repository_impl.dart';
 import 'data/repositories/map/place_repository_impl.dart';
+import 'data/repositories/premium/premium_repository_impl.dart';
 import 'data/repositories/projects/metrados/metrados_local_repository_impl.dart';
 import 'data/repositories/projects/metrados/result/result_local_repository_impl.dart';
 import 'domain/datasources/auth/auth_remote_data_source.dart';
 import 'domain/datasources/home/inicio/article_remote_data_source.dart';
 import 'domain/datasources/home/muro/custom_brick_local_data_source.dart';
 import 'domain/datasources/map/location_data_source.dart';
+import 'domain/datasources/premium/premium_local_data_source.dart';
+import 'domain/datasources/premium/premium_remote_data_source.dart';
+import 'domain/datasources/premium/premium_service_data_source.dart';
 import 'domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'domain/datasources/projects/metrados/result/result_local_data_source.dart';
 import 'domain/entities/entities.dart';
@@ -71,6 +82,7 @@ import 'domain/repositories/home/inicio/article_repository.dart';
 import 'domain/repositories/home/inicio/measurement_repository.dart';
 import 'domain/repositories/home/muro/custom_brick_repository.dart';
 import 'domain/repositories/map/place_repository.dart';
+import 'domain/repositories/premium/premium_repository.dart';
 import 'domain/repositories/projects/metrados/metrados_local_repository.dart';
 import 'domain/repositories/projects/metrados/result/result_local_repository.dart';
 import 'domain/usecases/auth/change_password.dart';
@@ -130,6 +142,7 @@ Future<void> initDependencies() async {
     ColumnaSchema,
     VigaSchema,
     CustomBrickSchema,
+    PremiumStatusModelSchema,
   ],
     directory: isarDirectory,
     inspector: true,
@@ -174,7 +187,9 @@ Future<void> initDependencies() async {
 
   await _initMapAndSearch();
 
+  _initPremium();
 }
+
 
 Future<void> _initAuth() async {
   print('Inicializando autenticación...');
@@ -498,4 +513,76 @@ void _initCustomBricks() {
   );
 
   print('CustomBrick dependencies registrados exitosamente');
+}
+
+Future<void> _initPremium() async {
+  print('Inicializando Premium...');
+
+  serviceLocator.registerLazySingleton<PremiumLocalDataSource>(
+        () => PremiumLocalDataSourceImpl(serviceLocator<Isar>()),
+  );
+
+  // Remote DataSource (Supabase)
+  serviceLocator.registerLazySingleton<PremiumRemoteDataSource>(
+        () => PremiumRemoteDataSourceImpl(serviceLocator<SupabaseClient>()),
+  );
+
+  // Service DataSource Factory (Mock o RevenueCat)
+  serviceLocator.registerLazySingleton<PremiumServiceDataSource>(
+        () {
+      if (AppConfig.useMockPremium) {
+        return MockPremiumServiceImpl(serviceLocator<SupabaseClient>());
+      } else {
+        return RevenueCatServiceImpl(serviceLocator<SupabaseClient>());
+      }
+    },
+  );
+
+  // Repository
+  serviceLocator.registerLazySingleton<PremiumRepository>(
+        () {
+      final repository = PremiumRepositoryImpl(
+        serviceDataSource: serviceLocator<PremiumServiceDataSource>(),
+        remoteDataSource: serviceLocator<PremiumRemoteDataSource>(),
+        localDataSource: serviceLocator<PremiumLocalDataSource>(),
+        connectionChecker: serviceLocator<InternetConnection>(),
+      );
+
+      // CORREGIDO: Configurar userId dinámicamente
+      final supabaseClient = serviceLocator<SupabaseClient>();
+
+      // Listener para cambios de autenticación - CORREGIDO
+      supabaseClient.auth.onAuthStateChange.listen((authChangeEvent) {
+        final event = authChangeEvent.event;
+        final session = authChangeEvent.session;
+
+        if (event == AuthChangeEvent.signedIn && session?.user != null) {
+          repository.setCurrentUserId(session!.user.id);
+          print('🔧 Premium Repository: User ID configurado: ${session.user.id}');
+        } else if (event == AuthChangeEvent.signedOut) {
+          print('🔧 Premium Repository: Usuario deslogueado');
+        }
+      });
+
+      // Configurar inmediatamente si ya hay un usuario autenticado
+      final currentUser = supabaseClient.auth.currentUser;
+      if (currentUser != null) {
+        repository.setCurrentUserId(currentUser.id);
+        print('🔧 Premium Repository: User ID inicial: ${currentUser.id}');
+      } else {
+        print('🔧 Premium Repository: No hay usuario inicial');
+      }
+
+      return repository;
+    },
+  );
+
+  // BLoC
+  serviceLocator.registerFactory(
+        () => PremiumBloc(
+      premiumRepository: serviceLocator<PremiumRepository>(),
+    ),
+  );
+
+  print('Premium dependencies inicializadas correctamente');
 }

@@ -1,4 +1,3 @@
-// lib/presentation/providers/home/estructuras/structural_element_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,6 +19,18 @@ final List<StructuralElement> _structuralElements = [
   StructuralElement(
     id: '2',
     name: 'Viga',
+    image: AppImages.concretoImg,
+    details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
+  ),
+  StructuralElement(
+    id: '3',
+    name: 'Zapata',
+    image: AppImages.concretoImg,
+    details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
+  ),
+  StructuralElement(
+    id: '4',
+    name: 'Cimiento corrido',
     image: AppImages.concretoImg,
     details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
   ),
