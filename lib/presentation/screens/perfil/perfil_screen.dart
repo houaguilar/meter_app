@@ -5,9 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
+import '../../../config/app_config.dart';
 import '../../../config/theme/theme.dart';
 import '../../../config/utils/show_snackbar.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/premium/premium_bloc.dart';
+import '../../widgets/premium/premium_feature_widget.dart';
+import '../../widgets/premium/premium_paywall_screen.dart';
+import '../../widgets/premium/premium_status_indicator.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -28,6 +33,12 @@ class _PerfilScreenState extends State<PerfilScreen>
   void initState() {
     super.initState();
     _initializeScreen();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final premiumBloc = context.read<PremiumBloc>();
+      print('🔍 PerfilScreen: Forzando carga inicial de premium status');
+      premiumBloc.add(LoadPremiumStatus());
+    });
   }
 
   @override
@@ -86,7 +97,6 @@ class _PerfilScreenState extends State<PerfilScreen>
             }
           },
         ),
-        // NUEVO: Listener para manejar el logout
         BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthInitial) {
@@ -127,6 +137,96 @@ class _PerfilScreenState extends State<PerfilScreen>
     }
   }
 
+  Widget _buildPremiumDebugInfo() {
+    if (!AppConfig.isDevelopment) return const SizedBox.shrink();
+
+    return BlocBuilder<PremiumBloc, PremiumState>(
+      builder: (context, premiumState) {
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.red.shade50,
+            border: Border.all(color: Colors.red.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '🔍 DEBUG PREMIUM STATE:',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'State Type: ${premiumState.runtimeType}',
+                style: TextStyle(fontSize: 10, color: Colors.red.shade600),
+              ),
+              if (premiumState is PremiumLoaded) ...[
+                Text(
+                  'Is Premium: ${premiumState.status.isPremium}',
+                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
+                ),
+                Text(
+                  'Source: ${premiumState.status.source}',
+                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
+                ),
+                Text(
+                  'Until: ${premiumState.status.premiumUntil}',
+                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
+                ),
+                Text(
+                  'Is Active: ${premiumState.status.isActive}',
+                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
+                ),
+              ],
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        context.read<PremiumBloc>().add(LoadPremiumStatus());
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                      ),
+                      child: const Text('Refresh', style: TextStyle(fontSize: 10)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PremiumPaywallScreen(),
+                            fullscreenDialog: true,
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                      ),
+                      child: const Text('Paywall', style: TextStyle(fontSize: 10)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildProfileContent(BuildContext context, ProfileState state) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
@@ -136,6 +236,9 @@ class _PerfilScreenState extends State<PerfilScreen>
           _buildSliverAppBar(state),
           SliverToBoxAdapter(
             child: _buildMainContent(state),
+          ),
+          SliverToBoxAdapter(
+            child: _buildPremiumDebugInfo(),
           ),
         ],
       ),
@@ -147,9 +250,9 @@ class _PerfilScreenState extends State<PerfilScreen>
       expandedHeight: 350,
       floating: false,
       pinned: true,
+      backgroundColor: Colors.transparent,
       elevation: 0,
-      backgroundColor: AppColors.primary,
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+//      systemOverlayStyle: SystemUiOverlayStyle.light,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -168,6 +271,8 @@ class _PerfilScreenState extends State<PerfilScreen>
         ),
       ),
       actions: [
+        const PremiumStatusIndicator(padding: EdgeInsets.symmetric(horizontal: 8)),
+
         if (state is ProfileLoaded)
           IconButton(
             icon: const Icon(Icons.edit_rounded, color: AppColors.white, size: 24),
@@ -195,12 +300,13 @@ class _PerfilScreenState extends State<PerfilScreen>
                   const Spacer(flex: 1),
 
                   // Avatar con inicial del nombre
-                  _buildProfileAvatar(userProfile),
+               //   _buildProfileAvatar(userProfile),
+                  _buildPremiumProfileAvatar(userProfile),
                   const SizedBox(height: 16),
 
                   // Información del usuario
                   Flexible(
-                    child: Text(
+                    /*child: Text(
                       userProfile.name.isNotEmpty ? userProfile.name : 'Usuario MetraShop',
                       style: const TextStyle(
                         fontSize: 22,
@@ -210,7 +316,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                    ),
+                    ),*/
+                    child: _buildUserNameWithPremium(userProfile),
                   ),
                   const SizedBox(height: 8),
 
@@ -241,13 +348,176 @@ class _PerfilScreenState extends State<PerfilScreen>
                   const SizedBox(height: 16),
 
                   // Barra de completitud
-                  _buildCompletionProgress(completionPercentage),
+             //     _buildCompletionProgress(completionPercentage),
+                  _buildPremiumProgressCard(completionPercentage),
+                  const Spacer(flex: 1),
                 ],
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPremiumProgressCard(double completionPercentage) {
+    return BlocBuilder<PremiumBloc, PremiumState>(
+      builder: (context, premiumState) {
+        final isPremium = premiumState is PremiumLoaded && premiumState.status.isActive;
+
+        if (isPremium) {
+          // Usuario premium - mostrar beneficios
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.shade50,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.amber.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.amber.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.diamond, color: Colors.amber.shade600, size: 24),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Usuario Premium',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.amber.shade700,
+                        ),
+                      ),
+                      if (premiumState is PremiumLoaded && premiumState.status.daysRemaining != null)
+                        Text(
+                          'Expira en ${premiumState.status.daysRemaining} días',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.amber.shade600,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumPaywallScreen(),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Gestionar',
+                    style: TextStyle(
+                      color: Colors.amber.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // Usuario gratuito - mostrar progreso y CTA premium
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.white.withOpacity(0.95),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.textSecondary.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Completitud del perfil',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${completionPercentage.round()}%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Progress bar
+                LinearProgressIndicator(
+                  value: completionPercentage / 100,
+                  backgroundColor: AppColors.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+                const SizedBox(height: 12),
+
+                // CTA Premium
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumPaywallScreen(),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.purple.shade400, Colors.blue.shade400],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.star, color: Colors.white, size: 16),
+                        SizedBox(width: 6),
+                        Text(
+                          'Activar Premium',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
     );
   }
 
@@ -261,44 +531,145 @@ class _PerfilScreenState extends State<PerfilScreen>
     );
   }
 
-  Widget _buildProfileAvatar(UserProfile userProfile) {
-    final firstLetter = userProfile.name.isNotEmpty
-        ? userProfile.name[0].toUpperCase()
-        : 'U';
-    final avatarColor = _generateAvatarColor(userProfile.name);
+  Widget _buildPremiumProfileAvatar(UserProfile userProfile) {
+    return BlocBuilder<PremiumBloc, PremiumState>(
+      builder: (context, premiumState) {
+        final isPremium = premiumState is PremiumLoaded && premiumState.status.isActive;
 
-    return Hero(
-      tag: 'profile-avatar',
-      child: Container(
-        width: 90,
-        height: 90,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: RadialGradient(
-            colors: [
-              avatarColor,
-              avatarColor.withOpacity(0.8),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.accent.withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
+        return Stack(
+          children: [
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: isPremium
+                    ? LinearGradient(
+                  colors: [Colors.amber.shade400, Colors.orange.shade400],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+                    : LinearGradient(
+                  colors: [AppColors.accent, AppColors.secondary],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: isPremium
+                        ? Colors.amber.withOpacity(0.3)
+                        : AppColors.accent.withOpacity(0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Text(
+                  userProfile.name.isNotEmpty
+                      ? userProfile.name[0].toUpperCase()
+                      : 'U',
+                  style: const TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.white,
+                  ),
+                ),
+              ),
             ),
+
+            // Badge premium
+            if (isPremium)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade600,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.amber.withOpacity(0.5),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.star,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
+              ),
           ],
-        ),
-        child: Center(
-          child: Text(
-            firstLetter,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.white,
+        );
+      },
+    );
+  }
+
+  Widget _buildUserNameWithPremium(UserProfile userProfile) {
+    return BlocBuilder<PremiumBloc, PremiumState>(
+      builder: (context, premiumState) {
+        final isPremium = premiumState is PremiumLoaded && premiumState.status.isActive;
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                userProfile.name.isNotEmpty
+                    ? userProfile.name
+                    : 'Usuario Anónimo',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ),
-      ),
+
+            if (isPremium) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade600,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amber.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.star, color: Colors.white, size: 12),
+                    SizedBox(width: 4),
+                    Text(
+                      'PRO',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        );
+      },
     );
   }
 
@@ -535,6 +906,8 @@ class _PerfilScreenState extends State<PerfilScreen>
         children: [
           _buildAccountSection(),
           const SizedBox(height: 24),
+          _buildPremiumSection(),
+          const SizedBox(height: 24),
           _buildBusinessSection(),
           const SizedBox(height: 24),
           _buildSecuritySection(),
@@ -577,6 +950,44 @@ class _PerfilScreenState extends State<PerfilScreen>
     );
   }
 
+  Widget _buildPremiumSection() {
+    return BlocBuilder<PremiumBloc, PremiumState>(
+      builder: (context, premiumState) {
+        final isPremium = premiumState is PremiumLoaded && premiumState.status.isActive;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  isPremium ? Icons.diamond : Icons.star_outline,
+                  color: isPremium ? Colors.amber.shade600 : Colors.purple.shade600,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  isPremium ? 'Premium' : 'Mejora tu experiencia',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            if (isPremium)
+              _buildPremiumActiveCard(premiumState as PremiumLoaded)
+            else
+              _buildPremiumUpgradeCard(),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildBusinessSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -591,23 +1002,335 @@ class _PerfilScreenState extends State<PerfilScreen>
         ),
         const SizedBox(height: 16),
 
-        _buildActionCard([
-          _ActionItem(
-            icon: Icons.store_mall_directory_outlined,
-            title: 'Tiendas oficiales',
-            subtitle: 'Explora nuestras tiendas asociadas',
-            color: AppColors.secondary,
-            onTap: () => _showComingSoon('Tiendas oficiales'),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.textSecondary.withOpacity(0.08),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          _ActionItem(
-            icon: Icons.add_business_outlined,
-            title: 'Registrarme como proveedor',
-            subtitle: 'Únete a nuestra red de proveedores',
-            color: AppColors.accent,
-            onTap: () => context.pushNamed('register-location'),
+          child: Column(
+            children: [
+              PremiumFeatureWidget(
+                featureName: 'Análisis Avanzados desde Perfil',
+                fallback: _ActionItem(
+                  icon: Icons.analytics_outlined,
+                  title: 'Análisis básicos',
+                  subtitle: 'Estadísticas limitadas • Actualiza a Premium',
+                  color: Colors.grey,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumPaywallScreen(),
+                        fullscreenDialog: true,
+                      ),
+                    );
+                  },
+                ),
+                child: _ActionItem(
+                  icon: Icons.analytics_rounded,
+                  title: 'Análisis avanzados',
+                  subtitle: 'Estadísticas detalladas y reportes premium',
+                  color: Colors.purple,
+                  onTap: () {
+                    // Navegar a análisis premium
+                    showSnackBar(context, 'Abriendo análisis premium...');
+                  },
+                ),
+              ),
+
+              // Divisor
+              const Divider(height: 1, color: AppColors.border),
+              _buildActionCard([
+                _ActionItem(
+                  icon: Icons.store_mall_directory_outlined,
+                  title: 'Tiendas oficiales',
+                  subtitle: 'Explora nuestras tiendas asociadas',
+                  color: AppColors.secondary,
+                  onTap: () => _showComingSoon('Tiendas oficiales'),
+                ),
+                _ActionItem(
+                  icon: Icons.add_business_outlined,
+                  title: 'Registrarme como proveedor',
+                  subtitle: 'Únete a nuestra red de proveedores',
+                  color: AppColors.accent,
+                  onTap: () => context.pushNamed('register-location'),
+                ),
+              ]),
+            ],
           ),
-        ]),
+        ),
       ],
+    );
+  }
+
+  // AGREGAR estos métodos para los cards premium:
+
+  Widget _buildPremiumActiveCard(PremiumLoaded premiumState) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.amber.shade50, Colors.orange.shade50],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.amber.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade600,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.diamond, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '¡Eres Premium!',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    if (premiumState.status.timeRemainingFormatted.isNotEmpty)
+                      Text(
+                        premiumState.status.timeRemainingFormatted,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.amber.shade700,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PremiumPaywallScreen(),
+                      fullscreenDialog: true,
+                    ),
+                  );
+                },
+                child: const Text('Gestionar'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          const Text(
+            'Funciones premium activas:',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _buildFeatureChip('Análisis avanzados', Icons.analytics),
+              _buildFeatureChip('Sincronización ilimitada', Icons.cloud_sync),
+              _buildFeatureChip('Soporte prioritario', Icons.support_agent),
+              _buildFeatureChip('Respaldos automáticos', Icons.backup),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPremiumUpgradeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.purple.shade50, Colors.blue.shade50],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.purple.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple.shade400, Colors.blue.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.star, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Desbloquea Premium',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          const Text(
+            'Accede a funciones avanzadas y mejora tu productividad',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildBenefitRow('Análisis detallados'),
+                    _buildBenefitRow('Sin límites de sincronización'),
+                    _buildBenefitRow('Temas personalizados'),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.purple.shade400, Colors.blue.shade400],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppConfig.isDevelopment ? 'Gratis' : '\$9.99',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (!AppConfig.isDevelopment)
+                      const Text(
+                        '/mes',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PremiumPaywallScreen(),
+                    fullscreenDialog: true,
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple.shade600,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Ver Planes Premium',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureChip(String label, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.amber.shade100,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.amber.shade300),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.amber.shade700),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              color: Colors.amber.shade700,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBenefitRow(String benefit) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Icon(Icons.check, size: 14, color: Colors.purple.shade600),
+          const SizedBox(width: 6),
+          Text(
+            benefit,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -624,78 +1347,22 @@ class _PerfilScreenState extends State<PerfilScreen>
           ),
         ],
       ),
-      child: Column(
+      /*child: Column(
         children: actions.map((action) => _buildActionRow(action, actions.last == action)).toList(),
-      ),
-    );
-  }
+      ),*/
+      child: Column(
+        children: actions.asMap().entries.map((entry) {
+          final index = entry.key;
+          final action = entry.value;
 
-  Widget _buildActionRow(_ActionItem action, bool isLast) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: action.onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            border: isLast
-                ? null
-                : Border(
-              bottom: BorderSide(
-                color: AppColors.neutral200,
-                width: 1,
-              ),
-            ),
-          ),
-          child: Row(
+          return Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: action.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  action.icon,
-                  size: 24,
-                  color: action.color,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      action.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      action.subtitle,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              Icon(
-                Icons.chevron_right_rounded,
-                color: AppColors.textSecondary,
-                size: 24,
-              ),
+              action,
+              if (index < actions.length - 1)
+                Divider(height: 1, color: AppColors.border),
             ],
-          ),
-        ),
+          );
+        }).toList(),
       ),
     );
   }
@@ -813,6 +1480,7 @@ class _PerfilScreenState extends State<PerfilScreen>
     const totalFields = 6;
 
     if (userProfile.name.isNotEmpty) completedFields++;
+    if (userProfile.email.isNotEmpty) completedFields++;
     if (userProfile.phone.isNotEmpty) completedFields++;
     if (userProfile.employment.isNotEmpty) completedFields++;
     if (userProfile.city.isNotEmpty) completedFields++;
@@ -926,7 +1594,8 @@ class _PerfilScreenState extends State<PerfilScreen>
   }
 }
 
-class _ActionItem {
+// Clase helper para items del menú
+class _ActionItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
@@ -940,4 +1609,64 @@ class _ActionItem {
     required this.color,
     required this.onTap,
   });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: color,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary.withOpacity(0.5),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

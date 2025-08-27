@@ -10,7 +10,19 @@ class SlabRepositoryImpl implements SlabRepository {
     return [
       Slab(
         id: '1',
-        name: 'Losa aligerada',
+        name: 'Losa aligerada tradicional',
+        image: AppImages.pisoCardImg,
+        details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
+      ),
+      Slab(
+        id: '1',
+        name: 'Losa aligerada con viguetas prefabricadas',
+        image: AppImages.pisoCardImg,
+        details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
+      ),
+      Slab(
+        id: '1',
+        name: 'Losa maciza',
         image: AppImages.pisoCardImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),

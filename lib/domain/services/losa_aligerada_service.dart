@@ -24,7 +24,7 @@ class LosaAligeradaService {
   double _calcularVolumenConcretoM2(LosaAligerada losaAligerada) {
     double volumenConcretoM2;
 
-    if (losaAligerada.materialAligerado == "Bovedillas") {
+    if (losaAligerada.materialAligerado == "Poliestireno") {
       switch (losaAligerada.altura) {
         case '17 cm':
           volumenConcretoM2 = 0.0616; // m³/m²

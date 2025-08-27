@@ -133,7 +133,10 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
           context.pushNamed('losas-aligeradas');
           break;
         case '2': // Losa maciza (si se añade en el futuro)
-          context.pushNamed('losas-macizas');
+          context.pushNamed('losas-aligeradas');
+          break;
+        case '3': // Losa maciza (si se añade en el futuro)
+          context.pushNamed('losas-aligeradas');
           break;
         default:
           _showErrorMessage('Tipo de losa no reconocido');
