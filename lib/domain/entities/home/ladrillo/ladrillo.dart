@@ -1,4 +1,3 @@
-// Actualización de la entidad Ladrillo en ladrillo.dart
 
 import 'package:isar/isar.dart';
 

@@ -51,6 +51,13 @@ class AppTypography {
     color: AppColors.textPrimary,
   );
 
+  static TextStyle get titleMedium => GoogleFonts.poppins(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    height: 1.4,
+    color: AppColors.textPrimary,
+  );
+
   // Cuerpo de texto
   static TextStyle get bodyLarge => GoogleFonts.poppins(
     fontSize: 16,

@@ -6,6 +6,7 @@ import 'package:meter_app/presentation/screens/articles/article_detail_screen.da
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/steel_main_screen.dart';
 import 'package:meter_app/presentation/screens/home/muro/ladrillo/custom_brick_config_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/datos/datos_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/result_falso_piso_screen.dart';
@@ -22,6 +23,8 @@ import '../../data/local/shared_preferences_helper.dart';
 import '../../init_dependencies.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/screens/auth/init/metra_shop_screen.dart';
+import '../../presentation/screens/home/acero/viga/datos/datos_steel_beam_screen.dart';
+import '../../presentation/screens/home/acero/viga/result/result_steel_beam_screen.dart';
 import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
@@ -402,6 +405,50 @@ class AppRouter {
                             ),
                           ]
                       ),
+                    ],
+                  ),
+                ],
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'steel',
+                name: 'steel',
+                builder: (context, state) => const SteelMainScreen(),
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'steel-beam',
+                    name: 'steel-beam',
+                    builder: (context, state) => const DatosSteelBeamScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'steel-beam-results',
+                        name: 'steel-beam-results',
+                        builder: (context, state) => const ResultSteelBeamScreen(),
+                        routes: [
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'map-screen-steel-beam',
+                            name: 'map-screen-steel-beam',
+                            builder: (context, state) => const OptimizedMapScreen(),
+                          ),
+                          GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'save-steel-beam',
+                              name: 'save-steel-beam',
+                              builder: (context, state) => const SaveResultScreen(),
+                              routes: [
+                                GoRoute(
+                                  parentNavigatorKey: _rootNavigator,
+                                  path: 'new-project-steel-beam',
+                                  name: 'new-project-steel-beam',
+                                  builder: (context, state) => const NewProjectScreen(),
+                                ),
+                              ]
+                          ),
+                        ],
+                      )
                     ],
                   ),
                 ],

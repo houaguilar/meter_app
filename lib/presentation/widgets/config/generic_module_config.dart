@@ -244,7 +244,7 @@ class GenericModuleConfig {
     spacingSize: SpacingSize.medium,
     paddingSize: PaddingSize.medium,
     animationDuration: mediumAnimation,
-    maxAnimatedItems: 8,
+    maxAnimatedItems: 20,
   );
 
   /// Configuración optimizada para módulo de losas
@@ -253,7 +253,7 @@ class GenericModuleConfig {
     spacingSize: SpacingSize.medium,
     paddingSize: PaddingSize.medium,
     animationDuration: mediumAnimation,
-    maxAnimatedItems: 6,
+    maxAnimatedItems: 8,
   );
 
   /// Configuración optimizada para módulo de pisos
@@ -262,7 +262,7 @@ class GenericModuleConfig {
     spacingSize: SpacingSize.medium,
     paddingSize: PaddingSize.medium,
     animationDuration: mediumAnimation,
-    maxAnimatedItems: 6,
+    maxAnimatedItems: 4,
   );
 
   /// Configuración optimizada para módulo de tarrajeo
@@ -281,6 +281,14 @@ class GenericModuleConfig {
     paddingSize: PaddingSize.medium,
     animationDuration: mediumAnimation,
     maxAnimatedItems: 8,
+  );
+
+  static ModuleConfig get steelModuleConfig => ModuleConfig(
+    gridType: GridType.standard,
+    spacingSize: SpacingSize.medium,
+    paddingSize: PaddingSize.medium,
+    animationDuration: mediumAnimation,
+    maxAnimatedItems: 10,
   );
 }
 

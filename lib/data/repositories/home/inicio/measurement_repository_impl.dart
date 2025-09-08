@@ -41,6 +41,12 @@ class MeasurementRepositoryImpl implements MeasurementRepository {
         description: 'Ingresa los datos y revisa los resultados para los elementos estructurales.',
         location: 'structural-elements',
       ),
+      Measurement(
+        imageAsset: AppImages.concretoImg,
+        title: 'Acero',
+        description: 'Ingresa los datos y revisa los resultados para los elementos estructurales.',
+        location: 'steel',
+      ),
     ];
   }
 }

@@ -425,6 +425,36 @@ class CoatingGridBuilder<T> extends StatelessWidget {
   }
 }
 
+/// Widget específico para módulo de revestimientos
+class SteelGridBuilder<T> extends StatelessWidget {
+  final AsyncValue<List<T>> asyncValue;
+  final Widget Function(T steel, int index) itemBuilder;
+  final VoidCallback? onRetry;
+  final Widget? header;
+
+  const SteelGridBuilder({
+    super.key,
+    required this.asyncValue,
+    required this.itemBuilder,
+    this.onRetry,
+    this.header,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ResponsiveGridBuilder<T>(
+      asyncValue: asyncValue,
+      itemBuilder: itemBuilder,
+      moduleConfig: GenericModuleConfig.steelModuleConfig,
+      loadingText: 'Cargando aceros...',
+      emptyText: 'No hay revestimientos disponibles',
+      errorText: 'Error al cargar revestimientos',
+      onRetry: onRetry,
+      header: header,
+    );
+  }
+}
+
 /// Helper class para crear headers responsivos
 class ResponsiveHeader extends StatelessWidget {
   final String title;
