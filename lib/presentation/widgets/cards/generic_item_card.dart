@@ -421,3 +421,29 @@ class CoatingCard extends StatelessWidget {
     );
   }
 }
+
+class SteelCard extends StatelessWidget {
+  final dynamic steel; // Coating
+  final VoidCallback onTap;
+  final bool enabled;
+
+  const SteelCard({
+    super.key,
+    required this.steel,
+    required this.onTap,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GenericItemCard(
+      item: steel,
+      onTap: onTap,
+      getId: (item) => item.id,
+      getName: (item) => item.name,
+      getImage: (item) => item.image,
+      imageType: ImageType.svg,
+      primaryColor: AppColors.yellowMetraShop,
+    );
+  }
+}

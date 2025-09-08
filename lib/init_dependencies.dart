@@ -73,6 +73,9 @@ import 'domain/datasources/premium/premium_service_data_source.dart';
 import 'domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'domain/datasources/projects/metrados/result/result_local_data_source.dart';
 import 'domain/entities/entities.dart';
+import 'domain/entities/home/acero/viga/steel_bar.dart';
+import 'domain/entities/home/acero/viga/steel_beam.dart';
+import 'domain/entities/home/acero/viga/stirrup_distribution.dart';
 import 'domain/entities/home/estructuras/columna/columna.dart';
 import 'domain/entities/home/estructuras/viga/viga.dart';
 import 'domain/entities/home/losas/losas.dart';
@@ -141,6 +144,9 @@ Future<void> initDependencies() async {
     LosaAligeradaSchema,
     ColumnaSchema,
     VigaSchema,
+    SteelBeamSchema,
+    SteelBarSchema,
+    StirrupDistributionSchema,
     CustomBrickSchema,
     PremiumStatusModelSchema,
   ],

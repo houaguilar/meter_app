@@ -29,7 +29,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   late TabController _tabController;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late SharedPreferencesHelper sharedPreferencesHelper;
 
   int _currentIndex = 0;
   bool _isLoading = false;

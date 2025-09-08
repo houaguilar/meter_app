@@ -535,7 +535,22 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 
   void _saveResults() {
-    _showSuccessMessage('Resultados guardados exitosamente');
+    final tarrajeos = ref.watch(tarrajeoResultProvider);
+    if (tarrajeos.isNotEmpty) {
+      context.pushNamed('save-tarrajeo');
+    } else {
+      _showErrorSnackBar('No hay datos para guardar');
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   void _searchProviders() {

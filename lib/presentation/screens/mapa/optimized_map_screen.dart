@@ -12,6 +12,7 @@ import '../../assets/images.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/map/place/place_bloc.dart';
 import '../../widgets/app_bar/app_bar_widget.dart';
+import '../home/shared/quote/quote_project_selection_screen.dart';
 import 'detail/location_detail_hardcoded_screen.dart';
 import 'widgets/optimized_search_bar.dart';
 import 'widgets/location_permission_dialog.dart';
@@ -691,7 +692,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                           // Nombre del proveedor
                           Text(
                             provider.name,
-                            style: AppTypography.h3.copyWith(
+                            style: AppTypography.titleMedium.copyWith(
                               fontWeight: FontWeight.w700,
                               color: AppColors.neutral900,
                             ),
@@ -762,43 +763,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-
-              const SizedBox(height: 16),
-
-              // STATS ROW (Ventas realizadas)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.neutral50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: AppColors.neutral200,
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.shopping_cart_outlined,
-                        size: 16,
-                        color: AppColors.neutral600,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Ventas realizadas (${provider.salesCount})',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.neutral700,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
               const SizedBox(height: 16),
 
               // BOTONES DE ACCIÓN
@@ -866,7 +830,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                           color: Colors.transparent,
                           child: InkWell(
                             borderRadius: BorderRadius.circular(12),
-                            onTap: () => {}, //_showQuoteDialog(provider),
+                            onTap: () => _showQuoteDialog(provider),
                             child: Center(
                               child: Text(
                                 'Cotizar',
@@ -895,6 +859,17 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       MaterialPageRoute(
         builder: (context) => LocationDetailHardcodedScreen(
           locationId: provider.id, // Usa el ID del proveedor
+        ),
+      ),
+    );
+  }
+
+  void _showQuoteDialog(ProviderModel provider) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => QuoteProjectSelectionScreen(
+          providerName: provider.name,
+          providerImageUrl: provider.imageUrl,
         ),
       ),
     );
