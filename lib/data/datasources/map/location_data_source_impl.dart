@@ -1,15 +1,19 @@
+// lib/data/datasources/map/location_data_source_impl.dart
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:meter_app/domain/datasources/map/location_data_source.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../config/constants/error/exceptions.dart';
 import '../../models/map/location_model.dart';
+import '../../models/map/location_model_with_distance.dart';
 
 class LocationDataSourceImpl implements LocationDataSource {
   final SupabaseClient supabaseClient;
+  bool? _isPostGISAvailable;
 
   LocationDataSourceImpl(this.supabaseClient);
 
@@ -19,7 +23,7 @@ class LocationDataSourceImpl implements LocationDataSource {
       final response = await supabaseClient
           .from('locations')
           .select()
-          .order('created_at', ascending: false); // Ordenar por más recientes
+          .order('created_at', ascending: false);
 
       if (response == null) {
         return [];
@@ -36,6 +40,211 @@ class LocationDataSourceImpl implements LocationDataSource {
       throw ServerException('Error inesperado al cargar ubicaciones: $e');
     }
   }
+
+  /// 🚀 NUEVO: Método optimizado para ubicaciones cercanas
+  @override
+  Future<List<LocationModelWithDistance>> loadNearbyLocations({
+    required double userLat,
+    required double userLng,
+    double radiusKm = 25.0,
+    int maxResults = 15,
+  }) async {
+    try {
+      // Verificar PostGIS disponibilidad (solo una vez)
+      if (_isPostGISAvailable == null) {
+        _isPostGISAvailable = await isPostGISAvailable();
+      }
+
+      if (_isPostGISAvailable == true) {
+        // 🚀 MÉTODO OPTIMIZADO: Usar PostGIS
+        return await _loadNearbyWithPostGIS(
+          userLat: userLat,
+          userLng: userLng,
+          radiusKm: radiusKm,
+          maxResults: maxResults,
+        );
+      } else {
+        // 🔄 MÉTODO FALLBACK: Calcular en cliente
+        return await _loadNearbyWithClientCalculation(
+          userLat: userLat,
+          userLng: userLng,
+          radiusKm: radiusKm,
+          maxResults: maxResults,
+        );
+      }
+    } catch (e) {
+      // En caso de error con PostGIS, usar método cliente como fallback
+      try {
+        return await _loadNearbyWithClientCalculation(
+          userLat: userLat,
+          userLng: userLng,
+          radiusKm: radiusKm,
+          maxResults: maxResults,
+        );
+      } catch (fallbackError) {
+        throw ServerException('Error al cargar ubicaciones cercanas: $fallbackError');
+      }
+    }
+  }
+
+  /// 🚀 Método optimizado con PostGIS
+  Future<List<LocationModelWithDistance>> _loadNearbyWithPostGIS({
+    required double userLat,
+    required double userLng,
+    required double radiusKm,
+    required int maxResults,
+  }) async {
+    try {
+      print('🚀 Usando PostGIS para ubicaciones cercanas');
+
+      final response = await supabaseClient.rpc('get_nearby_locations', params: {
+        'user_lat': userLat,
+        'user_lng': userLng,
+        'radius_km': radiusKm,
+        'max_results': maxResults,
+      });
+
+      if (response == null) {
+        return [];
+      }
+
+      final locations = (response as List)
+          .map((json) => LocationModelWithDistance.fromMap(json))
+          .toList();
+
+      print('🎯 PostGIS encontró ${locations.length} ubicaciones');
+
+      return locations;
+    } catch (e) {
+      print('❌ Error con PostGIS: $e');
+      throw ServerException('Error con PostGIS: $e');
+    }
+  }
+
+  /// 🔄 Método fallback con cálculo en cliente
+  Future<List<LocationModelWithDistance>> _loadNearbyWithClientCalculation({
+    required double userLat,
+    required double userLng,
+    required double radiusKm,
+    required int maxResults,
+  }) async {
+    try {
+      print('🔄 Usando cálculo en cliente para ubicaciones cercanas');
+
+      // Cargar todas las ubicaciones
+      final allLocations = await loadLocations();
+
+      // Calcular distancias y filtrar
+      final locationsWithDistance = <LocationModelWithDistance>[];
+
+      for (final location in allLocations) {
+        final distance = Geolocator.distanceBetween(
+          userLat,
+          userLng,
+          location.latitude,
+          location.longitude,
+        ) / 1000; // Convertir a km
+
+        // Filtrar por radio
+        if (distance <= radiusKm) {
+          locationsWithDistance.add(LocationModelWithDistance(
+            id: location.id,
+            title: location.title,
+            description: location.description,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            userId: location.userId,
+            createdAt: location.createdAt,
+            imageUrl: location.imageUrl,
+            distanceKm: distance,
+          ));
+        }
+      }
+
+      // Ordenar por distancia y limitar resultados
+      locationsWithDistance.sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!));
+      final result = locationsWithDistance.take(maxResults).toList();
+
+      print('🎯 Cliente encontró ${result.length} ubicaciones');
+
+      return result;
+    } catch (e) {
+      throw ServerException('Error en cálculo cliente: $e');
+    }
+  }
+
+  /// 🔧 NUEVO: Verificar disponibilidad PostGIS
+  @override
+  Future<bool> isPostGISAvailable() async {
+    try {
+      await supabaseClient.rpc('get_nearby_locations', params: {
+        'user_lat': -12.0464,
+        'user_lng': -77.0428,
+        'radius_km': 25.0,
+        'max_results': 1,
+      });
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// 🛠️ NUEVO: Configurar PostGIS
+  @override
+  Future<bool> setupPostGIS() async {
+    try {
+      final isAvailable = await isPostGISAvailable();
+      _isPostGISAvailable = isAvailable;
+      return isAvailable;
+    } catch (e) {
+      _isPostGISAvailable = false;
+      return false;
+    }
+  }
+
+  /// 📍 NUEVO: Obtener ubicaciones por usuario
+  @override
+  Future<List<LocationModel>> getLocationsByUser(String userId) async {
+    try {
+      final response = await supabaseClient
+          .from('locations')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+
+      if (response == null) {
+        return [];
+      }
+
+      return (response as List)
+          .map((json) => LocationModel.fromMap(json))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al cargar ubicaciones del usuario: ${e.message}');
+    } catch (e) {
+      throw ServerException('Error inesperado: $e');
+    }
+  }
+
+  /// 🗑️ NUEVO: Eliminar ubicación
+  @override
+  Future<void> deleteLocation(String locationId) async {
+    try {
+      await supabaseClient
+          .from('locations')
+          .delete()
+          .eq('id', locationId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al eliminar ubicación: ${e.message}');
+    } catch (e) {
+      throw ServerException('Error inesperado al eliminar: $e');
+    }
+  }
+
+  // ============================================================
+  // TUS MÉTODOS EXISTENTES - CONSERVADOS INTACTOS ✅
+  // ============================================================
 
   @override
   Future<void> saveLocation(LocationModel location) async {
@@ -136,9 +345,7 @@ class LocationDataSourceImpl implements LocationDataSource {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MÉTODOS PRIVADOS DE VALIDACIÓN Y UTILIDAD
-  // ═══════════════════════════════════════════════════════════════════════════
+  // TUS MÉTODOS PRIVADOS EXISTENTES - CONSERVADOS ✅
 
   void _validateLocationData(LocationModel location) {
     if (location.title.trim().isEmpty) {
@@ -205,12 +412,8 @@ class LocationDataSourceImpl implements LocationDataSource {
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // MÉTODOS ADICIONALES PARA MANTENIMIENTO
-  // ═══════════════════════════════════════════════════════════════════════════
-
   /// Obtener ubicaciones por usuario específico
-  Future<List<LocationModel>> getLocationsByUser(String userId) async {
+  Future<List<LocationModel>> _getLocationsByUserInternal(String userId) async {
     try {
       final response = await supabaseClient
           .from('locations')
@@ -233,7 +436,7 @@ class LocationDataSourceImpl implements LocationDataSource {
   }
 
   /// Eliminar una ubicación (para funcionalidad futura)
-  Future<void> deleteLocation(String locationId) async {
+  Future<void> _deleteLocationInternal(String locationId) async {
     try {
       await supabaseClient
           .from('locations')

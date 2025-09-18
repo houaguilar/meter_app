@@ -26,16 +26,20 @@ class ArticleRepositoryImpl implements ArticleRepository {
       final result = await remoteDataSource.fetchArticles();
       return result.fold(
             (failure) => Left(failure),
-            (models) => Right(models.map((model) => ArticleEntity(
-          id: model.id,
-          title: model.title,
-          description: model.description,
-          imageUrl: model.imageUrl,
-          articleDetail: model.articleDetail,
-          videoId: model.videoId,
-          createdAt: model.createdAt,
-          updatedAt: model.updatedAt,
-        )).toList()),
+            (models) => Right(models.map((model) {
+          print('🔍 Repository mapping: ${model.title} has ${model.contentImages.length} images');
+          return ArticleEntity(
+            id: model.id,
+            title: model.title,
+            description: model.description,
+            imageUrl: model.imageUrl,
+            articleDetail: model.articleDetail,
+            contentImages: model.contentImages, // ✅ AGREGAR ESTA LÍNEA
+            videoId: model.videoId,
+            createdAt: model.createdAt,
+            updatedAt: model.updatedAt,
+          );
+        }).toList()),
       );
 
     } catch (e) {

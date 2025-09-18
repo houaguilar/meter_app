@@ -31,3 +31,82 @@ class ImageUploaded extends LocationsState {
 
   ImageUploaded(this.imageUrl);
 }
+
+/// Estados para ubicaciones cercanas optimizadas
+class NearbyLocationsLoading extends LocationsState {}
+
+class NearbyLocationsLoaded extends LocationsState {
+  final List<LocationWithDistance> nearbyLocations;
+  final double userLat;
+  final double userLng;
+  final double radiusKm;
+  final bool usingPostGIS;
+
+  NearbyLocationsLoaded({
+    required this.nearbyLocations,
+    required this.userLat,
+    required this.userLng,
+    required this.radiusKm,
+    this.usingPostGIS = false,
+  });
+}
+
+class NearbyLocationsEmpty extends LocationsState {
+  final double userLat;
+  final double userLng;
+  final double radiusKm;
+
+  NearbyLocationsEmpty({
+    required this.userLat,
+    required this.userLng,
+    required this.radiusKm,
+  });
+}
+
+/// Estados para PostGIS
+class PostGISChecking extends LocationsState {}
+
+class PostGISAvailable extends LocationsState {
+  final bool isAvailable;
+
+  PostGISAvailable(this.isAvailable);
+}
+
+/// Estados para ubicaciones por usuario
+class UserLocationsLoading extends LocationsState {}
+
+class UserLocationsLoaded extends LocationsState {
+  final List<LocationMap> userLocations;
+  final String userId;
+
+  UserLocationsLoaded({
+    required this.userLocations,
+    required this.userId,
+  });
+}
+
+/// Estados para eliminación
+class LocationDeleting extends LocationsState {}
+
+class LocationDeleted extends LocationsState {
+  final String deletedLocationId;
+
+  LocationDeleted(this.deletedLocationId);
+}
+
+/// Estados combinados para mejor UX
+class LocationsRefreshing extends LocationsState {
+  final List<LocationWithDistance>? previousNearbyLocations;
+
+  LocationsRefreshing({this.previousNearbyLocations});
+}
+
+class LocationOperationSuccess extends LocationsState {
+  final String message;
+  final LocationsState? previousState;
+
+  LocationOperationSuccess({
+    required this.message,
+    this.previousState,
+  });
+}

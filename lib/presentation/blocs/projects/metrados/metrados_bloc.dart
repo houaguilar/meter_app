@@ -31,21 +31,28 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> {
     on<LoadMetradosEvent>(_onLoadMetrados);
     on<EditMetradoEvent>(_onEditMetrado);
     on<DeleteMetradoEvent>(_onDeleteMetrado);
+    on<ResetMetradoStateEvent>(_onResetMetradoState);
+
   }
 
   void _onCreateMetrado(CreateMetradoEvent event, Emitter<MetradosState> emit) async {
     emit(MetradoLoading());
     final result = await _createMetrado(CreateMetradoParams(name: event.name, projectId: event.projectId));
     result.fold(
-          (failure) {
-        if (failure.message.contains('already exists')) {
-          emit(MetradoNameAlreadyExists('El metrado con el nombre "${event.name}" ya existe.'));
-        } else {
-          emit(MetradoFailure(_mapFailureToMessage(failure)));
-        }
-      },
-        (metradoId) {
+            (failure) {
+          // MEJORADO: Manejo más específico de errores basado en el tipo
+          if (failure.type == FailureType.duplicateName) {
+            emit(MetradoNameAlreadyExists(
+                'Ya existe un metrado con el nombre "${event.name}" en este proyecto. '
+                    'Los nombres deben ser únicos dentro del mismo proyecto.'
+            ));
+          } else {
+            emit(MetradoFailure(_mapFailureToMessage(failure)));
+          }
+        },
+            (metradoId) {
           emit(MetradoAdded(metradoId: metradoId));
+          // Cargar metrados actualizados después de crear uno nuevo
           add(LoadMetradosEvent(projectId: event.projectId));
         }
     );
@@ -61,16 +68,26 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> {
   }
 
   void _onEditMetrado(EditMetradoEvent event, Emitter<MetradosState> emit) async {
+    emit(MetradoLoading());
     final result = await _editMetrado(EditMetradoParams(metrado: event.metrado));
     result.fold(
-          (failure) {
-          emit(MetradoFailure(_mapFailureToMessage(failure)));
-          add(LoadMetradosEvent(projectId: event.metrado.projectId));
-          },
-          (_) {
-            emit(MetradoEdited());
-            add(LoadMetradosEvent(projectId: event.metrado.projectId));
+            (failure) {
+          // MEJORADO: Manejo específico de errores en edición
+          if (failure.type == FailureType.duplicateName) {
+            emit(MetradoNameAlreadyExists(
+                'Ya existe un metrado con el nombre "${event.metrado.name}" en este proyecto. '
+                    'Por favor elige un nombre diferente.'
+            ));
+          } else {
+            emit(MetradoFailure(_mapFailureToMessage(failure)));
           }
+          // Recargar metrados después del error para mantener consistencia
+          add(LoadMetradosEvent(projectId: event.metrado.projectId));
+        },
+            (_) {
+          emit(MetradoEdited());
+          add(LoadMetradosEvent(projectId: event.metrado.projectId));
+        }
     );
   }
 
@@ -83,7 +100,20 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> {
     );
   }
 
+  void _onResetMetradoState(ResetMetradoStateEvent event, Emitter<MetradosState> emit) async {
+    emit(MetradoInitial());
+  }
+
   String _mapFailureToMessage(Failure failure) {
-    return 'Server Failure';
+    switch (failure.type) {
+      case FailureType.duplicateName:
+        return failure.message;
+      case FailureType.general:
+        return failure.message.isNotEmpty ? failure.message : 'Ha ocurrido un error';
+      case FailureType.unknown:
+        return 'Error inesperado. Por favor intenta nuevamente.';
+      default:
+        return 'Error del servidor';
+    }
   }
 }

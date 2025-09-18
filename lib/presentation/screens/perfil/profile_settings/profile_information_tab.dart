@@ -1,8 +1,10 @@
+// lib/presentation/screens/perfil/profile_settings/profile_information_tab.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:country_state_city_pro/country_state_city_pro.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/presentation/screens/perfil/profile_settings/widgets/peru_location_picker.dart';
 import '../../../../config/theme/theme.dart';
+import '../../../widgets/dialogs/confirmation_dialog_perfil.dart';
 
 class ImprovedProfileInformationTab extends StatefulWidget {
   const ImprovedProfileInformationTab({super.key});
@@ -18,7 +20,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   late TextEditingController _employmentController;
   late TextEditingController _districtController;
 
-  // Controllers para country_state_city_pro
+  // Controllers para el nuevo widget de ubicación (mantienen la misma función)
   final TextEditingController _countryController = TextEditingController();
   final TextEditingController _stateController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -47,7 +49,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _setupListeners();
   }
 
-  // =============== AGREGADO: Para refrescar cuando vuelves a la pantalla ===============
+  // =============== MANTENER: Para refrescar cuando vuelves a la pantalla ===============
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -75,7 +77,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _populateControllers(dynamic profile) {
-    // =============== MEJORADO: Solo actualizar si es diferente ===============
+    // =============== MANTENER: Solo actualizar si es diferente ===============
     if (_nameController.text != (profile.name ?? '')) {
       _nameController.text = profile.name ?? '';
     }
@@ -135,8 +137,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _saveChanges() {
-    // =============== QUITADO: Validación obligatoria ===============
-    // No validamos el formulario para que los campos sean opcionales
+    // =============== MANTENER: Sin validación obligatoria ===============
     setState(() {
       _isLoading = true;
     });
@@ -154,13 +155,16 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
     ));
 
+    // =============== AGREGAR: SubmitProfile como en tu código original ===============
+    profileBloc.add( SubmitProfile());
+
     setState(() {
       _isLoading = false;
       _formChanged = false;
     });
   }
 
-  // =============== AGREGADO: Método para descartar cambios ===============
+  // =============== MANTENER: Método para descartar cambios ===============
   void _discardChanges() {
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
@@ -171,27 +175,17 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     }
   }
 
-  // =============== AGREGADO: Confirmación al salir ===============
+  // =============== MANTENER: Confirmación al salir ===============
   Future<bool> _onWillPop() async {
     if (!_formChanged) return true;
 
-    final shouldPop = await showDialog<bool>(
+    final shouldPop = await ConfirmationDialog.show(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('¿Salir sin guardar?'),
-        content: Text('Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Salir sin guardar'),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-          ),
-        ],
-      ),
+      title: '¿Salir sin guardar?',
+      content: 'Tienes cambios sin guardar. ¿Estás seguro de que quieres salir?',
+      confirmText: 'Salir sin guardar',
+      cancelText: 'Cancelar',
+      isDestructive: true,
     );
 
     return shouldPop ?? false;
@@ -200,7 +194,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
 
   @override
   Widget build(BuildContext context) {
-    // =============== AGREGADO: WillPopScope para confirmación ===============
+    // =============== MANTENER: WillPopScope para confirmación ===============
     return WillPopScope(
       onWillPop: _onWillPop,
       child: BlocListener<ProfileBloc, ProfileState>(
@@ -208,13 +202,21 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           if (state is ProfileLoaded) {
             _populateControllers(state.userProfile);
           }
+          // =============== AGREGAR: Listener para ProfileSuccess ===============
+          if (state is ProfileSuccess) {
+            _showSuccessDialog();
+          }
+          // =============== AGREGAR: Listener para ProfileError ===============
+          if (state is ProfileError) {
+            _showErrorDialog(state.message);
+          }
         },
         child: Scaffold(
           backgroundColor: AppColors.background,
           body: Form(
             key: _formKey,
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -223,27 +225,28 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                     'Completa tu perfil para una mejor experiencia',
                     Icons.person_outline_rounded,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   _buildPersonalInfoSection(),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                   _buildSectionHeader(
                     'Información Profesional',
                     'Detalles sobre tu actividad laboral',
                     Icons.work_outline_rounded,
                   ),
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                   _buildProfessionalInfoSection(),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 32),
                   _buildSectionHeader(
                     'Ubicación',
                     'Selecciona tu ubicación paso a paso',
                     Icons.location_on_outlined,
                   ),
-                  SizedBox(height: 24),
-                  _buildLocationSectionWithCountryStateCityPro(),
-                  SizedBox(height: 40),
+                  const SizedBox(height: 24),
+                  // =============== CAMBIO: Reemplazar CountryStateCityPicker ===============
+                  _buildLocationSectionWithPeruLocationPicker(),
+                  // =========================================================================
+                  const SizedBox(height: 40),
                   _buildActionButtons(),
-                  SizedBox(height: 32),
                 ],
               ),
             ),
@@ -251,70 +254,55 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         ),
       ),
     );
-    // ===================================================================
   }
 
   Widget _buildSectionHeader(String title, String subtitle, IconData icon) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border.withOpacity(0.5)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
-            blurRadius: 8,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryMetraShop.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primaryMetraShop,
+                size: 20,
+              ),
             ),
-            child: Icon(
-              icon,
-              color: AppColors.primary,
-              size: 24,
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Padding(
+          padding: const EdgeInsets.only(left: 48),
+          child: Text(
+            subtitle,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary.withOpacity(0.8),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildPersonalInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -323,7 +311,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           BoxShadow(
             color: AppColors.primary.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -334,16 +322,14 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             label: 'Nombre completo',
             hint: 'Ingresa tu nombre completo',
             icon: Icons.person_outline_rounded,
-            // =============== QUITADO: validator obligatorio ===============
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           _buildTextFormField(
             controller: _phoneController,
             label: 'Teléfono',
             hint: 'Ingresa tu número de teléfono',
             icon: Icons.phone_outlined,
             keyboardType: TextInputType.phone,
-            // =============== QUITADO: validator obligatorio ===============
           ),
         ],
       ),
@@ -352,7 +338,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
 
   Widget _buildProfessionalInfoSection() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -361,7 +347,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           BoxShadow(
             color: AppColors.primary.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -385,9 +371,10 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     );
   }
 
-  Widget _buildLocationSectionWithCountryStateCityPro() {
+  // =============== NUEVO: Sección con PeruLocationPicker ===============
+  Widget _buildLocationSectionWithPeruLocationPicker() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -396,18 +383,18 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           BoxShadow(
             color: AppColors.primary.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
         children: [
-          // =============== CORREGIDO: Sin parámetros que no existen en v0.0.6 ===============
-          CountryStateCityPicker(
-            country: _countryController,
-            state: _stateController,
-            city: _cityController,
-            dialogColor: AppColors.surface,
+          PeruLocationPicker(
+            countryController: _countryController,
+            departmentController: _stateController, // Mapea state a department
+            provinceController: _cityController,    // Mapea city a province
+            districtController: _districtController,
+            showCountryField: true, // =============== AGREGAR: Mostrar campo país ===============
             textFieldDecoration: InputDecoration(
               fillColor: AppColors.neutral50,
               filled: true,
@@ -424,7 +411,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: AppColors.primary,
                   width: 2,
                 ),
@@ -435,11 +422,11 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                   color: AppColors.border.withOpacity(0.5),
                 ),
               ),
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
               ),
-              labelStyle: TextStyle(
+              labelStyle: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 14,
               ),
@@ -448,16 +435,10 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
                 fontSize: 14,
               ),
             ),
-          ),
-          // ===============================================================================
-
-          SizedBox(height: 20),
-
-          _buildTextFormField(
-            controller: _districtController,
-            label: 'Distrito',
-            hint: 'Ingresa tu distrito',
-            icon: Icons.location_city_outlined,
+            onCountryChanged: _onFormChanged,      // =============== MANTENER: callbacks ===============
+            onDepartmentChanged: _onFormChanged,
+            onProvinceChanged: _onFormChanged,
+            onDistrictChanged: _onFormChanged,
           ),
         ],
       ),
@@ -475,7 +456,10 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      validator: validator,
       decoration: InputDecoration(
+        fillColor: AppColors.neutral50,
+        filled: true,
         labelText: label,
         hintText: hint,
         prefixIcon: Icon(icon, color: AppColors.primary),
@@ -485,12 +469,16 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
-        filled: true,
-        fillColor: AppColors.neutral50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+        hintStyle: TextStyle(color: AppColors.textSecondary.withOpacity(0.7), fontSize: 14),
       ),
-      validator: validator,
     );
   }
 
@@ -499,11 +487,20 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     required List<String> items,
     required String label,
     required IconData icon,
-    required Function(String?) onChanged,
+    required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
       value: value,
+      items: items.map((String item) {
+        return DropdownMenuItem<String>(
+          value: item,
+          child: Text(item),
+        );
+      }).toList(),
+      onChanged: onChanged,
       decoration: InputDecoration(
+        fillColor: AppColors.neutral50,
+        filled: true,
         labelText: label,
         prefixIcon: Icon(icon, color: AppColors.primary),
         border: OutlineInputBorder(
@@ -512,27 +509,19 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
-        filled: true,
-        fillColor: AppColors.neutral50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        labelStyle: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
       ),
-      items: items.map((item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(
-            item,
-            style: TextStyle(
-              color: item == items.first ? AppColors.textSecondary : AppColors.textPrimary,
-            ),
-          ),
-        );
-      }).toList(),
-      onChanged: onChanged,
-      // =============== QUITADO: validator obligatorio ===============
     );
   }
 
+  // =============== MANTENER: Botones de acción originales ===============
   Widget _buildActionButtons() {
     return Column(
       children: [
@@ -551,7 +540,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               elevation: _formChanged ? 2 : 0,
             ),
             child: _isLoading
-                ? SizedBox(
+                ? const SizedBox(
               height: 20,
               width: 20,
               child: CircularProgressIndicator(
@@ -561,7 +550,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             )
                 : Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: const [
                 Icon(Icons.save_outlined, size: 20),
                 SizedBox(width: 8),
                 Text(
@@ -577,7 +566,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
         ),
 
         if (_formChanged) ...[
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           // Botón secundario - Descartar cambios
           SizedBox(
             width: double.infinity,
@@ -586,14 +575,14 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
               onPressed: _isLoading ? null : _discardChanges,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
-                side: BorderSide(color: AppColors.error),
+                side: const BorderSide(color: AppColors.error),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: const [
                   Icon(Icons.restore_outlined, size: 18),
                   SizedBox(width: 8),
                   Text(
@@ -609,6 +598,121 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
           ),
         ],
       ],
+    );
+  }
+
+  // =============== AGREGAR: Diálogos de feedback ===============
+  void _showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.check_circle_outline,
+                  color: AppColors.success,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Perfil Actualizado',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            'Tu información de perfil se ha actualizado correctamente.',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Recargar perfil para refrescar la pantalla anterior
+                context.read<ProfileBloc>().add(LoadProfile(forceReload: true));
+              },
+              child: const Text(
+                'Continuar',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Error',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text(
+                'Cerrar',
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

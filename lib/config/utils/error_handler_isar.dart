@@ -229,7 +229,12 @@ class ErrorHandlerIsar {
             : 'Ha ocurrido un error inesperado.';
       case FailureType.unknown:
         return 'Error desconocido. Por favor intenta nuevamente.';
-      }
+      case FailureType.validation:
+        return 'Error validation';
+
+      case FailureType.server:
+        return 'Error server';
+    }
   }
 
   /// Maneja errores de conectividad

@@ -96,6 +96,10 @@ import 'domain/usecases/home/muro/custom_brick/delete_custom_brick.dart';
 import 'domain/usecases/home/muro/custom_brick/get_all_custom_bricks.dart';
 import 'domain/usecases/home/muro/custom_brick/save_custom_brick.dart';
 import 'domain/usecases/home/muro/custom_brick/update_custom_brick.dart';
+import 'domain/usecases/map/check_postgis_availability.dart';
+import 'domain/usecases/map/delete_location.dart';
+import 'domain/usecases/map/get_locations_by_user.dart';
+import 'domain/usecases/map/get_nearby_locations.dart';
 import 'domain/usecases/map/get_place_details.dart';
 import 'domain/usecases/map/get_place_suggestions.dart';
 import 'domain/usecases/map/upload_image.dart';
@@ -430,6 +434,26 @@ Future<void> _initLocations() async {
   // Usecases
   serviceLocator
     ..registerFactory(
+          () => GetNearbyLocations(
+        serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+          () => CheckPostGISAvailability(
+        serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+          () => GetLocationsByUser(
+        serviceLocator(),
+      ),
+    )
+    ..registerFactory(
+          () => DeleteLocation(
+        serviceLocator(),
+      ),
+    )
+    ..registerFactory(
           () => SaveLocation(
         serviceLocator(),
       ),
@@ -452,8 +476,14 @@ Future<void> _initLocations() async {
       saveLocation: serviceLocator(),
       getAllLocations: serviceLocator(),
       uploadImage: serviceLocator(),
+          getNearbyLocations: serviceLocator(),
+      checkPostGISAvailabilityUseCase: serviceLocator(),
+      getLocationsByUser: serviceLocator(),
+      deleteLocationUseCase: serviceLocator(),
     ),
   );
+
+  print('✅ Locations con PostGIS inicializados correctamente');
 }
 
 Future<void> _initMapAndSearch() async {

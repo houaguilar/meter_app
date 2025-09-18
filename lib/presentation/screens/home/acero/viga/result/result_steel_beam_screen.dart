@@ -1,4 +1,4 @@
-// lib/presentation/screens/home/acero/viga/result_steel_beam_screen.dart
+// lib/presentation/screens/home/acero/viga/result/result_steel_beam_screen.dart - VERSIÓN MEJORADA
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -7,6 +7,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../assets/icons.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 
@@ -85,56 +86,81 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
       if (beams.isEmpty || consolidatedResult == null) {
         print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
-        Future.delayed(const Duration(seconds: 2), () {
-          if (mounted) {
-            context.pop();
-          }
-        });
+        context.pop();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Resultados de Acero'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        actions: [
+          IconButton(
+            onPressed: _shareResults,
+            icon: const Icon(Icons.share),
+            tooltip: 'Compartir resultados',
+          ),
+          IconButton(
+            onPressed: _generatePDF,
+            icon: const Icon(Icons.picture_as_pdf),
+            tooltip: 'Generar PDF',
+          ),
+        ],
+      ),
+      backgroundColor: AppColors.background,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: _buildBody(),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.pushNamed('steel-beam'),
+        backgroundColor: AppColors.secondary,
+        icon: const Icon(Icons.add, color: AppColors.white),
+        label: const Text(
+          'Calcular Más Vigas',
+          style: TextStyle(color: AppColors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBody() {
     final consolidatedResult = ref.watch(calculateConsolidatedSteelProvider);
     final beams = ref.watch(steelBeamResultProvider);
+    final quickStats = ref.watch(quickStatsProvider);
 
-    return PopScope(
-      canPop: true,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Resultados de Acero',
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: AppColors.white,
-            ),
-          ),
-          backgroundColor: AppColors.primary,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white),
-            onPressed: () => context.pop(),
-          ),
-          actions: [
-            IconButton(
-              onPressed: _showShareOptions,
-              icon: const Icon(Icons.share),
-            ),
-          ],
-        ),
-        body: consolidatedResult == null
-            ? _buildEmptyState()
-            : FadeTransition(
-          opacity: _fadeAnimation,
-          child: SlideTransition(
-            position: _slideAnimation,
-            child: _buildResultsContent(consolidatedResult, beams),
-          ),
-        ),
-        bottomNavigationBar: consolidatedResult != null
-            ? _buildBottomActions()
-            : null,
+    if (consolidatedResult == null || beams.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con resumen ejecutivo
+          _buildExecutiveSummary(quickStats),
+          const SizedBox(height: 20),
+
+          // Materiales consolidados
+          _buildConsolidatedMaterials(consolidatedResult),
+          const SizedBox(height: 20),
+
+          // Detalle por viga (expandible)
+          _buildBeamDetails(consolidatedResult),
+          const SizedBox(height: 20),
+
+          // Gráfico de distribución (opcional)
+          _buildDistributionChart(consolidatedResult),
+          const SizedBox(height: 100), // Espacio para FAB
+        ],
       ),
     );
   }
@@ -145,153 +171,137 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.calculate_outlined,
+            Icons.construction,
             size: 80,
-            color: AppColors.neutral300,
+            color: AppColors.textSecondary.withOpacity(0.5),
           ),
           const SizedBox(height: 16),
           Text(
             'No hay resultados disponibles',
-            style: AppTypography.titleMedium.copyWith(
-              color: AppColors.neutral600,
+            style: AppTypography.bodyLarge.copyWith(
+              color: AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Realiza primero el cálculo de acero',
+            'Configura al menos una viga para ver los resultados',
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.neutral500,
+              color: AppColors.textSecondary,
             ),
+            textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton(
-            onPressed: () => context.pop(),
-            child: const Text('Volver al formulario'),
+          ElevatedButton.icon(
+            onPressed: () => context.pushNamed('steel-beam-data'),
+            icon: const Icon(Icons.add),
+            label: const Text('Configurar Vigas'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: AppColors.white,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildResultsContent(dynamic consolidatedResult, List<dynamic> beams) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSummaryCards(consolidatedResult),
-          const SizedBox(height: 24),
-          _buildBeamBreakdown(consolidatedResult),
-          const SizedBox(height: 24),
-          _buildMaterialsTable(consolidatedResult),
-          const SizedBox(height: 24),
-          _buildTechnicalDetails(beams.first), // Mostrar detalles de la primera viga
-          const SizedBox(height: 100), // Espacio para el bottom navigation
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryCards(dynamic consolidatedResult) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Resumen General',
-          style: AppTypography.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1.2,
-          children: [
-            _buildSummaryCard(
-              'Vigas Calculadas',
-              consolidatedResult.numberOfBeams.toString(),
-              Icons.view_column,
-              AppColors.primary,
-            ),
-            _buildSummaryCard(
-              'Peso Total',
-              '${consolidatedResult.totalWeight.toStringAsFixed(1)} kg',
-              Icons.scale,
-              AppColors.success,
-            ),
-            _buildSummaryCard(
-              'Alambre #16',
-              '${consolidatedResult.totalWire.toStringAsFixed(1)} kg',
-              Icons.linear_scale,
-              AppColors.warning,
-            ),
-            _buildSummaryCard(
-              'Total Estribos',
-              consolidatedResult.totalStirrups.toString(),
-              Icons.crop_square,
-              AppColors.info,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSummaryCard(String title, String value, IconData icon, Color color) {
+  Widget _buildExecutiveSummary(Map<String, dynamic> stats) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color, color.withOpacity(0.8)],
+          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(icon, color: AppColors.white, size: 24),
               Container(
-                padding: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: AppColors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.trending_up, color: AppColors.white, size: 16),
+                child: const Icon(
+                  Icons.summarize,
+                  color: AppColors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Resumen Ejecutivo',
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: AppColors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${stats['totalBeams']} ${stats['totalBeams'] == 1 ? 'viga calculada' : 'vigas calculadas'}',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: 20),
+
+          // Métricas principales
+          Row(
             children: [
-              Text(
-                value,
-                style: AppTypography.titleMedium.copyWith(
-                  color: AppColors.white,
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: _buildMetricCard(
+                  'Peso Total',
+                  '${(stats['totalWeight'] as double).toStringAsFixed(2)} kg',
+                  Icons.fitness_center,
                 ),
               ),
-              Text(
-                title,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.white.withOpacity(0.9),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  'Alambre #16',
+                  '${(stats['totalWire'] as double).toStringAsFixed(2)} kg',
+                  Icons.cable,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildMetricCard(
+                  'Total Estribos',
+                  '${stats['totalStirrups']}',
+                  Icons.donut_large,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildMetricCard(
+                  'Elementos',
+                  '${stats['totalBeams']} vigas',
+                  Icons.view_in_ar,
                 ),
               ),
             ],
@@ -301,76 +311,38 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     );
   }
 
-  Widget _buildBeamBreakdown(dynamic consolidatedResult) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Desglose por Viga',
-          style: AppTypography.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.neutral50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.neutral200),
-          ),
-          child: Column(
-            children: consolidatedResult.beamResults.map<Widget>((result) {
-              return _buildBreakdownItem(
-                result.description,
-                '${result.totalWeight.toStringAsFixed(2)} kg',
-                '${result.totalStirrups} estribos',
-              );
-            }).toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBreakdownItem(String name, String weight, String stirrups) {
+  Widget _buildMetricCard(String label, String value, IconData icon) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.white.withOpacity(0.15),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppColors.neutral200),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              name,
-              style: AppTypography.bodyMedium.copyWith(
-                fontWeight: FontWeight.w500,
+          Row(
+            children: [
+              Icon(icon, color: AppColors.white, size: 16),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.white.withOpacity(0.9),
+                    fontSize: 11,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              weight,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              stirrups,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.neutral600,
-              ),
-              textAlign: TextAlign.center,
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTypography.titleMedium.copyWith(
+              color: AppColors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
             ),
           ),
         ],
@@ -378,124 +350,55 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     );
   }
 
-  Widget _buildMaterialsTable(dynamic consolidatedResult) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Lista de Materiales',
-          style: AppTypography.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
+  Widget _buildConsolidatedMaterials(ConsolidatedSteelResult result) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: AppColors.neutral200),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              // Header
               Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                  ),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        'Material',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Cantidad',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        'Unidad',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.inventory,
+                  color: AppColors.white,
+                  size: 20,
                 ),
               ),
-              // Materiales de acero
-              ...consolidatedResult.consolidatedMaterials.entries.map((entry) {
-                return _buildTableRow(
-                  'Acero de ${entry.key}',
-                  entry.value.quantity.toStringAsFixed(1),
-                  entry.value.unit,
-                );
-              }),
-              // Alambre
-              _buildTableRow(
-                'Alambre #16',
-                consolidatedResult.totalWire.toStringAsFixed(1),
-                'kg',
-              ),
-              // Total destacado
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: AppColors.neutral50,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
-                ),
-                child: Row(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
-                      flex: 2,
-                      child: Text(
-                        'PESO TOTAL',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
+                    Text(
+                      'Lista de Materiales Consolidada',
+                      style: AppTypography.titleMedium.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.primary,
                       ),
                     ),
-                    Expanded(
-                      child: Text(
-                        consolidatedResult.totalWeight.toStringAsFixed(2),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const Expanded(
-                      child: Text(
-                        'kg',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                        textAlign: TextAlign.center,
+                    Text(
+                      'Materiales totales para todas las vigas',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   ],
@@ -503,16 +406,95 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 16),
+
+          // Tabla de materiales
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.neutral200),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: const BoxDecoration(
+                    color: AppColors.secondary,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(8),
+                      topRight: Radius.circular(8),
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          'Material',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Cantidad',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          'Unidad',
+                          style: TextStyle(
+                            color: AppColors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Filas de materiales
+                ...result.consolidatedMaterials.entries.map((entry) {
+                  return _buildMaterialRow(
+                    'Acero de ${entry.key}',
+                    entry.value.quantity.toStringAsFixed(0),
+                    entry.value.unit,
+                  );
+                }),
+
+                // Alambre
+                _buildMaterialRow(
+                  'Alambre #16',
+                  result.totalWire.toStringAsFixed(2),
+                  'kg',
+                  isHighlighted: true,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildTableRow(String material, String quantity, String unit) {
+  Widget _buildMaterialRow(String material, String quantity, String unit, {bool isHighlighted = false}) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        border: Border(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: isHighlighted ? AppColors.warning.withOpacity(0.1) : null,
+        border: const Border(
           bottom: BorderSide(color: AppColors.neutral200),
         ),
       ),
@@ -522,13 +504,19 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
             flex: 2,
             child: Text(
               material,
-              style: AppTypography.bodyMedium,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: isHighlighted ? FontWeight.w600 : null,
+                color: isHighlighted ? AppColors.warning : null,
+              ),
             ),
           ),
           Expanded(
             child: Text(
               quantity,
-              style: AppTypography.bodyMedium,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+                color: isHighlighted ? AppColors.warning : AppColors.primary,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -544,261 +532,348 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     );
   }
 
-  Widget _buildTechnicalDetails(dynamic beam) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Detalles Técnicos',
-          style: AppTypography.bodyLarge.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.primary,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.neutral50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.neutral200),
-          ),
-          child: Column(
-            children: [
-              _buildDetailRow('Descripción', beam.description),
-              _buildDetailRow('Desperdicio', '${(beam.waste * 100).toStringAsFixed(1)}%'),
-              _buildDetailRow('Elementos similares', beam.elements.toString()),
-              _buildDetailRow('Recubrimiento', '${(beam.cover * 100).toStringAsFixed(1)} cm'),
-              _buildDetailRow('Dimensiones', '${beam.height} × ${beam.length} × ${beam.width} m'),
-              _buildDetailRow('Usar empalme', beam.useSplice ? 'Sí' : 'No'),
-              _buildDetailRow('Diámetro estribos', beam.stirrupDiameter),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.neutral600,
-            ),
-          ),
-          Text(
-            value,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBottomActions() {
+  Widget _buildBeamDetails(ConsolidatedSteelResult result) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neutral900.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleSaveAction,
-                icon: const Icon(Icons.save),
-                label: const Text('Guardar'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.success,
-                  foregroundColor: AppColors.white,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: _handleProviderAction,
-                icon: const Icon(Icons.location_on),
-                label: const Text('Proveedores'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: AppColors.white,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showShareOptions() {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Compartir Resultados',
-              style: AppTypography.titleMedium.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildShareOption(
-                  icon: Icons.picture_as_pdf,
-                  label: 'PDF',
-                  color: AppColors.error,
-                  onTap: _sharePDF,
-                ),
-                _buildShareOption(
-                  icon: Icons.text_snippet,
-                  label: 'Texto',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
                   color: AppColors.primary,
-                  onTap: _shareText,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShareOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3)),
-          borderRadius: BorderRadius.circular(12),
-          color: color.withOpacity(0.1),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: color,
+                child: const Icon(
+                  Icons.view_list,
+                  color: AppColors.white,
+                  size: 20,
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Detalle por Viga',
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Lista de vigas
+          ...result.beamResults.asMap().entries.map((entry) {
+            final index = entry.key;
+            final beam = entry.value;
+            return _buildBeamDetailCard(beam, index + 1);
+          }),
+        ],
       ),
     );
   }
 
-  void _handleSaveAction() {
-    final consolidatedResult = ref.watch(calculateConsolidatedSteelProvider);
-    if (consolidatedResult != null) {
-      context.pushNamed('save-steel-beam');
-    } else {
-      _showErrorMessage('No hay datos para guardar');
+  Widget _buildBeamDetailCard(SteelCalculationResult beam, int number) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.neutral50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.neutral200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Center(
+                  child: Text(
+                    '$number',
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      beam.description,
+                      style: AppTypography.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${beam.totalWeight.toStringAsFixed(2)} kg • ${beam.totalStirrups} estribos',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // Materiales de esta viga
+          Row(
+            children: [
+              ...beam.materials.entries.take(3).map((entry) {
+                return Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.only(right: 8),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: AppColors.neutral300),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          entry.key,
+                          style: AppTypography.bodySmall.copyWith(
+                            fontSize: 10,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        Text(
+                          '${entry.value.quantity.toStringAsFixed(0)}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              if (beam.materials.length > 3)
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppColors.neutral100,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '+${beam.materials.length - 3}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDistributionChart(ConsolidatedSteelResult result) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.neutral200),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.success,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.pie_chart,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Distribución de Acero por Diámetro',
+                  style: AppTypography.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Gráfico simple de barras horizontales
+          ...result.consolidatedMaterials.entries.map((entry) {
+            final maxQuantity = result.consolidatedMaterials.values
+                .map((v) => v.quantity)
+                .reduce((a, b) => a > b ? a : b);
+            final percentage = (entry.value.quantity / maxQuantity);
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Acero ${entry.key}',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${entry.value.quantity.toStringAsFixed(0)} ${entry.value.unit}',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: AppColors.neutral100,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: FractionallySizedBox(
+                      widthFactor: percentage,
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _getColorForDiameter(entry.key),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Color _getColorForDiameter(String diameter) {
+    // Asignar colores diferentes según el diámetro
+    switch (diameter) {
+      case '6mm':
+      case '1/4"':
+        return AppColors.info;
+      case '8mm':
+      case '3/8"':
+        return AppColors.warning;
+      case '12mm':
+      case '1/2"':
+        return AppColors.primary;
+      case '5/8"':
+        return AppColors.secondary;
+      case '3/4"':
+        return AppColors.success;
+      case '1"':
+        return AppColors.error;
+      default:
+        return AppColors.neutral400;
     }
   }
 
-  void _handleProviderAction() {
-    final consolidatedResult = ref.watch(calculateConsolidatedSteelProvider);
-    if (consolidatedResult != null) {
-      context.pushNamed('map-screen-steel-beam');
-    } else {
-      _showErrorMessage('No hay datos de acero');
-    }
+  void _shareResults() {
+    final summaryText = ref.read(consolidatedSummaryProvider);
+    Share.share(
+      summaryText,
+      subject: 'Resultados de Cálculo de Acero en Vigas',
+    );
   }
 
-  Future<void> _sharePDF() async {
-    try {
-      Navigator.of(context).pop();
-
-      context.showCalculationLoader(
-        message: 'Generando PDF...',
-        description: 'Creando documento con los resultados',
-      );
-
-      // Aquí implementarías la generación del PDF específico para acero
-      // Similar a PDFFactory.generateStructuralElementPDF pero para acero
-      // final pdfFile = await PDFFactory.generateSteelBeamPDF(ref);
-
-      await Future.delayed(const Duration(seconds: 2)); // Simulación
-
-      context.hideLoader();
-
-      // Simulación de compartir
-      final shareText = _generateShareText();
-      await Share.share(shareText);
-
-    } catch (e) {
-      context.hideLoader();
-      _showErrorMessage('Error al generar PDF: $e');
-    }
-  }
-
-  Future<void> _shareText() async {
-    try {
-      Navigator.of(context).pop();
-      final shareText = _generateShareText();
-      await Share.share(shareText);
-    } catch (e) {
-      _showErrorMessage('Error al compartir: $e');
-    }
-  }
-
-  String _generateShareText() {
-    final consolidatedResult = ref.read(calculateConsolidatedSteelProvider);
-    if (consolidatedResult == null) return '';
-
-    final shareData = ref.read(datosShareSteelBeamProvider);
-    return '''
-📊 RESULTADOS DE ACERO EN VIGAS - METRASHOP
-
-$shareData
-
-💡 Generado con METRASHOP
-    ''';
+  void _generatePDF() {
+    // TODO: Implementar generación de PDF
+    _showSuccessMessage('Función de PDF en desarrollo');
   }
 
   void _showErrorMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.check_circle, color: Colors.white, size: 20),
+            const SizedBox(width: 8),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: AppColors.success,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 2),
       ),
     );
   }

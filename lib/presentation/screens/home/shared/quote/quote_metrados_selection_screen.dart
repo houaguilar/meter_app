@@ -59,7 +59,7 @@ class _QuoteMetradosSelectionScreenState extends State<QuoteMetradosSelectionScr
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.primary,
       foregroundColor: AppColors.neutral900,
       elevation: 0,
       centerTitle: true,

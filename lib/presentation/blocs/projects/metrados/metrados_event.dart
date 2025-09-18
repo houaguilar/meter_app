@@ -27,3 +27,5 @@ class DeleteMetradoEvent extends MetradosEvent {
 
   DeleteMetradoEvent({required this.metrado});
 }
+
+class ResetMetradoStateEvent extends MetradosEvent {}
