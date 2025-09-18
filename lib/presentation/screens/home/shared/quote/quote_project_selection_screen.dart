@@ -47,7 +47,7 @@ class _QuoteProjectSelectionScreenState extends State<QuoteProjectSelectionScree
           fontSize: 18,
         ),
       ),
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppColors.primary,
       foregroundColor: AppColors.neutral900,
       elevation: 0,
       centerTitle: true,

@@ -275,8 +275,8 @@ class AppRouter {
                               routes: [
                                 GoRoute(
                                   parentNavigatorKey: _rootNavigator,
-                                  path: 'falso-piso-new-project',
-                                  name: 'falso-piso-new-project',
+                                  path: 'new-project-falso-piso',
+                                  name: 'new-project-falso-piso',
                                   builder: (context, state) => const NewProjectScreen(),
                                 ),
                               ]
@@ -311,8 +311,8 @@ class AppRouter {
                               routes: [
                                 GoRoute(
                                   parentNavigatorKey: _rootNavigator,
-                                  path: 'contrapiso-new-project',
-                                  name: 'contrapiso-new-project',
+                                  path: 'new-project-contrapiso',
+                                  name: 'new-project-contrapiso',
                                   builder: (context, state) => const NewProjectScreen(),
                                 ),
                               ]

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:meter_app/presentation/screens/articles/widgets/article_content_viewer.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -61,13 +62,30 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   }
 
   void _loadArticleData() {
+    print('🔍 ========== _loadArticleData ==========');
+    print('🔍 Looking for article ID: ${widget.articleId}');
+    print('🔍 Article name from navigation: ${widget.articleName}');
+
     final articleBloc = context.read<ArticleBloc>();
     if (articleBloc.state is ArticleLoaded) {
       final articles = (articleBloc.state as ArticleLoaded).articles;
+      print('🔍 Available articles in state:');
+      for (var article in articles) {
+        print('🔍 - ${article.id}: ${article.title} (images: ${article.contentImages.length})');
+      }
+
       _currentArticle = articles.where((a) => a.id == widget.articleId).firstOrNull;
+      print('🔍 Found current article: ${_currentArticle?.title ?? 'NULL'}');
+
+      if (_currentArticle != null) {
+        print('🔍 Current article has ${_currentArticle!.contentImages.length} images');
+      }
+    } else {
+      print('🔍 State is not ArticleLoaded: ${articleBloc.state.runtimeType}');
     }
 
     if (_currentArticle == null) {
+      print('🔍 Current article is null, fetching articles...');
       articleBloc.add(FetchArticles());
     }
   }
@@ -365,6 +383,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   }
 
   Widget _buildLoadedContent(ArticleEntity article, Widget player) {
+
+    print('🔍 ========== _buildLoadedContent ==========');
+    print('🔍 Building loaded content for: ${article.title}');
+    print('🔍 Article has ${article.contentImages.length} images');
+
     return CustomScrollView(
       slivers: [
         _buildAppBar(article.title),
@@ -448,11 +471,40 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Título
             Container(height: 24, width: double.infinity, color: Colors.white),
             const SizedBox(height: 12),
+
+            // Descripción
             Container(height: 16, width: double.infinity, color: Colors.white),
             const SizedBox(height: 8),
             Container(height: 16, width: 200, color: Colors.white),
+            const SizedBox(height: 24),
+
+            // Imagen placeholder
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Caption placeholder
+            Container(height: 14, width: 150, color: Colors.white),
+            const SizedBox(height: 24),
+
+            // Segunda imagen
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ],
         ),
       ),
@@ -499,9 +551,23 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   }
 
   Widget _buildArticleDetails(ArticleEntity article) {
+    print('🔍 ========== _buildArticleDetails ==========');
+    print('🔍 Article: ${article.title}');
+    print('🔍 Article ID: ${article.id}');
+    print('🔍 hasImageContent: ${article.hasImageContent}');
+    print('🔍 contentImages count: ${article.contentImages.length}');
+
+    for (var img in article.contentImages) {
+      print('🔍 Image: ${img.imageUrl}');
+      print('🔍 Caption: ${img.caption}');
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: Column(
+      child: ArticleContentViewer(
+        article: article,
+      ),
+      /*child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Título
@@ -584,7 +650,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
             ),
           ),
         ],
-      ),
+      ),*/
     );
   }
 

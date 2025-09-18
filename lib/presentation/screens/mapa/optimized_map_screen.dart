@@ -7,6 +7,7 @@ import 'package:meter_app/presentation/screens/mapa/widgets/optimized_place_sear
 
 import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
+import '../../../domain/entities/map/location_with_distance.dart';
 import '../../../domain/entities/map/place_entity.dart';
 import '../../assets/images.dart';
 import '../../blocs/map/locations_bloc.dart';
@@ -43,13 +44,8 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   String? _locationError;
 
   List<ProviderModel> _providers = [];
-  int _currentProviderIndex = 0;
-
-  // Configuración del mapa
-  static const CameraPosition _defaultPosition = CameraPosition(
-    target: LatLng(-12.046374, -77.042793), // Lima, Perú
-    zoom: 12.0,
-  );
+  LocationWithDistance? _selectedLocation;
+  List<LocationWithDistance> _nearbyLocations = [];
 
   @override
   bool get wantKeepAlive => true;
@@ -60,7 +56,9 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     WidgetsBinding.instance.addObserver(this);
     _pageController = PageController(viewportFraction: 0.85);
     _initializeLocation();
-    _loadProviders(); // Cargar proveedores
+   // _loadProviders(); // Cargar proveedores
+    context.read<LocationsBloc>().add(LoadLocations());
+
   }
 
   @override
@@ -107,6 +105,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
               if (state is OptimizedPlaceSelected) {
                 setState(() {
                   _selectedPlace = state.place;
+                  _selectedLocation = null;
                 });
 
                 if (_isMapReady && _mapController != null) {
@@ -129,17 +128,17 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
           // FAB de ubicación
           Positioned(
-            bottom: 310,
+            bottom: 320,
             right: 16,
             child: _buildEnhancedLocationFAB(),
           ),
 
           // Carrusel de proveedores (SIN expandir/colapsar)
           Positioned(
-            bottom: 15,
+            bottom: 50,
             left: 0,
             right: 0,
-            child: _buildProvidersCarousel(),
+            child: _buildNearbyLocationsCarousel(),
           ),
 
           if (!_isMapReady || _isLocationLoading)
@@ -216,8 +215,14 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       });
 
       if (_isMapReady && _mapController != null) {
-        await _animateToPosition(position);
+        _animateToPosition(position);
       }
+
+      final locationsState = context.read<LocationsBloc>().state;
+      if (locationsState is LocationsLoaded) {
+        _calculateNearbyLocations(locationsState.locations);
+      }
+
     } catch (e) {
       debugPrint('Error getting current location: $e');
       setState(() {
@@ -258,6 +263,355 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   void _stopLocationUpdates() {
     _positionStream?.cancel();
     _positionStream = null;
+  }
+
+  Widget _buildNearbyLocationsCarousel() {
+    return BlocListener<LocationsBloc, LocationsState>(
+      listener: (context, state) {
+        if (state is LocationsLoaded) {
+          // Calcular ubicaciones cercanas cuando se cargan las ubicaciones
+          _calculateNearbyLocations(state.locations);
+        }
+      },
+      child: _nearbyLocations.isEmpty
+          ? const SizedBox.shrink()
+          : Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, -2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle del carrusel
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              decoration: BoxDecoration(
+                color: AppColors.secondary.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.near_me,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Ubicaciones cercanas (${_nearbyLocations.length})',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Lista de ubicaciones
+            SizedBox(
+              height: 120,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: _nearbyLocations.length,
+                itemBuilder: (context, index) {
+                  final location = _nearbyLocations[index];
+                  final isSelected = _selectedLocation?.id == location.id;
+
+                  return Container(
+                    width: 260,
+                    margin: EdgeInsets.only(
+                      right: index == _nearbyLocations.length - 1 ? 0 : 12,
+                    ),
+                    child: _buildLocationCard(location, isSelected),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationCard(LocationWithDistance location, bool isSelected) {
+    return GestureDetector(
+      onTap: () => _onLocationTapped(location),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.1)
+              : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.secondary.withOpacity(0.2),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: isSelected
+                  ? AppColors.primary.withOpacity(0.15)
+                  : Colors.black.withOpacity(0.05),
+              blurRadius: isSelected ? 8 : 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              // Imagen/Icono
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.primary,
+                ),
+                child: location.imageUrl?.isNotEmpty == true
+                    ? ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    location.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 24,
+                      );
+                    },
+                  ),
+                )
+                    : Icon(
+                  Icons.location_on,
+                  color: AppColors.primary,
+                  size: 24,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // Información
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      location.title,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    if (location.distanceKm != null)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.near_me,
+                            size: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${location.distanceKm!.toStringAsFixed(1)}km',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    const SizedBox(height: 4),
+
+                    if (location.description.isNotEmpty)
+                      Text(
+                        location.description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+
+                    const SizedBox(height: 4),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          // Botón Ver Productos
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppColors.primary,
+                                borderRadius: BorderRadius.circular(12),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.primary,
+                                    AppColors.primary.withOpacity(0.8),
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () => _navigateToProviderDetail(location),
+                                  child: Center(
+                                    child: Text(
+                                      'Ver Productos',
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: AppColors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // Botón Cotizar
+                          Expanded(
+                            child: Container(
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppColors.primary,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () => _showQuoteDialog(location),
+                                  child: Center(
+                                    child: Text(
+                                      'Cotizar',
+                                      style: AppTypography.bodyMedium.copyWith(
+                                        color: AppColors.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _onLocationTapped(LocationWithDistance location) {
+    setState(() {
+      _selectedLocation = location;
+      _selectedPlace = null; // Limpiar selección de búsqueda
+    });
+
+    // Animar el mapa hacia la ubicación seleccionada
+    _animateToLocation(location);
+  }
+
+  // 🆕 SOLO AGREGAR: Calcular ubicaciones cercanas
+  void _calculateNearbyLocations(List<LocationMap> allLocations) {
+    if (_currentPosition == null) return;
+
+    final locationsWithDistance = <LocationWithDistance>[];
+
+    for (final location in allLocations) {
+      final distance = Geolocator.distanceBetween(
+        _currentPosition!.latitude,
+        _currentPosition!.longitude,
+        location.latitude,
+        location.longitude,
+      ) / 1000; // Convertir a km
+
+      // Solo incluir ubicaciones dentro de 25km
+      if (distance <= 25.0) {
+        locationsWithDistance.add(LocationWithDistance.fromLocation(
+          location,
+          distanceKm: distance,
+        ));
+      }
+    }
+
+    // Ordenar por distancia y tomar las 10 más cercanas
+    locationsWithDistance.sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!));
+
+    setState(() {
+      _nearbyLocations = locationsWithDistance.take(10).toList();
+    });
+  }
+
+  // 🆕 SOLO AGREGAR: Animar a ubicación específica
+  Future<void> _animateToLocation(LocationWithDistance location) async {
+    if (_mapController == null) return;
+
+    await _mapController!.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(location.latitude, location.longitude),
+          zoom: 16.0,
+        ),
+      ),
+    );
   }
 
   // NAVEGACIÓN Y ANIMACIONES DEL MAPA
@@ -349,13 +703,23 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
             target: LatLng(_selectedPlace!.lat, _selectedPlace!.lng),
             zoom: 16.0,
           );
+        } else if (_selectedLocation != null) {
+          // 🆕 AGREGAR: Soporte para ubicación seleccionada del carrusel
+          initialPosition = CameraPosition(
+            target: LatLng(_selectedLocation!.latitude, _selectedLocation!.longitude),
+            zoom: 16.0,
+          );
         } else if (_currentPosition != null) {
           initialPosition = CameraPosition(
             target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
             zoom: 15.0,
           );
         } else {
-          initialPosition = _defaultPosition;
+          // 🔧 CORREGIDO: Position por defecto solo como fallback
+          initialPosition = const CameraPosition(
+            target: LatLng(-12.0464, -77.0428), // Lima, Perú como fallback
+            zoom: 12.0,
+          );
         }
 
         return GoogleMap(
@@ -383,15 +747,28 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     final markers = <Marker>{};
 
     for (final location in locations) {
+      final isSelected = _selectedLocation?.id == location.id;
+
       markers.add(
         Marker(
           markerId: MarkerId(location.id ?? ''),
           position: LatLng(location.latitude, location.longitude),
+          icon: isSelected
+              ? BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed)
+              : BitmapDescriptor.defaultMarker,
           infoWindow: InfoWindow(
             title: location.title,
-            snippet: location.description,
+            snippet: location.description ?? '',
           ),
-          onTap: () => _navigateToLocationDetail(location),
+          onTap: () {
+            // 🆕 También actualizar selección desde el mapa
+            if (location is LocationWithDistance) {
+              setState(() {
+                _selectedLocation = location;
+              });
+            }
+            _navigateToLocationDetail(location);
+          },
         ),
       );
     }
@@ -435,6 +812,11 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     // Animar a la ubicación actual si ya la tenemos
     if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
+
+      final locationsState = context.read<LocationsBloc>().state;
+      if (locationsState is LocationsLoaded) {
+        _calculateNearbyLocations(locationsState.locations);
+      }
     }
   }
 
@@ -491,7 +873,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   }
 
   // CARRUSEL DE PROVEEDORES OPTIMIZADO PARA TODOS LOS TAMAÑOS DE PANTALLA
-  Widget _buildProvidersCarousel() {
+  /*Widget _buildProvidersCarousel() {
     return LayoutBuilder(
       builder: (context, constraints) {
         final screenHeight = MediaQuery.of(context).size.height;
@@ -499,13 +881,13 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         double carouselHeight;
 
         if (screenHeight <= 667) {
-          carouselHeight = 270;
+          carouselHeight = 230;
         } else if (screenHeight <= 736) {
-          carouselHeight = 270;
+          carouselHeight = 230;
         } else if (screenHeight <= 812) {
-          carouselHeight = 280;
+          carouselHeight = 240;
         } else {
-          carouselHeight = 280;
+          carouselHeight = 250;
         }
 
         return Container(
@@ -515,9 +897,9 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         );
       },
     );
-  }
+  }*/
 
-  Widget _buildCarouselContent() {
+  /*Widget _buildCarouselContent() {
     if (_providers.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
@@ -575,7 +957,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         );
       },
     );
-  }
+  }*/
 
   Widget _buildImage(String imageUrl) {
     // Si la URL empieza con http/https, es una imagen de red
@@ -631,7 +1013,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
   // TARJETA DE PROVEEDOR OPTIMIZADA PARA TODOS LOS TAMAÑOS DE PANTALLA
 // TARJETA DE PROVEEDOR MEJORADA INSPIRADA EN EQUIPCONSTRUYE
-  Widget _buildProviderCard(ProviderModel provider) {
+  /*Widget _buildProviderCard(ProviderModel provider) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final cardHeight = constraints.maxHeight;
@@ -852,24 +1234,24 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         );
       },
     );
-  }
+  }*/
 
-  void _navigateToProviderDetail(ProviderModel provider) {
+  void _navigateToProviderDetail(LocationWithDistance location) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => LocationDetailHardcodedScreen(
-          locationId: provider.id, // Usa el ID del proveedor
+          locationId: location.id ?? "1", // Usa el ID del proveedor
         ),
       ),
     );
   }
 
-  void _showQuoteDialog(ProviderModel provider) {
+  void _showQuoteDialog(LocationWithDistance location) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => QuoteProjectSelectionScreen(
-          providerName: provider.name,
-          providerImageUrl: provider.imageUrl,
+          providerName: location.title,
+          providerImageUrl: location.imageUrl ?? "",
         ),
       ),
     );

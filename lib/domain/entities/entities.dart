@@ -5,6 +5,6 @@ export 'home/home_list_item.dart';
 export 'projects/project.dart';
 export 'projects/metrado/metrado.dart';
 
-export 'home/inicio/article.dart';
+export 'article/article.dart';
 export 'home/inicio/measurement.dart';
 export 'home/tarrajeo/tarrajeo.dart';

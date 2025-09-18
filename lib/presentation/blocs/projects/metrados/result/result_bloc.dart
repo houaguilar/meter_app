@@ -18,6 +18,7 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
   }) : super(ResultInitial()) {
     on<SaveResultEvent>(_onSaveResult);
     on<LoadResultsEvent>(_onLoadResults);
+    on<ResetResultStateEvent>(_onResetResultState);
   }
 
   void _onSaveResult(SaveResultEvent event, Emitter<ResultState> emit) async {
@@ -38,8 +39,20 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
     );
   }
 
+  void _onResetResultState(ResetResultStateEvent event, Emitter<ResultState> emit) async {
+    emit(ResultInitial());
+  }
+
   String _mapFailureToMessage(Failure failure) {
-    // Puedes mapear los mensajes de fallo a mensajes específicos aquí.
-    return 'Server Failure';
+    switch (failure.type) {
+      case FailureType.duplicateName:
+        return failure.message;
+      case FailureType.general:
+        return failure.message.isNotEmpty ? failure.message : 'Error al guardar resultados';
+      case FailureType.unknown:
+        return 'Error inesperado al procesar los resultados';
+      default:
+        return 'Error del servidor al guardar resultados';
+    }
   }
 }

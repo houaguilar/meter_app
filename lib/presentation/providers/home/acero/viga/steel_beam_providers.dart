@@ -1,3 +1,4 @@
+// lib/presentation/providers/home/acero/viga/steel_beam_providers.dart - VERSIÓN MEJORADA
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -17,7 +18,10 @@ double aplicarDesperdicio(double cantidad, double factorDesperdicio) {
   return cantidad * (1 + factorDesperdicio);
 }
 
-// Providers sin anotaciones para evitar problemas
+// ============================================================================
+// PROVIDERS PRINCIPALES
+// ============================================================================
+
 final steelBeamResultProvider = StateNotifierProvider<SteelBeamResultNotifier, List<SteelBeam>>((ref) {
   return SteelBeamResultNotifier();
 });
@@ -30,7 +34,114 @@ final stirrupDistributionsForBeamProvider = StateNotifierProvider<StirrupDistrib
   return StirrupDistributionsForBeamNotifier();
 });
 
-// Notifiers
+// Provider para calcular resultados individuales por viga
+final calculateIndividualSteelProvider = Provider.family<SteelCalculationResult?, String>((ref, beamId) {
+  final beams = ref.watch(steelBeamResultProvider);
+  final allBars = ref.watch(steelBarsForBeamProvider);
+  final allDistributions = ref.watch(stirrupDistributionsForBeamProvider);
+
+  final beam = beams.where((b) => b.idSteelBeam == beamId).firstOrNull;
+  if (beam == null) return null;
+
+  final steelBars = allBars[beamId] ?? [];
+  final stirrupDistributions = allDistributions[beamId] ?? [];
+
+  return _calculateSteelForBeam(beam, steelBars, stirrupDistributions);
+});
+
+// Provider para calcular resultados consolidados de todas las vigas
+final calculateConsolidatedSteelProvider = Provider<ConsolidatedSteelResult?>((ref) {
+  final beams = ref.watch(steelBeamResultProvider);
+  if (beams.isEmpty) return null;
+
+  final List<SteelCalculationResult> beamResults = [];
+  double totalWeight = 0;
+  double totalWire = 0;
+  int totalStirrups = 0;
+  final Map<String, MaterialQuantity> consolidatedMaterials = {};
+
+  // Calcular cada viga individualmente
+  for (final beam in beams) {
+    final result = ref.read(calculateIndividualSteelProvider(beam.idSteelBeam));
+    if (result != null) {
+      beamResults.add(result);
+      totalWeight += result.totalWeight;
+      totalWire += result.wireWeight;
+      totalStirrups += result.totalStirrups;
+
+      // Consolidar materiales por diámetro
+      result.materials.forEach((diameter, material) {
+        if (consolidatedMaterials.containsKey(diameter)) {
+          final existing = consolidatedMaterials[diameter]!;
+          consolidatedMaterials[diameter] = MaterialQuantity(
+            quantity: existing.quantity + material.quantity,
+            unit: material.unit,
+          );
+        } else {
+          consolidatedMaterials[diameter] = material;
+        }
+      });
+    }
+  }
+
+  return ConsolidatedSteelResult(
+    numberOfBeams: beams.length,
+    totalWeight: totalWeight,
+    totalWire: totalWire,
+    totalStirrups: totalStirrups,
+    beamResults: beamResults,
+    consolidatedMaterials: consolidatedMaterials,
+  );
+});
+
+// Provider para generar texto de resumen consolidado
+final consolidatedSummaryProvider = Provider<String>((ref) {
+  final result = ref.watch(calculateConsolidatedSteelProvider);
+  if (result == null) return "";
+
+  String summary = "=== RESUMEN CONSOLIDADO DE ACERO ===\n\n";
+
+  summary += "📊 RESULTADOS GENERALES:\n";
+  summary += "• Número de vigas: ${result.numberOfBeams}\n";
+  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
+  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n";
+  summary += "• Total de estribos: ${result.totalStirrups}\n\n";
+
+  summary += "📋 MATERIALES CONSOLIDADOS:\n";
+  result.consolidatedMaterials.forEach((diameter, material) {
+    summary += "• Acero de $diameter: ${material.quantity.toStringAsFixed(0)} ${material.unit}\n";
+  });
+
+  summary += "\n🏗️ DETALLE POR VIGA:\n";
+  for (int i = 0; i < result.beamResults.length; i++) {
+    final beamResult = result.beamResults[i];
+    summary += "\n${i + 1}. ${beamResult.description}:\n";
+    summary += "   • Peso: ${beamResult.totalWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Alambre: ${beamResult.wireWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Estribos: ${beamResult.totalStirrups}\n";
+  }
+
+  summary += "\n---\nGenerado por MeterApp - ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}";
+
+  return summary;
+});
+
+// Provider para obtener resumen de vigas creadas
+final beamsSummaryProvider = Provider<String>((ref) {
+  final beams = ref.watch(steelBeamResultProvider);
+  if (beams.isEmpty) return "No hay vigas configuradas";
+
+  if (beams.length == 1) {
+    return "1 viga: ${beams.first.description}";
+  } else {
+    return "${beams.length} vigas: ${beams.map((b) => b.description).join(', ')}";
+  }
+});
+
+// ============================================================================
+// NOTIFIERS
+// ============================================================================
+
 class SteelBeamResultNotifier extends StateNotifier<List<SteelBeam>> {
   SteelBeamResultNotifier() : super([]);
 
@@ -146,6 +257,16 @@ class SteelBarsForBeamNotifier extends StateNotifier<Map<String, List<SteelBar>>
   List<SteelBar> getBarsForBeam(String beamId) {
     return state[beamId] ?? [];
   }
+
+  void clearBarsForBeam(String beamId) {
+    final newState = Map<String, List<SteelBar>>.from(state);
+    newState.remove(beamId);
+    state = newState;
+  }
+
+  void clearAll() {
+    state = {};
+  }
 }
 
 class StirrupDistributionsForBeamNotifier extends StateNotifier<Map<String, List<StirrupDistribution>>> {
@@ -192,85 +313,39 @@ class StirrupDistributionsForBeamNotifier extends StateNotifier<Map<String, List
   List<StirrupDistribution> getDistributionsForBeam(String beamId) {
     return state[beamId] ?? [];
   }
-}
 
-// Provider para cálculos
-final calculateConsolidatedSteelProvider = Provider<ConsolidatedSteelResult?>((ref) {
-  final beams = ref.watch(steelBeamResultProvider);
-  final steelBarsMap = ref.watch(steelBarsForBeamProvider);
-  final stirrupDistributionsMap = ref.watch(stirrupDistributionsForBeamProvider);
-
-  if (beams.isEmpty) return null;
-
-  final results = <SteelCalculationResult>[];
-  double totalWeight = 0;
-  double totalWire = 0;
-  int totalStirrups = 0;
-  final Map<String, MaterialQuantity> consolidatedMaterials = {};
-
-  for (final beam in beams) {
-    final steelBars = steelBarsMap[beam.idSteelBeam] ?? [];
-    final stirrupDistributions = stirrupDistributionsMap[beam.idSteelBeam] ?? [];
-
-    if (steelBars.isNotEmpty && stirrupDistributions.isNotEmpty) {
-      final result = _performSteelCalculation(beam, steelBars, stirrupDistributions);
-      results.add(result);
-
-      totalWeight += result.totalWeight;
-      totalWire += result.wireWeight;
-      totalStirrups += result.totalStirrups;
-
-      // Consolidar materiales
-      result.materials.forEach((diameter, material) {
-        if (consolidatedMaterials.containsKey(diameter)) {
-          final existing = consolidatedMaterials[diameter]!;
-          consolidatedMaterials[diameter] = MaterialQuantity(
-            quantity: existing.quantity + material.quantity,
-            unit: material.unit,
-          );
-        } else {
-          consolidatedMaterials[diameter] = material;
-        }
-      });
-    }
+  void clearDistributionsForBeam(String beamId) {
+    final newState = Map<String, List<StirrupDistribution>>.from(state);
+    newState.remove(beamId);
+    state = newState;
   }
 
-  if (results.isEmpty) return null;
+  void clearAll() {
+    state = {};
+  }
+}
 
-  return ConsolidatedSteelResult(
-    numberOfBeams: results.length,
-    totalWeight: totalWeight,
-    totalWire: totalWire,
-    totalStirrups: totalStirrups,
-    beamResults: results,
-    consolidatedMaterials: consolidatedMaterials,
-  );
-});
+// ============================================================================
+// FUNCIONES DE CÁLCULO
+// ============================================================================
 
-// Función para realizar el cálculo de acero
-SteelCalculationResult _performSteelCalculation(
+/// Calcula el acero para una viga específica
+SteelCalculationResult _calculateSteelForBeam(
     SteelBeam beam,
     List<SteelBar> steelBars,
     List<StirrupDistribution> stirrupDistributions,
     ) {
-  // Inicializar totales por diámetro
   final Map<String, double> totalesPorDiametro = {};
-  for (final diameter in SteelConstants.availableDiameters) {
-    totalesPorDiametro[diameter] = 0.0;
-  }
 
   // **CÁLCULO DE ACERO LONGITUDINAL**
   for (final steelBar in steelBars) {
-    // Longitud del acero longitudinal = altura de la viga
-    final longitudAcero = beam.height;
+    // Longitud básica por barra
+    final longitudBasica = beam.elements * steelBar.quantity * beam.height;
+    totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudBasica;
 
-    // Longitud total base
-    double longitudTotal = beam.elements * steelBar.quantity * longitudAcero;
-    totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudTotal;
-
-    // Agregar empalme si está habilitado y el diámetro lo permite
-    if (beam.useSplice && SteelConstants.spliceLengths.containsKey(steelBar.diameter)) {
-      final longitudEmpalme = beam.elements * steelBar.quantity * SteelConstants.spliceLengths[steelBar.diameter]!;
+    // Agregar empalme si está habilitado
+    if (beam.useSplice) {
+      final longitudEmpalme = beam.elements * steelBar.quantity * (SteelConstants.spliceLengths[steelBar.diameter] ?? 0.6);
       totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
     }
 
@@ -348,22 +423,50 @@ SteelCalculationResult _performSteelCalculation(
   );
 }
 
-// Providers adicionales
+// ============================================================================
+// PROVIDERS ADICIONALES
+// ============================================================================
+
 final availableDiametersProvider = Provider<List<String>>((ref) {
   return SteelConstants.availableDiameters;
 });
 
+// Provider para datos de compartir (texto consolidado)
 final datosShareSteelBeamProvider = Provider<String>((ref) {
-  final result = ref.watch(calculateConsolidatedSteelProvider);
-  if (result == null) return "";
+  return ref.watch(consolidatedSummaryProvider);
+});
 
-  String datos = "";
-  for (final beamResult in result.beamResults) {
-    datos += "* ${beamResult.description}: ${beamResult.totalWeight.toStringAsFixed(2)} kg\n";
+// Provider para validar si hay datos listos para calcular
+final canCalculateProvider = Provider<bool>((ref) {
+  final beams = ref.watch(steelBeamResultProvider);
+  return beams.isNotEmpty;
+});
+
+// Provider para obtener estadísticas rápidas
+final quickStatsProvider = Provider<Map<String, dynamic>>((ref) {
+  final result = ref.watch(calculateConsolidatedSteelProvider);
+  if (result == null) {
+    return {
+      'totalBeams': 0,
+      'totalWeight': 0.0,
+      'totalWire': 0.0,
+      'totalStirrups': 0,
+    };
   }
 
-  datos += "\nTOTAL: ${result.totalWeight.toStringAsFixed(2)} kg de acero\n";
-  datos += "Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg";
+  return {
+    'totalBeams': result.numberOfBeams,
+    'totalWeight': result.totalWeight,
+    'totalWire': result.totalWire,
+    'totalStirrups': result.totalStirrups,
+  };
+});
 
-  return datos;
+// Provider para limpiar todos los datos
+final clearAllDataProvider = Provider<void Function()>((ref) {
+  return () {
+    ref.read(steelBeamResultProvider.notifier).clearList();
+    ref.read(steelBarsForBeamProvider.notifier).clearAll();
+    ref.read(stirrupDistributionsForBeamProvider.notifier).clearAll();
+  };
 });

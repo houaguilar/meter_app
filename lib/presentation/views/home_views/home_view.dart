@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/assets/images.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/measurements_bottom_sheet.dart';
@@ -10,16 +11,17 @@ import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles
 import '../../../config/theme/theme.dart';
 import '../../../domain/entities/entities.dart';
 import '../../blocs/home/inicio/measurement_bloc.dart';
+import '../../providers/providers.dart';
 import '../../widgets/widgets.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});
 
   @override
-  State<HomeView> createState() => _HomeViewState();
+  ConsumerState<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView>
+class _HomeViewState extends ConsumerState<HomeView>
     with AutomaticKeepAliveClientMixin {
 
   @override
@@ -33,10 +35,31 @@ class _HomeViewState extends State<HomeView>
     super.initState();
     // Inicializar después del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted && !_isInitialized) {
-        _initializeData();
+      if (mounted) {
+        _clearAllProviders();
+
+        if (!_isInitialized) {
+          _initializeData();
+        }
       }
     });
+  }
+
+  void _clearAllProviders() {
+    try {
+      // Limpiar providers de resultados de cálculos
+      ref.read(ladrilloResultProvider.notifier).clearList();
+      ref.read(falsoPisoResultProvider.notifier).clearList();
+      ref.read(contrapisoResultProvider.notifier).clearList();
+      ref.read(tarrajeoResultProvider.notifier).clearList();
+      ref.read(losaAligeradaResultProvider.notifier).clearList();
+      ref.read(columnaResultProvider.notifier).clearList();
+      ref.read(vigaResultProvider.notifier).clearList();
+
+      print('DEBUG: Providers limpiados al navegar al home');
+    } catch (e) {
+      print('ERROR al limpiar providers: $e');
+    }
   }
 
   void _initializeData() {

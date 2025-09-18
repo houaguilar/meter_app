@@ -11,11 +11,12 @@ class LocationModel extends LocationMap {
     required super.address,
     super.userId,
     super.imageUrl,
+    super.createdAt,
   });
 
   factory LocationModel.fromMap(Map<String, dynamic> map) {
     return LocationModel(
-      id: map['id']?.toString(), // Convertir a String si es necesario
+      id: map['id']?.toString(),
       title: map['title']?.toString() ?? '',
       description: map['description']?.toString() ?? '',
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
@@ -23,6 +24,9 @@ class LocationModel extends LocationMap {
       address: map['address']?.toString() ?? '',
       userId: map['user_id']?.toString(),
       imageUrl: map['image_url']?.toString(),
+      createdAt: map['created_at'] != null
+          ? DateTime.tryParse(map['created_at'].toString())
+          : null,
     );
   }
 
@@ -42,10 +46,15 @@ class LocationModel extends LocationMap {
       map['id'] = id;
     }
 
+    // Solo incluir created_at si no es null
+    if (createdAt != null) {
+      map['created_at'] = createdAt!.toIso8601String();
+    }
+
     return map;
   }
 
-  // Método para crear una copia con valores actualizados
+  @override
   LocationModel copyWith({
     String? id,
     String? title,
@@ -55,6 +64,7 @@ class LocationModel extends LocationMap {
     String? address,
     String? userId,
     String? imageUrl,
+    DateTime? createdAt,
   }) {
     return LocationModel(
       id: id ?? this.id,
@@ -65,38 +75,7 @@ class LocationModel extends LocationMap {
       address: address ?? this.address,
       userId: userId ?? this.userId,
       imageUrl: imageUrl ?? this.imageUrl,
+      createdAt: createdAt ?? this.createdAt,
     );
-  }
-
-  @override
-  String toString() {
-    return 'LocationModel(id: $id, title: $title, latitude: $latitude, longitude: $longitude, userId: $userId)';
-  }
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-
-    return other is LocationModel &&
-        other.id == id &&
-        other.title == title &&
-        other.description == description &&
-        other.latitude == latitude &&
-        other.longitude == longitude &&
-        other.address == address &&
-        other.userId == userId &&
-        other.imageUrl == imageUrl;
-  }
-
-  @override
-  int get hashCode {
-    return id.hashCode ^
-    title.hashCode ^
-    description.hashCode ^
-    latitude.hashCode ^
-    longitude.hashCode ^
-    address.hashCode ^
-    userId.hashCode ^
-    imageUrl.hashCode;
   }
 }

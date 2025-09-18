@@ -15,3 +15,5 @@ class LoadResultsEvent extends ResultEvent {
 
   LoadResultsEvent({required this.metradoId});
 }
+
+class ResetResultStateEvent extends ResultEvent {}

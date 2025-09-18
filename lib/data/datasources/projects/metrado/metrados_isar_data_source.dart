@@ -1,3 +1,5 @@
+// lib/data/datasources/projects/metrado/metrados_isar_data_source.dart
+
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
@@ -33,19 +35,18 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
         throw const ServerException('El proyecto especificado no existe');
       }
 
-      // Verificar duplicados en el mismo proyecto
+      // CORREGIDO: Solo verificar duplicados dentro del proyecto actual
+      // Los nombres de metrados pueden repetirse entre diferentes proyectos
       final existingMetrado = await isar.metrados
           .filter()
           .nameEqualTo(name.trim())
           .and()
-          .projectIdEqualTo(projectId)
+          .projectIdEqualTo(projectId) // Solo en este proyecto específico
           .findFirst();
 
       if (existingMetrado != null) {
-        throw Failure(
-          message: 'Ya existe un metrado con el nombre "$name" en este proyecto',
-          type: FailureType.duplicateName,
-        );
+        // MEJORADO: Lanzar ServerException en lugar de Failure para consistencia
+        throw const ServerException('Ya existe un metrado con este nombre en el proyecto actual');
       }
 
       // Crear el nuevo metrado
@@ -64,7 +65,11 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
       });
 
       return metrado.id;
+    } on ServerException {
+      // Re-lanzar ServerExceptions tal como están
+      rethrow;
     } on Failure {
+      // Convertir Failure a ServerException para consistencia
       rethrow;
     } catch (e) {
       throw ServerException('Error al crear metrado: ${e.toString()}');
@@ -126,206 +131,42 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
         throw const ServerException('El nombre del metrado es demasiado largo');
       }
 
-      // Verificar duplicados (excluyendo el metrado actual)
-      final existingMetrado = await isar.metrados
+      // CORREGIDO: Verificar duplicados solo en el mismo proyecto, excluyendo el metrado actual
+      final existingMetrados = await isar.metrados
           .filter()
           .nameEqualTo(metrado.name.trim())
           .and()
           .projectIdEqualTo(metrado.projectId)
-          .and()
-          .not()
-          .idEqualTo(metrado.id)
-          .findFirst();
+          .findAll();
 
-      if (existingMetrado != null) {
-        throw Failure(
-          message: 'Ya existe un metrado con el nombre "${metrado.name}" en este proyecto',
-          type: FailureType.duplicateName,
-        );
+      // Verificar si existe algún metrado con el mismo nombre que NO sea el actual
+      final duplicateExists = existingMetrados
+          .any((m) => m.id != metrado.id);
+
+      if (duplicateExists) {
+        throw const ServerException('Ya existe un metrado con este nombre en el proyecto actual');
       }
 
-      // Actualizar el metrado
-      final updatedMetrado = metrado.copyWith(name: metrado.name.trim());
-
+      // Actualizar en la base de datos
       await isar.writeTxn(() async {
-        await isar.metrados.put(updatedMetrado);
+        await isar.metrados.put(metrado);
       });
-    } on Failure {
-      rethrow;
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('Error al actualizar metrado: ${e.toString()}');
     }
   }
 
-  /// Elimina todos los resultados asociados a un metrado
+  // Método auxiliar para eliminar todos los resultados de un metrado
   Future<void> _deleteAllMetradoResults(int metradoId) async {
     final isar = isarService;
 
-    // Eliminar ladrillos
-    final ladrillosToDelete = await isar.ladrillos
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in ladrillosToDelete) {
-      await isar.ladrillos.delete(item.id);
-    }
-
-    // Eliminar pisos
-    final pisosToDelete = await isar.pisos
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in pisosToDelete) {
-      await isar.pisos.delete(item.id);
-    }
-
-    // Eliminar tarrajeos
-    final tarrajeosToDelete = await isar.tarrajeos
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in tarrajeosToDelete) {
-      await isar.tarrajeos.delete(item.id);
-    }
-
-    // Eliminar losas aligeradas
-    final losasToDelete = await isar.losaAligeradas
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in losasToDelete) {
-      await isar.losaAligeradas.delete(item.id);
-    }
-
-    // Eliminar columnas
-    final columnasToDelete = await isar.columnas
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in columnasToDelete) {
-      await isar.columnas.delete(item.id);
-    }
-
-    // Eliminar vigas
-    final vigasToDelete = await isar.vigas
-        .filter()
-        .metradoIdEqualTo(metradoId)
-        .findAll();
-    for (var item in vigasToDelete) {
-      await isar.vigas.delete(item.id);
-    }
-  }
-
-  /// Obtiene el conteo total de resultados para un metrado
-  Future<int> getTotalResultsCount(int metradoId) async {
-    try {
-      final isar = isarService;
-
-      final ladrillosCount = await isar.ladrillos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      final pisosCount = await isar.pisos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      final tarrajeosCount = await isar.tarrajeos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      final losasCount = await isar.losaAligeradas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      final columnasCount = await isar.columnas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      final vigasCount = await isar.vigas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      return ladrillosCount + pisosCount + tarrajeosCount +
-          losasCount + columnasCount + vigasCount;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Verifica si un metrado tiene resultados
-  Future<bool> hasResults(int metradoId) async {
-    final count = await getTotalResultsCount(metradoId);
-    return count > 0;
-  }
-
-  /// Obtiene estadísticas detalladas de un metrado
-  Future<Map<String, int>> getMetradoStatistics(int metradoId) async {
-    try {
-      final isar = isarService;
-      final stats = <String, int>{};
-
-      stats['ladrillos'] = await isar.ladrillos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      stats['pisos'] = await isar.pisos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      stats['tarrajeos'] = await isar.tarrajeos
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      stats['losas'] = await isar.losaAligeradas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      stats['columnas'] = await isar.columnas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      stats['vigas'] = await isar.vigas
-          .filter()
-          .metradoIdEqualTo(metradoId)
-          .count();
-
-      return stats;
-    } catch (e) {
-      return {};
-    }
-  }
-
-  /// Busca metrados por nombre en un proyecto
-  Future<List<Metrado>> searchMetrados(int projectId, String query) async {
-    try {
-      final isar = isarService;
-
-      if (query.trim().isEmpty) {
-        return await loadMetrados(projectId);
-      }
-
-      final metrados = await isar.metrados
-          .filter()
-          .projectIdEqualTo(projectId)
-          .and()
-          .nameContains(query.trim(), caseSensitive: false)
-          .sortByProjectIdDesc()
-          .findAll();
-
-      return metrados;
-    } catch (e) {
-      throw ServerException('Error al buscar metrados: ${e.toString()}');
-    }
+    // Eliminar todos los tipos de resultados asociados al metrado
+    await isar.ladrillos.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.pisos.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.tarrajeos.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.losaAligeradas.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.columnas.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.vigas.filter().metradoIdEqualTo(metradoId).deleteAll();
   }
 }
