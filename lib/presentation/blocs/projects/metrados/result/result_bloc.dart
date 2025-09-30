@@ -22,12 +22,29 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
   }
 
   void _onSaveResult(SaveResultEvent event, Emitter<ResultState> emit) async {
+    print('🔄 ResultBloc: Iniciando guardado de resultados...');
     emit(ResultLoading());
-    final result = await saveResultsUseCase(SaveResultParams(results: event.results, metradoId: event.metradoId));
-    result.fold(
-          (failure) => emit(ResultFailure(_mapFailureToMessage(failure))),
-          (_) => emit(ResultSuccess(event.results)),
-    );
+
+    try {
+      final result = await saveResultsUseCase(SaveResultParams(
+          results: event.results,
+          metradoId: event.metradoId
+      ));
+
+      result.fold(
+            (failure) {
+          print('❌ ResultBloc: Error al guardar - ${failure.message}');
+          emit(ResultFailure(_mapFailureToMessage(failure)));
+        },
+            (_) {
+          print('✅ ResultBloc: Resultados guardados exitosamente');
+          emit(ResultSuccess(event.results));
+        },
+      );
+    } catch (e) {
+      print('❌ ResultBloc: Excepción no controlada - $e');
+      emit(ResultFailure('Error inesperado: $e'));
+    }
   }
 
   void _onLoadResults(LoadResultsEvent event, Emitter<ResultState> emit) async {
@@ -40,10 +57,22 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
   }
 
   void _onResetResultState(ResetResultStateEvent event, Emitter<ResultState> emit) async {
-    emit(ResultInitial());
+    print('🔄 ResultBloc: Reseteando estado...');
+
+    // Forzar emisión de estado inicial
+    if (!emit.isDone) {
+      emit(ResultInitial());
+    }
+
+    // Limpiar cualquier cache interno
+    await Future.delayed(const Duration(milliseconds: 50));
+
+    print('✅ ResultBloc: Estado reseteado a inicial');
   }
 
   String _mapFailureToMessage(Failure failure) {
+    print('🔍 Mapeando failure: ${failure.type} - ${failure.message}');
+
     switch (failure.type) {
       case FailureType.duplicateName:
         return failure.message;

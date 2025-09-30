@@ -109,17 +109,17 @@ class _SteelMainScreenState extends ConsumerState<SteelMainScreen>
         context.pushNamed('steel-beam');
         break;
       case '2': // Acero en Columna
-      // Implementar más adelante
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Próximamente: Acero en Columna')),
-        );
+        context.pushNamed('steel-column');
         break;
       case '3': // Acero en Zapata
-      // Implementar más adelante
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Próximamente: Acero en Zapata')),
-        );
+        context.pushNamed('steel-footing');
         break;
+      case '4': // Acero en Zapata
+        context.pushNamed('steel-slab');
+        break;
+        default:
+          context.pushNamed('steel-beam');
+          break;
     }
   }
 

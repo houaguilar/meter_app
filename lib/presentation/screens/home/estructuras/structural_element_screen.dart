@@ -165,7 +165,7 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
 
   /// Determina si un elemento estructural está disponible
   bool _isStructuralElementAvailable(String elementId) {
-    const availableIds = ['1', '2','3', '4']; // Columna y Viga disponibles
+    const availableIds = ['1', '2','3', '4', '5', '6']; // Columna y Viga disponibles
     return availableIds.contains(elementId);
   }
 
@@ -179,11 +179,17 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
         print('🌉 Seleccionando VIGA para ID: $elementId');
         return 'viga';
       case '3':
-        print('🌉 Seleccionando VIGA para ID: $elementId');
+        print('🌉 Seleccionando ZAPATA para ID: $elementId');
         return 'Zapata';
       case '4':
-        print('🌉 Seleccionando VIGA para ID: $elementId');
-        return 'Cimiento corrido';
+        print('🌉 Seleccionando CIMIENTO CORRIDO para ID: $elementId');
+        return 'cimiento_corrido';
+      case '5':
+        print('🧱 Seleccionando SOBRECIMIENTO para ID: $elementId');
+        return 'sobrecimiento';
+      case '6':
+        print('🧱 Seleccionando SOLADO para ID: $elementId');
+        return 'solado';
       default:
         print('❓ ID no reconocido: $elementId, usando columna por defecto');
         return 'columna';
@@ -237,11 +243,6 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
         ),
       ),
     );
-  }
-
-  /// Contactar soporte técnico
-  void _contactSupport() {
-    _showErrorMessage('Funcionalidad de soporte próximamente disponible');
   }
 
   /// Sistema de logging para debugging

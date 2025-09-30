@@ -1,19 +1,16 @@
-// lib/presentation/screens/home/acero/viga/datos/datos_steel_beam_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/viga/datos/models/beam_form_data.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
 
 import '../../../../../../config/theme/theme.dart';
-import '../../../../../../domain/entities/home/acero/steel_constants.dart';
+import '../../../../../../domain/entities/home/acero/steel_beam_constants.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
-import '../../../../../widgets/widgets.dart';
 import '../../widgets/dynamic_steel_bars_widget.dart';
 import '../../widgets/dynamic_stirrup_distributions_widget.dart';
 
@@ -749,7 +746,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    items: SteelConstants.availableDiameters.map((diameter) {
+                    items: SteelBeamConstants.availableDiameters.map((diameter) {
                       return DropdownMenuItem(
                         value: diameter,
                         child: Text(diameter),

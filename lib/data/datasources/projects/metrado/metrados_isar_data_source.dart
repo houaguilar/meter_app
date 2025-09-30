@@ -2,7 +2,10 @@
 
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/datasources/projects/metrados/metrados_local_data_source.dart';
+import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
+import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 import 'package:meter_app/domain/entities/home/losas/losas.dart';
 
@@ -168,5 +171,8 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
     await isar.losaAligeradas.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.columnas.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.vigas.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.sobrecimientos.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.cimientoCorridos.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.solados.filter().metradoIdEqualTo(metradoId).deleteAll();
   }
 }

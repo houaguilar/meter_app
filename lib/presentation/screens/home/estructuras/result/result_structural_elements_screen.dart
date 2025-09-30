@@ -79,15 +79,24 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       final tipoElemento = ref.read(tipoStructuralElementProvider);
       final columnas = ref.read(columnaResultProvider);
       final vigas = ref.read(vigaResultProvider);
+      final sobrecimientos = ref.read(sobrecimientoResultProvider);
+      final cimientosCorridos = ref.read(cimientoCorridoResultProvider);
+      final solados = ref.read(soladoResultProvider);
 
       print('🔍 Estado en ResultScreen:');
       print('- Tipo: $tipoElemento');
       print('- Columnas: ${columnas.length}');
       print('- Vigas: ${vigas.length}');
+      print('- Sobrecimientos: ${sobrecimientos.length}');
+      print('- Cimientos corridos: ${cimientosCorridos.length}');
+      print('- Solados: ${solados.length}');
 
       if (tipoElemento.isEmpty ||
           (tipoElemento == 'columna' && columnas.isEmpty) ||
-          (tipoElemento == 'viga' && vigas.isEmpty)) {
+          (tipoElemento == 'viga' && vigas.isEmpty) ||
+          (tipoElemento == 'sobrecimiento' && sobrecimientos.isEmpty) ||
+          (tipoElemento == 'cimiento_corrido' && cimientosCorridos.isEmpty) || // ← AGREGAR
+          (tipoElemento == 'solado' && solados.isEmpty)) {
         print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
         context.pop();
@@ -223,10 +232,25 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           const SizedBox(height: 12),
           _buildConfigRow('Resistencia del Concreto', resistencia),
           const SizedBox(height: 12),
-          _buildConfigRow('Tipo de Elemento', tipoElemento == 'columna' ? 'Columnas' : 'Vigas'),
+          _buildConfigRow('Tipo de Elemento', _getTipoElementoDisplay(tipoElemento)),
+          if (tipoElemento == 'solado') ...[
+            const SizedBox(height: 12),
+            _buildConfigRow('Espesor', '10 cm (fijo)'),
+          ],
         ],
       ),
     );
+  }
+
+  String _getTipoElementoDisplay(String tipoElemento) {
+    switch (tipoElemento) {
+      case 'columna': return 'Columnas';
+      case 'viga': return 'Vigas';
+      case 'sobrecimiento': return 'Sobrecimientos';
+      case 'cimiento_corrido': return 'Cimientos Corridos';
+      case 'solado': return 'Solados';
+      default: return 'Elemento Estructural';
+    }
   }
 
   Widget _buildModernCard({
@@ -344,25 +368,93 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   }
 
   Widget _buildMaterialTable(String tipoElemento) {
-    final cemento = _getCemento(tipoElemento);
-    final arena = _getArena(tipoElemento);
-    final piedra = _getPiedra(tipoElemento);
-    final agua = _getAgua(tipoElemento);
+    if (tipoElemento == 'cimiento_corrido') {
+      final cemento = ref.watch(cantidadCementoCimientoCorridoProvider);
+      final arena = ref.watch(cantidadArenaCimientoCorridoProvider);
+      final piedraChancada = ref.watch(cantidadPiedraChancadaCimientoCorridoProvider);
+      final piedraZanja = ref.watch(cantidadPiedraZanjaCimientoCorridoProvider);
+      final agua = ref.watch(cantidadAguaCimientoCorridoProvider);
 
-    return Table(
-      columnWidths: const {
-        0: FlexColumnWidth(2),
-        1: FlexColumnWidth(1),
-        2: FlexColumnWidth(1.5),
-      },
-      children: [
-        _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-        _buildTableRow(['Cemento', 'bls', cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(2)]),
-        _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(2)]),
-        _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
-      ],
-    );
+      return Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+          2: FlexColumnWidth(1.5),
+        },
+        children: [
+          _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
+          _buildTableRow(['Cemento', 'bolsas', cemento.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(3)]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', piedraChancada.toStringAsFixed(3)]),
+          _buildTableRow(['Piedra de zanja (máx. 10")', 'm³', piedraZanja.toStringAsFixed(3)]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(3)]),
+        ],
+      );
+    } else if (tipoElemento == 'solado') {
+      final cemento = ref.watch(cantidadCementoSoladoProvider);
+      final arena = ref.watch(cantidadArenaSoladoProvider);
+      final piedraChancada = ref.watch(cantidadPiedraChancadaSoladoProvider);
+      final agua = ref.watch(cantidadAguaSoladoProvider);
+
+      return Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+          2: FlexColumnWidth(1.5),
+        },
+        children: [
+          _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
+          _buildTableRow(['Cemento', 'bolsas', cemento.toStringAsFixed(3)]),
+          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(6)]),
+          _buildTableRow(['Piedra chancada', 'm³', piedraChancada.toStringAsFixed(6)]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(6)]),
+        ],
+      );
+    } else if (tipoElemento == 'sobrecimiento') {
+      // Materiales específicos para sobrecimiento
+      final cemento = ref.watch(cantidadCementoSobrecimientoProvider);
+      final arena = ref.watch(cantidadArenaSobrecimientoProvider);
+      final piedraChancada = ref.watch(cantidadPiedraChancadaSobrecimientoProvider);
+      final piedraGrande = ref.watch(cantidadPiedraGrandeSobrecimientoProvider);
+      final agua = ref.watch(cantidadAguaSobrecimientoProvider);
+
+      return Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+          2: FlexColumnWidth(1.5),
+        },
+        children: [
+          _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
+          _buildTableRow(['Cemento', 'bolsas', cemento.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(3)]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', piedraChancada.toStringAsFixed(3)]),
+          _buildTableRow(['Piedra grande (máx. 10")', 'm³', piedraGrande.toStringAsFixed(3)]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(3)]),
+        ],
+      );
+    } else {
+      // Lógica existente para columna y viga
+      final cemento = _getCemento(tipoElemento);
+      final arena = _getArena(tipoElemento);
+      final piedra = _getPiedra(tipoElemento);
+      final agua = _getAgua(tipoElemento);
+
+      return Table(
+        columnWidths: const {
+          0: FlexColumnWidth(2),
+          1: FlexColumnWidth(1),
+          2: FlexColumnWidth(1.5),
+        },
+        children: [
+          _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
+          _buildTableRow(['Cemento', 'bolsas', cemento.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(3)]),
+          _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(3)]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(3)]),
+        ],
+      );
+    }
   }
 
   // ✅ NUEVO: Widget con tooltip para unidades
@@ -638,6 +730,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(columnaResultProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(vigaResultProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(sobrecimientoResultProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(cimientoCorridoResultProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(soladoResultProvider);
     }
     return [];
   }
@@ -647,6 +745,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(volumenColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(volumenVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(volumenSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(volumenCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(volumenSoladoProvider);
     }
     return [];
   }
@@ -672,11 +776,18 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     return 5.0;
   }
 
+  // ✅ MODIFICAR métodos existentes:
   double _getCemento(String tipoElemento) {
     if (tipoElemento == 'columna') {
       return ref.watch(cantidadCementoColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadCementoVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(cantidadCementoSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(cantidadCementoCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(cantidadCementoSoladoProvider);
     }
     return 0.0;
   }
@@ -686,6 +797,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadArenaColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadArenaVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(cantidadArenaSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(cantidadArenaCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(cantidadArenaSoladoProvider);
     }
     return 0.0;
   }
@@ -695,6 +812,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadPiedraColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadPiedraVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(cantidadPiedraChancadaSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(cantidadPiedraChancadaCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(cantidadPiedraChancadaSoladoProvider);
     }
     return 0.0;
   }
@@ -704,6 +827,12 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadAguaColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadAguaVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      return ref.watch(cantidadAguaSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') {
+      return ref.watch(cantidadAguaCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') {
+      return ref.watch(cantidadAguaSoladoProvider);
     }
     return 0.0;
   }
@@ -762,14 +891,23 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     }
   }
 
+// ✅ BUSCAR y MODIFICAR método _generateShareText:
   String _generateShareText() {
     final tipoElemento = ref.watch(tipoStructuralElementProvider);
     final elements = _getElements(tipoElemento);
     final volumenes = _getVolumenes(tipoElemento);
 
-    String datosMetrado = 'DATOS METRADO\n';
-    for (int i = 0; i < elements.length && i < volumenes.length; i++) {
-      datosMetrado += '* ${elements[i].description}: ${volumenes[i].toStringAsFixed(2)} m³\n';
+    String datos = '';
+    if (tipoElemento == 'columna') {
+      datos = ref.read(datosShareColumnaProvider);
+    } else if (tipoElemento == 'viga') {
+      datos = ref.read(datosShareVigaProvider);
+    } else if (tipoElemento == 'sobrecimiento') {
+      datos = ref.read(datosShareSobrecimientoProvider);
+    } else if (tipoElemento == 'cimiento_corrido') { // ← AGREGAR
+      datos = ref.read(datosShareCimientoCorridoProvider);
+    } else if (tipoElemento == 'solado') { // ← AGREGAR
+      datos = ref.read(datosShareSoladoProvider);
     }
 
     final cemento = _getCemento(tipoElemento);
@@ -777,16 +915,46 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     final piedra = _getPiedra(tipoElemento);
     final agua = _getAgua(tipoElemento);
 
-    return '''$datosMetrado
--------------
-LISTA DE MATERIALES
-*Cemento: ${cemento.ceil()} bls
-*Arena gruesa: ${arena.toStringAsFixed(2)} m³
-*Piedra para concreto: ${piedra.toStringAsFixed(2)} m³
-*Agua: ${agua.toStringAsFixed(2)} m³
+    String tipoText = _getTipoElementoDisplay(tipoElemento);
 
-*Factor de Desperdicio: ${_getFactorDesperdicio(tipoElemento).toStringAsFixed(1)}%
-*Resistencia: ${_getResistencia(tipoElemento)}''';
+    String materialesText = '';
+    if (tipoElemento == 'sobrecimiento') {
+      final piedraGrande = ref.watch(cantidadPiedraGrandeSobrecimientoProvider);
+      materialesText = '''• Cemento: ${cemento.toStringAsFixed(2)} bolsas
+- Arena gruesa: ${arena.toStringAsFixed(3)} m³
+- Piedra chancada 3/4": ${piedra.toStringAsFixed(3)} m³
+- Piedra grande (máx. 10"): ${piedraGrande.toStringAsFixed(3)} m³
+- Agua: ${agua.toStringAsFixed(3)} m³''';
+    } else if (tipoElemento == 'cimiento_corrido') {
+      final piedraZanja = ref.watch(cantidadPiedraZanjaCimientoCorridoProvider);
+      materialesText = '''• Cemento: ${cemento.toStringAsFixed(2)} bolsas
+- Arena gruesa: ${arena.toStringAsFixed(3)} m³
+- Piedra chancada 3/4": ${piedra.toStringAsFixed(3)} m³
+- Piedra de zanja (máx. 10"): ${piedraZanja.toStringAsFixed(3)} m³
+- Agua: ${agua.toStringAsFixed(3)} m³''';
+    } else if (tipoElemento == 'solado') {
+      materialesText = '''• Cemento: ${cemento.toStringAsFixed(3)} bolsas
+- Arena gruesa: ${arena.toStringAsFixed(6)} m³
+- Piedra chancada: ${piedra.toStringAsFixed(6)} m³
+- Agua: ${agua.toStringAsFixed(6)} m³''';
+    } else {
+      materialesText = '''• Cemento: ${cemento.toStringAsFixed(2)} bolsas
+- Arena gruesa: ${arena.toStringAsFixed(3)} m³
+- Piedra chancada: ${piedra.toStringAsFixed(3)} m³
+- Agua: ${agua.toStringAsFixed(3)} m³''';
+    }
+
+    return '''
+🏗️ METRADO DE $tipoText - METRASHOP
+
+📊 ELEMENTOS CALCULADOS:
+$datos
+
+🧱 MATERIALES REQUERIDOS:
+$materialesText
+
+📱 Calculado con METRASHOP
+  ''';
   }
 
   void _clearDataOnExit() {

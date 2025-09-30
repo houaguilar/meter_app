@@ -135,7 +135,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
           // Carrusel de proveedores (SIN expandir/colapsar)
           Positioned(
-            bottom: 50,
+            bottom: 0,
             left: 0,
             right: 0,
             child: _buildNearbyLocationsCarousel(),
@@ -327,7 +327,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
             // Lista de ubicaciones
             SizedBox(
-              height: 120,
+              height: 170,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -337,7 +337,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                   final isSelected = _selectedLocation?.id == location.id;
 
                   return Container(
-                    width: 260,
+                    width: 280,
                     margin: EdgeInsets.only(
                       right: index == _nearbyLocations.length - 1 ? 0 : 12,
                     ),
@@ -347,7 +347,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -382,176 +382,182 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         ),
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
+          child: Column(
             children: [
-              // Imagen/Icono
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: AppColors.primary,
-                ),
-                child: location.imageUrl?.isNotEmpty == true
-                    ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    location.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.location_on,
-                        color: AppColors.primary,
-                        size: 24,
-                      );
-                    },
-                  ),
-                )
-                    : Icon(
-                  Icons.location_on,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              // Información
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      location.title,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: isSelected
-                            ? AppColors.primary
-                            : AppColors.textPrimary,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+              Row(
+                children: [
+                  // Imagen/Icono
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.primary,
                     ),
+                    child: location.imageUrl?.isNotEmpty == true
+                        ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        location.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.location_on,
+                            color: AppColors.primary,
+                            size: 24,
+                          );
+                        },
+                      ),
+                    )
+                        : Icon(
+                      Icons.location_on,
+                      color: AppColors.primary,
+                      size: 24,
+                    ),
+                  ),
 
-                    const SizedBox(height: 4),
+                  const SizedBox(width: 15),
 
-                    if (location.distanceKm != null)
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.near_me,
-                            size: 12,
-                            color: AppColors.textSecondary,
+                  // Información
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          location.title,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
                           ),
-                          const SizedBox(width: 4),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        if (location.distanceKm != null)
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.near_me,
+                                size: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${location.distanceKm!.toStringAsFixed(1)}km',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+
+                        const SizedBox(height: 4),
+
+                        if (location.description.isNotEmpty)
                           Text(
-                            '${location.distanceKm!.toStringAsFixed(1)}km',
+                            location.description,
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: AppColors.textSecondary,
-                              fontWeight: FontWeight.w500,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ],
-                      ),
 
-                    const SizedBox(height: 4),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
 
-                    if (location.description.isNotEmpty)
-                      Text(
-                        location.description,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
+              Padding(
+                padding: const EdgeInsets.all(0),
+                child: Row(
+                  children: [
+                    // Botón Ver Productos
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _navigateToProviderDetail(location),
+                            child: Center(
+                              child: Text(
+                                'Ver Productos',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
+                    ),
 
-                    const SizedBox(height: 4),
+                    const SizedBox(width: 10),
 
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Botón Ver Productos
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(12),
-                                gradient: LinearGradient(
-                                  colors: [
-                                    AppColors.primary,
-                                    AppColors.primary.withOpacity(0.8),
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.primary.withOpacity(0.3),
-                                    blurRadius: 8,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () => _navigateToProviderDetail(location),
-                                  child: Center(
-                                    child: Text(
-                                      'Ver Productos',
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: AppColors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                    // Botón Cotizar
+                    Expanded(
+                      child: Container(
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.primary,
+                            width: 1.5,
                           ),
-
-                          const SizedBox(width: 12),
-
-                          // Botón Cotizar
-                          Expanded(
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => _showQuoteDialog(location),
+                            child: Center(
+                              child: Text(
+                                'Cotizar',
+                                style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.primary,
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: Material(
-                                color: Colors.transparent,
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(12),
-                                  onTap: () => _showQuoteDialog(location),
-                                  child: Center(
-                                    child: Text(
-                                      'Cotizar',
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: AppColors.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+
             ],
           ),
         ),

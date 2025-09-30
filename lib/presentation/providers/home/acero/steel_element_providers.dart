@@ -24,6 +24,12 @@ final List<SteelElement> _steelElements = [
     image: AppImages.concretoImg,
     details: 'Cálculo de materiales de acero para zapatas.',
   ),
+  SteelElement(
+    id: '4',
+    name: 'Acero en Losa Maciza',
+    image: AppImages.concretoImg,
+    details: 'Cálculo de materiales de acero para losa maciza.',
+  ),
 ];
 
 @riverpod

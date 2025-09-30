@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../domain/entities/home/acero/steel_constants.dart';
+import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
 import '../viga/datos/models/beam_form_data.dart';
 import '../viga/datos/models/steel_bar_data.dart';
 
@@ -124,7 +124,7 @@ class _DynamicSteelBarsWidgetState extends State<DynamicSteelBarsWidget> {
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
               ),
-              items: SteelConstants.availableDiameters.map((diameter) {
+              items: SteelBeamConstants.availableDiameters.map((diameter) {
                 return DropdownMenuItem(
                   value: diameter,
                   child: Text(diameter),
