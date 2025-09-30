@@ -76,7 +76,10 @@ import 'domain/entities/entities.dart';
 import 'domain/entities/home/acero/viga/steel_bar.dart';
 import 'domain/entities/home/acero/viga/steel_beam.dart';
 import 'domain/entities/home/acero/viga/stirrup_distribution.dart';
+import 'domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import 'domain/entities/home/estructuras/columna/columna.dart';
+import 'domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import 'domain/entities/home/estructuras/solado/solado.dart';
 import 'domain/entities/home/estructuras/viga/viga.dart';
 import 'domain/entities/home/losas/losas.dart';
 import 'domain/entities/home/muro/custom_brick.dart';
@@ -152,6 +155,9 @@ Future<void> initDependencies() async {
     SteelBarSchema,
     StirrupDistributionSchema,
     CustomBrickSchema,
+    SobrecimientoSchema,
+    CimientoCorridoSchema,
+    SoladoSchema,
     PremiumStatusModelSchema,
   ],
     directory: isarDirectory,
@@ -332,7 +338,7 @@ void _initProjects() {
   );
 
   print('Registrando ResultLocalDataSource...');
-  serviceLocator.registerLazySingleton<ResultLocalDataSource>(
+  serviceLocator.registerFactory<ResultLocalDataSource>(
         () => ResultIsarDataSource(serviceLocator<Isar>()),
   );
 
@@ -352,7 +358,7 @@ void _initProjects() {
   );
 
   print('Registrando ResultLocalRepository...');
-  serviceLocator.registerLazySingleton<ResultLocalRepository>(
+  serviceLocator.registerFactory<ResultLocalRepository>(
         () => ResultLocalRepositoryImpl(serviceLocator<ResultLocalDataSource>()),
   );
 

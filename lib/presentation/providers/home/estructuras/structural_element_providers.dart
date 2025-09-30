@@ -2,7 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../../config/constants/constant.dart';
+import '../../../../domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../../../domain/entities/home/estructuras/columna/columna.dart';
+import '../../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import '../../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../../presentation/assets/images.dart';
@@ -33,6 +36,18 @@ final List<StructuralElement> _structuralElements = [
     name: 'Cimiento corrido',
     image: AppImages.concretoImg,
     details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
+  ),
+  StructuralElement(
+    id: '5',
+    name: 'Sobrecimiento',
+    image: AppImages.concretoImg,
+    details: 'Elementos de concreto simple que conectan la cimentación con los muros.',
+  ),
+  StructuralElement(
+    id: '6',
+    name: 'Solado',
+    image: AppImages.concretoImg,
+    details: 'Capa de concreto simple que se coloca sobre el terreno como base.',
   ),
 ];
 
@@ -95,6 +110,12 @@ const Map<String, Map<String, double>> factoresConcreto = {
 
 // Helper function para calcular volumen de elementos estructurales
 double calcularVolumenElemento(dynamic elemento) {
+  // Caso especial para Solado
+  if (elemento is Solado) {
+    return calcularVolumenSolado(elemento);
+  }
+
+  // Lógica existente para otros elementos
   if (elemento.volumen != null && elemento.volumen!.isNotEmpty) {
     return double.tryParse(elemento.volumen!) ?? 0.0;
   }
@@ -428,6 +449,659 @@ double cantidadAguaViga(CantidadAguaVigaRef ref) {
     if (factores != null && volumen > 0) {
       final aguaPorM3 = factores['agua']!;
       final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, viga.factorDesperdicio);
+      aguaTotal += aguaConDesperdicio * volumen;
+    }
+  }
+
+  return aguaTotal;
+}
+
+
+// Agregar al final de structural_element_providers.dart:
+
+// Constantes específicas para Sobrecimiento (basadas en el Excel)
+const Map<String, Map<String, double>> factoresSobrecimiento = {
+  "175 kg/cm²": {
+    "cemento": 8.43, // bolsas por m³
+    "arenaGruesa": 0.45, // m³ por m³
+    "piedraChancada": 0.40, // m³ por m³
+    "piedraGrande": 0.25, // m³ por m³
+    "agua": 0.139, // m³ por m³
+  },
+  "140 kg/cm²": {
+    "cemento": 7.50,
+    "arenaGruesa": 0.50,
+    "piedraChancada": 0.45,
+    "piedraGrande": 0.30,
+    "agua": 0.145,
+  },
+  "210 kg/cm²": {
+    "cemento": 9.20,
+    "arenaGruesa": 0.42,
+    "piedraChancada": 0.38,
+    "piedraGrande": 0.23,
+    "agua": 0.135,
+  },
+  "280 kg/cm²": {
+    "cemento": 10.80,
+    "arenaGruesa": 0.38,
+    "piedraChancada": 0.35,
+    "piedraGrande": 0.20,
+    "agua": 0.125,
+  },
+};
+
+// Providers for Sobrecimiento
+@riverpod
+class SobrecimientoResult extends _$SobrecimientoResult {
+  @override
+  List<Sobrecimiento> build() => [];
+
+  void createSobrecimiento(
+      String description,
+      String resistencia,
+      String factorDesperdicio, {
+        String? largo,
+        String? ancho,
+        String? altura,
+        String? volumen,
+      }) {
+    final newSobrecimiento = Sobrecimiento(
+      idSobrecimiento: uuid.v4(),
+      description: description,
+      resistencia: resistencia,
+      factorDesperdicio: factorDesperdicio,
+      largo: largo,
+      ancho: ancho,
+      altura: altura,
+      volumen: volumen,
+    );
+
+    // Validar que el sobrecimiento tenga datos suficientes
+    final volumenCalculado = calcularVolumenElemento(newSobrecimiento);
+    if (volumenCalculado <= 0) {
+      throw Exception("El sobrecimiento debe tener largo, ancho y altura o volumen definidos.");
+    }
+
+    print('✅ Nuevo sobrecimiento creado: ${newSobrecimiento.description}, volumen: $volumenCalculado m³');
+    state = [...state, newSobrecimiento];
+  }
+
+  void clearList() {
+    print('🧹 Limpiando lista de sobrecimientos');
+    state = [];
+  }
+}
+
+@riverpod
+List<double> volumenSobrecimiento(VolumenSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  final volumenes = sobrecimientos.map((sobrecimiento) => calcularVolumenElemento(sobrecimiento)).toList();
+  print('📊 Volúmenes de sobrecimientos calculados: $volumenes');
+  return volumenes;
+}
+
+@riverpod
+List<String> descriptionSobrecimiento(DescriptionSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  return sobrecimientos.map((e) => e.description).toList();
+}
+
+@riverpod
+String datosShareSobrecimiento(DatosShareSobrecimientoRef ref) {
+  final description = ref.watch(descriptionSobrecimientoProvider);
+  final volumen = ref.watch(volumenSobrecimientoProvider);
+
+  String datos = "";
+  if (description.length == volumen.length) {
+    for (int i = 0; i < description.length; i++) {
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+    }
+    if (datos.length > 2) {
+      datos = datos.substring(0, datos.length - 2);
+    }
+  }
+  return datos;
+}
+
+// Providers para cálculos de materiales específicos del Sobrecimiento
+@riverpod
+double cantidadCementoSobrecimiento(CantidadCementoSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  if (sobrecimientos.isEmpty) return 0.0;
+
+  double cementoTotal = 0.0;
+
+  for (final sobrecimiento in sobrecimientos) {
+    final volumen = calcularVolumenElemento(sobrecimiento);
+    final factores = factoresSobrecimiento[sobrecimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final cementoPorM3 = factores['cemento']!;
+      final cementoConDesperdicio = aplicarDesperdicio(cementoPorM3, sobrecimiento.factorDesperdicio);
+      cementoTotal += cementoConDesperdicio * volumen;
+    }
+  }
+
+  print('🧱 Cemento total para sobrecimientos: $cementoTotal');
+  return cementoTotal;
+}
+
+@riverpod
+double cantidadArenaSobrecimiento(CantidadArenaSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  if (sobrecimientos.isEmpty) return 0.0;
+
+  double arenaTotal = 0.0;
+
+  for (final sobrecimiento in sobrecimientos) {
+    final volumen = calcularVolumenElemento(sobrecimiento);
+    final factores = factoresSobrecimiento[sobrecimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final arenaPorM3 = factores['arenaGruesa']!;
+      final arenaConDesperdicio = aplicarDesperdicio(arenaPorM3, sobrecimiento.factorDesperdicio);
+      arenaTotal += arenaConDesperdicio * volumen;
+    }
+  }
+
+  return arenaTotal;
+}
+
+@riverpod
+double cantidadPiedraChancadaSobrecimiento(CantidadPiedraChancadaSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  if (sobrecimientos.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final sobrecimiento in sobrecimientos) {
+    final volumen = calcularVolumenElemento(sobrecimiento);
+    final factores = factoresSobrecimiento[sobrecimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraChancada']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, sobrecimiento.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadPiedraGrandeSobrecimiento(CantidadPiedraGrandeSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  if (sobrecimientos.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final sobrecimiento in sobrecimientos) {
+    final volumen = calcularVolumenElemento(sobrecimiento);
+    final factores = factoresSobrecimiento[sobrecimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraGrande']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, sobrecimiento.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadAguaSobrecimiento(CantidadAguaSobrecimientoRef ref) {
+  final sobrecimientos = ref.watch(sobrecimientoResultProvider);
+  if (sobrecimientos.isEmpty) return 0.0;
+
+  double aguaTotal = 0.0;
+
+  for (final sobrecimiento in sobrecimientos) {
+    final volumen = calcularVolumenElemento(sobrecimiento);
+    final factores = factoresSobrecimiento[sobrecimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final aguaPorM3 = factores['agua']!;
+      final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, sobrecimiento.factorDesperdicio);
+      aguaTotal += aguaConDesperdicio * volumen;
+    }
+  }
+
+  return aguaTotal;
+}
+
+// Agregar en structural_element_providers.dart:
+
+// Constantes específicas para Cimiento Corrido (basadas en el Excel)
+const Map<String, Map<String, double>> factoresCimientoCorrido = {
+  "175 kg/cm²": {
+    "cemento": 8.43,
+    "arenaGruesa": 0.45,
+    "piedraChancada": 0.35,
+    "piedraZanja": 0.30,
+    "agua": 0.139,
+  },
+  "140 kg/cm²": {
+    "cemento": 7.50,
+    "arenaGruesa": 0.50,
+    "piedraChancada": 0.40,
+    "piedraZanja": 0.35,
+    "agua": 0.145,
+  },
+  "210 kg/cm²": {
+    "cemento": 9.20,
+    "arenaGruesa": 0.42,
+    "piedraChancada": 0.33,
+    "piedraZanja": 0.28,
+    "agua": 0.135,
+  },
+  "280 kg/cm²": {
+    "cemento": 10.80,
+    "arenaGruesa": 0.38,
+    "piedraChancada": 0.30,
+    "piedraZanja": 0.25,
+    "agua": 0.125,
+  },
+};
+
+// Providers for Cimiento Corrido
+@riverpod
+class CimientoCorridoResult extends _$CimientoCorridoResult {
+  @override
+  List<CimientoCorrido> build() => [];
+
+  void createCimientoCorrido(
+      String description,
+      String resistencia,
+      String factorDesperdicio, {
+        String? largo,
+        String? ancho,
+        String? altura,
+        String? volumen,
+      }) {
+    final newCimientoCorrido = CimientoCorrido(
+      idCimientoCorrido: uuid.v4(),
+      description: description,
+      resistencia: resistencia,
+      factorDesperdicio: factorDesperdicio,
+      largo: largo,
+      ancho: ancho,
+      altura: altura,
+      volumen: volumen,
+    );
+
+    // Validar que el cimiento tenga datos suficientes
+    final volumenCalculado = calcularVolumenElemento(newCimientoCorrido);
+    if (volumenCalculado <= 0) {
+      throw Exception("El cimiento corrido debe tener largo, ancho y altura o volumen definidos.");
+    }
+
+    print('✅ Nuevo cimiento corrido creado: ${newCimientoCorrido.description}, volumen: $volumenCalculado m³');
+    state = [...state, newCimientoCorrido];
+  }
+
+  void clearList() {
+    print('🧹 Limpiando lista de cimientos corridos');
+    state = [];
+  }
+}
+
+@riverpod
+List<double> volumenCimientoCorrido(VolumenCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  final volumenes = cimientos.map((cimiento) => calcularVolumenElemento(cimiento)).toList();
+  print('📊 Volúmenes de cimientos corridos calculados: $volumenes');
+  return volumenes;
+}
+
+@riverpod
+List<String> descriptionCimientoCorrido(DescriptionCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  return cimientos.map((e) => e.description).toList();
+}
+
+@riverpod
+String datosShareCimientoCorrido(DatosShareCimientoCorridoRef ref) {
+  final description = ref.watch(descriptionCimientoCorridoProvider);
+  final volumen = ref.watch(volumenCimientoCorridoProvider);
+
+  String datos = "";
+  if (description.length == volumen.length) {
+    for (int i = 0; i < description.length; i++) {
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+    }
+    if (datos.length > 2) {
+      datos = datos.substring(0, datos.length - 2);
+    }
+  }
+  return datos;
+}
+
+// Providers para cálculos de materiales específicos del Cimiento Corrido
+@riverpod
+double cantidadCementoCimientoCorrido(CantidadCementoCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  if (cimientos.isEmpty) return 0.0;
+
+  double cementoTotal = 0.0;
+
+  for (final cimiento in cimientos) {
+    final volumen = calcularVolumenElemento(cimiento);
+    final factores = factoresCimientoCorrido[cimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final cementoPorM3 = factores['cemento']!;
+      final cementoConDesperdicio = aplicarDesperdicio(cementoPorM3, cimiento.factorDesperdicio);
+      cementoTotal += cementoConDesperdicio * volumen;
+    }
+  }
+
+  print('🧱 Cemento total para cimientos corridos: $cementoTotal');
+  return cementoTotal;
+}
+
+@riverpod
+double cantidadArenaCimientoCorrido(CantidadArenaCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  if (cimientos.isEmpty) return 0.0;
+
+  double arenaTotal = 0.0;
+
+  for (final cimiento in cimientos) {
+    final volumen = calcularVolumenElemento(cimiento);
+    final factores = factoresCimientoCorrido[cimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final arenaPorM3 = factores['arenaGruesa']!;
+      final arenaConDesperdicio = aplicarDesperdicio(arenaPorM3, cimiento.factorDesperdicio);
+      arenaTotal += arenaConDesperdicio * volumen;
+    }
+  }
+
+  return arenaTotal;
+}
+
+@riverpod
+double cantidadPiedraChancadaCimientoCorrido(CantidadPiedraChancadaCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  if (cimientos.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final cimiento in cimientos) {
+    final volumen = calcularVolumenElemento(cimiento);
+    final factores = factoresCimientoCorrido[cimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraChancada']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, cimiento.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadPiedraZanjaCimientoCorrido(CantidadPiedraZanjaCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  if (cimientos.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final cimiento in cimientos) {
+    final volumen = calcularVolumenElemento(cimiento);
+    final factores = factoresCimientoCorrido[cimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraZanja']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, cimiento.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadAguaCimientoCorrido(CantidadAguaCimientoCorridoRef ref) {
+  final cimientos = ref.watch(cimientoCorridoResultProvider);
+  if (cimientos.isEmpty) return 0.0;
+
+  double aguaTotal = 0.0;
+
+  for (final cimiento in cimientos) {
+    final volumen = calcularVolumenElemento(cimiento);
+    final factores = factoresCimientoCorrido[cimiento.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final aguaPorM3 = factores['agua']!;
+      final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, cimiento.factorDesperdicio);
+      aguaTotal += aguaConDesperdicio * volumen;
+    }
+  }
+
+  return aguaTotal;
+}
+
+
+// Constantes específicas para Solado (basadas en el Excel)
+const Map<String, Map<String, double>> factoresSolado = {
+  "175 kg/cm²": {
+    "cemento": 8.43,
+    "arenaGruesa": 0.54,
+    "piedraChancada": 0.55,
+    "agua": 0.185,
+  },
+  "140 kg/cm²": {
+    "cemento": 7.50,
+    "arenaGruesa": 0.59,
+    "piedraChancada": 0.60,
+    "agua": 0.190,
+  },
+  "210 kg/cm²": {
+    "cemento": 9.20,
+    "arenaGruesa": 0.51,
+    "piedraChancada": 0.52,
+    "agua": 0.180,
+  },
+  "280 kg/cm²": {
+    "cemento": 10.80,
+    "arenaGruesa": 0.48,
+    "piedraChancada": 0.49,
+    "agua": 0.175,
+  },
+};
+
+// Helper function para calcular volumen de Solado
+double calcularVolumenSolado(Solado solado) {
+  // Para solado, el volumen siempre se calcula como: área × espesor_fijo
+  if (solado.area != null && solado.area!.isNotEmpty) {
+    final area = double.tryParse(solado.area!) ?? 0.0;
+    return area * solado.espesorFijo;
+  }
+
+  if (solado.largo != null && solado.largo!.isNotEmpty &&
+      solado.ancho != null && solado.ancho!.isNotEmpty) {
+    final largo = double.tryParse(solado.largo!) ?? 0.0;
+    final ancho = double.tryParse(solado.ancho!) ?? 0.0;
+    final area = largo * ancho;
+    return area * solado.espesorFijo;
+  }
+
+  return 0.0;
+}
+
+// Providers for Solado
+@riverpod
+class SoladoResult extends _$SoladoResult {
+  @override
+  List<Solado> build() => [];
+
+  void createSolado(
+      String description,
+      String resistencia,
+      String factorDesperdicio, {
+        String? largo,
+        String? ancho,
+        String? area,
+      }) {
+    final newSolado = Solado(
+      idSolado: uuid.v4(),
+      description: description,
+      resistencia: resistencia,
+      factorDesperdicio: factorDesperdicio,
+      largo: largo,
+      ancho: ancho,
+      area: area,
+      espesorFijo: 0.1, // Siempre 10 cm
+    );
+
+    // Validar que el solado tenga datos suficientes
+    final volumenCalculado = calcularVolumenSolado(newSolado);
+    if (volumenCalculado <= 0) {
+      throw Exception("El solado debe tener área o largo y ancho definidos.");
+    }
+
+    print('✅ Nuevo solado creado: ${newSolado.description}, volumen: $volumenCalculado m³');
+    state = [...state, newSolado];
+  }
+
+  void clearList() {
+    print('🧹 Limpiando lista de solados');
+    state = [];
+  }
+}
+
+@riverpod
+List<double> volumenSolado(VolumenSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  final volumenes = solados.map((solado) => calcularVolumenSolado(solado)).toList();
+  print('📊 Volúmenes de solados calculados: $volumenes');
+  return volumenes;
+}
+
+@riverpod
+List<double> areaSolado(AreaSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  final areas = solados.map((solado) {
+    if (solado.area != null && solado.area!.isNotEmpty) {
+      return double.tryParse(solado.area!) ?? 0.0;
+    }
+    if (solado.largo != null && solado.largo!.isNotEmpty &&
+        solado.ancho != null && solado.ancho!.isNotEmpty) {
+      final largo = double.tryParse(solado.largo!) ?? 0.0;
+      final ancho = double.tryParse(solado.ancho!) ?? 0.0;
+      return largo * ancho;
+    }
+    return 0.0;
+  }).toList();
+  return areas;
+}
+
+@riverpod
+List<String> descriptionSolado(DescriptionSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  return solados.map((e) => e.description).toList();
+}
+
+@riverpod
+String datosShareSolado(DatosShareSoladoRef ref) {
+  final description = ref.watch(descriptionSoladoProvider);
+  final areas = ref.watch(areaSoladoProvider);
+
+  String datos = "";
+  if (description.length == areas.length) {
+    for (int i = 0; i < description.length; i++) {
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m2\n";
+    }
+    if (datos.length > 2) {
+      datos = datos.substring(0, datos.length - 2);
+    }
+  }
+  return datos;
+}
+
+// Providers para cálculos de materiales específicos del Solado
+@riverpod
+double cantidadCementoSolado(CantidadCementoSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  if (solados.isEmpty) return 0.0;
+
+  double cementoTotal = 0.0;
+
+  for (final solado in solados) {
+    final volumen = calcularVolumenSolado(solado);
+    final factores = factoresSolado[solado.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final cementoPorM3 = factores['cemento']!;
+      final cementoConDesperdicio = aplicarDesperdicio(cementoPorM3, solado.factorDesperdicio);
+      cementoTotal += cementoConDesperdicio * volumen;
+    }
+  }
+
+  print('🧱 Cemento total para solados: $cementoTotal');
+  return cementoTotal;
+}
+
+@riverpod
+double cantidadArenaSolado(CantidadArenaSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  if (solados.isEmpty) return 0.0;
+
+  double arenaTotal = 0.0;
+
+  for (final solado in solados) {
+    final volumen = calcularVolumenSolado(solado);
+    final factores = factoresSolado[solado.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final arenaPorM3 = factores['arenaGruesa']!;
+      final arenaConDesperdicio = aplicarDesperdicio(arenaPorM3, solado.factorDesperdicio);
+      arenaTotal += arenaConDesperdicio * volumen;
+    }
+  }
+
+  return arenaTotal;
+}
+
+@riverpod
+double cantidadPiedraChancadaSolado(CantidadPiedraChancadaSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  if (solados.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final solado in solados) {
+    final volumen = calcularVolumenSolado(solado);
+    final factores = factoresSolado[solado.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraChancada']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, solado.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadAguaSolado(CantidadAguaSoladoRef ref) {
+  final solados = ref.watch(soladoResultProvider);
+  if (solados.isEmpty) return 0.0;
+
+  double aguaTotal = 0.0;
+
+  for (final solado in solados) {
+    final volumen = calcularVolumenSolado(solado);
+    final factores = factoresSolado[solado.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final aguaPorM3 = factores['agua']!;
+      final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, solado.factorDesperdicio);
       aguaTotal += aguaConDesperdicio * volumen;
     }
   }

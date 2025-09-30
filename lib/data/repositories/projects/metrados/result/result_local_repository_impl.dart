@@ -3,6 +3,7 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/domain/repositories/projects/metrados/result/result_local_repository.dart';
 
+import '../../../../../config/constants/error/exceptions.dart';
 import '../../../../../config/constants/error/failures.dart';
 import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
 
@@ -16,8 +17,21 @@ class ResultLocalRepositoryImpl implements ResultLocalRepository {
     try {
       await dataSource.saveResults(results, metradoId);
       return right(null);
+    } on ServerException catch (e) {
+      // ✅ FIX: Mapear ServerException correctamente
+      return left(Failure(
+        message: e.message,
+        type: FailureType.general,
+      ));
+    } on Failure catch (f) {
+      // ✅ FIX: Re-lanzar Failure tal como está
+      return left(f);
     } catch (e) {
-      return left(Failure(message: 'Error al guardar el resultado'));
+      // ✅ FIX: Manejo específico de errores desconocidos
+      return left(Failure(
+        message: 'Error inesperado al guardar resultados: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 
@@ -26,8 +40,16 @@ class ResultLocalRepositoryImpl implements ResultLocalRepository {
     try {
       final results = await dataSource.loadResults(metradoId);
       return right(results);
+    } on ServerException catch (e) {
+      return left(Failure(
+        message: e.message,
+        type: FailureType.general,
+      ));
     } catch (e) {
-      return left(Failure(message: 'Error al cargar los resultados'));
+      return left(Failure(
+        message: 'Error inesperado al cargar resultados: ${e.toString()}',
+        type: FailureType.unknown,
+      ));
     }
   }
 }

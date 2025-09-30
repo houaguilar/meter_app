@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/steel_constants.dart';
+import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
 import '../../../../../domain/entities/home/acero/viga/steel_beam.dart';
 import '../../../../../domain/entities/home/acero/viga/steel_bar.dart';
 import '../../../../../domain/entities/home/acero/viga/stirrup_distribution.dart';
@@ -35,7 +35,7 @@ final stirrupDistributionsForBeamProvider = StateNotifierProvider<StirrupDistrib
 });
 
 // Provider para calcular resultados individuales por viga
-final calculateIndividualSteelProvider = Provider.family<SteelCalculationResult?, String>((ref, beamId) {
+final calculateIndividualSteelProvider = Provider.family<SteelBeamCalculationResult?, String>((ref, beamId) {
   final beams = ref.watch(steelBeamResultProvider);
   final allBars = ref.watch(steelBarsForBeamProvider);
   final allDistributions = ref.watch(stirrupDistributionsForBeamProvider);
@@ -50,11 +50,11 @@ final calculateIndividualSteelProvider = Provider.family<SteelCalculationResult?
 });
 
 // Provider para calcular resultados consolidados de todas las vigas
-final calculateConsolidatedSteelProvider = Provider<ConsolidatedSteelResult?>((ref) {
+final calculateConsolidatedSteelProvider = Provider<ConsolidatedBeamSteelResult?>((ref) {
   final beams = ref.watch(steelBeamResultProvider);
   if (beams.isEmpty) return null;
 
-  final List<SteelCalculationResult> beamResults = [];
+  final List<SteelBeamCalculationResult> beamResults = [];
   double totalWeight = 0;
   double totalWire = 0;
   int totalStirrups = 0;
@@ -84,7 +84,7 @@ final calculateConsolidatedSteelProvider = Provider<ConsolidatedSteelResult?>((r
     }
   }
 
-  return ConsolidatedSteelResult(
+  return ConsolidatedBeamSteelResult(
     numberOfBeams: beams.length,
     totalWeight: totalWeight,
     totalWire: totalWire,
@@ -330,7 +330,7 @@ class StirrupDistributionsForBeamNotifier extends StateNotifier<Map<String, List
 // ============================================================================
 
 /// Calcula el acero para una viga específica
-SteelCalculationResult _calculateSteelForBeam(
+SteelBeamCalculationResult _calculateSteelForBeam(
     SteelBeam beam,
     List<SteelBar> steelBars,
     List<StirrupDistribution> stirrupDistributions,
@@ -345,7 +345,7 @@ SteelCalculationResult _calculateSteelForBeam(
 
     // Agregar empalme si está habilitado
     if (beam.useSplice) {
-      final longitudEmpalme = beam.elements * steelBar.quantity * (SteelConstants.spliceLengths[steelBar.diameter] ?? 0.6);
+      final longitudEmpalme = beam.elements * steelBar.quantity * (SteelBeamConstants.spliceLengths[steelBar.diameter] ?? 0.6);
       totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
     }
 
@@ -391,11 +391,11 @@ SteelCalculationResult _calculateSteelForBeam(
   totalesPorDiametro.forEach((diameter, longitud) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
-      final varillas = longitud / SteelConstants.standardRodLength;
+      final varillas = longitud / SteelBeamConstants.standardRodLength;
       final varillasConDesperdicio = (varillas * (1 + beam.waste)).ceil().toDouble();
 
       // Calcular peso
-      final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
+      final weightPerMeter = SteelBeamConstants.steelWeights[diameter] ?? 0.0;
       final pesoKg = longitud * weightPerMeter;
       pesoTotal += pesoKg;
 
@@ -409,9 +409,9 @@ SteelCalculationResult _calculateSteelForBeam(
   });
 
   // Calcular alambre (1.5% del peso total con desperdicio)
-  final alambreKg = pesoTotal * SteelConstants.wirePercentage * (1 + beam.waste);
+  final alambreKg = pesoTotal * SteelBeamConstants.wirePercentage * (1 + beam.waste);
 
-  return SteelCalculationResult(
+  return SteelBeamCalculationResult(
     beamId: beam.idSteelBeam,
     description: beam.description,
     totalWeight: pesoTotal * (1 + beam.waste),
@@ -428,7 +428,7 @@ SteelCalculationResult _calculateSteelForBeam(
 // ============================================================================
 
 final availableDiametersProvider = Provider<List<String>>((ref) {
-  return SteelConstants.availableDiameters;
+  return SteelBeamConstants.availableDiameters;
 });
 
 // Provider para datos de compartir (texto consolidado)

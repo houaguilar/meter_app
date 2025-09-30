@@ -161,7 +161,13 @@ class UnifiedResultsCombiner {
     if (name.contains('agua')) return 'Agua';
 
     // Piedra
-    if (name.contains('piedra chancada') || name.contains('piedra')) return 'Piedra chancada';
+    if (name.contains('piedra chancada 3/4')) return 'Piedra chancada 3/4"';
+    if (name.contains('piedra chancada')) return 'Piedra chancada';
+    if (name.contains('piedra grande') && name.contains('máx. 10')) return 'Piedra grande (máx. 10")';
+    if (name.contains('piedra de zanja') && name.contains('máx. 10')) return 'Piedra de zanja (máx. 10")';
+    if (name.contains('piedra grande')) return 'Piedra grande';
+    if (name.contains('piedra de zanja')) return 'Piedra de zanja';
+    if (name.contains('piedra')) return 'Piedra';
 
     // Acero
     if (name.contains('acero')) return 'Acero';
@@ -206,6 +212,14 @@ class UnifiedResultsCombiner {
         return 'Columna';
       case CalculationType.viga:
         return 'Viga';
+      case CalculationType.sobrecimiento:
+        return 'Sobrecimiento';
+      case CalculationType.cimientoCorrido:
+        return 'Cimiento Corrido';
+      case CalculationType.solado:
+        return 'Solado';
+      default:
+        return 'Desconocido';
       }
   }
 }

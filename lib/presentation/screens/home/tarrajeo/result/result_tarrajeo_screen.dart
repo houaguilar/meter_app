@@ -554,7 +554,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 
   void _searchProviders() {
-    context.pushNamed('map-screen-2');
+    context.pushNamed('map-screen-tarrajeo');
   }
 
   void _showShareOptions() {

@@ -6,11 +6,19 @@ import 'package:meter_app/presentation/screens/articles/article_detail_screen.da
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/columna/datos/datos_steel_column_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/columna/result/result_steel_column_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/losa_maciza/datos/datos_steel_slab_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/losa_maciza/result/result_steel_slab_screen.dart';
 import 'package:meter_app/presentation/screens/home/acero/steel_main_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/zapata/datos/datos_steel_footing_screen.dart';
+import 'package:meter_app/presentation/screens/home/acero/zapata/result/result_steel_footing_screen.dart';
 import 'package:meter_app/presentation/screens/home/muro/ladrillo/custom_brick_config_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/datos/datos_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/result_falso_piso_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
+import 'package:meter_app/presentation/screens/home/tarrajeo/derrame/datos/datos_tarrajeo_derrame_screen.dart';
+import 'package:meter_app/presentation/screens/home/tarrajeo/derrame/result/result_tarrajeo_derrame_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/notificaciones/notifications_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
@@ -230,6 +238,34 @@ class AppRouter {
                     ]
                   ),
                   GoRoute(
+                      parentNavigatorKey: _rootNavigator,
+                      path: 'tarrajeo-derrame',
+                      name: 'tarrajeo-derrame',
+                      builder: (context, state) => const DatosTarrajeoDerrameScreen(),
+                      routes: [
+                        GoRoute(
+                          parentNavigatorKey: _rootNavigator,
+                          path: 'tarrajeo-derrame-results',
+                          name: 'tarrajeo-derrame-results',
+                          builder: (context, state) => const ResultTarrajeoDerrameScreen(),
+                          routes: [
+                            GoRoute(
+                              parentNavigatorKey: _rootNavigator,
+                              path: 'map-screen-tarrajeo-derrame',
+                              name: 'map-screen-tarrajeo-derrame',
+                              builder: (context, state) => const OptimizedMapScreen(),
+                            ),
+                            GoRoute(
+                                parentNavigatorKey: _rootNavigator,
+                                path: 'save-tarrajeo-derrame',
+                                name: 'save-tarrajeo-derrame',
+                                builder: (context, state) => const SaveResultScreen(),
+                            ),
+                          ],
+                        ),
+                      ]
+                  ),
+                  GoRoute(
                     parentNavigatorKey: _rootNavigator,
                     path: 'tarrajeo-cielorraso',
                     name: 'tarrajeo-cielorraso',
@@ -438,14 +474,90 @@ class AppRouter {
                               path: 'save-steel-beam',
                               name: 'save-steel-beam',
                               builder: (context, state) => const SaveResultScreen(),
-                              routes: [
-                                GoRoute(
-                                  parentNavigatorKey: _rootNavigator,
-                                  path: 'new-project-steel-beam',
-                                  name: 'new-project-steel-beam',
-                                  builder: (context, state) => const NewProjectScreen(),
-                                ),
-                              ]
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'steel-column',
+                    name: 'steel-column',
+                    builder: (context, state) => const DatosSteelColumnScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'steel-column-results',
+                        name: 'steel-column-results',
+                        builder: (context, state) => const ResultSteelColumnScreen(),
+                        routes: [
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'map-screen-steel-column',
+                            name: 'map-screen-steel-column',
+                            builder: (context, state) => const OptimizedMapScreen(),
+                          ),
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'save-steel-column',
+                            name: 'save-steel-column',
+                            builder: (context, state) => const SaveResultScreen(),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'steel-footing',
+                    name: 'steel-footing',
+                    builder: (context, state) => const DatosSteelFootingScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'steel-footing-results',
+                        name: 'steel-footing-results',
+                        builder: (context, state) => const ResultSteelFootingScreen(),
+                        routes: [
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'map-screen-steel-footing',
+                            name: 'map-screen-steel-footing',
+                            builder: (context, state) => const OptimizedMapScreen(),
+                          ),
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'save-steel-footing',
+                            name: 'save-steel-footing',
+                            builder: (context, state) => const SaveResultScreen(),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'steel-slab',
+                    name: 'steel-slab',
+                    builder: (context, state) => const DatosSteelSlabScreen(),
+                    routes: [
+                      GoRoute(
+                        parentNavigatorKey: _rootNavigator,
+                        path: 'steel-slab-results',
+                        name: 'steel-slab-results',
+                        builder: (context, state) => const ResultSteelSlabScreen(),
+                        routes: [
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'map-screen-steel-slab',
+                            name: 'map-screen-steel-slab',
+                            builder: (context, state) => const OptimizedMapScreen(),
+                          ),
+                          GoRoute(
+                            parentNavigatorKey: _rootNavigator,
+                            path: 'save-steel-slab',
+                            name: 'save-steel-slab',
+                            builder: (context, state) => const SaveResultScreen(),
                           ),
                         ],
                       )

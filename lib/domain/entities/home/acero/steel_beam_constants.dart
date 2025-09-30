@@ -1,6 +1,6 @@
-// lib/config/constants/steel_constants.dart
+// lib/config/constants/steel_beam_constants.dart
 /// Constantes para acero
-class SteelConstants {
+class SteelBeamConstants {
   // Pesos específicos del acero (kg/m)
   static const Map<String, double> steelWeights = {
     '6mm': 0.222,
@@ -45,7 +45,7 @@ class SteelConstants {
 
 // lib/domain/entities/home/acero/viga/steel_calculation_result.dart
 /// Resultado del cálculo de acero para una viga
-class SteelCalculationResult {
+class SteelBeamCalculationResult {
   final String beamId;
   final String description;
   final double totalWeight; // Peso total en kg
@@ -55,7 +55,7 @@ class SteelCalculationResult {
   final Map<String, MaterialQuantity> materials; // Materiales por diámetro
   final Map<String, double> totalsByDiameter; // Totales en metros por diámetro
 
-  const SteelCalculationResult({
+  const SteelBeamCalculationResult({
     required this.beamId,
     required this.description,
     required this.totalWeight,
@@ -79,15 +79,15 @@ class MaterialQuantity {
 }
 
 /// Resultado consolidado de múltiples vigas
-class ConsolidatedSteelResult {
+class ConsolidatedBeamSteelResult {
   final int numberOfBeams;
   final double totalWeight; // Peso total general en kg
   final double totalWire; // Alambre total en kg
   final int totalStirrups; // Total de estribos
-  final List<SteelCalculationResult> beamResults; // Resultados individuales
+  final List<SteelBeamCalculationResult> beamResults; // Resultados individuales
   final Map<String, MaterialQuantity> consolidatedMaterials; // Materiales consolidados
 
-  const ConsolidatedSteelResult({
+  const ConsolidatedBeamSteelResult({
     required this.numberOfBeams,
     required this.totalWeight,
     required this.totalWire,

@@ -1,9 +1,11 @@
-// lib/domain/services/shared/UnifiedMaterialsCalculator.dart
 
 import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../domain/entities/home/losas/losas.dart';
+import '../../entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
+import '../../entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import '../../entities/home/estructuras/solado/solado.dart';
 
 /// Calculadora unificada de materiales actualizada con los nuevos cálculos de los providers
 class UnifiedMaterialsCalculator {
@@ -30,6 +32,12 @@ class UnifiedMaterialsCalculator {
         return _calculateColumnaMaterials(results.cast<Columna>());
       } else if (firstResult is Viga) {
         return _calculateVigaMaterials(results.cast<Viga>());
+      } else if (firstResult is Sobrecimiento) {
+        return _calculateSobrecimientoMaterials(results.cast<Sobrecimiento>());
+      } else if (firstResult is CimientoCorrido) {
+        return _calculateCimientoCorridoMaterials(results.cast<CimientoCorrido>());
+      } else if (firstResult is Solado) {
+        return _calculateSoladoMaterials(results.cast<Solado>());
       }
 
       return CalculationResult.error('Tipo de cálculo no soportado');
@@ -180,7 +188,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.ladrillo,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: areaTotal,
       totalUnit: 'm²',
       additionalInfo: {
@@ -284,7 +292,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.piso,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: areaTotal,
       totalUnit: 'm²',
       additionalInfo: {
@@ -359,7 +367,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.piso,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: areaTotal,
       totalUnit: 'm²',
       additionalInfo: {
@@ -448,7 +456,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.losaAligerada,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: totalArea,
       totalUnit: 'm²',
       additionalInfo: {
@@ -526,7 +534,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.tarrajeo,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: totalArea,
       totalUnit: 'm²',
       additionalInfo: {
@@ -603,7 +611,7 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.columna,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: totalVolumen,
       totalUnit: 'm³',
       additionalInfo: {
@@ -678,12 +686,326 @@ class UnifiedMaterialsCalculator {
     return CalculationResult(
       type: CalculationType.viga,
       materials: materials,
-      measurements: measurements,
+      details: measurements,
       totalValue: totalVolumen,
       totalUnit: 'm³',
       additionalInfo: {
         'resistencia': vigas.first.resistencia,
         'desperdicio': '${double.tryParse(vigas.first.factorDesperdicio) ?? 5}%',
+      },
+    );
+  }
+
+  static CalculationResult _calculateSobrecimientoMaterials(List<Sobrecimiento> sobrecimientos) {
+    const Map<String, Map<String, double>> factoresSobrecimiento = {
+      "175 kg/cm²": {
+        "cemento": 8.43,
+        "arenaGruesa": 0.45,
+        "piedraChancada": 0.40,
+        "piedraGrande": 0.25,
+        "agua": 0.139,
+      },
+      "140 kg/cm²": {
+        "cemento": 7.50,
+        "arenaGruesa": 0.50,
+        "piedraChancada": 0.45,
+        "piedraGrande": 0.30,
+        "agua": 0.145,
+      },
+      "210 kg/cm²": {
+        "cemento": 9.20,
+        "arenaGruesa": 0.42,
+        "piedraChancada": 0.38,
+        "piedraGrande": 0.23,
+        "agua": 0.135,
+      },
+      "280 kg/cm²": {
+        "cemento": 10.80,
+        "arenaGruesa": 0.38,
+        "piedraChancada": 0.35,
+        "piedraGrande": 0.20,
+        "agua": 0.125,
+      },
+    };
+
+    double volumenTotal = 0.0;
+    double cementoTotal = 0.0;
+    double arenaTotal = 0.0;
+    double piedraChancadaTotal = 0.0;
+    double piedraGrandeTotal = 0.0;
+    double aguaTotal = 0.0;
+
+    for (final sobrecimiento in sobrecimientos) {
+      final volumen = _calcularVolumenElemento(sobrecimiento);
+      volumenTotal += volumen;
+
+      final factores = factoresSobrecimiento[sobrecimiento.resistencia] ??
+          factoresSobrecimiento["175 kg/cm²"]!;
+
+      final desperdicio = (double.tryParse(sobrecimiento.factorDesperdicio) ?? 5.0) / 100;
+      final volumenConDesperdicio = volumen * (1 + desperdicio);
+
+      cementoTotal += factores['cemento']! * volumenConDesperdicio;
+      arenaTotal += factores['arenaGruesa']! * volumenConDesperdicio;
+      piedraChancadaTotal += factores['piedraChancada']! * volumenConDesperdicio;
+      piedraGrandeTotal += factores['piedraGrande']! * volumenConDesperdicio;
+      aguaTotal += factores['agua']! * volumenConDesperdicio;
+    }
+
+    final materials = <Material>[
+      Material(
+        description: 'Cemento',
+        unit: 'bolsas',
+        quantity: cementoTotal.toStringAsFixed(2),
+      ),
+      Material(
+        description: 'Arena gruesa',
+        unit: 'm³',
+        quantity: arenaTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Piedra chancada 3/4"',
+        unit: 'm³',
+        quantity: piedraChancadaTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Piedra grande (máx. 10")',
+        unit: 'm³',
+        quantity: piedraGrandeTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Agua',
+        unit: 'm³',
+        quantity: aguaTotal.toStringAsFixed(3),
+      ),
+    ];
+
+    final details = sobrecimientos.map((s) => MeasurementData(
+      description: s.description,
+      value: _calcularVolumenElemento(s),
+      unit: 'm³',
+    )).toList();
+
+    return CalculationResult(
+      type: CalculationType.sobrecimiento,
+      materials: materials,
+      details: details,
+      totalValue: volumenTotal,
+      totalUnit: 'm³',
+      additionalInfo: {
+        'resistencia': sobrecimientos.first.resistencia,
+        'factorDesperdicio': '${sobrecimientos.first.factorDesperdicio}%',
+        'tipoElemento': 'Sobrecimiento',
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA CIMIENTO CORRIDO
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateCimientoCorridoMaterials(List<CimientoCorrido> cimientos) {
+    const Map<String, Map<String, double>> factoresCimiento = {
+      "175 kg/cm²": {
+        "cemento": 8.43,
+        "arenaGruesa": 0.45,
+        "piedraChancada": 0.35,
+        "piedraZanja": 0.30,
+        "agua": 0.139,
+      },
+      "140 kg/cm²": {
+        "cemento": 7.50,
+        "arenaGruesa": 0.50,
+        "piedraChancada": 0.40,
+        "piedraZanja": 0.35,
+        "agua": 0.145,
+      },
+      "210 kg/cm²": {
+        "cemento": 9.20,
+        "arenaGruesa": 0.42,
+        "piedraChancada": 0.33,
+        "piedraZanja": 0.28,
+        "agua": 0.135,
+      },
+      "280 kg/cm²": {
+        "cemento": 10.80,
+        "arenaGruesa": 0.38,
+        "piedraChancada": 0.30,
+        "piedraZanja": 0.25,
+        "agua": 0.125,
+      },
+    };
+
+    double volumenTotal = 0.0;
+    double cementoTotal = 0.0;
+    double arenaTotal = 0.0;
+    double piedraChancadaTotal = 0.0;
+    double piedraZanjaTotal = 0.0;
+    double aguaTotal = 0.0;
+
+    for (final cimiento in cimientos) {
+      final volumen = _calcularVolumenElemento(cimiento);
+      volumenTotal += volumen;
+
+      final factores = factoresCimiento[cimiento.resistencia] ??
+          factoresCimiento["175 kg/cm²"]!;
+
+      final desperdicio = (double.tryParse(cimiento.factorDesperdicio) ?? 5.0) / 100;
+      final volumenConDesperdicio = volumen * (1 + desperdicio);
+
+      cementoTotal += factores['cemento']! * volumenConDesperdicio;
+      arenaTotal += factores['arenaGruesa']! * volumenConDesperdicio;
+      piedraChancadaTotal += factores['piedraChancada']! * volumenConDesperdicio;
+      piedraZanjaTotal += factores['piedraZanja']! * volumenConDesperdicio;
+      aguaTotal += factores['agua']! * volumenConDesperdicio;
+    }
+
+    final materials = <Material>[
+      Material(
+        description: 'Cemento',
+        unit: 'bolsas',
+        quantity: cementoTotal.toStringAsFixed(2),
+      ),
+      Material(
+        description: 'Arena gruesa',
+        unit: 'm³',
+        quantity: arenaTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Piedra chancada 3/4"',
+        unit: 'm³',
+        quantity: piedraChancadaTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Piedra de zanja (máx. 10")',
+        unit: 'm³',
+        quantity: piedraZanjaTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Agua',
+        unit: 'm³',
+        quantity: aguaTotal.toStringAsFixed(3),
+      ),
+    ];
+
+    final details = cimientos.map((c) => MeasurementData(
+      description: c.description,
+      value: _calcularVolumenElemento(c),
+      unit: 'm³',
+    )).toList();
+
+    return CalculationResult(
+      type: CalculationType.cimientoCorrido,
+      materials: materials,
+      details: details,
+      totalValue: volumenTotal,
+      totalUnit: 'm³',
+      additionalInfo: {
+        'resistencia': cimientos.first.resistencia,
+        'factorDesperdicio': '${cimientos.first.factorDesperdicio}%',
+        'tipoElemento': 'Cimiento Corrido',
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA SOLADO
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateSoladoMaterials(List<Solado> solados) {
+    const Map<String, Map<String, double>> factoresSolado = {
+      "175 kg/cm²": {
+        "cemento": 8.43,
+        "arenaGruesa": 0.54,
+        "piedraChancada": 0.55,
+        "agua": 0.185,
+      },
+      "140 kg/cm²": {
+        "cemento": 7.50,
+        "arenaGruesa": 0.59,
+        "piedraChancada": 0.60,
+        "agua": 0.190,
+      },
+      "210 kg/cm²": {
+        "cemento": 9.20,
+        "arenaGruesa": 0.51,
+        "piedraChancada": 0.52,
+        "agua": 0.180,
+      },
+      "280 kg/cm²": {
+        "cemento": 10.80,
+        "arenaGruesa": 0.48,
+        "piedraChancada": 0.49,
+        "agua": 0.175,
+      },
+    };
+
+    double areaTotal = 0.0;
+    double volumenTotal = 0.0;
+    double cementoTotal = 0.0;
+    double arenaTotal = 0.0;
+    double piedraChancadaTotal = 0.0;
+    double aguaTotal = 0.0;
+
+    for (final solado in solados) {
+      final area = _calcularAreaSolado(solado);
+      areaTotal += area;
+
+      final volumen = area * solado.espesorFijo; // Siempre 0.1 m
+      volumenTotal += volumen;
+
+      final factores = factoresSolado[solado.resistencia] ??
+          factoresSolado["175 kg/cm²"]!;
+
+      final desperdicio = (double.tryParse(solado.factorDesperdicio) ?? 5.0) / 100;
+      final volumenConDesperdicio = volumen * (1 + desperdicio);
+
+      cementoTotal += factores['cemento']! * volumenConDesperdicio;
+      arenaTotal += factores['arenaGruesa']! * volumenConDesperdicio;
+      piedraChancadaTotal += factores['piedraChancada']! * volumenConDesperdicio;
+      aguaTotal += factores['agua']! * volumenConDesperdicio;
+    }
+
+    final materials = <Material>[
+      Material(
+        description: 'Cemento',
+        unit: 'bolsas',
+        quantity: cementoTotal.toStringAsFixed(3),
+      ),
+      Material(
+        description: 'Arena gruesa',
+        unit: 'm³',
+        quantity: arenaTotal.toStringAsFixed(6),
+      ),
+      Material(
+        description: 'Piedra chancada',
+        unit: 'm³',
+        quantity: piedraChancadaTotal.toStringAsFixed(6),
+      ),
+      Material(
+        description: 'Agua',
+        unit: 'm³',
+        quantity: aguaTotal.toStringAsFixed(6),
+      ),
+    ];
+
+    final details = solados.map((s) => MeasurementData(
+      description: s.description,
+      value: _calcularAreaSolado(s),
+      unit: 'm²',
+    )).toList();
+
+    return CalculationResult(
+      type: CalculationType.solado,
+      materials: materials,
+      details: details,
+      totalValue: areaTotal,
+      totalUnit: 'm²',
+      additionalInfo: {
+        'resistencia': solados.first.resistencia,
+        'factorDesperdicio': '${solados.first.factorDesperdicio}%',
+        'espesorFijo': '${solados.first.espesorFijo * 100} cm',
+        'tipoElemento': 'Solado',
       },
     );
   }
@@ -745,14 +1067,40 @@ class UnifiedMaterialsCalculator {
 
   /// Calcula el volumen de un elemento estructural (columna o viga)
   static double _calcularVolumenElemento(dynamic elemento) {
+
+    if (elemento is Solado) {
+      return _calcularAreaSolado(elemento) * elemento.espesorFijo;
+    }
+
     if (elemento.volumen != null && elemento.volumen!.isNotEmpty) {
       return double.tryParse(elemento.volumen!) ?? 0.0;
-    } else {
-      final largo = double.tryParse(elemento.largo ?? '') ?? 0.0;
-      final ancho = double.tryParse(elemento.ancho ?? '') ?? 0.0;
-      final altura = double.tryParse(elemento.altura ?? '') ?? 0.0;
+    }
+
+    if (elemento.largo != null && elemento.largo!.isNotEmpty &&
+        elemento.ancho != null && elemento.ancho!.isNotEmpty &&
+        elemento.altura != null && elemento.altura!.isNotEmpty) {
+      final largo = double.tryParse(elemento.largo!) ?? 0.0;
+      final ancho = double.tryParse(elemento.ancho!) ?? 0.0;
+      final altura = double.tryParse(elemento.altura!) ?? 0.0;
       return largo * ancho * altura;
     }
+
+    return 0.0;
+  }
+
+  static double _calcularAreaSolado(Solado solado) {
+    if (solado.area != null && solado.area!.isNotEmpty) {
+      return double.tryParse(solado.area!) ?? 0.0;
+    }
+
+    if (solado.largo != null && solado.largo!.isNotEmpty &&
+        solado.ancho != null && solado.ancho!.isNotEmpty) {
+      final largo = double.tryParse(solado.largo!) ?? 0.0;
+      final ancho = double.tryParse(solado.ancho!) ?? 0.0;
+      return largo * ancho;
+    }
+
+    return 0.0;
   }
 
   /// Calcula el área de una losa aligerada
@@ -790,6 +1138,9 @@ enum CalculationType {
   tarrajeo,
   columna,
   viga,
+  sobrecimiento,
+  cimientoCorrido,
+  solado,
 }
 
 /// Clase para representar un material calculado
@@ -828,7 +1179,7 @@ class MeasurementData {
 class CalculationResult {
   final CalculationType type;
   final List<Material> materials;
-  final List<MeasurementData> measurements;
+  final List<MeasurementData> details;
   final double totalValue;
   final String totalUnit;
   final Map<String, String> additionalInfo;
@@ -837,7 +1188,7 @@ class CalculationResult {
   const CalculationResult({
     required this.type,
     required this.materials,
-    required this.measurements,
+    required this.details,
     required this.totalValue,
     required this.totalUnit,
     this.additionalInfo = const {},
@@ -848,7 +1199,7 @@ class CalculationResult {
   const CalculationResult.empty()
       : type = CalculationType.ladrillo,
         materials = const [],
-        measurements = const [],
+        details = const [],
         totalValue = 0.0,
         totalUnit = '',
         additionalInfo = const {},
@@ -858,7 +1209,7 @@ class CalculationResult {
   const CalculationResult.error(String error)
       : type = CalculationType.ladrillo,
         materials = const [],
-        measurements = const [],
+        details = const [],
         totalValue = 0.0,
         totalUnit = '',
         additionalInfo = const {},
@@ -868,7 +1219,7 @@ class CalculationResult {
   bool get hasError => errorMessage != null;
 
   /// Indica si está vacío
-  bool get isEmpty => materials.isEmpty && measurements.isEmpty;
+  bool get isEmpty => materials.isEmpty && details.isEmpty;
 
   @override
   String toString() {
@@ -876,7 +1227,7 @@ class CalculationResult {
     if (isEmpty) return 'Resultado vacío';
 
     final materialsStr = materials.map((m) => '  • ${m.toString()}').join('\n');
-    final measurementsStr = measurements.map((m) => '  • ${m.toString()}').join('\n');
+    final measurementsStr = details.map((m) => '  • ${m.toString()}').join('\n');
 
     return '''
 Tipo: ${type.name}

@@ -249,8 +249,8 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                   ),
                 ),
                 Positioned(
-                  bottom: 80,
-                  left: 20,
+                  bottom: 20,
+                  left: 50,
                   child: _buildDimensionControl(
                     'Ancho',
                     _widthController,
@@ -264,7 +264,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 ),
                 Positioned(
                   bottom: 20,
-                  right: 20,
+                  right: 50,
                   child: _buildDimensionControl(
                     'Alto',
                     _heightController,

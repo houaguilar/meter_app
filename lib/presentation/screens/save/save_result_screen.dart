@@ -1,14 +1,14 @@
-// lib/presentation/screens/save/save_result_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/screens/projects/new_project/new_project_screen.dart';
 
 import '../../../config/utils/security_service.dart';
 import '../../../domain/entities/entities.dart';
+import '../../../domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
+import '../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import '../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../domain/entities/home/losas/losas.dart';
 import '../../blocs/projects/metrados/metrados_bloc.dart';
@@ -34,15 +34,30 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   @override
   void initState() {
     super.initState();
+
+    // 🔧 FIX: Inicialización más robusta
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeScreen();
     });
   }
 
   void _initializeScreen() {
-    context.read<ProjectsBloc>().add(LoadProjectsEvent());
-    context.read<ResultBloc>().add(ResetResultStateEvent());
-    context.read<MetradosBloc>().add(ResetMetradoStateEvent());
+    try {
+      // 🔧 FIX: Reset completo al inicializar
+      context.read<ResultBloc>().add(ResetResultStateEvent());
+      context.read<MetradosBloc>().add(ResetMetradoStateEvent());
+
+      // Cargar proyectos después del reset
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (mounted) {
+          context.read<ProjectsBloc>().add(LoadProjectsEvent());
+        }
+      });
+
+      print('🚀 Pantalla inicializada correctamente'); // Debug
+    } catch (e) {
+      print('❌ Error inicializando pantalla: $e'); // Debug
+    }
   }
 
   @override
@@ -458,12 +473,17 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
   // Métodos de lógica
 
-  void _handleSave() {
+  void _handleSave() async {
+    print('🚀 Iniciando proceso de guardado...');
+
     if (!_formKey.currentState!.validate()) {
+      print('❌ Formulario no válido');
       return;
     }
 
     final results = _getCalculatedResults();
+    print('📊 Resultados obtenidos: ${results.length}');
+
     if (results.isEmpty) {
       _showMessage('No hay resultados para guardar', isError: true);
       return;
@@ -479,28 +499,86 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       _isLoading = true;
     });
 
-    final sanitizedName = SecurityService.sanitizeText(_descriptionController.text.trim());
+    try {
+      // ✅ PASO 1: Reset completo y agresivo
+      print('🔄 Reseteando BLoCs...');
+      context.read<ResultBloc>().add(ResetResultStateEvent());
+      context.read<MetradosBloc>().add(ResetMetradoStateEvent());
 
-    context.read<MetradosBloc>().add(
-      CreateMetradoEvent(
-        name: sanitizedName,
-        projectId: int.parse(selectedProjectId!),
-      ),
-    );
+      // ✅ PASO 2: Esperar que el reset termine completamente
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!mounted) return;
+
+      // ✅ PASO 3: Verificar estados iniciales
+      final resultState = context.read<ResultBloc>().state;
+      final metradoState = context.read<MetradosBloc>().state;
+
+      print('📊 Estado ResultBloc: ${resultState.runtimeType}');
+      print('📊 Estado MetradosBloc: ${metradoState.runtimeType}');
+
+      if (resultState is! ResultInitial || metradoState is! MetradoInitial) {
+        print('⚠️ Estados no se resetearon correctamente, forzando...');
+
+        // Forzar reset adicional
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (!mounted) return;
+      }
+
+      // ✅ PASO 4: Crear metrado
+      final sanitizedName = SecurityService.sanitizeText(_descriptionController.text.trim());
+      print('📝 Creando metrado: "$sanitizedName" en proyecto $selectedProjectId');
+
+      context.read<MetradosBloc>().add(
+        CreateMetradoEvent(
+          name: sanitizedName,
+          projectId: int.parse(selectedProjectId!),
+        ),
+      );
+
+    } catch (e) {
+      print('❌ Error en proceso de guardado: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage('Error interno: $e', isError: true);
+      _resetBlocs();
+    }
   }
 
   List<dynamic> _getCalculatedResults() {
     final allResults = <dynamic>[];
 
     try {
-      allResults.addAll(ref.read(ladrilloResultProvider));
-      allResults.addAll(ref.read(falsoPisoResultProvider));
-      allResults.addAll(ref.read(contrapisoResultProvider));
-      allResults.addAll(ref.read(tarrajeoResultProvider));
-      allResults.addAll(ref.read(losaAligeradaResultProvider));
-      allResults.addAll(ref.read(columnaResultProvider));
-      allResults.addAll(ref.read(vigaResultProvider));
+      // 🔧 FIX: Validar cada provider antes de leerlo
+      final providers = [
+            () => ref.read(ladrilloResultProvider),
+            () => ref.read(falsoPisoResultProvider),
+            () => ref.read(contrapisoResultProvider),
+            () => ref.read(tarrajeoResultProvider),
+            () => ref.read(losaAligeradaResultProvider),
+            () => ref.read(columnaResultProvider),
+            () => ref.read(vigaResultProvider),
+            () => ref.read(sobrecimientoResultProvider),
+            () => ref.read(cimientoCorridoResultProvider),
+            () => ref.read(soladoResultProvider),
+      ];
+
+      for (final providerReader in providers) {
+        try {
+          final results = providerReader();
+          if (results.isNotEmpty) {
+            allResults.addAll(results);
+            print('📊 Agregados ${results.length} resultados de tipo ${results.first.runtimeType}');
+          }
+        } catch (e) {
+          print('⚠️ Error leyendo provider: $e');
+        }
+      }
+
+      print('📈 Total de resultados obtenidos: ${allResults.length}');
     } catch (e) {
+      print('❌ Error obteniendo resultados: $e');
       debugPrint('Error obteniendo resultados: $e');
     }
 
@@ -514,6 +592,9 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     if (result is LosaAligerada) return 'Losas Aligeradas';
     if (result is Columna) return 'Columnas';
     if (result is Viga) return 'Vigas';
+    if (result is Sobrecimiento) return 'Sobrecimientos';
+    if (result is CimientoCorrido) return 'Cimientos Corridos';
+    if (result is Solado) return 'Solados';
     return 'Elementos';
   }
 
@@ -525,6 +606,9 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       case 'Losas Aligeradas': return Icons.layers;
       case 'Columnas': return Icons.view_column;
       case 'Vigas': return Icons.horizontal_rule;
+      case 'Sobrecimientos': return Icons.foundation;
+      case 'Cimientos Corridos': return Icons.landscape;
+      case 'Solados': return Icons.layers_outlined;
       default: return Icons.construction;
     }
   }
@@ -539,47 +623,95 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     );
   }
 
-  String _getNewProjectRoute(dynamic result) {
-    if (result is Ladrillo) return 'new-project-ladrillo';
-    if (result is Piso) return 'new-project-piso';
-    if (result is Tarrajeo) return 'new-project-tarrajeo';
-    if (result is LosaAligerada) return 'new-project-losas';
-    if (result is Columna || result is Viga) return 'new-project-structural';
-    return 'new-project';
-  }
-
   // Manejadores de estado
 
   void _handleResultState(BuildContext context, ResultState state) {
+    print('🔍 ResultState: ${state.runtimeType}'); // Debug
+
     if (state is ResultSuccess) {
-      _showMessage('Metrado guardado exitosamente');
-      _clearForm();
-      Navigator.pop(context);
-    } else if (state is ResultFailure) {
+      print('✅ Resultados guardados exitosamente'); // Debug
       setState(() {
         _isLoading = false;
       });
-      _showMessage('Error al guardar: ${state.message}', isError: true);
+      _showMessage('Metrado guardado exitosamente');
+      _clearForm();
+
+      // Navegar después de un pequeño delay para mostrar el mensaje
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          Navigator.pop(context);
+        }
+      });
+
+    } else if (state is ResultFailure) {
+      print('❌ Error al guardar resultados: ${state.message}'); // Debug
+      setState(() {
+        _isLoading = false;
+      });
+      _showMessage('Error al guardar resultados: ${state.message}', isError: true);
       _resetBlocs();
     }
   }
 
   void _handleMetradoState(BuildContext context, MetradosState state) {
+    print('🔍 MetradosState recibido: ${state.runtimeType}');
+
     if (state is MetradoAdded) {
+      print('✅ Metrado creado exitosamente con ID: ${state.metradoId}');
+
       final results = _getCalculatedResults();
-      context.read<ResultBloc>().add(
-        SaveResultEvent(
-          results: results,
-          metradoId: state.metradoId.toString(),
-        ),
-      );
+      if (results.isEmpty) {
+        print('❌ Error: No hay resultados para guardar');
+        setState(() {
+          _isLoading = false;
+        });
+        _showMessage('Error: No hay resultados para guardar', isError: true);
+        return;
+      }
+
+      // ✅ Verificar estado de ResultBloc antes de proceder
+      final currentResultState = context.read<ResultBloc>().state;
+      print('📊 Estado actual de ResultBloc: ${currentResultState.runtimeType}');
+
+      if (currentResultState is ResultLoading) {
+        print('⚠️ ResultBloc está cargando, esperando...');
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (mounted) {
+            _handleMetradoState(context, state);
+          }
+        });
+        return;
+      }
+
+      // ✅ Guardar resultados con copia para evitar modificaciones
+      print('💾 Guardando ${results.length} resultados...');
+
+      try {
+        context.read<ResultBloc>().add(
+          SaveResultEvent(
+            results: results.map((r) => _createCopyOfResult(r)).toList(),
+            metradoId: state.metradoId.toString(),
+          ),
+        );
+      } catch (e) {
+        print('❌ Error al disparar SaveResultEvent: $e');
+        setState(() {
+          _isLoading = false;
+        });
+        _showMessage('Error al guardar resultados: $e', isError: true);
+        _resetBlocs();
+      }
+
     } else if (state is MetradoFailure) {
+      print('❌ Error creando metrado: ${state.message}');
       setState(() {
         _isLoading = false;
       });
       _showMessage('Error al crear metrado: ${state.message}', isError: true);
       _resetBlocs();
+
     } else if (state is MetradoNameAlreadyExists) {
+      print('❌ Nombre de metrado duplicado: ${state.message}');
       setState(() {
         _isLoading = false;
       });
@@ -631,12 +763,95 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   }
 
   void _resetBlocs() {
-    Future.delayed(const Duration(milliseconds: 500), () {
+    // 🔧 FIX: Reset inmediato sin delay y con mejor manejo de errores
+    try {
       if (mounted) {
         context.read<ResultBloc>().add(ResetResultStateEvent());
         context.read<MetradosBloc>().add(ResetMetradoStateEvent());
+        print('🔄 BLoCs reseteados'); // Debug
       }
-    });
+    } catch (e) {
+      print('⚠️ Error al resetear BLoCs: $e'); // Debug
+    }
+  }
+
+  dynamic _createCopyOfResult(dynamic result) {
+    // Esto evita problemas de referencias compartidas
+    if (result is Ladrillo) {
+      return Ladrillo(
+        idLadrillo: result.idLadrillo,
+        description: result.description,
+        tipoLadrillo: result.tipoLadrillo,
+        factorDesperdicio: result.factorDesperdicio,
+        factorDesperdicioMortero: result.factorDesperdicioMortero,
+        proporcionMortero: result.proporcionMortero,
+        tipoAsentado: result.tipoAsentado,
+        largo: result.largo,
+        altura: result.altura,
+        area: result.area,
+      );
+    } else if (result is Columna) {
+      return Columna(
+        idColumna: result.idColumna,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        altura: result.altura,
+        volumen: result.volumen,
+      );
+    }
+    else if (result is Viga) {
+      return Viga(
+        idViga: result.idViga,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        altura: result.altura,
+        volumen: result.volumen,
+      );
+    }
+    else if (result is Sobrecimiento) {
+      return Sobrecimiento(
+        idSobrecimiento: result.idSobrecimiento,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        altura: result.altura,
+        volumen: result.volumen,
+      );
+    }
+    else if (result is CimientoCorrido) {
+      return CimientoCorrido(
+        idCimientoCorrido: result.idCimientoCorrido,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        altura: result.altura,
+        volumen: result.volumen,
+      );
+    }
+    else if (result is Solado) {
+      return Solado(
+        idSolado: result.idSolado,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        area: result.area,
+        espesorFijo: result.espesorFijo,
+      );
+    }
+    // Agregar otros tipos según necesidades...
+    return result;
   }
 
   void _showMessage(String message, {bool isError = false}) {

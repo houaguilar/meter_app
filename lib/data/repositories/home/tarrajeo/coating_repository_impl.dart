@@ -15,7 +15,7 @@ class CoatingRepositoryImpl implements CoatingRepository {
       ),
       Coating(
         id: '2',
-        name: 'Muro exteriores',
+        name: 'Derrames',
         image: AppImages.mezclaCementoImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),
@@ -27,7 +27,7 @@ class CoatingRepositoryImpl implements CoatingRepository {
       ),
       Coating(
         id: '4',
-        name: 'Derrames',
+        name: 'Muro exteriores',
         image: AppImages.mezclaCementoImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),

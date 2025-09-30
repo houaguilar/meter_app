@@ -168,7 +168,17 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       );
     }
 
-    String appBarTitle = tipoElemento == 'columna' ? 'Cálculo de Columna' : 'Cálculo de Viga';
+    String appBarTitle = tipoElemento == 'columna'
+        ? 'Datos de Columna'
+        : tipoElemento == 'viga'
+        ? 'Datos de Viga'
+        : tipoElemento == 'sobrecimiento'
+        ? 'Datos de Sobrecimiento'
+        : tipoElemento == 'cimiento_corrido'
+        ? 'Datos de Cimiento Corrido'
+        : tipoElemento == 'solado'
+        ? 'Datos de Solado'
+        : 'Datos de Elemento';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -315,7 +325,27 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   }
 
   Widget _buildResistenciaSelection() {
-    final opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "280 kg/cm²"];
+    List<String> opcionesResistencia = [];
+
+    switch (tipoElemento) {
+      case 'columna':
+        opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "280 kg/cm²"];
+        break;
+      case 'viga':
+        opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "280 kg/cm²"]; // si quieres que sea lo mismo
+        break;
+      case 'sobrecimiento':
+        opcionesResistencia = ["175 kg/cm²"];
+        break;
+        case 'cimiento_corrido':
+        opcionesResistencia = ["175 kg/cm²"];
+        break;
+      case 'solado':
+        opcionesResistencia = ["175 kg/cm²"];
+        break;
+      default:
+        opcionesResistencia = ["175 kg/cm²", "210 kg/cm²", "280 kg/cm²"];
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -667,6 +697,12 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
         _processColumnaData();
       } else if (tipoActual == 'viga') {
         _processVigaData();
+      } else if (tipoActual == 'sobrecimiento') {
+        _processSobrecimientoData();
+      } else if (tipoActual == 'cimiento_corrido') {
+        _processCimientoCorridoData();
+      } else if (tipoActual == 'solado') {
+        _processSoladoData();
       } else {
         print('❌ Tipo no reconocido: $tipoActual');
         _showErrorMessage('Error: Tipo de elemento no válido');
@@ -676,6 +712,9 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       // Observar cambios en los providers
       ref.watch(vigaResultProvider);
       ref.watch(columnaResultProvider);
+      ref.watch(sobrecimientoResultProvider);
+      ref.watch(cimientoCorridoResultProvider);
+      ref.watch(soladoResultProvider);
       context.pushNamed('structural-element-results');
 
       await Future.delayed(const Duration(seconds: 2));
@@ -844,6 +883,211 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     } catch (e) {
       print("❌ Error creando vigas: $e");
       _showErrorMessage('Error al procesar datos de viga: $e');
+    }
+  }
+
+
+  void _processSobrecimientoData() {
+    var datosSobrecimiento = ref.read(sobrecimientoResultProvider.notifier);
+    datosSobrecimiento.clearList();
+
+    try {
+      if (_currentIndex == 0) {
+        // Tab de volumen
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
+          datosSobrecimiento.createSobrecimiento(
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            volumen: _volumenTextController.text,
+          );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosSobrecimiento.createSobrecimiento(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              volumen: field['volumen']!.text,
+            );
+          }
+        }
+      } else {
+        // Tab de dimensiones
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty &&
+            _heightTextController.text.isNotEmpty) {
+          datosSobrecimiento.createSobrecimiento(
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+            altura: _heightTextController.text,
+          );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty &&
+              field['altura']!.text.isNotEmpty) {
+            datosSobrecimiento.createSobrecimiento(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+              altura: field['altura']!.text,
+            );
+          }
+        }
+      }
+
+      final sobrecimientosCreados = ref.read(sobrecimientoResultProvider);
+      print("✅ Sobrecimientos creados: ${sobrecimientosCreados.length}");
+    } catch (e) {
+      print("❌ Error creando sobrecimientos: $e");
+      _showErrorMessage('Error al procesar datos de sobrecimiento: $e');
+    }
+  }
+
+  void _processCimientoCorridoData() {
+    var datosCimiento = ref.read(cimientoCorridoResultProvider.notifier);
+    datosCimiento.clearList();
+
+    try {
+      if (_currentIndex == 0) {
+        // Tab de volumen
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
+          datosCimiento.createCimientoCorrido(
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            volumen: _volumenTextController.text,
+          );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosCimiento.createCimientoCorrido(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              volumen: field['volumen']!.text,
+            );
+          }
+        }
+      } else {
+        // Tab de dimensiones
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty &&
+            _heightTextController.text.isNotEmpty) {
+          datosCimiento.createCimientoCorrido(
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+            altura: _heightTextController.text,
+          );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty &&
+              field['altura']!.text.isNotEmpty) {
+            datosCimiento.createCimientoCorrido(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+              altura: field['altura']!.text,
+            );
+          }
+        }
+      }
+
+      final cimientosCreados = ref.read(cimientoCorridoResultProvider);
+      print("✅ Cimientos corridos creados: ${cimientosCreados.length}");
+    } catch (e) {
+      print("❌ Error creando cimientos corridos: $e");
+      _showErrorMessage('Error al procesar datos de cimiento corrido: $e');
+    }
+  }
+
+  void _processSoladoData() {
+    var datosSolado = ref.read(soladoResultProvider.notifier);
+    datosSolado.clearList();
+
+    try {
+      if (_currentIndex == 0) {
+        // Tab de área (para solado es más apropiado que volumen)
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
+          // Para solado, interpretar como área
+          datosSolado.createSolado(
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            area: _volumenTextController.text,
+          );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosSolado.createSolado(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              area: field['volumen']!.text,
+            );
+          }
+        }
+      } else {
+        // Tab de dimensiones (largo × ancho para calcular área)
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty) {
+          datosSolado.createSolado(
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+          );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty) {
+            datosSolado.createSolado(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+            );
+          }
+        }
+      }
+
+      final soladosCreados = ref.read(soladoResultProvider);
+      print("✅ Solados creados: ${soladosCreados.length}");
+    } catch (e) {
+      print("❌ Error creando solados: $e");
+      _showErrorMessage('Error al procesar datos de solado: $e');
     }
   }
 

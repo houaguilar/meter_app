@@ -437,7 +437,7 @@ class _ResultScreenState extends State<ResultScreen>
   }
 
   Widget _buildDataTable(CalculationResult result) {
-    if (result.measurements.isEmpty) {
+    if (result.details.isEmpty) {
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(16),
@@ -457,7 +457,7 @@ class _ResultScreenState extends State<ResultScreen>
       },
       children: [
         _buildTableHeader(['Descripción', 'Medida', 'Und.']),
-        ...result.measurements.map((measurement) {
+        ...result.details.map((measurement) {
           return _buildTableRow([
             measurement.description,
             measurement.value.toStringAsFixed(2),
@@ -689,6 +689,12 @@ class _ResultScreenState extends State<ResultScreen>
         return Colors.orange;
       case CalculationType.viga:
         return Colors.purple;
+        case CalculationType.sobrecimiento:
+        return Colors.red;
+      case CalculationType.cimientoCorrido:
+        return Colors.green;
+      case CalculationType.solado:
+        return Colors.yellow;
       }
   }
 
@@ -706,6 +712,12 @@ class _ResultScreenState extends State<ResultScreen>
         return Icons.view_column_outlined;
       case CalculationType.viga:
         return Icons.horizontal_rule_outlined;
+      case CalculationType.sobrecimiento:
+        return Icons.foundation;
+      case CalculationType.cimientoCorrido:
+        return Icons.landscape;
+      case CalculationType.solado:
+        return Icons.layers_outlined;
       }
   }
 
@@ -723,6 +735,12 @@ class _ResultScreenState extends State<ResultScreen>
         return 'Columna';
       case CalculationType.viga:
         return 'Viga';
+      case CalculationType.sobrecimiento:
+        return 'Sobrecimiento';
+      case CalculationType.cimientoCorrido:
+        return 'Cimiento Corrido';
+      case CalculationType.solado:
+        return 'Solado';
       }
   }
 
@@ -754,6 +772,16 @@ class _ResultScreenState extends State<ResultScreen>
         return 'Desperdicio Concreto';
       case 'tipo':
         return 'Tipo';
+      case 'factorDesperdicio':
+        return 'Factor de Desperdicio';
+      case 'resistenciaDelConcreto':
+        return 'Resistencia del Concreto';
+      case 'tipoElemento':
+        return 'Tipo de Elemento';
+      case 'espesorFijo':
+        return 'Espesor (fijo)';
+      case 'areaCalculada':
+        return 'Área Calculada';
       default:
         return key;
     }

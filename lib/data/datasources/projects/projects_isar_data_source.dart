@@ -1,7 +1,10 @@
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/datasources/projects/projects_local_data_source.dart';
 import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
+import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 import 'package:meter_app/domain/entities/home/losas/losas.dart';
 
@@ -302,6 +305,32 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
     for (var item in vigasToDelete) {
       await isar.vigas.delete(item.id);
     }
+
+    final sobrecimientosToDelete = await isar.sobrecimientos
+        .filter()
+        .metradoIdEqualTo(metradoId)
+        .findAll();
+    for (var item in sobrecimientosToDelete) {
+      await isar.sobrecimientos.delete(item.id);
+    }
+
+    // Eliminar cimientos corridos
+    final cimientosCorridosToDelete = await isar.cimientoCorridos
+        .filter()
+        .metradoIdEqualTo(metradoId)
+        .findAll();
+    for (var item in cimientosCorridosToDelete) {
+      await isar.cimientoCorridos.delete(item.id);
+    }
+
+    // Eliminar solados
+    final soladosToDelete = await isar.solados
+        .filter()
+        .metradoIdEqualTo(metradoId)
+        .findAll();
+    for (var item in soladosToDelete) {
+      await isar.solados.delete(item.id);
+    }
   }
 
   /// Sanitiza el nombre del proyecto
@@ -374,9 +403,22 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
             .filter()
             .metradoIdEqualTo(metrado.id)
             .count();
+        final sobrecimientosCount = await isar.sobrecimientos
+            .filter()
+            .metradoIdEqualTo(metrado.id)
+            .count();
+        final cimientosCorridosCount = await isar.cimientoCorridos
+            .filter()
+            .metradoIdEqualTo(metrado.id)
+            .count();
+        final soladosCount = await isar.solados
+            .filter()
+            .metradoIdEqualTo(metrado.id)
+            .count();
 
         totalResults += ladrillosCount + pisosCount + tarrajeosCount +
-            losasCount + columnasCount + vigasCount;
+            losasCount + columnasCount + vigasCount + sobrecimientosCount +
+            cimientosCorridosCount + soladosCount;
       }
 
       return {

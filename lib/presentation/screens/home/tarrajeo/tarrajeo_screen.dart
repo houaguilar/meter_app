@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/tarrajeo/coating.dart';
@@ -141,6 +142,11 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
         case '1': // Tarrajeo normal
           context.pushNamed('tarrajeo-muro');
           break;
+          case '2': // derrame
+        ref.read(tipoTarrajeoDerrrameProvider.notifier).selectTarrajeoDerrrame(coatingType);
+        context.pushNamed('tarrajeo-derrame');
+          break;
+
         default:
           context.pushNamed('tarrajeo-muro');
       }
@@ -161,7 +167,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
 
   /// Determina si un revestimiento está disponible
   bool _isCoatingAvailable(String coatingId) {
-    const availableIds = ['1']; // Tarrajeo normal y Yeso
+    const availableIds = ['1', '2']; // Tarrajeo normal y Yeso
     return availableIds.contains(coatingId);
   }
 
@@ -170,6 +176,12 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
     switch (coatingId) {
       case '1':
         return 'Tarrajeo Normal';
+      case '2':
+        return 'Tarrajeo Derrame';
+      case '3':
+        return 'Tarrajeo Cielorraso';
+      case '4':
+        return 'Solaqueo';
       default:
         return 'Tarrajeo Normal';
     }

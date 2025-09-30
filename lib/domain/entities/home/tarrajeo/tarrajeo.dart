@@ -16,7 +16,7 @@ class Tarrajeo {
   final String description;
   final String tipo;
   final String factorDesperdicio;
-  final String proporcionMortero; // "4" o "5" (para 1:4 o 1:5)
+  final String proporcionMortero;
   final String espesor;
   final String? longitud;
   final String? ancho;
