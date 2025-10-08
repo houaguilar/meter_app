@@ -1,13 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../../../../domain/entities/home/acero/columna/steel_column.dart';
 import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
-import '../../../../../domain/entities/home/acero/steel_column_constants.dart';
-import '../../../../../domain/entities/home/acero/viga/steel_bar.dart';
-import '../../../../../domain/entities/home/acero/viga/stirrup_distribution.dart';
-
-const uuid = Uuid();
 
 // ============================================================================
 // PROVIDERS PRINCIPALES
@@ -17,27 +11,14 @@ final steelColumnResultProvider = StateNotifierProvider<SteelColumnResultNotifie
   return SteelColumnResultNotifier();
 });
 
-final steelBarsForColumnProvider = StateNotifierProvider<SteelBarsForColumnNotifier, Map<String, List<SteelBar>>>((ref) {
-  return SteelBarsForColumnNotifier();
-});
-
-final stirrupDistributionsForColumnProvider = StateNotifierProvider<StirrupDistributionsForColumnNotifier, Map<String, List<StirrupDistribution>>>((ref) {
-  return StirrupDistributionsForColumnNotifier();
-});
-
 // Provider para calcular resultados individuales por columna
 final calculateIndividualColumnSteelProvider = Provider.family<SteelColumnCalculationResult?, String>((ref, columnId) {
   final columns = ref.watch(steelColumnResultProvider);
-  final allBars = ref.watch(steelBarsForColumnProvider);
-  final allDistributions = ref.watch(stirrupDistributionsForColumnProvider);
 
   final column = columns.where((c) => c.idSteelColumn == columnId).firstOrNull;
   if (column == null) return null;
 
-  final steelBars = allBars[columnId] ?? [];
-  final stirrupDistributions = allDistributions[columnId] ?? [];
-
-  return _calculateSteelForColumn(column, steelBars, stirrupDistributions);
+  return _calculateSteelForColumn(column);
 });
 
 // Provider para calcular resultados consolidados de todas las columnas
@@ -89,16 +70,12 @@ final calculateConsolidatedColumnSteelProvider = Provider<ConsolidatedColumnStee
 // FUNCIONES DE CÁLCULO ESPECÍFICAS PARA COLUMNAS
 // ============================================================================
 
-/// Calcula el acero para una columna específica siguiendo el Excel
-SteelColumnCalculationResult _calculateSteelForColumn(
-    SteelColumn column,
-    List<SteelBar> steelBars,
-    List<StirrupDistribution> stirrupDistributions,
-    ) {
+/// Calcula el acero para una columna específica usando listas embebidas
+SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
   final Map<String, double> totalesPorDiametro = {};
 
-  // **CÁLCULO DE ACERO LONGITUDINAL**
-  for (final steelBar in steelBars) {
+  // **CÁLCULO DE ACERO LONGITUDINAL** - Ahora usando column.steelBars directamente
+  for (final steelBar in column.steelBars) {
     // Longitud básica por barra: elementos × cantidad × altura de columna
     final longitudBasica = column.elements * steelBar.quantity * column.height;
     totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudBasica;
@@ -116,12 +93,12 @@ SteelColumnCalculationResult _calculateSteelForColumn(
     }
   }
 
-  // **CÁLCULO DE ESTRIBOS**
+  // **CÁLCULO DE ESTRIBOS** - Ahora usando column.stirrupDistributions directamente
   // Calcular longitud cubierta por distribuciones
   double longitudCubierta = 0;
   int cantidadEstribosDistribucion = 0;
 
-  for (final distribution in stirrupDistributions) {
+  for (final distribution in column.stirrupDistributions) {
     longitudCubierta += distribution.quantity * distribution.separation;
     cantidadEstribosDistribucion += distribution.quantity * 2; // x2 para ambos extremos
   }
@@ -301,135 +278,61 @@ final canCalculateColumnProvider = Provider<bool>((ref) {
 final clearAllColumnDataProvider = Provider<void Function()>((ref) {
   return () {
     ref.read(steelColumnResultProvider.notifier).clearList();
-    ref.read(steelBarsForColumnProvider.notifier).clearAll();
-    ref.read(stirrupDistributionsForColumnProvider.notifier).clearAll();
   };
 });
 
-class SteelBarsForColumnNotifier extends StateNotifier<Map<String, List<SteelBar>>> {
-  SteelBarsForColumnNotifier() : super({});
+// ============================================================================
+// CLASES DE DATOS PARA RESULTADOS
+// ============================================================================
 
-  void addBar(String columnId, SteelBar newBar) {
-    final currentBars = state[columnId] ?? [];
-    state = {
-      ...state,
-      columnId: [...currentBars, newBar],
-    };
-  }
+class MaterialQuantity {
+  final double quantity;
+  final String unit;
 
-  void addSteelBar(String columnId, int quantity, String diameter) {
-    final newBar = SteelBar(
-      idSteelBar: uuid.v4(),
-      quantity: quantity,
-      diameter: diameter,
-    );
-
-    final currentBars = state[columnId] ?? [];
-    state = {
-      ...state,
-      columnId: [...currentBars, newBar],
-    };
-  }
-
-  void updateBar(String columnId, int index, SteelBar updatedBar) {
-    final currentBars = state[columnId] ?? [];
-    if (index >= 0 && index < currentBars.length) {
-      final newBars = List<SteelBar>.from(currentBars);
-      newBars[index] = updatedBar;
-      state = {
-        ...state,
-        columnId: newBars,
-      };
-    }
-  }
-
-  void removeBar(String columnId, int index) {
-    final currentBars = state[columnId] ?? [];
-    if (index >= 0 && index < currentBars.length) {
-      final newBars = List<SteelBar>.from(currentBars);
-      newBars.removeAt(index);
-      state = {
-        ...state,
-        columnId: newBars,
-      };
-    }
-  }
-
-  List<SteelBar> getBarsForColumn(String columnId) {
-    return state[columnId] ?? [];
-  }
-
-  void clearBarsForColumn(String columnId) {
-    final newState = Map<String, List<SteelBar>>.from(state);
-    newState.remove(columnId);
-    state = newState;
-  }
-
-  void clearAll() {
-    state = {};
-  }
+  const MaterialQuantity({
+    required this.quantity,
+    required this.unit,
+  });
 }
 
-class StirrupDistributionsForColumnNotifier extends StateNotifier<Map<String, List<StirrupDistribution>>> {
-  StirrupDistributionsForColumnNotifier() : super({});
+class SteelColumnCalculationResult {
+  final String columnId;
+  final String description;
+  final double totalWeight;
+  final double wireWeight;
+  final int totalStirrups;
+  final double stirrupPerimeter;
+  final Map<String, MaterialQuantity> materials;
+  final Map<String, double> totalsByDiameter;
+  final bool hasFooting;
 
-  void addDistribution(String columnId, StirrupDistribution newDistribution) {
-    final currentDistributions = state[columnId] ?? [];
-    state = {
-      ...state,
-      columnId: [...currentDistributions, newDistribution],
-    };
-  }
+  const SteelColumnCalculationResult({
+    required this.columnId,
+    required this.description,
+    required this.totalWeight,
+    required this.wireWeight,
+    required this.totalStirrups,
+    required this.stirrupPerimeter,
+    required this.materials,
+    required this.totalsByDiameter,
+    required this.hasFooting,
+  });
+}
 
-  void addDistributionByValues(String columnId, int quantity, double separation) {
-    final newDistribution = StirrupDistribution(
-      idStirrupDistribution: uuid.v4(),
-      quantity: quantity,
-      separation: separation,
-    );
+class ConsolidatedColumnSteelResult {
+  final int numberOfColumns;
+  final double totalWeight;
+  final double totalWire;
+  final int totalStirrups;
+  final List<SteelColumnCalculationResult> columnResults;
+  final Map<String, MaterialQuantity> consolidatedMaterials;
 
-    final currentDistributions = state[columnId] ?? [];
-    state = {
-      ...state,
-      columnId: [...currentDistributions, newDistribution],
-    };
-  }
-
-  void updateDistribution(String columnId, int index, StirrupDistribution updatedDistribution) {
-    final currentDistributions = state[columnId] ?? [];
-    if (index >= 0 && index < currentDistributions.length) {
-      final newDistributions = List<StirrupDistribution>.from(currentDistributions);
-      newDistributions[index] = updatedDistribution;
-      state = {
-        ...state,
-        columnId: newDistributions,
-      };
-    }
-  }
-
-  void removeDistribution(String columnId, int index) {
-    final currentDistributions = state[columnId] ?? [];
-    if (index >= 0 && index < currentDistributions.length) {
-      final newDistributions = List<StirrupDistribution>.from(currentDistributions);
-      newDistributions.removeAt(index);
-      state = {
-        ...state,
-        columnId: newDistributions,
-      };
-    }
-  }
-
-  List<StirrupDistribution> getDistributionsForColumn(String columnId) {
-    return state[columnId] ?? [];
-  }
-
-  void clearDistributionsForColumn(String columnId) {
-    final newState = Map<String, List<StirrupDistribution>>.from(state);
-    newState.remove(columnId);
-    state = newState;
-  }
-
-  void clearAll() {
-    state = {};
-  }
+  const ConsolidatedColumnSteelResult({
+    required this.numberOfColumns,
+    required this.totalWeight,
+    required this.totalWire,
+    required this.totalStirrups,
+    required this.columnResults,
+    required this.consolidatedMaterials,
+  });
 }

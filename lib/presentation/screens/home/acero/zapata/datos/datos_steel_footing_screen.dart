@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
@@ -10,7 +9,6 @@ import '../../../../../../config/theme/theme.dart';
 import '../../../../../providers/home/acero/zapata/steel_footing_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
-import '../../../../../widgets/widgets.dart';
 import '../../widgets/mesh_distribution_widget.dart';
 import 'models/footing_form_data.dart';
 
@@ -101,74 +99,92 @@ class _DatosSteelFootingScreenState extends ConsumerState<DatosSteelFootingScree
         title: const Text('Acero en Zapatas'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            onPressed: _addNewFooting,
-            icon: const Icon(Icons.add),
-            tooltip: 'Agregar zapata',
-          ),
-          if (_footings.length > 1)
-            IconButton(
-              onPressed: _removeCurrentFooting,
-              icon: const Icon(Icons.delete),
-              tooltip: 'Eliminar zapata actual',
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: AppColors.primary,
+            child: TabBar(
+              controller: _tabController,
+              tabs: _footings.asMap().entries.map((entry) {
+                final index = entry.key;
+                final footing = entry.value;
+                return Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        footing.descriptionController.text.isEmpty
+                            ? 'Zapata ${index + 1}'
+                            : footing.descriptionController.text,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      if (_footings.length > 1) ...[
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => _removeFooting(index),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+              indicatorColor: AppColors.white,
+              labelColor: AppColors.white,
+              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              isScrollable: true,
             ),
-        ],
-        bottom: _footings.length > 1 ? TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          indicatorColor: AppColors.white,
-          labelColor: AppColors.white,
-          unselectedLabelColor: AppColors.white.withOpacity(0.7),
-          tabs: _footings.asMap().entries.map((entry) {
-            final index = entry.key;
-            final footing = entry.value;
-            return Tab(
-              text: footing.descriptionController.text.isEmpty
-                  ? 'Zapata ${index + 1}'
-                  : footing.descriptionController.text,
-            );
-          }).toList(),
-        ) : null,
+          ),
+        ),
       ),
       backgroundColor: AppColors.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: _buildBody(),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _calculateFootings,
-        backgroundColor: _isLoading ? AppColors.border : AppColors.secondary,
-        icon: _isLoading
-            ? SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-          ),
-        )
-            : const Icon(Icons.calculate, color: AppColors.white),
-        label: Text(
-          _isLoading ? 'Calculando...' : 'Calcular',
-          style: const TextStyle(color: AppColors.white),
+        child: TabBarView(
+          controller: _tabController,
+          children: _footings.map((footing) => _buildFootingForm(footing)).toList(),
         ),
       ),
-    );
-  }
-
-  Widget _buildBody() {
-    if (_footings.isEmpty) {
-      return const Center(
-        child: Text('No hay zapatas configuradas'),
-      );
-    }
-
-    return TabBarView(
-      controller: _tabController,
-      children: _footings.map((footing) =>
-          _buildFootingForm(footing)
-      ).toList(),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // FAB 1: Agregar zapata
+          FloatingActionButton(
+            onPressed: _addNewFooting,
+            backgroundColor: AppColors.secondary,
+            heroTag: "add_footing",
+            tooltip: 'Agregar Zapata',
+            child: const Icon(Icons.add, color: AppColors.white),
+          ),
+          const SizedBox(height: 12),
+          // FAB 2: Calcular
+          FloatingActionButton.extended(
+            onPressed: _isLoading ? null : _calculateFootings,
+            backgroundColor: AppColors.primary,
+            heroTag: "calculate",
+            icon: _isLoading
+                ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: AppColors.white,
+                strokeWidth: 2,
+              ),
+            )
+                : const Icon(Icons.calculate, color: AppColors.white),
+            label: Text(
+              _isLoading
+                  ? 'Calculando...'
+                  : 'Calcular ${_footings.length} ${_footings.length == 1 ? 'Zapata' : 'Zapatas'}',
+              style: const TextStyle(color: AppColors.white),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -317,6 +333,25 @@ class _DatosSteelFootingScreenState extends ConsumerState<DatosSteelFootingScree
       );
       _tabController.addListener(_onTabChanged);
       _currentFootingIndex = _footings.length - 1;
+    });
+  }
+
+  void _removeFooting(int index) {
+    if (_footings.length <= 1) return;
+
+    setState(() {
+      _footings[index].dispose();
+      _footings.removeAt(index);
+
+      _tabController.removeListener(_onTabChanged);
+      _tabController.dispose();
+      _tabController = TabController(
+        length: _footings.length,
+        vsync: this,
+        initialIndex: index > 0 ? index - 1 : 0,
+      );
+      _tabController.addListener(_onTabChanged);
+      _currentFootingIndex = _tabController.index;
     });
   }
 

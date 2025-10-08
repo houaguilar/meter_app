@@ -1,17 +1,17 @@
-// lib/presentation/screens/home/acero/losa/datos/datos_steel_slab_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/losa_maciza/mesh_enums.dart';
+import '../../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import '../../../../../../domain/entities/home/acero/steel_beam_constants.dart';
 import '../../../../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
-import '../../../../../widgets/widgets.dart';
 import '../../widgets/slab_floating_action_button.dart';
 import '../../widgets/slab_text_form_field.dart';
 import 'models/slab_form_data.dart';
@@ -110,7 +110,6 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
             color: AppColors.primary,
             child: TabBar(
               controller: _tabController,
-              isScrollable: _slabs.length > 3,
               tabs: _slabs.asMap().entries.map((entry) {
                 final index = entry.key;
                 final slab = entry.value;
@@ -122,51 +121,78 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
                         slab.descriptionController.text.isEmpty
                             ? 'Losa ${index + 1}'
                             : slab.descriptionController.text,
-                        style: const TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 12),
                       ),
                       if (_slabs.length > 1) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => _removeSlab(index),
-                          child: const Icon(Icons.close, size: 16),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
                         ),
                       ],
                     ],
                   ),
                 );
               }).toList(),
+              indicatorColor: AppColors.white,
+              labelColor: AppColors.white,
+              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              isScrollable: true,
             ),
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _addNewSlab,
-            tooltip: 'Agregar losa',
-          ),
-        ],
       ),
       backgroundColor: AppColors.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: _buildBody(),
+        child: TabBarView(
+          controller: _tabController,
+          children: _slabs.asMap().entries.map((entry) {
+            final index = entry.key;
+            return _buildSlabForm(index); // ← Usa el método existente
+          }).toList(),
+        ),
       ),
-      floatingActionButton: SlabFloatingActionButton(
-        onPressed: _isLoading ? null : _calculateSlabs,
-        isLoading: _isLoading,
-        icon: Icons.calculate,
-        tooltip: 'Calcular acero',
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          // FAB 1: Agregar losa
+          FloatingActionButton(
+            onPressed: _addNewSlab,
+            backgroundColor: AppColors.secondary,
+            heroTag: "add_slab",
+            tooltip: 'Agregar Losa',
+            child: const Icon(Icons.add, color: AppColors.white),
+          ),
+          const SizedBox(height: 12),
+          // FAB 2: Calcular
+          FloatingActionButton.extended(
+            onPressed: _isLoading ? null : _calculateSlabs,
+            backgroundColor: AppColors.primary,
+            heroTag: "calculate",
+            icon: _isLoading
+                ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: AppColors.white,
+                strokeWidth: 2,
+              ),
+            )
+                : const Icon(Icons.calculate, color: AppColors.white),
+            label: Text(
+              _isLoading
+                  ? 'Calculando...'
+                  : 'Calcular ${_slabs.length} ${_slabs.length == 1 ? 'Losa' : 'Losas'}',
+              style: const TextStyle(color: AppColors.white),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildBody() {
-    return TabBarView(
-      controller: _tabController,
-      children: _slabs.asMap().entries.map((entry) {
-        final index = entry.key;
-        return _buildSlabForm(index);
-      }).toList(),
     );
   }
 
@@ -638,9 +664,10 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
 
   void _addNewSlab() {
     setState(() {
-      _slabs.add(SlabFormData.initial());
-      _formKeys.add(GlobalKey<FormState>());
+      final newSlab = SlabFormData.initial();
+      _slabs.add(newSlab);
 
+      _tabController.removeListener(_onTabChanged);
       _tabController.dispose();
       _tabController = TabController(
         length: _slabs.length,
@@ -650,6 +677,10 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
       _tabController.addListener(_onTabChanged);
       _currentSlabIndex = _slabs.length - 1;
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tabController.animateTo(_slabs.length - 1);
+    });
   }
 
   void _removeSlab(int index) {
@@ -658,8 +689,8 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
     setState(() {
       _slabs[index].dispose();
       _slabs.removeAt(index);
-      _formKeys.removeAt(index);
 
+      _tabController.removeListener(_onTabChanged);
       _tabController.dispose();
       _tabController = TabController(
         length: _slabs.length,
@@ -671,6 +702,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
     });
   }
 
+
   Future<void> _calculateSlabs() async {
     if (!_validateAllSlabs()) return;
 
@@ -678,9 +710,57 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
     context.showCalculationLoader(message: 'Calculando acero para losas...');
 
     try {
-      ref.read(clearAllSlabDataProvider)();
+      ref.read(steelSlabResultProvider.notifier).clearList();
 
       for (final slabData in _slabs) {
+        // Crear listas de barras de malla embebidas
+        final meshBarsEmbedded = <SteelMeshBarEmbedded>[];
+
+        // Malla inferior - horizontal
+        final inferiorH = SteelMeshBarEmbedded();
+        inferiorH.idSteelMeshBar = const Uuid().v4();
+        inferiorH.meshType = MeshType.inferior;
+        inferiorH.direction = MeshDirection.horizontal;
+        inferiorH.diameter = slabData.inferiorHorizontalDiameter;
+        inferiorH.separation = double.parse(slabData.inferiorHorizontalSeparationController.text);
+        meshBarsEmbedded.add(inferiorH);
+
+        // Malla inferior - vertical
+        final inferiorV = SteelMeshBarEmbedded();
+        inferiorV.idSteelMeshBar = const Uuid().v4();
+        inferiorV.meshType = MeshType.inferior;
+        inferiorV.direction = MeshDirection.vertical;
+        inferiorV.diameter = slabData.inferiorVerticalDiameter;
+        inferiorV.separation = double.parse(slabData.inferiorVerticalSeparationController.text);
+        meshBarsEmbedded.add(inferiorV);
+
+        // Malla superior (si está habilitada)
+        if (slabData.useSuperiorMesh) {
+          // Malla superior - horizontal
+          final superiorH = SteelMeshBarEmbedded();
+          superiorH.idSteelMeshBar = const Uuid().v4();
+          superiorH.meshType = MeshType.superior;
+          superiorH.direction = MeshDirection.horizontal;
+          superiorH.diameter = slabData.superiorHorizontalDiameter;
+          superiorH.separation = double.parse(slabData.superiorHorizontalSeparationController.text);
+          meshBarsEmbedded.add(superiorH);
+
+          // Malla superior - vertical
+          final superiorV = SteelMeshBarEmbedded();
+          superiorV.idSteelMeshBar = const Uuid().v4();
+          superiorV.meshType = MeshType.superior;
+          superiorV.direction = MeshDirection.vertical;
+          superiorV.diameter = slabData.superiorVerticalDiameter;
+          superiorV.separation = double.parse(slabData.superiorVerticalSeparationController.text);
+          meshBarsEmbedded.add(superiorV);
+        }
+
+        // Configuración de malla superior embebida
+        final superiorConfig = SuperiorMeshConfigEmbedded();
+        superiorConfig.idConfig = const Uuid().v4();
+        superiorConfig.enabled = slabData.useSuperiorMesh;
+
+        // Crear losa con listas embebidas
         ref.read(steelSlabResultProvider.notifier).createSteelSlab(
           description: slabData.descriptionController.text,
           waste: double.parse(slabData.wasteController.text) / 100,
@@ -688,49 +768,9 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
           length: double.parse(slabData.lengthController.text),
           width: double.parse(slabData.widthController.text),
           bendLength: double.parse(slabData.bendLengthController.text),
+          meshBars: meshBarsEmbedded,
+          superiorMeshConfig: superiorConfig,
         );
-
-        final slabs = ref.read(steelSlabResultProvider);
-        final currentSlab = slabs.last;
-
-        ref.read(superiorMeshConfigForSlabProvider.notifier).setSuperioryMeshEnabled(
-          currentSlab.idSteelSlab,
-          slabData.useSuperiorMesh,
-        );
-
-        ref.read(steelMeshBarsForSlabProvider.notifier).addMeshBar(
-          currentSlab.idSteelSlab,
-          MeshType.inferior,
-          MeshDirection.horizontal,
-          slabData.inferiorHorizontalDiameter,
-          double.parse(slabData.inferiorHorizontalSeparationController.text),
-        );
-
-        ref.read(steelMeshBarsForSlabProvider.notifier).addMeshBar(
-          currentSlab.idSteelSlab,
-          MeshType.inferior,
-          MeshDirection.vertical,
-          slabData.inferiorVerticalDiameter,
-          double.parse(slabData.inferiorVerticalSeparationController.text),
-        );
-
-        if (slabData.useSuperiorMesh) {
-          ref.read(steelMeshBarsForSlabProvider.notifier).addMeshBar(
-            currentSlab.idSteelSlab,
-            MeshType.superior,
-            MeshDirection.horizontal,
-            slabData.superiorHorizontalDiameter,
-            double.parse(slabData.superiorHorizontalSeparationController.text),
-          );
-
-          ref.read(steelMeshBarsForSlabProvider.notifier).addMeshBar(
-            currentSlab.idSteelSlab,
-            MeshType.superior,
-            MeshDirection.vertical,
-            slabData.superiorVerticalDiameter,
-            double.parse(slabData.superiorVerticalSeparationController.text),
-          );
-        }
       }
 
       context.hideLoader();

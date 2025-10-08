@@ -4,6 +4,22 @@ import '../../../entities.dart';
 
 part 'steel_beam.g.dart';
 
+/// Barra de acero embebida para vigas
+@embedded
+class SteelBeamBarEmbedded {
+  String idSteelBar = '';
+  int quantity = 0;
+  String diameter = '';
+}
+
+/// Distribución de estribos embebida para vigas
+@embedded
+class SteelBeamStirrupDistributionEmbedded {
+  String idStirrupDistribution = '';
+  int quantity = 0;
+  double separation = 0.0;
+}
+
 @collection
 class SteelBeam {
   Id id = Isar.autoIncrement;
@@ -35,6 +51,10 @@ class SteelBeam {
   final double stirrupBendLength; // Doblez en metros
   final double restSeparation; // Resto @ en metros
 
+  // ✅ LISTAS EMBEBIDAS
+  final List<SteelBeamBarEmbedded> steelBars;
+  final List<SteelBeamStirrupDistributionEmbedded> stirrupDistributions;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -54,6 +74,8 @@ class SteelBeam {
     required this.stirrupDiameter,
     required this.stirrupBendLength,
     required this.restSeparation,
+    required this.steelBars,
+    required this.stirrupDistributions,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -74,6 +96,8 @@ class SteelBeam {
     String? stirrupDiameter,
     double? stirrupBendLength,
     double? restSeparation,
+    List<SteelBeamBarEmbedded>? steelBars,
+    List<SteelBeamStirrupDistributionEmbedded>? stirrupDistributions,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => SteelBeam(
@@ -92,6 +116,8 @@ class SteelBeam {
     stirrupDiameter: stirrupDiameter ?? this.stirrupDiameter,
     stirrupBendLength: stirrupBendLength ?? this.stirrupBendLength,
     restSeparation: restSeparation ?? this.restSeparation,
+    steelBars: steelBars ?? this.steelBars,
+    stirrupDistributions: stirrupDistributions ?? this.stirrupDistributions,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   )..id = id;
