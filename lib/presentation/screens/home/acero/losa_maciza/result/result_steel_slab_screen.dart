@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/acero/losa/result/result_steel_slab_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -464,7 +463,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
       content.writeln('Losa ${i + 1}: ${slab.description}');
       content.writeln('  • Peso total: ${slab.totalWeight.toStringAsFixed(2)} kg');
       content.writeln('  • Alambre #16: ${slab.wireWeight.toStringAsFixed(2)} kg');
-      if (slab.superiorMesh != null) {
+      if (slab.hasSuperiorMesh) {
         content.writeln('  • Incluye malla superior');
       }
     }
@@ -836,7 +835,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
                   ),
                 ),
               ),
-              if (slab.superiorMesh != null) ...[
+              if (slab.hasSuperiorMesh) ...[
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(

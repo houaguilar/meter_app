@@ -236,7 +236,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 // Controles de dimensiones
                 Positioned(
                   top: 20,
-                  right: 20,
+                  right: 40,
                   child: _buildDimensionControl(
                     'Largo',
                     _lengthController,
@@ -250,7 +250,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 ),
                 Positioned(
                   bottom: 20,
-                  left: 50,
+                  right: 110,
                   child: _buildDimensionControl(
                     'Ancho',
                     _widthController,
@@ -264,7 +264,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 ),
                 Positioned(
                   bottom: 20,
-                  right: 50,
+                  left: 110,
                   child: _buildDimensionControl(
                     'Alto',
                     _heightController,

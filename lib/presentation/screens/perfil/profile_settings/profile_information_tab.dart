@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
-import 'package:meter_app/presentation/screens/perfil/profile_settings/widgets/peru_location_picker.dart';
+import 'package:meter_app/presentation/widgets/location/multi_country_location_picker.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../widgets/dialogs/confirmation_dialog_perfil.dart';
 
@@ -49,7 +49,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _setupListeners();
   }
 
-  // =============== MANTENER: Para refrescar cuando vuelves a la pantalla ===============
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -62,7 +61,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       _populateControllers(state.userProfile);
     }
   }
-  // ==================================================================================
 
   void _initializeControllers() {
     _nameController = TextEditingController();
@@ -77,7 +75,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _populateControllers(dynamic profile) {
-    // =============== MANTENER: Solo actualizar si es diferente ===============
     if (_nameController.text != (profile.name ?? '')) {
       _nameController.text = profile.name ?? '';
     }
@@ -99,7 +96,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     if (_cityController.text != (profile.city ?? '')) {
       _cityController.text = profile.city ?? '';
     }
-    // =========================================================================
   }
 
   void _setupListeners() {
@@ -113,9 +109,13 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _onFormChanged() {
-    if (!_formChanged) {
-      setState(() {
-        _formChanged = true;
+    if (!_formChanged && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _formChanged = true;
+          });
+        }
       });
     }
   }
@@ -155,7 +155,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       district: _districtController.text.trim().isNotEmpty ? _districtController.text.trim() : null,
     ));
 
-    // =============== AGREGAR: SubmitProfile como en tu código original ===============
     profileBloc.add( SubmitProfile());
 
     setState(() {
@@ -164,7 +163,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     });
   }
 
-  // =============== MANTENER: Método para descartar cambios ===============
   void _discardChanges() {
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
@@ -175,7 +173,6 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     }
   }
 
-  // =============== MANTENER: Confirmación al salir ===============
   Future<bool> _onWillPop() async {
     if (!_formChanged) return true;
 
@@ -389,56 +386,17 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
       ),
       child: Column(
         children: [
-          PeruLocationPicker(
+          MultiCountryLocationPicker(
             countryController: _countryController,
-            departmentController: _stateController, // Mapea state a department
-            provinceController: _cityController,    // Mapea city a province
-            districtController: _districtController,
-            showCountryField: true, // =============== AGREGAR: Mostrar campo país ===============
-            textFieldDecoration: InputDecoration(
-              fillColor: AppColors.neutral50,
-              filled: true,
-              suffixIcon: Icon(
-                Icons.arrow_drop_down_rounded,
-                color: AppColors.primary,
-                size: 28,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: AppColors.border.withOpacity(0.5),
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 2,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: AppColors.border.withOpacity(0.5),
-                ),
-              ),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              labelStyle: const TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-              hintStyle: TextStyle(
-                color: AppColors.textSecondary.withOpacity(0.7),
-                fontSize: 14,
-              ),
-            ),
-            onCountryChanged: _onFormChanged,      // =============== MANTENER: callbacks ===============
-            onDepartmentChanged: _onFormChanged,
-            onProvinceChanged: _onFormChanged,
-            onDistrictChanged: _onFormChanged,
+            level2Controller: _stateController,    // Nivel 2: Departamento/Estado
+            level3Controller: _cityController,     // Nivel 3: Provincia/Municipio
+            level4Controller: _districtController, // Nivel 4: Distrito/Corregimiento
+            initialCountryCode: 'PE', // País inicial: Perú
+            spacing: 20.0, // Espaciado entre campos
+            onCountryChanged: _onFormChanged,
+            onLevel2Changed: _onFormChanged,
+            onLevel3Changed: _onFormChanged,
+            onLevel4Changed: _onFormChanged,
           ),
         ],
       ),

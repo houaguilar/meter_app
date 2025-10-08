@@ -5,9 +5,11 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/viga/datos/models/beam_form_data.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/steel_beam_constants.dart';
+import '../../../../../../domain/entities/home/acero/viga/steel_beam.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -157,8 +159,27 @@ class _DatosSteelBeamScreenState extends ConsumerState<DatosSteelBeamScreen>
       // Limpiar resultados anteriores
       ref.read(steelBeamResultProvider.notifier).clearList();
 
-      // Crear todas las vigas
+      // Crear todas las vigas con listas embebidas
       for (final beamData in _beams) {
+        // Convertir barras de acero a objetos embebidos
+        final steelBarsEmbedded = beamData.steelBars.map((barData) {
+          final bar = SteelBeamBarEmbedded();
+          bar.idSteelBar = const Uuid().v4();
+          bar.quantity = barData.quantity;
+          bar.diameter = barData.diameter;
+          return bar;
+        }).toList();
+
+        // Convertir distribuciones de estribos a objetos embebidos
+        final stirrupDistributionsEmbedded = beamData.stirrupDistributions.map((distData) {
+          final dist = SteelBeamStirrupDistributionEmbedded();
+          dist.idStirrupDistribution = const Uuid().v4();
+          dist.quantity = distData.quantity;
+          dist.separation = distData.separation;
+          return dist;
+        }).toList();
+
+        // Crear viga con listas embebidas
         ref.read(steelBeamResultProvider.notifier).createSteelBeam(
           description: beamData.descriptionController.text,
           waste: double.parse(beamData.wasteController.text) / 100,
@@ -174,29 +195,9 @@ class _DatosSteelBeamScreenState extends ConsumerState<DatosSteelBeamScreen>
           stirrupDiameter: beamData.stirrupDiameter,
           stirrupBendLength: double.parse(beamData.stirrupBendLengthController.text),
           restSeparation: double.parse(beamData.restSeparationController.text),
+          steelBars: steelBarsEmbedded,
+          stirrupDistributions: stirrupDistributionsEmbedded,
         );
-
-        // Agregar barras de acero y distribuciones de estribos para cada viga
-        final beams = ref.read(steelBeamResultProvider);
-        final currentBeam = beams.last;
-
-        // Agregar barras de acero
-        for (final bar in beamData.steelBars) {
-          ref.read(steelBarsForBeamProvider.notifier).addSteelBar(
-            currentBeam.idSteelBeam,
-            bar.quantity,
-            bar.diameter,
-          );
-        }
-
-        // Agregar distribuciones de estribos
-        for (final distribution in beamData.stirrupDistributions) {
-          ref.read(stirrupDistributionsForBeamProvider.notifier).addDistribution(
-            currentBeam.idSteelBeam,
-            distribution.quantity,
-            distribution.separation,
-          );
-        }
       }
 
       context.hideLoader();

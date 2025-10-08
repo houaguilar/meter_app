@@ -1,25 +1,15 @@
-// ============================================================================
-// DatosSteelColumnScreen - Basado exactamente en DatosSteelBeamScreen
-// con las modificaciones específicas para columnas
-// ============================================================================
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_beam_constants.dart';
 import 'package:uuid/uuid.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/columna/datos/models/column_form_data.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
-import 'package:meter_app/presentation/screens/home/acero/viga/datos/models/steel_bar_data.dart';
-import 'package:meter_app/presentation/screens/home/acero/viga/datos/models/stirrup_distribution_data.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/columna/steel_column.dart';
-import '../../../../../../domain/entities/home/acero/viga/steel_bar.dart';
-import '../../../../../../domain/entities/home/acero/viga/stirrup_distribution.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -173,12 +163,28 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
 
       // Limpiar resultados anteriores
       ref.read(steelColumnResultProvider.notifier).clearList();
-      ref.read(steelBarsForColumnProvider.notifier).clearAll();
-      ref.read(stirrupDistributionsForColumnProvider.notifier).clearAll();
 
-      // Crear todas las columnas
+      // Crear todas las columnas con listas embebidas
       for (final columnData in _columns) {
-        // Crear la columna
+        // Convertir barras de acero a objetos embebidos
+        final steelBarsEmbedded = columnData.steelBars.map((barData) {
+          final bar = SteelBarEmbedded();
+          bar.idSteelBar = const Uuid().v4();
+          bar.quantity = barData.quantity;
+          bar.diameter = barData.diameter;
+          return bar;
+        }).toList();
+
+        // Convertir distribuciones de estribos a objetos embebidos
+        final stirrupDistributionsEmbedded = columnData.stirrupDistributions.map((distData) {
+          final dist = StirrupDistributionEmbedded();
+          dist.idStirrupDistribution = const Uuid().v4();
+          dist.quantity = distData.quantity;
+          dist.separation = distData.separation;
+          return dist;
+        }).toList();
+
+        // Crear la columna con listas embebidas
         final newColumn = SteelColumn(
           idSteelColumn: const Uuid().v4(),
           description: columnData.descriptionController.text,
@@ -199,33 +205,14 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
           stirrupDiameter: columnData.stirrupDiameter,
           stirrupBendLength: double.parse(columnData.stirrupBendLengthController.text),
           restSeparation: double.parse(columnData.restSeparationController.text),
+          steelBars: steelBarsEmbedded,
+          stirrupDistributions: stirrupDistributionsEmbedded,
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         );
 
-        // Agregar columna
+        // Agregar columna al provider
         ref.read(steelColumnResultProvider.notifier).addColumn(newColumn);
-
-        // Agregar barras de acero para esta columna
-        for (final barData in columnData.steelBars) {
-          final bar = SteelBar(
-            idSteelBar: const Uuid().v4(),
-            quantity: barData.quantity,
-            diameter: barData.diameter,
-          );
-          ref.read(steelBarsForColumnProvider.notifier).addBar(newColumn.idSteelColumn, bar);
-        }
-
-        // Agregar distribuciones de estribos para esta columna
-        for (final distData in columnData.stirrupDistributions) {
-          final distribution = StirrupDistribution(
-            idStirrupDistribution: const Uuid().v4(),
-            quantity: distData.quantity,
-            separation: distData.separation,
-          );
-          ref.read(stirrupDistributionsForColumnProvider.notifier)
-              .addDistribution(newColumn.idSteelColumn, distribution);
-        }
       }
 
       if (mounted) {
@@ -254,123 +241,109 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
     super.build(context);
 
     return Scaffold(
-      appBar: AppBarWidget(
-        titleAppBar: 'Acero en Columnas', // cambio de 'Acero en Vigas'
-        isVisibleTutorial: true,
-        showTutorial: _showTutorialManually,
+      appBar: AppBar(
+        title: const Text('Acero en Columnas'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
+        // ✅ CAMBIO: Tabs ahora en el AppBar con botón X para eliminar
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Container(
+            color: AppColors.primary,
+            child: TabBar(
+              controller: _tabController,
+              tabs: _columns.asMap().entries.map((entry) {
+                final index = entry.key;
+                final column = entry.value;
+                return Tab(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        column.descriptionController.text.isEmpty
+                            ? 'Columna ${index + 1}'
+                            : column.descriptionController.text,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      if (_columns.length > 1) ...[
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: () => _removeColumn(index),
+                          child: const Icon(
+                            Icons.close,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }).toList(),
+              indicatorColor: AppColors.white,
+              labelColor: AppColors.white,
+              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              isScrollable: true,
+            ),
+          ),
+        ),
       ),
       backgroundColor: AppColors.background,
       body: FadeTransition(
         opacity: _fadeAnimation,
-        child: _buildBody(),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _isLoading ? null : _calculateResults,
-        backgroundColor: _isLoading ? AppColors.textSecondary : AppColors.primary,
-        foregroundColor: AppColors.white,
-        icon: _isLoading
-            ? const SizedBox(
-          width: 20,
-          height: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.white,
-          ),
-        )
-            : const Icon(Icons.calculate),
-        label: Text(_isLoading ? 'Calculando...' : 'Calcular'),
-      ),
-    );
-  }
-
-  Widget _buildBody() {
-    return Column(
-      children: [
-        _buildTabsSection(),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: _columns.asMap().entries.map((entry) {
-              final index = entry.key;
-              final columnData = entry.value;
-              return _ColumnFormView(
-                columnData: columnData,
-                columnIndex: index,
-                onDataChanged: () => setState(() {}),
-                onRemoveColumn: () => _removeColumn(index),
-                canRemove: _columns.length > 1,
-              );
-            }).toList(),
-          ),
+        child: TabBarView(
+          controller: _tabController,
+          children: _columns.asMap().entries.map((entry) {
+            final index = entry.key;
+            final columnData = entry.value;
+            return _ColumnFormView(
+              columnData: columnData,
+              columnIndex: index,
+              onDataChanged: () => setState(() {}),
+              onRemoveColumn: () => _removeColumn(index),
+              canRemove: _columns.length > 1,
+            );
+          }).toList(),
         ),
-      ],
-    );
-  }
-
-  Widget _buildTabsSection() {
-    return Container(
-      color: AppColors.surface,
-      child: Column(
+      ),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          // Botón agregar columna
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _addNewColumn,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Agregar Columna'), // cambio de 'Agregar Viga'
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.primary),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-              ),
-            ),
+          // FAB 1: Botón redondo pequeño para agregar columna
+          FloatingActionButton(
+            onPressed: _addNewColumn,
+            backgroundColor: AppColors.secondary,
+            heroTag: "add_column",
+            tooltip: 'Agregar Columna',
+            child: const Icon(Icons.add, color: AppColors.white),
           ),
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            indicatorColor: AppColors.primary,
-            labelColor: AppColors.primary,
-            unselectedLabelColor: AppColors.textSecondary,
-            tabs: _columns.asMap().entries.map((entry) {
-              final index = entry.key;
-              return Tab(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('Columna ${index + 1}'), // cambio de 'Viga ${index + 1}'
-                    if (_columns.length > 1) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => _removeColumn(index),
-                        child: Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            color: AppColors.error.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: const Icon(
-                            Icons.close,
-                            size: 14,
-                            color: AppColors.error,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }).toList(),
+          const SizedBox(height: 12),
+          // FAB 2: Botón extended principal para calcular
+          FloatingActionButton.extended(
+            onPressed: _isLoading ? null : _calculateResults,
+            backgroundColor: AppColors.primary,
+            heroTag: "calculate",
+            icon: _isLoading
+                ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                color: AppColors.white,
+                strokeWidth: 2,
+              ),
+            )
+                : const Icon(Icons.calculate, color: AppColors.white),
+            label: Text(
+              _isLoading
+                  ? 'Calculando...'
+                  : 'Calcular ${_columns.length} ${_columns.length == 1 ? 'Columna' : 'Columnas'}',
+              style: const TextStyle(color: AppColors.white),
+            ),
           ),
         ],
       ),
     );
   }
-
 }
 
 // Widget de formulario individual para cada columna

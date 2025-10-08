@@ -47,12 +47,13 @@ import '../../presentation/screens/projects/new_project/new_project_screen.dart'
 import '../../presentation/screens/projects/result/result_screen.dart';
 
 
-final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
-final GlobalKey<NavigatorState> _shellNavigator = GlobalKey(debugLabel: 'shell');
-
 class AppRouter {
   final AuthBloc authBloc;
  // final AnalyticsRepository analyticsRepository;
+
+  // GlobalKeys as instance variables to prevent conflicts during hot reload
+  final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
+  final GlobalKey<NavigatorState> _shellNavigator = GlobalKey(debugLabel: 'shell');
 
   AppRouter(this.authBloc);
 

@@ -1,8 +1,30 @@
-// lib/domain/entities/home/acero/losa/steel_slab.dart
 import 'package:isar/isar.dart';
 import '../../../entities.dart';
+import 'mesh_enums.dart';
 
 part 'steel_slab.g.dart';
+
+/// Barra de malla embebida para losas
+@embedded
+class SteelMeshBarEmbedded {
+  String idSteelMeshBar = '';
+
+  @enumerated
+  MeshType meshType = MeshType.inferior;
+
+  @enumerated
+  MeshDirection direction = MeshDirection.horizontal;
+
+  String diameter = '';
+  double separation = 0.0;
+}
+
+/// Configuración de malla superior embebida
+@embedded
+class SuperiorMeshConfigEmbedded {
+  String idConfig = '';
+  bool enabled = false;
+}
 
 @collection
 class SteelSlab {
@@ -23,6 +45,10 @@ class SteelSlab {
   final double width; // Ancho en metros
   final double bendLength; // Doblez en metros
 
+  // ✅ LISTAS EMBEBIDAS
+  final List<SteelMeshBarEmbedded> meshBars;
+  final SuperiorMeshConfigEmbedded superiorMeshConfig;
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -34,6 +60,8 @@ class SteelSlab {
     required this.length,
     required this.width,
     required this.bendLength,
+    required this.meshBars,
+    required this.superiorMeshConfig,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -46,6 +74,8 @@ class SteelSlab {
     double? length,
     double? width,
     double? bendLength,
+    List<SteelMeshBarEmbedded>? meshBars,
+    SuperiorMeshConfigEmbedded? superiorMeshConfig,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => SteelSlab(
@@ -56,6 +86,8 @@ class SteelSlab {
     length: length ?? this.length,
     width: width ?? this.width,
     bendLength: bendLength ?? this.bendLength,
+    meshBars: meshBars ?? this.meshBars,
+    superiorMeshConfig: superiorMeshConfig ?? this.superiorMeshConfig,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   )..id = id;
