@@ -8,7 +8,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 import '../../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../../../../../domain/entities/home/acero/steel_beam_constants.dart';
+import '../../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -612,7 +612,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
                       child: DropdownButton<String>(
                         value: controllers['diameter'],
                         isExpanded: true,
-                        items: SteelBeamConstants.availableDiameters.map((diameter) {
+                        items: SteelConstants.availableDiameters.map((diameter) {
                           return DropdownMenuItem(
                             value: diameter,
                             child: Text(diameter),

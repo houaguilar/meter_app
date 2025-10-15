@@ -8,7 +8,7 @@ import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_t
 import 'package:uuid/uuid.dart';
 
 import '../../../../../../config/theme/theme.dart';
-import '../../../../../../domain/entities/home/acero/steel_beam_constants.dart';
+import '../../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../../domain/entities/home/acero/viga/steel_beam.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
@@ -747,7 +747,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    items: SteelBeamConstants.availableDiameters.map((diameter) {
+                    items: SteelConstants.availableDiameters.map((diameter) {
                       return DropdownMenuItem(
                         value: diameter,
                         child: Text(diameter),

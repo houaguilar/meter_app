@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/domain/entities/home/acero/steel_beam_constants.dart';
 import 'package:uuid/uuid.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/columna/datos/models/column_form_data.dart';
@@ -10,6 +9,7 @@ import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_t
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/columna/steel_column.dart';
+import '../../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -837,7 +837,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    items: SteelBeamConstants.availableDiameters.map((diameter) {
+                    items: SteelConstants.availableDiameters.map((diameter) {
                       return DropdownMenuItem(
                         value: diameter,
                         child: Text(diameter),

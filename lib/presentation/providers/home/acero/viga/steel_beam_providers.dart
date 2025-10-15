@@ -1,8 +1,8 @@
 // lib/presentation/providers/home/acero/viga/steel_beam_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
 import '../../../../../domain/entities/home/acero/viga/steel_beam.dart';
 
 const uuid = Uuid();
@@ -90,7 +90,7 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
     // Agregar empalme si está habilitado
     if (beam.useSplice) {
       final longitudEmpalme = beam.elements * steelBar.quantity *
-          (SteelBeamConstants.spliceLengths[steelBar.diameter] ?? 0.6);
+          (SteelConstants.spliceLengths[steelBar.diameter] ?? 0.6);
       totalesPorDiametro[steelBar.diameter] =
           (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
     }
@@ -133,11 +133,11 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
   totalesPorDiametro.forEach((diameter, longitud) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
-      final varillas = longitud / SteelBeamConstants.standardRodLength;
+      final varillas = longitud / SteelConstants.standardRodLength;
       final varillasConDesperdicio = (varillas * (1 + beam.waste)).ceil().toDouble();
 
       // Calcular peso
-      final weightPerMeter = SteelBeamConstants.steelWeights[diameter] ?? 0.0;
+      final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
       final pesoKg = longitud * weightPerMeter;
       pesoTotal += pesoKg;
 
@@ -151,7 +151,7 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
   });
 
   // Calcular alambre (1.5% del peso total con desperdicio)
-  final alambreKg = pesoTotal * SteelBeamConstants.wirePercentage * (1 + beam.waste);
+  final alambreKg = pesoTotal * SteelConstants.wirePercentage * (1 + beam.waste);
 
   return SteelBeamCalculationResult(
     beamId: beam.idSteelBeam,

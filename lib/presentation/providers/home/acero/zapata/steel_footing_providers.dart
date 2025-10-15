@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
+import '../../../../../domain/entities/home/acero/steel_base_models.dart';
+import '../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../domain/entities/home/acero/zapata/steel_footing.dart';
-import '../../../../../domain/entities/home/acero/zapata/steel_footing_constants.dart';
+import '../../../../../domain/entities/home/acero/zapata/steel_footing_models.dart';
 
 const uuid = Uuid();
 
@@ -84,7 +85,7 @@ final consolidatedFootingSummaryProvider = Provider<String>((ref) {
   String summary = "=== RESUMEN CONSOLIDADO DE ACERO EN ZAPATAS ===\n\n";
 
   summary += "📊 RESULTADOS GENERALES:\n";
-  summary += "• Número de zapatas: ${result.numberOfFooting}\n";
+  summary += "• Número de zapatas: ${result.numberOfElements}\n";
   summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
   summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n\n";
 
@@ -152,7 +153,7 @@ final quickFootingStatsProvider = Provider<Map<String, dynamic>>((ref) {
   }
 
   return {
-    'totalFootings': result.numberOfFooting,
+    'totalFootings': result.numberOfElements,
     'totalWeight': result.totalWeight,
     'totalWire': result.totalWire,
   };
@@ -224,11 +225,11 @@ SteelFootingCalculationResult _calculateSteelForFooting(SteelFooting footing) {
   totalesPorDiametro.forEach((diameter, longitud) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
-      final varillas = longitud / SteelBeamConstants.standardRodLength;
+      final varillas = longitud / SteelConstants.standardRodLength;
       final varillasConDesperdicio = (varillas * (1 + footing.waste)).ceil().toDouble();
 
       // Calcular peso
-      final weightPerMeter = SteelBeamConstants.steelWeights[diameter] ?? 0.0;
+      final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
       final pesoKg = longitud * weightPerMeter;
       pesoTotal += pesoKg;
 
@@ -242,7 +243,7 @@ SteelFootingCalculationResult _calculateSteelForFooting(SteelFooting footing) {
   });
 
   // Calcular alambre (1.5% del peso total con desperdicio)
-  final alambreKg = pesoTotal * SteelBeamConstants.wirePercentage * (1 + footing.waste);
+  final alambreKg = pesoTotal * SteelConstants.wirePercentage * (1 + footing.waste) * 0.8;
 
   return SteelFootingCalculationResult(
     footingId: footing.idSteelFooting,

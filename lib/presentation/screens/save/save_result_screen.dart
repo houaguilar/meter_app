@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 import 'package:meter_app/presentation/screens/projects/new_project/new_project_screen.dart';
 
 import '../../../config/utils/security_service.dart';
@@ -556,6 +557,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
             () => ref.read(falsoPisoResultProvider),
             () => ref.read(contrapisoResultProvider),
             () => ref.read(tarrajeoResultProvider),
+            () => ref.read(tarrajeoDerrameResultProvider),
             () => ref.read(losaAligeradaResultProvider),
             () => ref.read(columnaResultProvider),
             () => ref.read(vigaResultProvider),
