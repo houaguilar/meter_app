@@ -1,10 +1,9 @@
-// lib/presentation/providers/home/acero/losa/steel_slab_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../../domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 import '../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../../../../domain/entities/home/acero/steel_beam_constants.dart';
+import '../../../../../domain/entities/home/acero/steel_constants.dart';
 
 const uuid = Uuid();
 
@@ -108,11 +107,11 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
   totalesPorDiametro.forEach((diameter, longitud) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
-      final varillas = longitud / SteelBeamConstants.standardRodLength;
+      final varillas = longitud / SteelConstants.standardRodLength;
       final varillasConDesperdicio = (varillas * (1 + slab.waste)).ceil().toDouble();
 
       // Calcular peso
-      final weightPerMeter = SteelBeamConstants.steelWeights[diameter] ?? 0.0;
+      final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
       final pesoKg = longitud * weightPerMeter;
       pesoTotal += pesoKg;
 
@@ -126,7 +125,7 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
   });
 
   // Calcular alambre (1.5% del peso total con desperdicio)
-  final alambreKg = pesoTotal * SteelBeamConstants.wirePercentage * (1 + slab.waste);
+  final alambreKg = pesoTotal * SteelConstants.wirePercentage * (1 + slab.waste);
 
   return SteelSlabCalculationResult(
     slabId: slab.idSteelSlab,

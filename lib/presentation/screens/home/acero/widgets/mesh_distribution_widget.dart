@@ -1,9 +1,8 @@
-// lib/presentation/screens/home/acero/zapata/widgets/mesh_distribution_widget.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:meter_app/domain/entities/home/acero/steel_beam_constants.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../zapata/datos/models/footing_form_data.dart';
 import 'modern_steel_text_form_field.dart';
 
@@ -399,7 +398,7 @@ class _MeshDistributionWidgetState extends State<MeshDistributionWidget>
               child: DropdownButton<String>(
                 value: diameter,
                 isExpanded: true,
-                items: SteelBeamConstants.availableDiameters.map((dia) {
+                items: SteelConstants.availableDiameters.map((dia) {
                   return DropdownMenuItem<String>(
                     value: dia,
                     child: Text(

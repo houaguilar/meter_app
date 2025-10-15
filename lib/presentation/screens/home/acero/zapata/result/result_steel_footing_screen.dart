@@ -450,7 +450,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
     content.writeln('🏗️ RESUMEN DE MATERIALES - ZAPATAS DE ACERO\n');
 
     content.writeln('📊 RESUMEN GENERAL:');
-    content.writeln('• Número de zapatas: ${consolidatedResult.numberOfFooting}');
+    content.writeln('• Número de zapatas: ${consolidatedResult.numberOfElements}');
     content.writeln('• Peso total de acero: ${consolidatedResult.totalWeight.toStringAsFixed(2)} kg');
     content.writeln('• Alambre #16: ${consolidatedResult.totalWire.toStringAsFixed(2)} kg');
 
