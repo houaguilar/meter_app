@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -11,7 +12,10 @@ import 'package:meter_app/domain/entities/map/location.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/show_snackbar.dart';
+import '../../../../config/utils/validators.dart';
 import '../../../../domain/entities/auth/user_profile.dart';
+import '../../../../domain/entities/map/document_type.dart';
+import '../../../../domain/entities/map/verification_status.dart';
 import '../../../blocs/map/locations_bloc.dart';
 import '../../../blocs/profile/profile_bloc.dart';
 
@@ -33,10 +37,16 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
   late TextEditingController _addressController;
+  late TextEditingController _documentController;
+  late TextEditingController _phoneController;
+  late TextEditingController _whatsappController;
 
   final FocusNode _titleFocusNode = FocusNode();
   final FocusNode _descriptionFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
+  final FocusNode _documentFocusNode = FocusNode();
+  final FocusNode _phoneFocusNode = FocusNode();
+  final FocusNode _whatsappFocusNode = FocusNode();
 
   // ═══════════════════════════════════════════════════════════════════════════
   // CONTROLADOR DE GOOGLE MAPS (Solucionando problema de movimiento)
@@ -68,6 +78,11 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
   bool _isSaving = false;
   String? _locationError;
 
+  // Estado para campos de marketplace
+  DocumentType _selectedDocumentType = DocumentType.dni;
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
   // ═══════════════════════════════════════════════════════════════════════════
   // CONFIGURACIÓN INICIAL
   // ═══════════════════════════════════════════════════════════════════════════
@@ -84,6 +99,9 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     _titleController = TextEditingController();
     _descriptionController = TextEditingController();
     _addressController = TextEditingController();
+    _documentController = TextEditingController();
+    _phoneController = TextEditingController();
+    _whatsappController = TextEditingController();
   }
 
   void _initializeAnimations() {
@@ -273,6 +291,17 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
       return;
     }
 
+    // Validar fecha y hora de verificación
+    if (_selectedDate == null) {
+      showSnackBar(context, 'Por favor, selecciona una fecha de verificación');
+      return;
+    }
+
+    if (_selectedTime == null) {
+      showSnackBar(context, 'Por favor, selecciona una hora de verificación');
+      return;
+    }
+
     setState(() {
       _isSaving = true;
     });
@@ -318,6 +347,37 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     return null;
   }
 
+  String? _validateDocument(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El documento es obligatorio';
+    }
+
+    if (_selectedDocumentType == DocumentType.dni) {
+      final result = Validators.validateDNI(value);
+      return result.isValid ? null : result.message;
+    } else {
+      final result = Validators.validateCE(value);
+      return result.isValid ? null : result.message;
+    }
+  }
+
+  String? _validatePhone(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'El teléfono es obligatorio';
+    }
+    final result = Validators.validatePhonePeru(value);
+    return result.isValid ? null : result.message;
+  }
+
+  String? _validateWhatsApp(String? value) {
+    // WhatsApp es opcional
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+    final result = Validators.validatePhonePeru(value);
+    return result.isValid ? null : result.message;
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // LIMPIEZA DE RECURSOS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -327,9 +387,15 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     _titleController.dispose();
     _descriptionController.dispose();
     _addressController.dispose();
+    _documentController.dispose();
+    _phoneController.dispose();
+    _whatsappController.dispose();
     _titleFocusNode.dispose();
     _descriptionFocusNode.dispose();
     _addressFocusNode.dispose();
+    _documentFocusNode.dispose();
+    _phoneFocusNode.dispose();
+    _whatsappFocusNode.dispose();
     _slideAnimationController.dispose();
     _fadeAnimationController.dispose();
     _mapAnimationController.dispose();
@@ -366,7 +432,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     return AppBar(
       title: Text(
         'Registrar Ubicación',
-        style: context.textTheme.headlineSmall?.copyWith(
+        style: context.textTheme.displaySmall?.copyWith(
           color: context.colors.surface,
           fontWeight: FontWeight.w600,
         ),
@@ -412,7 +478,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           const SizedBox(height: 16),
           Text(
             'Error al cargar la información',
-            style: context.textTheme.headlineSmall?.copyWith(
+            style: context.textTheme.displaySmall?.copyWith(
               color: context.colors.error,
             ),
           ),
@@ -497,6 +563,39 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           prefixIcon: Icons.place,
           validator: null,
         ),
+        const SizedBox(height: 24),
+        _buildMarketplaceSectionHeader(),
+        const SizedBox(height: 16),
+        _buildDocumentTypeSelector(),
+        const SizedBox(height: 20),
+        _buildInputField(
+          label: 'Número de Documento',
+          hintText: _selectedDocumentType == DocumentType.dni ? 'Ej: 12345678' : 'Ej: 001234567',
+          controller: _documentController,
+          focusNode: _documentFocusNode,
+          prefixIcon: Icons.credit_card,
+          validator: _validateDocument,
+        ),
+        const SizedBox(height: 20),
+        _buildInputField(
+          label: 'Teléfono',
+          hintText: 'Ej: 987654321',
+          controller: _phoneController,
+          focusNode: _phoneFocusNode,
+          prefixIcon: Icons.phone,
+          validator: _validatePhone,
+        ),
+        const SizedBox(height: 20),
+        _buildInputField(
+          label: 'WhatsApp (Opcional)',
+          hintText: 'Ej: 987654321',
+          controller: _whatsappController,
+          focusNode: _whatsappFocusNode,
+          prefixIcon: Icons.chat,
+          validator: _validateWhatsApp,
+        ),
+        const SizedBox(height: 20),
+        _buildVerificationDateTimeSection(),
       ],
     );
   }
@@ -548,6 +647,325 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMarketplaceSectionHeader() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.colors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: context.colors.primary.withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.store,
+            color: context.colors.primary,
+            size: 28,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Información de Proveedor',
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: context.colors.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Complete los datos para registrarse como proveedor',
+                  style: context.textTheme.bodySmall?.copyWith(
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDocumentTypeSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tipo de Documento',
+          style: context.textTheme.titleMedium?.copyWith(
+            color: context.colors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDocumentTypeOption(
+                DocumentType.dni,
+                'DNI',
+                'Documento Nacional de Identidad',
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildDocumentTypeOption(
+                DocumentType.ce,
+                'CE',
+                'Carné de Extranjería',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDocumentTypeOption(
+    DocumentType type,
+    String title,
+    String subtitle,
+  ) {
+    final isSelected = _selectedDocumentType == type;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedDocumentType = type;
+          _documentController.clear();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? context.colors.primary.withOpacity(0.1)
+              : context.colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? context.colors.primary
+                : context.colors.primary.withOpacity(0.3),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: context.textTheme.titleMedium?.copyWith(
+                    color: isSelected
+                        ? context.colors.primary
+                        : context.colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Icon(
+                  isSelected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: isSelected
+                      ? context.colors.primary
+                      : context.colors.textSecondary,
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: context.textTheme.bodySmall?.copyWith(
+                color: context.colors.textSecondary,
+              ),
+              textAlign: TextAlign.left,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVerificationDateTimeSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Fecha y Hora de Verificación',
+          style: context.textTheme.titleMedium?.copyWith(
+            color: context.colors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Seleccione cuándo desea que verifiquemos su ubicación',
+          style: context.textTheme.bodySmall?.copyWith(
+            color: context.colors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildDateSelector(),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildTimeSelector(),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDateSelector() {
+    return GestureDetector(
+      onTap: () async {
+        final now = DateTime.now();
+        final firstDate = now.add(const Duration(days: 1)); // Mínimo mañana
+        final lastDate = now.add(const Duration(days: 30)); // Máximo 30 días
+
+        final pickedDate = await showDatePicker(
+          context: context,
+          initialDate: _selectedDate ?? firstDate,
+          firstDate: firstDate,
+          lastDate: lastDate,
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: context.colors.primary,
+                  onPrimary: context.colors.surface,
+                  surface: context.colors.surface,
+                  onSurface: context.colors.textPrimary,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (pickedDate != null) {
+          setState(() {
+            _selectedDate = pickedDate;
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _selectedDate != null
+                ? context.colors.primary
+                : context.colors.primary.withOpacity(0.3),
+            width: _selectedDate != null ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.calendar_today,
+              color: _selectedDate != null
+                  ? context.colors.primary
+                  : context.colors.textSecondary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedDate != null
+                    ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                    : 'Seleccionar fecha',
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: _selectedDate != null
+                      ? context.colors.textPrimary
+                      : context.colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeSelector() {
+    return GestureDetector(
+      onTap: () async {
+        final pickedTime = await showTimePicker(
+          context: context,
+          initialTime: _selectedTime ?? const TimeOfDay(hour: 9, minute: 0),
+          builder: (context, child) {
+            return Theme(
+              data: Theme.of(context).copyWith(
+                colorScheme: ColorScheme.light(
+                  primary: context.colors.primary,
+                  onPrimary: context.colors.surface,
+                  surface: context.colors.surface,
+                  onSurface: context.colors.textPrimary,
+                ),
+              ),
+              child: child!,
+            );
+          },
+        );
+
+        if (pickedTime != null) {
+          setState(() {
+            _selectedTime = pickedTime;
+          });
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: context.colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: _selectedTime != null
+                ? context.colors.primary
+                : context.colors.primary.withOpacity(0.3),
+            width: _selectedTime != null ? 2 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.access_time,
+              color: _selectedTime != null
+                  ? context.colors.primary
+                  : context.colors.textSecondary,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _selectedTime != null
+                    ? '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}'
+                    : 'Seleccionar hora',
+                style: context.textTheme.bodyMedium?.copyWith(
+                  color: _selectedTime != null
+                      ? context.colors.textPrimary
+                      : context.colors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -735,7 +1153,22 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
       // Obtener el usuario actual de la sesión
       final profileState = context.read<ProfileBloc>().state;
       if (profileState is ProfileLoaded) {
-        // Generar ID único para la ubicación (Supabase lo generará automáticamente)
+        // Combinar fecha y hora para scheduledDateTime
+        final scheduledDateTime = DateTime(
+          _selectedDate!.year,
+          _selectedDate!.month,
+          _selectedDate!.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        );
+
+        // Limpiar números de teléfono
+        final cleanedPhone = Validators.cleanPhone(_phoneController.text);
+        final cleanedWhatsApp = _whatsappController.text.isNotEmpty
+            ? Validators.cleanPhone(_whatsappController.text)
+            : null;
+
+        // Crear ubicación con todos los campos de marketplace
         final location = LocationMap(
           id: null, // Supabase generará el ID automáticamente
           title: _titleController.text.trim(),
@@ -745,6 +1178,14 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           address: _addressController.text.trim(),
           userId: profileState.userProfile.id,
           imageUrl: state.imageUrl,
+          // Campos de marketplace
+          document: _documentController.text.trim(),
+          documentType: _selectedDocumentType,
+          phone: cleanedPhone,
+          whatsapp: cleanedWhatsApp,
+          verificationStatus: VerificationStatus.pendingApproval,
+          scheduledDate: scheduledDateTime,
+          scheduledTime: '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         );
 
         // Guardar la ubicación con la imagen ya subida
@@ -759,9 +1200,9 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
       setState(() {
         _isSaving = false;
       });
-      showSnackBar(context, 'Ubicación guardada exitosamente');
+      showSnackBar(context, 'Ubicación registrada. Pendiente de aprobación.');
 
-      // Refrescar la lista de ubicaciones para que aparezca en OptimizedMapScreen
+      // Refrescar la lista de ubicaciones
       context.read<LocationsBloc>().add(LoadLocations());
 
       Navigator.of(context).pop();

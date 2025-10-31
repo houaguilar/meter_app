@@ -16,9 +16,17 @@ import 'package:meter_app/domain/usecases/map/get_nearby_locations.dart';
 import 'package:meter_app/domain/usecases/map/get_place_details.dart';
 import 'package:meter_app/domain/usecases/map/get_place_suggestions.dart';
 import 'package:meter_app/domain/usecases/map/save_location.dart';
+import 'package:meter_app/domain/usecases/map/toggle_location_active.dart';
 import 'package:meter_app/domain/usecases/map/upload_image.dart';
+import 'package:meter_app/domain/usecases/map/get_location_products.dart';
+import 'package:meter_app/domain/usecases/map/save_product.dart';
+import 'package:meter_app/domain/usecases/map/delete_product.dart';
+import 'package:meter_app/domain/usecases/map/toggle_product_stock.dart';
+import 'package:meter_app/domain/usecases/map/get_products_by_category.dart';
 import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
 import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
+import 'package:meter_app/presentation/blocs/map/products_bloc.dart';
+import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
 
 /// Módulo de inyección de dependencias para mapas, ubicaciones y búsqueda de lugares
 void registerMapModule(GetIt sl) {
@@ -54,10 +62,18 @@ void registerMapModule(GetIt sl) {
   sl.registerFactory(() => SaveLocation(sl()));
   sl.registerFactory(() => GetAllLocations(sl()));
   sl.registerFactory(() => UploadImage(sl()));
+  sl.registerFactory(() => ToggleLocationActive(sl()));
 
   // ==================== USE CASES - Places ====================
   sl.registerFactory(() => GetPlaceSuggestions(sl()));
   sl.registerFactory(() => GetPlaceDetails(sl()));
+
+  // ==================== USE CASES - Products ====================
+  sl.registerFactory(() => GetLocationProducts(sl()));
+  sl.registerFactory(() => SaveProduct(sl()));
+  sl.registerFactory(() => DeleteProduct(sl()));
+  sl.registerFactory(() => ToggleProductStock(sl()));
+  sl.registerFactory(() => GetProductsByCategory(sl()));
 
   // ==================== BLOCS ====================
   sl.registerLazySingleton(
@@ -69,6 +85,7 @@ void registerMapModule(GetIt sl) {
       checkPostGISAvailabilityUseCase: sl(),
       getLocationsByUser: sl(),
       deleteLocationUseCase: sl(),
+      toggleLocationActiveUseCase: sl(),
     ),
   );
 
@@ -77,5 +94,19 @@ void registerMapModule(GetIt sl) {
       getPlaceSuggestions: sl(),
       getPlaceDetails: sl(),
     ),
+  );
+
+  sl.registerLazySingleton(
+    () => ProductsBloc(
+      getLocationProducts: sl(),
+      getProductsByCategory: sl(),
+      saveProduct: sl(),
+      deleteProduct: sl(),
+      toggleProductStock: sl(),
+    ),
+  );
+
+  sl.registerLazySingleton(
+    () => CartBloc(),
   );
 }

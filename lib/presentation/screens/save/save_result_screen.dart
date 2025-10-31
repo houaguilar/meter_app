@@ -6,6 +6,10 @@ import 'package:meter_app/presentation/screens/projects/new_project/new_project_
 
 import '../../../config/utils/security_service.dart';
 import '../../../domain/entities/entities.dart';
+import '../../../domain/entities/home/acero/columna/steel_column.dart';
+import '../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
+import '../../../domain/entities/home/acero/viga/steel_beam.dart';
+import '../../../domain/entities/home/acero/zapata/steel_footing.dart';
 import '../../../domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
@@ -15,6 +19,10 @@ import '../../../domain/entities/home/losas/losas.dart';
 import '../../blocs/projects/metrados/metrados_bloc.dart';
 import '../../blocs/projects/metrados/result/result_bloc.dart';
 import '../../blocs/projects/projects_bloc.dart';
+import '../../providers/home/acero/columna/steel_column_providers.dart';
+import '../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
+import '../../providers/home/acero/viga/steel_beam_providers.dart';
+import '../../providers/home/acero/zapata/steel_footing_providers.dart';
 import '../../providers/providers.dart';
 
 class SaveResultScreen extends ConsumerStatefulWidget {
@@ -564,6 +572,11 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
             () => ref.read(sobrecimientoResultProvider),
             () => ref.read(cimientoCorridoResultProvider),
             () => ref.read(soladoResultProvider),
+
+            () => ref.read(steelColumnResultProvider),
+            () => ref.read(steelBeamResultProvider),
+            () => ref.read(steelSlabResultProvider),
+            () => ref.read(steelFootingResultProvider),
       ];
 
       for (final providerReader in providers) {
@@ -597,6 +610,12 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     if (result is Sobrecimiento) return 'Sobrecimientos';
     if (result is CimientoCorrido) return 'Cimientos Corridos';
     if (result is Solado) return 'Solados';
+
+    if (result is SteelColumn) return 'Columnas de Acero';
+    if (result is SteelBeam) return 'Vigas de Acero';
+    if (result is SteelSlab) return 'Losas Macizas de Acero';
+    if (result is SteelFooting) return 'Zapatas de Acero';
+
     return 'Elementos';
   }
 
@@ -688,15 +707,43 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       // ✅ Guardar resultados con copia para evitar modificaciones
       print('💾 Guardando ${results.length} resultados...');
 
+      // 🔍 Debug: Verificar tipos de resultados
+      for (final result in results) {
+        print('  📊 Tipo de resultado: ${result.runtimeType}');
+        if (result is SteelColumn) {
+          print('    - SteelColumn: ${result.description}');
+          print('    - Barras: ${result.steelBars.length}');
+          print('    - Estribos: ${result.stirrupDistributions.length}');
+        } else if (result is SteelBeam) {
+          print('    - SteelBeam: ${result.description}');
+          print('    - Barras: ${result.steelBars.length}');
+          print('    - Estribos: ${result.stirrupDistributions.length}');
+        } else if (result is SteelSlab) {
+          print('    - SteelSlab: ${result.description}');
+          print('    - MeshBars: ${result.meshBars.length}');
+        } else if (result is SteelFooting) {
+          print('    - SteelFooting: ${result.description}');
+        }
+      }
+
       try {
+        final copiedResults = results.map((r) => _createCopyOfResult(r)).toList();
+
+        // 🔍 Debug: Verificar copias
+        print('  📝 Resultados copiados: ${copiedResults.length}');
+        for (final copied in copiedResults) {
+          print('  📊 Copia tipo: ${copied.runtimeType}');
+        }
+
         context.read<ResultBloc>().add(
           SaveResultEvent(
-            results: results.map((r) => _createCopyOfResult(r)).toList(),
+            results: copiedResults,
             metradoId: state.metradoId.toString(),
           ),
         );
       } catch (e) {
         print('❌ Error al disparar SaveResultEvent: $e');
+        print('❌ Stack trace: ${StackTrace.current}');
         setState(() {
           _isLoading = false;
         });
@@ -850,6 +897,131 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         ancho: result.ancho,
         area: result.area,
         espesorFijo: result.espesorFijo,
+      );
+    }
+    // ✅ COPIAS DE RESULTADOS DE ACERO
+    else if (result is SteelColumn) {
+      // Copiar listas embebidas
+      final steelBarsCopy = result.steelBars.map((bar) => SteelBarEmbedded()
+        ..idSteelBar = bar.idSteelBar
+        ..quantity = bar.quantity
+        ..diameter = bar.diameter
+      ).toList();
+
+      final stirrupDistributionsCopy = result.stirrupDistributions.map((dist) => StirrupDistributionEmbedded()
+        ..idStirrupDistribution = dist.idStirrupDistribution
+        ..quantity = dist.quantity
+        ..separation = dist.separation
+      ).toList();
+
+      return SteelColumn(
+        idSteelColumn: result.idSteelColumn,
+        description: result.description,
+        waste: result.waste,
+        elements: result.elements,
+        cover: result.cover,
+        height: result.height,
+        length: result.length,
+        width: result.width,
+        hasFooting: result.hasFooting,
+        footingHeight: result.footingHeight,
+        footingBend: result.footingBend,
+        useSplice: result.useSplice,
+        stirrupDiameter: result.stirrupDiameter,
+        stirrupBendLength: result.stirrupBendLength,
+        restSeparation: result.restSeparation,
+        steelBars: steelBarsCopy,
+        stirrupDistributions: stirrupDistributionsCopy,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      );
+    }
+    else if (result is SteelBeam) {
+      // Copiar listas embebidas
+      final steelBarsCopy = result.steelBars.map((bar) => SteelBeamBarEmbedded()
+        ..idSteelBar = bar.idSteelBar
+        ..quantity = bar.quantity
+        ..diameter = bar.diameter
+      ).toList();
+
+      final stirrupDistributionsCopy = result.stirrupDistributions.map((dist) => SteelBeamStirrupDistributionEmbedded()
+        ..idStirrupDistribution = dist.idStirrupDistribution
+        ..quantity = dist.quantity
+        ..separation = dist.separation
+      ).toList();
+
+      return SteelBeam(
+        idSteelBeam: result.idSteelBeam,
+        description: result.description,
+        waste: result.waste,
+        elements: result.elements,
+        cover: result.cover,
+        height: result.height,
+        length: result.length,
+        width: result.width,
+        supportA1: result.supportA1,
+        supportA2: result.supportA2,
+        bendLength: result.bendLength,
+        useSplice: result.useSplice,
+        stirrupDiameter: result.stirrupDiameter,
+        stirrupBendLength: result.stirrupBendLength,
+        restSeparation: result.restSeparation,
+        steelBars: steelBarsCopy,
+        stirrupDistributions: stirrupDistributionsCopy,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      );
+    }
+    else if (result is SteelSlab) {
+      // Copiar lista de meshBars embebidos
+      final meshBarsCopy = result.meshBars.map((bar) => SteelMeshBarEmbedded()
+        ..idSteelMeshBar = bar.idSteelMeshBar
+        ..meshType = bar.meshType
+        ..direction = bar.direction
+        ..diameter = bar.diameter
+        ..separation = bar.separation
+      ).toList();
+
+      // Copiar configuración superior embebida
+      final superiorMeshConfigCopy = SuperiorMeshConfigEmbedded()
+        ..idConfig = result.superiorMeshConfig.idConfig
+        ..enabled = result.superiorMeshConfig.enabled;
+
+      return SteelSlab(
+        idSteelSlab: result.idSteelSlab,
+        description: result.description,
+        waste: result.waste,
+        elements: result.elements,
+        length: result.length,
+        width: result.width,
+        bendLength: result.bendLength,
+        meshBars: meshBarsCopy,
+        superiorMeshConfig: superiorMeshConfigCopy,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+      );
+    }
+    else if (result is SteelFooting) {
+      return SteelFooting(
+        idSteelFooting: result.idSteelFooting,
+        description: result.description,
+        waste: result.waste,
+        elements: result.elements,
+        cover: result.cover,
+        length: result.length,
+        width: result.width,
+        inferiorHorizontalDiameter: result.inferiorHorizontalDiameter,
+        inferiorHorizontalSeparation: result.inferiorHorizontalSeparation,
+        inferiorVerticalDiameter: result.inferiorVerticalDiameter,
+        inferiorVerticalSeparation: result.inferiorVerticalSeparation,
+        inferiorBendLength: result.inferiorBendLength,
+        hasSuperiorMesh: result.hasSuperiorMesh,
+        superiorHorizontalDiameter: result.superiorHorizontalDiameter,
+        superiorHorizontalSeparation: result.superiorHorizontalSeparation,
+        superiorVerticalDiameter: result.superiorVerticalDiameter,
+        superiorVerticalSeparation: result.superiorVerticalSeparation,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
       );
     }
     // Agregar otros tipos según necesidades...

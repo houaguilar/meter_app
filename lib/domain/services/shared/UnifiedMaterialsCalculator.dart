@@ -6,6 +6,10 @@ import '../../../domain/entities/home/losas/losas.dart';
 import '../../entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import '../../entities/home/estructuras/solado/solado.dart';
+import '../../entities/home/acero/columna/steel_column.dart';
+import '../../entities/home/acero/viga/steel_beam.dart';
+import '../../entities/home/acero/losa_maciza/steel_slab.dart';
+import '../../entities/home/acero/zapata/steel_footing.dart';
 
 /// Calculadora unificada de materiales actualizada con los nuevos cálculos de los providers
 class UnifiedMaterialsCalculator {
@@ -38,6 +42,14 @@ class UnifiedMaterialsCalculator {
         return _calculateCimientoCorridoMaterials(results.cast<CimientoCorrido>());
       } else if (firstResult is Solado) {
         return _calculateSoladoMaterials(results.cast<Solado>());
+      } else if (firstResult is SteelColumn) {
+        return _calculateSteelColumnMaterials(results.cast<SteelColumn>());
+      } else if (firstResult is SteelBeam) {
+        return _calculateSteelBeamMaterials(results.cast<SteelBeam>());
+      } else if (firstResult is SteelSlab) {
+        return _calculateSteelSlabMaterials(results.cast<SteelSlab>());
+      } else if (firstResult is SteelFooting) {
+        return _calculateSteelFootingMaterials(results.cast<SteelFooting>());
       }
 
       return CalculationResult.error('Tipo de cálculo no soportado');
@@ -1124,6 +1136,153 @@ class UnifiedMaterialsCalculator {
       return longitud * ancho;
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA ACERO EN COLUMNAS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateSteelColumnMaterials(List<SteelColumn> steelColumns) {
+    final materials = <Material>[];
+    final measurements = <MeasurementData>[];
+    int totalElements = 0;
+
+    for (var column in steelColumns) {
+      totalElements += column.elements;
+      measurements.add(MeasurementData(
+        description: column.description,
+        value: column.elements.toDouble(),
+        unit: 'und',
+      ));
+    }
+
+    materials.add(Material(
+      description: 'Elementos de acero',
+      unit: 'und',
+      quantity: totalElements.toString(),
+    ));
+
+    return CalculationResult(
+      type: CalculationType.steelColumn,
+      materials: materials,
+      details: measurements,
+      totalValue: totalElements.toDouble(),
+      totalUnit: 'und',
+      additionalInfo: {
+        'desperdicio': '${(steelColumns.first.waste * 100).toStringAsFixed(1)}%',
+        'recubrimiento': '${(steelColumns.first.cover * 100).toStringAsFixed(1)} cm',
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA ACERO EN VIGAS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateSteelBeamMaterials(List<SteelBeam> steelBeams) {
+    final materials = <Material>[];
+    final measurements = <MeasurementData>[];
+    int totalElements = 0;
+
+    for (var beam in steelBeams) {
+      totalElements += beam.elements;
+      measurements.add(MeasurementData(
+        description: beam.description,
+        value: beam.elements.toDouble(),
+        unit: 'und',
+      ));
+    }
+
+    materials.add(Material(
+      description: 'Elementos de acero',
+      unit: 'und',
+      quantity: totalElements.toString(),
+    ));
+
+    return CalculationResult(
+      type: CalculationType.steelBeam,
+      materials: materials,
+      details: measurements,
+      totalValue: totalElements.toDouble(),
+      totalUnit: 'und',
+      additionalInfo: {
+        'desperdicio': '${(steelBeams.first.waste * 100).toStringAsFixed(1)}%',
+        'recubrimiento': '${(steelBeams.first.cover * 100).toStringAsFixed(1)} cm',
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA ACERO EN LOSAS MACIZAS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateSteelSlabMaterials(List<SteelSlab> steelSlabs) {
+    final materials = <Material>[];
+    final measurements = <MeasurementData>[];
+    int totalElements = 0;
+
+    for (var slab in steelSlabs) {
+      totalElements += slab.elements;
+      measurements.add(MeasurementData(
+        description: slab.description,
+        value: slab.elements.toDouble(),
+        unit: 'und',
+      ));
+    }
+
+    materials.add(Material(
+      description: 'Elementos de acero',
+      unit: 'und',
+      quantity: totalElements.toString(),
+    ));
+
+    return CalculationResult(
+      type: CalculationType.steelSlab,
+      materials: materials,
+      details: measurements,
+      totalValue: totalElements.toDouble(),
+      totalUnit: 'und',
+      additionalInfo: {
+        'desperdicio': '${(steelSlabs.first.waste * 100).toStringAsFixed(1)}%',
+      },
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA ACERO EN ZAPATAS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateSteelFootingMaterials(List<SteelFooting> steelFootings) {
+    final materials = <Material>[];
+    final measurements = <MeasurementData>[];
+    int totalElements = 0;
+
+    for (var footing in steelFootings) {
+      totalElements += footing.elements;
+      measurements.add(MeasurementData(
+        description: footing.description,
+        value: footing.elements.toDouble(),
+        unit: 'und',
+      ));
+    }
+
+    materials.add(Material(
+      description: 'Elementos de acero',
+      unit: 'und',
+      quantity: totalElements.toString(),
+    ));
+
+    return CalculationResult(
+      type: CalculationType.steelFooting,
+      materials: materials,
+      details: measurements,
+      totalValue: totalElements.toDouble(),
+      totalUnit: 'und',
+      additionalInfo: {
+        'desperdicio': '${(steelFootings.first.waste * 100).toStringAsFixed(1)}%',
+        'recubrimiento': '${(steelFootings.first.cover * 100).toStringAsFixed(1)} cm',
+      },
+    );
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1141,6 +1300,10 @@ enum CalculationType {
   sobrecimiento,
   cimientoCorrido,
   solado,
+  steelColumn,
+  steelBeam,
+  steelSlab,
+  steelFooting,
 }
 
 /// Clase para representar un material calculado

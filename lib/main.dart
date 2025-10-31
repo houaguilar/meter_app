@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/config/common/cubits/shimmer/loader_cubit.dart';
+import 'package:meter_app/config/notifications/notification_repository.dart';
+import 'package:meter_app/firebase_options.dart';
 import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
 import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
@@ -20,11 +22,24 @@ import 'config/analytics/analytics_repository.dart';
 import 'config/common/cubits/app_user/app_user_cubit.dart';
 import 'config/config.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
+import 'presentation/blocs/cart/cart_bloc.dart';
+import 'presentation/blocs/map/products_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
- // await Firebase.initializeApp();
+
+  // Inicializar Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Inicializar dependencias
   await initDependencies();
+
+  // Inicializar servicio de notificaciones
+  final notificationService = serviceLocator<NotificationRepository>();
+  await notificationService.initialize();
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -47,6 +62,9 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final ProfileBloc profileBloc;
   late final PlaceBloc placeBloc;
   late final CombinedResultsBloc combinedResultsBloc;
+  late final ProductsBloc productsBloc;
+  late final CartBloc cartBloc;
+  late final NotificationRepository notificationService;
 
   @override
   void initState() {
@@ -61,6 +79,28 @@ class _MyAppState extends ConsumerState<MyApp> {
     profileBloc = serviceLocator<ProfileBloc>();
     placeBloc = serviceLocator<PlaceBloc>();
     combinedResultsBloc = serviceLocator<CombinedResultsBloc>();
+    productsBloc = serviceLocator<ProductsBloc>();
+    cartBloc = serviceLocator<CartBloc>();
+    notificationService = serviceLocator<NotificationRepository>();
+
+    // Configurar handlers de notificaciones
+    _setupNotificationHandlers();
+  }
+
+  void _setupNotificationHandlers() {
+    // Handler para notificaciones recibidas en foreground
+    notificationService.onMessageReceived((notification) {
+      debugPrint('🔔 Notification received in foreground');
+      // Aquí podrías mostrar un dialog, snackbar, o actualizar el estado
+      // NotificationHandler.handleForegroundNotification(context, notification);
+    });
+
+    // Handler para cuando el usuario toca una notificación
+    notificationService.onMessageOpenedApp((notification) {
+      debugPrint('📲 User tapped on notification');
+      // Navegar a la pantalla correspondiente
+      // NotificationHandler.handleNotificationTap(context, notification);
+    });
   }
 
   @override
@@ -76,8 +116,8 @@ class _MyAppState extends ConsumerState<MyApp> {
   Widget build(BuildContext context) {
 
     final appRouter = AppRouter(
-      authBloc
-    //  serviceLocator<AnalyticsRepository>(),
+      authBloc,
+      serviceLocator<AnalyticsRepository>(),
     ).router;
 
     return MultiBlocProvider(
@@ -121,6 +161,12 @@ class _MyAppState extends ConsumerState<MyApp> {
         BlocProvider(
           create: (context) => serviceLocator<PremiumBloc>()
             ..add(LoadPremiumStatus()),
+        ),
+        BlocProvider(
+          create: (_) => productsBloc,
+        ),
+        BlocProvider(
+          create: (_) => cartBloc,
         ),
       ],
       child: MultiBlocListener(

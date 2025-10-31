@@ -1,4 +1,4 @@
-package com.example.meter_app
+package com.jrd.metrashop
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -8,3 +8,13 @@ export 'projects/metrado/metrado.dart';
 export 'article/article.dart';
 export 'home/inicio/measurement.dart';
 export 'home/tarrajeo/tarrajeo.dart';
+
+// Map entities
+export 'map/location.dart';
+export 'map/location_with_distance.dart';
+export 'map/location_category.dart';
+export 'map/product.dart';
+export 'map/review.dart';
+export 'map/cart.dart';
+export 'map/verification_status.dart';
+export 'map/document_type.dart';

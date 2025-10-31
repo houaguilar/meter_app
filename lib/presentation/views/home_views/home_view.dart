@@ -262,7 +262,7 @@ class _HomeViewState extends ConsumerState<HomeView>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle('Red de proveedores'),
+        _buildSectionTitle('Mapa de proveedores'),
         const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),

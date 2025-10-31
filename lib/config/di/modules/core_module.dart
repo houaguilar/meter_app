@@ -27,6 +27,10 @@ import '../../../data/models/premium/premium_status_model.dart';
 import '../../../domain/entities/home/acero/columna/steel_column.dart';
 import '../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import '../../../domain/entities/home/acero/zapata/steel_footing.dart';
+// 🆕 Nuevas collections para marketplace
+import '../../../domain/entities/map/location_category.dart';
+import '../../../domain/entities/map/product.dart';
+import '../../../domain/entities/map/review.dart';
 
 /// Módulo de inyección de dependencias core (base del sistema)
 /// Contiene: SharedPreferences, Dio, Isar, Supabase, y utilidades base
@@ -50,6 +54,7 @@ Future<void> registerCoreModule(GetIt sl) async {
 
   final isar = await Isar.open(
     [
+      // Schemas existentes
       ProjectSchema,
       MetradoSchema,
       PisoSchema,
@@ -66,7 +71,12 @@ Future<void> registerCoreModule(GetIt sl) async {
       SobrecimientoSchema,
       CimientoCorridoSchema,
       SoladoSchema,
+
       PremiumStatusModelSchema,
+      // 🆕 Nuevos schemas para marketplace
+      LocationCategorySchema,
+      ProductSchema,
+      ReviewSchema,
     ],
     directory: isarDirectory,
     inspector: true,

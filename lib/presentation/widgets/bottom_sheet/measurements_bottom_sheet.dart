@@ -38,7 +38,7 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                 child: Row(
                   children: [
                     const Text(
-                      'Todas las mediciones',
+                      'Selecciona la partida',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,

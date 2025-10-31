@@ -5,6 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
 import '../../../config/app_config.dart';
+import '../../../config/utils/app_logger.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../../domain/entities/premium/purchase_result.dart';
 import '../../../domain/repositories/premium/premium_repository.dart';
@@ -69,29 +70,36 @@ class PremiumBloc extends Bloc<PremiumEvent, PremiumState> {
     final currentStatus = _getCurrentStatus();
     if (currentStatus == null) return;
 
+    AppLogger.premium.i('🛒 Iniciando proceso de compra...');
     emit(PurchaseInProgress(currentStatus));
 
     final result = await premiumRepository.purchaseMonthlySubscription();
 
     result.fold(
-          (failure) => emit(PurchaseFailure(
-        message: failure.message,
-        currentStatus: currentStatus,
-      )),
+          (failure) {
+        AppLogger.premium.e('❌ Compra fallida: ${failure.message}');
+        emit(PurchaseFailure(
+          message: failure.message,
+          currentStatus: currentStatus,
+        ));
+      },
           (purchaseResult) async {
         if (purchaseResult.isSuccess && purchaseResult.premiumStatus != null) {
+          AppLogger.premium.i('✅ Compra exitosa, iniciando sincronización...');
+
           emit(PurchaseSuccess(
             result: purchaseResult,
             newStatus: purchaseResult.premiumStatus!,
           ));
 
-          // AGREGAR: Refrescar después de compra exitosa
-          await Future.delayed(const Duration(seconds: 1));
-          add(RefreshPremiumStatus());
+          // Retry logic: Intentar refrescar el status con reintentos
+          await _refreshWithRetry(emit, currentStatus);
 
         } else if (purchaseResult.isCancelled) {
+          AppLogger.premium.i('🚫 Compra cancelada por el usuario');
           emit(PremiumLoaded(status: currentStatus));
         } else {
+          AppLogger.premium.w('⚠️ Compra no exitosa: ${purchaseResult.message}');
           emit(PurchaseFailure(
             message: purchaseResult.message ?? 'Error desconocido',
             currentStatus: currentStatus,
@@ -99,6 +107,46 @@ class PremiumBloc extends Bloc<PremiumEvent, PremiumState> {
         }
       },
     );
+  }
+
+  /// Refresca el status con reintentos (hasta 3 intentos)
+  Future<void> _refreshWithRetry(
+    Emitter<PremiumState> emit,
+    PremiumStatus currentStatus,
+  ) async {
+    for (int attempt = 1; attempt <= AppConfig.maxRetryAttempts; attempt++) {
+      AppLogger.premium.d('🔄 Intento de sincronización $attempt/${AppConfig.maxRetryAttempts}');
+
+      await Future.delayed(AppConfig.retryDelay);
+
+      final refreshResult = await premiumRepository.syncFromSupabase();
+
+      final success = refreshResult.fold(
+        (failure) {
+          AppLogger.premium.w('⚠️ Intento $attempt fallido: ${failure.message}');
+          return false;
+        },
+        (_) {
+          AppLogger.premium.i('✅ Sincronización exitosa en intento $attempt');
+          return true;
+        },
+      );
+
+      if (success) {
+        // El stream se actualizará automáticamente
+        return;
+      }
+
+      // Si es el último intento y falló, emitir error
+      if (attempt == AppConfig.maxRetryAttempts) {
+        AppLogger.premium.e('❌ Todos los intentos de sincronización fallaron');
+        emit(PremiumError(
+          message: 'Compra exitosa pero no se pudo sincronizar. '
+              'Usa "Restaurar Compras" si no ves tu premium activo.',
+          lastKnownStatus: currentStatus,
+        ));
+      }
+    }
   }
 
   Future<void> _onRestorePurchases(

@@ -8,11 +8,15 @@ import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import '../../../config/app_config.dart';
 import '../../../config/theme/theme.dart';
 import '../../../config/utils/show_snackbar.dart';
+import '../../../domain/entities/map/location.dart';
+import '../../../domain/entities/map/verification_status.dart';
 import '../../blocs/auth/auth_bloc.dart';
+import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/premium/premium_bloc.dart';
 import '../../widgets/premium/premium_feature_widget.dart';
 import '../../widgets/premium/premium_paywall_screen.dart';
 import '../../widgets/premium/premium_status_indicator.dart';
+import '../mapa/profile/provider_profile_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});
@@ -989,84 +993,339 @@ class _PerfilScreenState extends State<PerfilScreen>
   }
 
   Widget _buildBusinessSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Servicios',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.textSecondary.withOpacity(0.08),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+    return BlocBuilder<LocationsBloc, LocationsState>(
+      builder: (context, locationsState) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Servicios',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
               ),
-            ],
+            ),
+            const SizedBox(height: 16),
+
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.textSecondary.withOpacity(0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  PremiumFeatureWidget(
+                    featureName: 'Análisis Avanzados desde Perfil',
+                    fallback: _ActionItem(
+                      icon: Icons.analytics_outlined,
+                      title: 'Análisis básicos',
+                      subtitle: 'Estadísticas limitadas • Actualiza a Premium',
+                      color: Colors.grey,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const PremiumPaywallScreen(),
+                            fullscreenDialog: true,
+                          ),
+                        );
+                      },
+                    ),
+                    child: _ActionItem(
+                      icon: Icons.analytics_rounded,
+                      title: 'Análisis avanzados',
+                      subtitle: 'Estadísticas detalladas y reportes premium',
+                      color: Colors.purple,
+                      onTap: () {
+                        // Navegar a análisis premium
+                        showSnackBar(context, 'Abriendo análisis premium...');
+                      },
+                    ),
+                  ),
+
+                  // Divisor
+                  const Divider(height: 1, color: AppColors.border),
+
+                  // Sección de Proveedor
+                  _buildProviderSection(locationsState),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildProviderSection(LocationsState locationsState) {
+    final profileState = context.read<ProfileBloc>().state;
+    if (profileState is! ProfileLoaded) {
+      return const SizedBox.shrink();
+    }
+
+    final userId = profileState.userProfile.id;
+
+    // Cargar ubicaciones del usuario si no están cargadas
+    if (locationsState is! UserLocationsLoaded &&
+        locationsState is! UserLocationsLoading) {
+      // Disparar evento para cargar ubicaciones del usuario
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<LocationsBloc>().add(LoadLocationsByUser(userId));
+      });
+      return const SizedBox.shrink();
+    }
+
+    if (locationsState is UserLocationsLoading) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (locationsState is UserLocationsLoaded) {
+      final userLocations = locationsState.userLocations;
+
+      if (userLocations.isEmpty) {
+        // Usuario NO es proveedor - Mostrar botón para registrarse
+        return _buildActionCard([
+          _ActionItem(
+            icon: Icons.store_mall_directory_outlined,
+            title: 'Tiendas oficiales',
+            subtitle: 'Explora nuestras tiendas asociadas',
+            color: AppColors.secondary,
+            onTap: () => _showComingSoon('Tiendas oficiales'),
+          ),
+          _ActionItem(
+            icon: Icons.add_business_outlined,
+            title: 'Registrarme como proveedor',
+            subtitle: 'Únete a nuestra red de proveedores',
+            color: AppColors.accent,
+            onTap: () => context.pushNamed('register-location'),
+          ),
+        ]);
+      } else {
+        // Usuario YA es proveedor - Mostrar estado y botones
+        final providerLocation = userLocations.first;
+        return _buildProviderStatusCard(providerLocation);
+      }
+    }
+
+    // Estado por defecto
+    return _buildActionCard([
+      _ActionItem(
+        icon: Icons.add_business_outlined,
+        title: 'Registrarme como proveedor',
+        subtitle: 'Únete a nuestra red de proveedores',
+        color: AppColors.accent,
+        onTap: () => context.pushNamed('register-location'),
+      ),
+    ]);
+  }
+
+  Widget _buildProviderStatusCard(LocationMap location) {
+    final status = location.verificationStatus;
+    final statusColor = _getProviderStatusColor(status);
+    final statusIcon = _getProviderStatusIcon(status);
+    final statusText = _getProviderStatusText(status);
+
+    return Column(
+      children: [
+        // Card de estado de verificación
+        Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: statusColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: statusColor.withOpacity(0.3), width: 2),
           ),
           child: Column(
             children: [
-              PremiumFeatureWidget(
-                featureName: 'Análisis Avanzados desde Perfil',
-                fallback: _ActionItem(
-                  icon: Icons.analytics_outlined,
-                  title: 'Análisis básicos',
-                  subtitle: 'Estadísticas limitadas • Actualiza a Premium',
-                  color: Colors.grey,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PremiumPaywallScreen(),
-                        fullscreenDialog: true,
-                      ),
-                    );
-                  },
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: statusColor.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(statusIcon, color: statusColor, size: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Mi Negocio',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          location.title,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: _ActionItem(
-                  icon: Icons.analytics_rounded,
-                  title: 'Análisis avanzados',
-                  subtitle: 'Estadísticas detalladas y reportes premium',
-                  color: Colors.purple,
-                  onTap: () {
-                    // Navegar a análisis premium
-                    showSnackBar(context, 'Abriendo análisis premium...');
-                  },
+                child: Row(
+                  children: [
+                    Icon(statusIcon, color: statusColor, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              // Divisor
-              const Divider(height: 1, color: AppColors.border),
-              _buildActionCard([
-                _ActionItem(
-                  icon: Icons.store_mall_directory_outlined,
-                  title: 'Tiendas oficiales',
-                  subtitle: 'Explora nuestras tiendas asociadas',
-                  color: AppColors.secondary,
-                  onTap: () => _showComingSoon('Tiendas oficiales'),
+              // Información adicional según el estado
+              if (status.isPendingApproval && location.scheduledDate != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: AppColors.primary, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Verificación: ${_formatDate(location.scheduledDate!)} ${location.scheduledTime ?? ""}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                _ActionItem(
-                  icon: Icons.add_business_outlined,
-                  title: 'Registrarme como proveedor',
-                  subtitle: 'Únete a nuestra red de proveedores',
-                  color: AppColors.accent,
-                  onTap: () => context.pushNamed('register-location'),
-                ),
-              ]),
+              ],
+
+              // Botones según el estado
+              const SizedBox(height: 12),
+              _buildProviderActions(location),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildProviderActions(LocationMap location) {
+    final status = location.verificationStatus;
+
+    if (status.isApproved || status.isActive) {
+      // Si está aprobado, mostrar botón para configurar negocio
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => _navigateToProviderProfile(location),
+          icon: const Icon(Icons.settings, size: 20),
+          label: const Text('Configurar Mi Negocio'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      );
+    } else {
+      // Si está pendiente o rechazado, mostrar botón para ver detalles
+      return SizedBox(
+        width: double.infinity,
+        child: OutlinedButton.icon(
+          onPressed: () => _navigateToProviderProfile(location),
+          icon: const Icon(Icons.info_outline, size: 20),
+          label: const Text('Ver Detalles'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary, width: 2),
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
+  Color _getProviderStatusColor(VerificationStatus status) {
+    if (status.isPendingApproval) return AppColors.warning;
+    if (status.isApproved || status.isActive) return AppColors.success;
+    if (status.isRejected) return AppColors.error;
+    return AppColors.textSecondary;
+  }
+
+  IconData _getProviderStatusIcon(VerificationStatus status) {
+    if (status.isPendingApproval) return Icons.hourglass_empty;
+    if (status.isApproved || status.isActive) return Icons.check_circle;
+    if (status.isRejected) return Icons.cancel;
+    return Icons.info;
+  }
+
+  String _getProviderStatusText(VerificationStatus status) {
+    if (status.isPendingApproval) return 'Verificación Pendiente';
+    if (status.isApproved) return 'Negocio Verificado - Configura tus productos';
+    if (status.isActive) return 'Negocio Activo';
+    if (status.isRejected) return 'Solicitud Rechazada';
+    return 'Estado desconocido';
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+
+  void _navigateToProviderProfile(LocationMap location) {
+    // Importar ProviderProfileScreen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProviderProfileScreen(location: location),
+      ),
     );
   }
 

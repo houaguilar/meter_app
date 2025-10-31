@@ -48,6 +48,17 @@ final class DeleteLocationEvent extends LocationsEvent {
   DeleteLocationEvent(this.locationId);
 }
 
+/// Activar/Desactivar visibilidad de ubicación en el mapa
+final class ToggleLocationActiveEvent extends LocationsEvent {
+  final String locationId;
+  final bool isActive;
+
+  ToggleLocationActiveEvent({
+    required this.locationId,
+    required this.isActive,
+  });
+}
+
 /// Refrescar ubicaciones cercanas con nueva posición
 final class RefreshNearbyLocations extends LocationsEvent {
   final double userLat;

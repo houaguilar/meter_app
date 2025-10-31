@@ -1,9 +1,9 @@
-
 import 'dart:async';
 import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../config/app_config.dart';
 import '../../../config/constants/error/exceptions.dart';
+import '../../../config/utils/app_logger.dart';
 import '../../../domain/datasources/premium/premium_service_data_source.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../../domain/entities/premium/purchase_result.dart';
@@ -22,12 +22,12 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
 
   void _initializeCurrentUser() {
     _currentUserId = supabaseClient.auth.currentUser?.id;
-    print('🎭 Mock Service: Inicializando con userId: $_currentUserId');
+    AppLogger.premium.i('🎭 Mock Service: Inicializando con userId: $_currentUserId');
 
     if (_currentUserId != null) {
       _loadCurrentStatus();
     } else {
-      print('🎭 Mock Service: No hay usuario autenticado');
+      AppLogger.premium.w('🎭 Mock Service: No hay usuario autenticado');
     }
   }
 
@@ -35,7 +35,7 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
     if (_currentUserId == null) return;
 
     try {
-      print('🎭 Mock Service: Cargando status para usuario: $_currentUserId');
+      AppLogger.premium.d('🎭 Mock Service: Cargando status para usuario: $_currentUserId');
 
       final response = await supabaseClient
           .from('profiles')
@@ -44,10 +44,10 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
           .maybeSingle();
 
       if (response == null) {
-        print('🎭 Mock Service: No se encontró perfil, usando estado gratuito');
+        AppLogger.premium.w('🎭 Mock Service: No se encontró perfil, usando estado gratuito');
         _currentStatus = PremiumStatus.free();
       } else {
-        print('🎭 Mock Service: Datos de Supabase: $response');
+        AppLogger.premium.d('🎭 Mock Service: Datos de Supabase: $response');
 
         _currentStatus = PremiumStatus(
           isPremium: response['is_premium'] ?? false,
@@ -59,12 +59,12 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
           lastVerifiedAt: DateTime.now(),
         );
 
-        print('🎭 Mock Service: Status cargado: ${_currentStatus.toString()}');
+        AppLogger.premium.d('🎭 Mock Service: Status cargado: ${_currentStatus.toString()}');
       }
 
       _statusController.add(_currentStatus);
     } catch (e) {
-      print('Error cargando status mock: $e');
+      AppLogger.premium.e('Error cargando status mock: $e');
       _currentStatus = PremiumStatus.free();
       _statusController.add(_currentStatus);
     }
@@ -72,14 +72,14 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
 
   @override
   Future<PurchaseResult> purchaseMonthlySubscription() async {
-    print('🎭 Mock Service: Iniciando compra mensual...');
+    AppLogger.premium.i('🎭 Mock Service: Iniciando compra mensual...');
 
     // Verificar usuario actual
     _currentUserId = supabaseClient.auth.currentUser?.id;
-    print('🎭 Mock Service: Usuario actual: $_currentUserId');
+    AppLogger.premium.d('🎭 Mock Service: Usuario actual: $_currentUserId');
 
     if (_currentUserId == null) {
-      print('🎭 Mock Service: ERROR - No hay usuario autenticado');
+      AppLogger.premium.e('🎭 Mock Service: ERROR - No hay usuario autenticado');
       return PurchaseResult.error('Usuario no autenticado');
     }
 
@@ -87,24 +87,24 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
 
     // Simular posible error (10% de probabilidad)
     if (_shouldSimulateError()) {
-      print('🎭 Mock Service: Simulando error de pago');
+      AppLogger.premium.w('🎭 Mock Service: Simulando error de pago');
       return PurchaseResult.error('Error simulado de pago mock');
     }
 
     // Simular cancelación de usuario (5% de probabilidad)
     if (_shouldSimulateCancellation()) {
-      print('🎭 Mock Service: Simulando cancelación de usuario');
+      AppLogger.premium.i('🎭 Mock Service: Simulando cancelación de usuario');
       return PurchaseResult.userCancelled();
     }
 
     // Simular compra exitosa
-    print('🎭 Mock Service: Procesando compra exitosa...');
+    AppLogger.premium.i('🎭 Mock Service: Procesando compra exitosa...');
     final newStatus = PremiumStatus.mockPurchase(days: 30);
-    print('🎭 Mock Service: Nuevo status creado: ${newStatus.toString()}');
+    AppLogger.premium.d('🎭 Mock Service: Nuevo status creado: ${newStatus.toString()}');
 
     try {
       await _updateStatus(newStatus);
-      print('🎭 Mock Service: Status actualizado exitosamente');
+      AppLogger.premium.i('🎭 Mock Service: Status actualizado exitosamente');
 
       final result = PurchaseResult.success(
         newStatus,
@@ -112,11 +112,11 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
         purchaseDate: DateTime.now(),
       );
 
-      print('🎭 Mock Service: Resultado de compra: ${result.toString()}');
+      AppLogger.premium.d('🎭 Mock Service: Resultado de compra: ${result.toString()}');
       return result;
 
     } catch (e) {
-      print('🎭 Mock Service: ERROR actualizando status: $e');
+      AppLogger.premium.e('🎭 Mock Service: ERROR actualizando status: $e');
       return PurchaseResult.error('Error actualizando premium status: $e');
     }
   }
@@ -141,10 +141,10 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
 
   @override
   Future<PurchaseResult> grantTrialPremium() async {
-    print('🎭 Mock Service: Otorgando trial premium...');
+    AppLogger.premium.i('🎭 Mock Service: Otorgando trial premium...');
 
     _currentUserId = supabaseClient.auth.currentUser?.id;
-    print('🎭 Mock Service: Usuario para trial: $_currentUserId');
+    AppLogger.premium.d('🎭 Mock Service: Usuario para trial: $_currentUserId');
 
     if (_currentUserId == null) {
       return PurchaseResult.error('Usuario no autenticado');
@@ -154,20 +154,20 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
 
     // Verificar si ya tuvo trial
     if (_currentStatus.source == PremiumSource.mockTrial) {
-      print('🎭 Mock Service: Usuario ya tuvo trial');
+      AppLogger.premium.w('🎭 Mock Service: Usuario ya tuvo trial');
       return PurchaseResult.error('Ya utilizaste tu período de prueba');
     }
 
     final trialStatus = PremiumStatus.mockTrial(days: AppConfig.mockTrialDays);
-    print('🎭 Mock Service: Status de trial creado: ${trialStatus.toString()}');
+    AppLogger.premium.d('🎭 Mock Service: Status de trial creado: ${trialStatus.toString()}');
 
     try {
       await _updateStatus(trialStatus);
-      print('🎭 Mock Service: Trial otorgado exitosamente');
+      AppLogger.premium.i('🎭 Mock Service: Trial otorgado exitosamente');
 
       return PurchaseResult.success(trialStatus);
     } catch (e) {
-      print('🎭 Mock Service: ERROR otorgando trial: $e');
+      AppLogger.premium.e('🎭 Mock Service: ERROR otorgando trial: $e');
       return PurchaseResult.error('Error otorgando trial: $e');
     }
   }
@@ -214,8 +214,8 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
     }
 
     try {
-      print('🎭 Mock Service: Actualizando status para usuario: $_currentUserId');
-      print('🎭 Mock Service: Nuevo status: ${newStatus.toString()}');
+      AppLogger.premium.d('🎭 Mock Service: Actualizando status para usuario: $_currentUserId');
+      AppLogger.premium.d('🎭 Mock Service: Nuevo status: ${newStatus.toString()}');
 
       // Actualizar en Supabase usando UPDATE directo
       final updateData = {
@@ -234,15 +234,15 @@ class MockPremiumServiceImpl implements PremiumServiceDataSource {
           .eq('id', _currentUserId!)
           .select();
 
-      print('🎭 Mock Service: Resultado de actualización: $result');
+      AppLogger.premium.d('🎭 Mock Service: Resultado de actualización: $result');
 
       _currentStatus = newStatus.copyWith(lastVerifiedAt: DateTime.now());
       _statusController.add(_currentStatus);
 
-      print('🎭 MOCK: Premium status actualizado exitosamente');
+      AppLogger.premium.i('🎭 MOCK: Premium status actualizado exitosamente');
 
     } catch (e) {
-      print('🎭 Mock Service Error actualizando: $e');
+      AppLogger.premium.e('🎭 Mock Service Error actualizando: $e');
       throw ServerException('Error actualizando status mock: $e');
     }
   }

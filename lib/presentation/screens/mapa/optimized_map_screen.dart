@@ -9,12 +9,11 @@ import '../../../config/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/location_with_distance.dart';
 import '../../../domain/entities/map/place_entity.dart';
-import '../../assets/images.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/map/place/place_bloc.dart';
 import '../../widgets/app_bar/app_bar_widget.dart';
 import '../home/shared/quote/quote_project_selection_screen.dart';
-import 'detail/location_detail_hardcoded_screen.dart';
+import 'detail/location_detail_screen.dart';
 import 'widgets/optimized_search_bar.dart';
 import 'widgets/location_permission_dialog.dart';
 import 'widgets/map_loading_overlay.dart';
@@ -43,7 +42,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   bool _isLocationLoading = true;
   String? _locationError;
 
-  List<ProviderModel> _providers = [];
   LocationWithDistance? _selectedLocation;
   List<LocationWithDistance> _nearbyLocations = [];
 
@@ -582,6 +580,11 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     final locationsWithDistance = <LocationWithDistance>[];
 
     for (final location in allLocations) {
+      // FILTRO IMPORTANTE: Solo mostrar proveedores activos
+      if (!location.isActive) {
+        continue;
+      }
+
       final distance = Geolocator.distanceBetween(
         _currentPosition!.latitude,
         _currentPosition!.longitude,
@@ -753,6 +756,11 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     final markers = <Marker>{};
 
     for (final location in locations) {
+      // FILTRO IMPORTANTE: Solo mostrar markers de proveedores aprobados y activos
+      if (!location.verificationStatus.isApproved || !location.isActive) {
+        continue;
+      }
+
       final isSelected = _selectedLocation?.id == location.id;
 
       markers.add(
@@ -800,9 +808,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
   void _navigateToLocationDetail(LocationMap location) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => LocationDetailHardcodedScreen(
-          locationId: location.id ?? '1', // Default ID si no tiene
-        ),
+        builder: (context) => LocationDetailScreen(location: location,)
       ),
     );
   }
@@ -878,376 +884,10 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  // CARRUSEL DE PROVEEDORES OPTIMIZADO PARA TODOS LOS TAMAÑOS DE PANTALLA
-  /*Widget _buildProvidersCarousel() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final screenHeight = MediaQuery.of(context).size.height;
-
-        double carouselHeight;
-
-        if (screenHeight <= 667) {
-          carouselHeight = 230;
-        } else if (screenHeight <= 736) {
-          carouselHeight = 230;
-        } else if (screenHeight <= 812) {
-          carouselHeight = 240;
-        } else {
-          carouselHeight = 250;
-        }
-
-        return Container(
-          height: carouselHeight,
-          color: Colors.transparent,
-          child: _buildCarouselContent(),
-        );
-      },
-    );
-  }*/
-
-  /*Widget _buildCarouselContent() {
-    if (_providers.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.store_mall_directory_outlined,
-              size: 48,
-              color: AppColors.neutral400,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'No hay proveedores disponibles',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.neutral600,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return PageView.builder(
-      controller: _pageController,
-      onPageChanged: (index) {
-        setState(() {
-          _currentProviderIndex = index;
-        });
-      },
-      itemCount: _providers.length,
-      itemBuilder: (context, index) {
-        final provider = _providers[index];
-        final screenWidth = MediaQuery.of(context).size.width;
-
-        // Márgenes adaptativos basados en el ancho de pantalla
-        double horizontalMargin;
-        if (screenWidth <= 375) {
-          horizontalMargin = 12; // Pantallas muy pequeñas
-        } else if (screenWidth <= 414) {
-          horizontalMargin = 16; // Pantallas medianas
-        } else {
-          horizontalMargin = 20; // Pantallas grandes
-        }
-
-        return GestureDetector(
-          onTap: () => _navigateToProviderDetail(provider), // Cambio aquí
-          child: Container(
-            margin: EdgeInsets.symmetric(
-              horizontal: horizontalMargin,
-              vertical: 8,
-            ),
-            child: _buildProviderCard(_providers[index]),
-          ),
-        );
-      },
-    );
-  }*/
-
-  Widget _buildImage(String imageUrl) {
-    // Si la URL empieza con http/https, es una imagen de red
-    if (imageUrl.startsWith('http') || imageUrl.startsWith('https')) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: AppColors.neutral100,
-            child: const Icon(
-              Icons.image_not_supported,
-              size: 48,
-              color: AppColors.neutral400,
-            ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: AppColors.neutral100,
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2,
-                color: AppColors.primary,
-              ),
-            ),
-          );
-        },
-      );
-    } else {
-      // Es un asset local
-      return Image.asset(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: AppColors.neutral100,
-            child: const Icon(
-              Icons.image_not_supported,
-              size: 48,
-              color: AppColors.neutral400,
-            ),
-          );
-        },
-      );
-    }
-  }
-
-  // TARJETA DE PROVEEDOR OPTIMIZADA PARA TODOS LOS TAMAÑOS DE PANTALLA
-// TARJETA DE PROVEEDOR MEJORADA INSPIRADA EN EQUIPCONSTRUYE
-  /*Widget _buildProviderCard(ProviderModel provider) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final cardHeight = constraints.maxHeight;
-        final screenWidth = MediaQuery.of(context).size.width;
-
-        return Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(20), // Bordes más redondeados
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
-                spreadRadius: 0,
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-                spreadRadius: 0,
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER CON LOGO Y RATING
-              Container(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Logo del proveedor
-                    Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
-                        color: AppColors.neutral100,
-                        border: Border.all(
-                          color: AppColors.neutral200,
-                          width: 1,
-                        ),
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: _buildImage(provider.imageUrl),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // Información del proveedor
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Nombre del proveedor
-                          Text(
-                            provider.name,
-                            style: AppTypography.titleMedium.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.neutral900,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-
-                          const SizedBox(height: 4),
-
-                          // Rating con estrellas
-                          Row(
-                            children: [
-                              ...List.generate(5, (index) {
-                                double fillAmount = (provider.rating - index).clamp(0.0, 1.0);
-                                return Container(
-                                  margin: const EdgeInsets.only(right: 2),
-                                  child: Stack(
-                                    children: [
-                                      Icon(
-                                        Icons.star_outline,
-                                        size: 16,
-                                        color: AppColors.warning.withOpacity(0.3),
-                                      ),
-                                      ClipRect(
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-                                          widthFactor: fillAmount,
-                                          child: Icon(
-                                            Icons.star,
-                                            size: 16,
-                                            color: AppColors.warning,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-
-                              const SizedBox(width: 6),
-
-                              Text(
-                                provider.rating.toString(),
-                                style: AppTypography.bodySmall.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.neutral700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // DESCRIPCIÓN
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Text(
-                  provider.description,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.neutral600,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // BOTONES DE ACCIÓN
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Botón Ver Productos
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(12),
-                          gradient: LinearGradient(
-                            colors: [
-                              AppColors.primary,
-                              AppColors.primary.withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _navigateToProviderDetail(provider),
-                            child: Center(
-                              child: Text(
-                                'Ver Productos',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // Botón Cotizar
-                    Expanded(
-                      child: Container(
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.primary,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: () => _showQuoteDialog(provider),
-                            child: Center(
-                              child: Text(
-                                'Cotizar',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }*/
-
   void _navigateToProviderDetail(LocationWithDistance location) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => LocationDetailHardcodedScreen(
-          locationId: location.id ?? "1", // Usa el ID del proveedor
-        ),
+        builder: (context) => LocationDetailScreen(location: location,),
       ),
     );
   }
@@ -1263,60 +903,4 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  // CARGAR PROVEEDORES (simulado - reemplazar con tu lógica real)
-  void _loadProviders() {
-    // Datos simulados - reemplazar con tu fuente de datos real
-    setState(() {
-      _providers = [
-        ProviderModel(
-          id: '1',
-          name: 'Ferretería Central',
-          description: 'Materiales de construcción y herramientas',
-          category: 'Ferretería',
-          imageUrl: AppImages.expressImg,
-          rating: 4.8,
-          salesCount: 1250,
-          distance: 0.8,
-          isOpen: true,
-        ),
-        ProviderModel(
-          id: '2',
-          name: 'Cemento & Agregados SAC',
-          description: 'Venta de cemento, arena, piedra y agregados',
-          category: 'Cemento',
-          imageUrl: AppImages.equipImg,
-          rating: 4.6,
-          salesCount: 890,
-          distance: 1.2,
-          isOpen: false,
-        ),
-        // Agregar más proveedores según necesites
-      ];
-    });
-  }
-}
-
-// Modelo de proveedor (agregar a tu archivo de modelos)
-class ProviderModel {
-  final String id;
-  final String name;
-  final String description;
-  final String category;
-  final String imageUrl;
-  final double rating;
-  final int salesCount;
-  final double distance;
-  final bool isOpen;
-
-  ProviderModel({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.category,
-    required this.imageUrl,
-    required this.rating,
-    required this.salesCount,
-    required this.distance,
-    required this.isOpen,
-  });
 }

@@ -689,12 +689,20 @@ class _ResultScreenState extends State<ResultScreen>
         return Colors.orange;
       case CalculationType.viga:
         return Colors.purple;
-        case CalculationType.sobrecimiento:
+      case CalculationType.sobrecimiento:
         return Colors.red;
       case CalculationType.cimientoCorrido:
         return Colors.green;
       case CalculationType.solado:
         return Colors.yellow;
+      case CalculationType.steelColumn:
+        return Colors.blueGrey;
+      case CalculationType.steelBeam:
+        return Colors.indigo;
+      case CalculationType.steelSlab:
+        return Colors.teal;
+      case CalculationType.steelFooting:
+        return Colors.cyan;
       }
   }
 
@@ -718,6 +726,14 @@ class _ResultScreenState extends State<ResultScreen>
         return Icons.landscape;
       case CalculationType.solado:
         return Icons.layers_outlined;
+      case CalculationType.steelColumn:
+        return Icons.view_week_outlined;
+      case CalculationType.steelBeam:
+        return Icons.line_axis_outlined;
+      case CalculationType.steelSlab:
+        return Icons.grid_4x4_outlined;
+      case CalculationType.steelFooting:
+        return Icons.support_outlined;
       }
   }
 
@@ -741,6 +757,14 @@ class _ResultScreenState extends State<ResultScreen>
         return 'Cimiento Corrido';
       case CalculationType.solado:
         return 'Solado';
+      case CalculationType.steelColumn:
+        return 'Acero en Columna';
+      case CalculationType.steelBeam:
+        return 'Acero en Viga';
+      case CalculationType.steelSlab:
+        return 'Acero en Losa Maciza';
+      case CalculationType.steelFooting:
+        return 'Acero en Zapata';
       }
   }
 
