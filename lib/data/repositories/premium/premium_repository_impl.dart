@@ -1,9 +1,10 @@
-
 import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:rxdart/rxdart.dart';
+import '../../../config/app_config.dart';
 import '../../../config/constants/error/failures.dart';
+import '../../../config/utils/app_logger.dart';
 import '../../../domain/datasources/premium/premium_local_data_source.dart';
 import '../../../domain/datasources/premium/premium_remote_data_source.dart';
 import '../../../domain/datasources/premium/premium_service_data_source.dart';
@@ -32,8 +33,9 @@ class PremiumRepositoryImpl implements PremiumRepository {
   }
 
   void _initializeSync() {
-    // Sincronización periódica cada 5 minutos
-    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+    // Sincronización periódica configurada en AppConfig
+    _syncTimer = Timer.periodic(AppConfig.syncInterval, (_) {
+      AppLogger.premium.d('⏰ Sincronización periódica iniciada');
       _syncInBackground();
     });
   }
@@ -88,25 +90,64 @@ class PremiumRepositoryImpl implements PremiumRepository {
   @override
   Stream<PremiumStatus> watchPremiumStatus() {
     if (_currentUserId == null) {
+      AppLogger.premium.w('⚠️ watchPremiumStatus: Usuario no autenticado');
       return Stream.value(PremiumStatus.free());
     }
+
+    AppLogger.premium.d('👀 Iniciando watch de premium status para user: $_currentUserId');
 
     // Combinar streams usando rxdart
     return CombineLatestStream.list([
       _statusController.stream,
       localDataSource.watchCachedPremiumStatus(_currentUserId!)
-          .map((model) => model?.toDomain() ?? PremiumStatus.free()),
+          .map((model) {
+            final status = model?.toDomain() ?? PremiumStatus.free();
+            AppLogger.premium.d('📱 Local cache actualizado: ${status.isActive ? "Premium" : "Free"}');
+            return status;
+          })
+          .handleError((error) {
+            AppLogger.premium.e('❌ Error en stream local: $error');
+            return PremiumStatus.free();
+          }),
       remoteDataSource.watchPremiumStatus(_currentUserId!)
-          .map((model) => model.toDomain())
-          .onErrorReturn(PremiumStatus.free()), // Manejar errores del stream remoto
-    ]).map((statusList) {
+          .map((model) {
+            final status = model.toDomain();
+            AppLogger.premium.d('☁️ Remote actualizado: ${status.isActive ? "Premium" : "Free"}');
+            return status;
+          })
+          .handleError((error) {
+            AppLogger.premium.w('⚠️ Error en stream remoto (continuando): $error');
+            return PremiumStatus.free();
+          }),
+    ])
+    .debounceTime(const Duration(milliseconds: 300)) // Evitar múltiples emisiones rápidas
+    .map((statusList) {
       // Priorizar status premium activo, luego el más reciente
       final activeStatus = statusList.firstWhere(
-            (status) => status.isActive,
-        orElse: () => statusList.first,
+        (status) => status.isActive,
+        orElse: () => statusList.reduce((a, b) {
+          // Comparar timestamps para obtener el más reciente
+          final aTime = a.lastVerifiedAt ?? DateTime(1970);
+          final bTime = b.lastVerifiedAt ?? DateTime(1970);
+          return aTime.isAfter(bTime) ? a : b;
+        }),
       );
+
+      AppLogger.premium.d('✅ Status final emitido: ${activeStatus.isActive ? "Premium" : "Free"}');
       return activeStatus;
-    }).distinct();
+    })
+    .distinct((previous, next) {
+      // Solo emitir si hay cambios significativos
+      final hasChanged = previous.isPremium != next.isPremium ||
+          previous.premiumUntil != next.premiumUntil ||
+          previous.source != next.source;
+
+      if (!hasChanged) {
+        AppLogger.premium.d('🔄 Sin cambios significativos, no emitir');
+      }
+
+      return hasChanged;
+    });
   }
 
   @override

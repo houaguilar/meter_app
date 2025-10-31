@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
 import '../../../config/usecase/usecase.dart';
@@ -12,6 +13,7 @@ import '../../../domain/usecases/map/get_locations_by_user.dart';
 import '../../../domain/usecases/map/get_nearby_locations.dart';
 import '../../../domain/usecases/map/save_location.dart';
 import '../../../domain/usecases/map/get_all_locations.dart';
+import '../../../domain/usecases/map/toggle_location_active.dart';
 import '../../../domain/usecases/map/upload_image.dart';
 
 part 'locations_event.dart';
@@ -26,6 +28,7 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
   final CheckPostGISAvailability checkPostGISAvailabilityUseCase;
   final GetLocationsByUser getLocationsByUser;
   final DeleteLocation deleteLocationUseCase;
+  final ToggleLocationActive toggleLocationActiveUseCase;
 
   LocationsBloc({
     required this.getAllLocations,
@@ -35,6 +38,7 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
     required this.checkPostGISAvailabilityUseCase,
     required this.getLocationsByUser,
     required this.deleteLocationUseCase,
+    required this.toggleLocationActiveUseCase,
   }) : super(LocationsLoading()) {
     on<LoadLocations>(_onLoadLocations);
     on<AddNewLocation>(_onAddNewLocation);
@@ -44,6 +48,7 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
     on<CheckPostGISAvailabilityEvent>(_onCheckPostGISAvailability);
     on<LoadLocationsByUser>(_onLoadLocationsByUser);
     on<DeleteLocationEvent>(_onDeleteLocation);
+    on<ToggleLocationActiveEvent>(_onToggleLocationActive);
   }
 
   void _onLoadLocations(
@@ -205,6 +210,43 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
         // Mostrar mensaje de éxito temporal
         emit(LocationOperationSuccess(
           message: 'Ubicación eliminada correctamente',
+        ));
+      },
+    );
+  }
+
+  /// Handler para activar/desactivar ubicación
+  void _onToggleLocationActive(
+      ToggleLocationActiveEvent event, Emitter<LocationsState> emit) async {
+    debugPrint('🔔 LocationsBloc: Recibido ToggleLocationActiveEvent');
+    debugPrint('   locationId: ${event.locationId}');
+    debugPrint('   isActive: ${event.isActive}');
+
+    emit(LocationTogglingActive());
+
+    debugPrint('📞 LocationsBloc: Llamando a toggleLocationActiveUseCase...');
+    final result = await toggleLocationActiveUseCase(
+      locationId: event.locationId,
+      isActive: event.isActive,
+    );
+
+    result.fold(
+          (failure) {
+        debugPrint('❌ LocationsBloc: Error - ${failure.message}');
+        emit(LocationsError(failure.message));
+      },
+          (_) {
+        debugPrint('✅ LocationsBloc: Toggle exitoso!');
+        emit(LocationActiveToggled(
+          locationId: event.locationId,
+          isActive: event.isActive,
+        ));
+
+        // Mostrar mensaje de éxito temporal
+        emit(LocationOperationSuccess(
+          message: event.isActive
+              ? 'Negocio activado correctamente'
+              : 'Negocio desactivado correctamente',
         ));
       },
     );

@@ -5,7 +5,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
-import '../../../../../providers/home/acero/columna/steel_column_providers.dart'; // cambio de viga a columna
+import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
 
 class ResultSteelColumnScreen extends ConsumerStatefulWidget { // cambio de ResultSteelBeamScreen
   const ResultSteelColumnScreen({super.key});

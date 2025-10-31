@@ -1,6 +1,7 @@
 // lib/data/datasources/map/location_data_source_impl.dart
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/material.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:meter_app/domain/datasources/map/location_data_source.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +11,9 @@ import 'package:uuid/uuid.dart';
 import '../../../config/constants/error/exceptions.dart';
 import '../../models/map/location_model.dart';
 import '../../models/map/location_model_with_distance.dart';
+import '../../models/map/location_category_model.dart';
+import '../../models/map/product_model.dart';
+import '../../models/map/review_model.dart';
 
 class LocationDataSourceImpl implements LocationDataSource {
   final SupabaseClient supabaseClient;
@@ -242,6 +246,28 @@ class LocationDataSourceImpl implements LocationDataSource {
     }
   }
 
+  /// ⚡ NUEVO: Activar/Desactivar ubicación en el mapa
+  @override
+  Future<void> toggleLocationActive({
+    required String locationId,
+    required bool isActive,
+  }) async {
+    try {
+      await supabaseClient
+          .from('locations')
+          .update({
+            'is_active': isActive,
+          })
+          .eq('id', locationId);
+
+      debugPrint('✅ Location $locationId is_active set to: $isActive');
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar estado: ${e.message}');
+    } catch (e) {
+      throw ServerException('Error inesperado: $e');
+    }
+  }
+
   // ============================================================
   // TUS MÉTODOS EXISTENTES - CONSERVADOS INTACTOS ✅
   // ============================================================
@@ -456,6 +482,474 @@ class LocationDataSourceImpl implements LocationDataSource {
       return buckets.any((bucket) => bucket.name == 'locations');
     } catch (e) {
       return false;
+    }
+  }
+
+  // ============================================================
+  // MÉTODOS DEL MARKETPLACE - CATEGORÍAS (5 métodos)
+  // ============================================================
+
+  @override
+  Future<List<LocationCategoryModel>> getLocationCategories(String locationId) async {
+    try {
+      final response = await supabaseClient
+          .from('location_categories')
+          .select()
+          .eq('location_id', locationId)
+          .eq('is_active', true)
+          .order('display_order', ascending: true);
+
+      if (response == null) return [];
+
+      return (response as List)
+          .map((json) => LocationCategoryModel.fromSupabase(json))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al cargar categorías: ${e.message}');
+    }
+  }
+
+  @override
+  Future<LocationCategoryModel> saveLocationCategory(LocationCategoryModel category) async {
+    try {
+      final categoryMap = category.toSupabase();
+
+      final response = await supabaseClient
+          .from('location_categories')
+          .upsert(categoryMap)
+          .select()
+          .single();
+
+      return LocationCategoryModel.fromSupabase(response);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al guardar categoría: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> saveLocationCategories({
+    required String locationId,
+    required List<LocationCategoryModel> categories,
+  }) async {
+    try {
+      final categoriesData = categories
+          .map((cat) => cat.toSupabase())
+          .toList();
+
+      await supabaseClient
+          .from('location_categories')
+          .upsert(categoriesData);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al guardar categorías: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> deleteLocationCategory(String categoryId) async {
+    try {
+      await supabaseClient
+          .from('location_categories')
+          .delete()
+          .eq('id', categoryId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al eliminar categoría: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> updateCategoriesOrder(String locationId, List<String> categoryIds) async {
+    try {
+      for (var i = 0; i < categoryIds.length; i++) {
+        await supabaseClient
+            .from('location_categories')
+            .update({'display_order': i})
+            .eq('id', categoryIds[i])
+            .eq('location_id', locationId);
+      }
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar orden: ${e.message}');
+    }
+  }
+
+  // ============================================================
+  // MÉTODOS DEL MARKETPLACE - PRODUCTOS (8 métodos)
+  // ============================================================
+
+  @override
+  Future<List<ProductModel>> getLocationProducts(String locationId) async {
+    try {
+      final response = await supabaseClient
+          .from('products')
+          .select()
+          .eq('location_id', locationId)
+          .order('featured', ascending: false)
+          .order('display_order', ascending: true)
+          .order('created_at', ascending: false);
+
+      if (response == null) return [];
+
+      return (response as List)
+          .map((json) => ProductModel.fromSupabase(json))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al cargar productos: ${e.message}');
+    }
+  }
+
+  @override
+  Future<List<ProductModel>> getProductsByCategory({
+    required String locationId,
+    required String categoryId,
+  }) async {
+    try {
+      final response = await supabaseClient
+          .from('products')
+          .select()
+          .eq('location_id', locationId)
+          .eq('category_id', categoryId)
+          .order('featured', ascending: false)
+          .order('display_order', ascending: true);
+
+      if (response == null) return [];
+
+      return (response as List)
+          .map((json) => ProductModel.fromSupabase(json))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al cargar productos: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ProductModel> getProductById(String productId) async {
+    try {
+      final response = await supabaseClient
+          .from('products')
+          .select()
+          .eq('id', productId)
+          .single();
+
+      return ProductModel.fromSupabase(response);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al obtener producto: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ProductModel> saveProduct(ProductModel product) async {
+    try {
+      final productMap = product.toSupabase();
+
+      final response = await supabaseClient
+          .from('products')
+          .upsert(productMap)
+          .select()
+          .single();
+
+      return ProductModel.fromSupabase(response);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al guardar producto: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> saveProducts(List<ProductModel> products) async {
+    try {
+      final productsData = products
+          .map((prod) => prod.toSupabase())
+          .toList();
+
+      await supabaseClient
+          .from('products')
+          .upsert(productsData);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al guardar productos: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> deleteProduct(String productId) async {
+    try {
+      await supabaseClient
+          .from('products')
+          .delete()
+          .eq('id', productId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al eliminar producto: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> toggleProductStock({
+    required String productId,
+    required bool available,
+  }) async {
+    try {
+      await supabaseClient
+          .from('products')
+          .update({'stock_available': available})
+          .eq('id', productId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar stock: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> toggleProductFeatured({
+    required String productId,
+    required bool featured,
+  }) async {
+    try {
+      await supabaseClient
+          .from('products')
+          .update({'featured': featured})
+          .eq('id', productId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar destacado: ${e.message}');
+    }
+  }
+
+  // ============================================================
+  // MÉTODOS DEL MARKETPLACE - RESEÑAS (4 métodos)
+  // ============================================================
+
+  @override
+  Future<List<ReviewModel>> getLocationReviews(String locationId) async {
+    try {
+      final response = await supabaseClient
+          .from('reviews')
+          .select()
+          .eq('location_id', locationId)
+          .order('created_at', ascending: false);
+
+      if (response == null) return [];
+
+      return (response as List)
+          .map((json) => ReviewModel.fromSupabase(json))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al obtener reseñas: ${e.message}');
+    }
+  }
+
+  @override
+  Future<ReviewModel> createReview(ReviewModel review) async {
+    try {
+      final reviewMap = review.toSupabase();
+
+      final response = await supabaseClient
+          .from('reviews')
+          .insert(reviewMap)
+          .select()
+          .single();
+
+      return ReviewModel.fromSupabase(response);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al crear reseña: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> respondToReview({
+    required String reviewId,
+    required String response,
+  }) async {
+    try {
+      await supabaseClient
+          .from('reviews')
+          .update({
+        'provider_response': response,
+        'responded_at': DateTime.now().toIso8601String(),
+      })
+          .eq('id', reviewId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al responder reseña: ${e.message}');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> getReviewStats(String locationId) async {
+    try {
+      final reviews = await getLocationReviews(locationId);
+
+      if (reviews.isEmpty) {
+        return {
+          'total_reviews': 0,
+          'average_rating': 0.0,
+          'rating_5_count': 0,
+          'rating_4_count': 0,
+          'rating_3_count': 0,
+          'rating_2_count': 0,
+          'rating_1_count': 0,
+          'has_response_count': 0,
+        };
+      }
+
+      final totalReviews = reviews.length;
+      final sumRatings = reviews.fold<int>(0, (sum, review) => sum + (review.rating ?? 0));
+      final averageRating = sumRatings / totalReviews;
+
+      final rating5 = reviews.where((r) => r.rating == 5).length;
+      final rating4 = reviews.where((r) => r.rating == 4).length;
+      final rating3 = reviews.where((r) => r.rating == 3).length;
+      final rating2 = reviews.where((r) => r.rating == 2).length;
+      final rating1 = reviews.where((r) => r.rating == 1).length;
+      final hasResponse = reviews.where((r) => r.ownerResponse != null).length;
+
+      return {
+        'total_reviews': totalReviews,
+        'average_rating': averageRating,
+        'rating_5_count': rating5,
+        'rating_4_count': rating4,
+        'rating_3_count': rating3,
+        'rating_2_count': rating2,
+        'rating_1_count': rating1,
+        'has_response_count': hasResponse,
+      };
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al obtener estadísticas: ${e.message}');
+    }
+  }
+
+  // ============================================================
+  // MÉTODOS DEL MARKETPLACE - VERIFICACIÓN (2 métodos)
+  // ============================================================
+
+  @override
+  Future<void> scheduleVerification({
+    required String locationId,
+    required DateTime date,
+    required String time,
+  }) async {
+    try {
+      await supabaseClient
+          .from('locations')
+          .update({
+        'verification_status': 'scheduled',
+        'scheduled_date': date.toIso8601String().split('T')[0],
+        'scheduled_time': time,
+      })
+          .eq('id', locationId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al agendar verificación: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> updateVerificationStatus({
+    required String locationId,
+    required String status,
+    String? notes,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'verification_status': status,
+      };
+
+      if (notes != null) {
+        updateData['verification_notes'] = notes;
+      }
+
+      await supabaseClient
+          .from('locations')
+          .update(updateData)
+          .eq('id', locationId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar verificación: ${e.message}');
+    }
+  }
+
+  // ============================================================
+  // MÉTODOS DEL MARKETPLACE - BÚSQUEDA Y STATS (2 métodos)
+  // ============================================================
+
+  @override
+  Future<List<LocationModelWithDistance>> getNearbyActiveLocations({
+    required double latitude,
+    required double longitude,
+    double radiusKm = 5.0,
+    int limit = 20,
+    List<String>? categoryIds,
+    double? minRating,
+  }) async {
+    try {
+      final queryBuilder = supabaseClient
+          .from('locations')
+          .select()
+          .eq('is_active', true)
+          .eq('verification_status', 'approved');
+
+      final filteredQuery = minRating != null
+          ? queryBuilder.gte('rating', minRating)
+          : queryBuilder;
+
+      final response = await filteredQuery
+          .limit(limit)
+          .order('rating', ascending: false);
+
+      if (response == null) return [];
+
+      final allLocations = (response as List)
+          .map((json) => LocationModel.fromMap(json))
+          .toList();
+
+      // Filtrar por distancia y convertir a LocationModelWithDistance
+      final nearbyLocations = <LocationModelWithDistance>[];
+      for (final location in allLocations) {
+        final distance = Geolocator.distanceBetween(
+          latitude,
+          longitude,
+          location.latitude,
+          location.longitude,
+        ) / 1000;
+
+        if (distance <= radiusKm) {
+          nearbyLocations.add(LocationModelWithDistance(
+            id: location.id,
+            title: location.title,
+            description: location.description,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            address: location.address,
+            userId: location.userId,
+            imageUrl: location.imageUrl,
+            createdAt: location.createdAt,
+            distanceKm: distance,
+          ));
+        }
+      }
+
+      // Ordenar por distancia
+      nearbyLocations.sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!));
+
+      return nearbyLocations;
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al buscar ubicaciones: ${e.message}');
+    }
+  }
+
+  @override
+  Future<void> updateLocationStats({
+    required String locationId,
+    double? rating,
+    int? reviewsCount,
+    int? ordersCount,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{};
+
+      if (rating != null) updateData['rating'] = rating;
+      if (reviewsCount != null) updateData['reviews_count'] = reviewsCount;
+      if (ordersCount != null) updateData['orders_count'] = ordersCount;
+
+      if (updateData.isEmpty) return;
+
+      await supabaseClient
+          .from('locations')
+          .update(updateData)
+          .eq('id', locationId);
+    } on PostgrestException catch (e) {
+      throw ServerException('Error al actualizar estadísticas: ${e.message}');
     }
   }
 }

@@ -302,6 +302,317 @@ class Validators {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  // VALIDADORES PARA MARKETPLACE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Validación de DNI peruano (8 dígitos)
+  static ValidationResult validateDNI(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El DNI es requerido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Verificar que solo contenga números
+    if (!RegExp(r'^\d+$').hasMatch(trimmedValue)) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El DNI solo debe contener números',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Verificar longitud exacta de 8 dígitos
+    if (trimmedValue.length != 8) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El DNI debe tener exactamente 8 dígitos',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'DNI válido ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de Carnet de Extranjería peruano (9 dígitos)
+  static ValidationResult validateCE(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El Carnet de Extranjería es requerido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Verificar que solo contenga números
+    if (!RegExp(r'^\d+$').hasMatch(trimmedValue)) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El CE solo debe contener números',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Verificar longitud exacta de 9 dígitos
+    if (trimmedValue.length != 9) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El Carnet de Extranjería debe tener exactamente 9 dígitos',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Carnet de Extranjería válido ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de teléfono peruano (9 dígitos, empieza con 9)
+  static ValidationResult validatePhonePeru(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El teléfono es requerido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Limpiar espacios, guiones y paréntesis
+    final cleanPhone = trimmedValue.replaceAll(RegExp(r'[\s\-\(\)]'), '');
+
+    // Verificar que solo contenga números
+    if (!RegExp(r'^\d+$').hasMatch(cleanPhone)) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El teléfono solo debe contener números',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    // Verificar longitud y que empiece con 9
+    if (!RegExp(r'^9\d{8}$').hasMatch(cleanPhone)) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El teléfono debe tener 9 dígitos y empezar con 9',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Teléfono válido ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de WhatsApp peruano (opcional, mismo formato que teléfono)
+  static ValidationResult validateWhatsAppPeru(String value) {
+    final trimmedValue = value.trim();
+
+    // WhatsApp es opcional
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: true,
+        message: '',
+        severity: ValidationSeverity.success,
+      );
+    }
+
+    // Si hay valor, aplicar mismas reglas que teléfono
+    return validatePhonePeru(trimmedValue);
+  }
+
+  /// Validación de nombre de negocio
+  static ValidationResult validateBusinessName(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El nombre del negocio es requerido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (trimmedValue.length < 3) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El nombre debe tener al menos 3 caracteres',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (trimmedValue.length > 100) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El nombre no puede tener más de 100 caracteres',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Nombre válido ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de dirección
+  static ValidationResult validateAddress(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'La dirección es requerida',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (trimmedValue.length < 5) {
+      return ValidationResult(
+        isValid: false,
+        message: 'La dirección debe tener al menos 5 caracteres',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (trimmedValue.length > 200) {
+      return ValidationResult(
+        isValid: false,
+        message: 'La dirección es demasiado larga',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Dirección válida ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de precio de producto
+  static ValidationResult validateProductPrice(String value) {
+    final trimmedValue = value.trim();
+
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El precio es requerido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    final price = double.tryParse(trimmedValue);
+
+    if (price == null) {
+      return ValidationResult(
+        isValid: false,
+        message: 'Ingrese un precio válido',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (price <= 0) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El precio debe ser mayor a 0',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    if (price > 999999.99) {
+      return ValidationResult(
+        isValid: false,
+        message: 'El precio es demasiado alto',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Precio válido ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  /// Validación de descripción (opcional)
+  static ValidationResult validateDescription(String value) {
+    final trimmedValue = value.trim();
+
+    // Descripción es opcional
+    if (trimmedValue.isEmpty) {
+      return ValidationResult(
+        isValid: true,
+        message: '',
+        severity: ValidationSeverity.success,
+      );
+    }
+
+    if (trimmedValue.length > 500) {
+      return ValidationResult(
+        isValid: false,
+        message: 'La descripción no puede tener más de 500 caracteres',
+        severity: ValidationSeverity.error,
+      );
+    }
+
+    return ValidationResult(
+      isValid: true,
+      message: 'Descripción válida ✓',
+      severity: ValidationSeverity.success,
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // HELPERS PARA MARKETPLACE
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Limpia teléfono removiendo espacios, guiones y paréntesis
+  static String cleanPhone(String phone) {
+    return phone.trim().replaceAll(RegExp(r'[\s\-\(\)]'), '');
+  }
+
+  /// Formatea teléfono peruano: 999 999 999
+  static String formatPhonePeru(String phone) {
+    final clean = cleanPhone(phone);
+    if (clean.length != 9) return clean;
+
+    return '${clean.substring(0, 3)} ${clean.substring(3, 6)} ${clean.substring(6)}';
+  }
+
+  /// Formatea DNI: 12 345 678
+  static String formatDNI(String dni) {
+    final clean = dni.trim();
+    if (clean.length != 8) return clean;
+
+    return '${clean.substring(0, 2)} ${clean.substring(2, 5)} ${clean.substring(5)}';
+  }
+
+  /// Formatea CE: 123 456 789
+  static String formatCE(String ce) {
+    final clean = ce.trim();
+    if (clean.length != 9) return clean;
+
+    return '${clean.substring(0, 3)} ${clean.substring(3, 6)} ${clean.substring(6)}';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS HELPER PRIVADOS
   // ═══════════════════════════════════════════════════════════════════════════
 

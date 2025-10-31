@@ -94,6 +94,19 @@ class LocationDeleted extends LocationsState {
   LocationDeleted(this.deletedLocationId);
 }
 
+/// Estados para activar/desactivar ubicación
+class LocationTogglingActive extends LocationsState {}
+
+class LocationActiveToggled extends LocationsState {
+  final String locationId;
+  final bool isActive;
+
+  LocationActiveToggled({
+    required this.locationId,
+    required this.isActive,
+  });
+}
+
 /// Estados combinados para mejor UX
 class LocationsRefreshing extends LocationsState {
   final List<LocationWithDistance>? previousNearbyLocations;

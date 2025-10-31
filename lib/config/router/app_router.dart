@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/analytics/analytics_repository.dart';
-import 'package:meter_app/config/analytics/analytics_route_observer.dart';
 import 'package:meter_app/presentation/screens/articles/article_detail_screen.dart';
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
@@ -19,7 +17,10 @@ import 'package:meter_app/presentation/screens/home/pisos/falso_piso/result/resu
 import 'package:meter_app/presentation/screens/home/tarrajeo/datos/datos_tarrajeo_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/derrame/datos/datos_tarrajeo_derrame_screen.dart';
 import 'package:meter_app/presentation/screens/home/tarrajeo/derrame/result/result_tarrajeo_derrame_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/products/category_selector_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/products/brand_configurator_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/profile/provider_profile_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/notificaciones/notifications_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
@@ -31,6 +32,8 @@ import '../../data/local/shared_preferences_helper.dart';
 import '../../init_dependencies.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/screens/auth/init/metra_shop_screen.dart';
+import '../analytics/analytics_repository.dart';
+import '../analytics/analytics_route_observer.dart';
 import '../../presentation/screens/home/acero/viga/datos/datos_steel_beam_screen.dart';
 import '../../presentation/screens/home/acero/viga/result/result_steel_beam_screen.dart';
 import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
@@ -49,20 +52,20 @@ import '../../presentation/screens/projects/result/result_screen.dart';
 
 class AppRouter {
   final AuthBloc authBloc;
- // final AnalyticsRepository analyticsRepository;
+  final AnalyticsRepository analyticsRepository;
 
   // GlobalKeys as instance variables to prevent conflicts during hot reload
   final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
   final GlobalKey<NavigatorState> _shellNavigator = GlobalKey(debugLabel: 'shell');
 
-  AppRouter(this.authBloc);
+  AppRouter(this.authBloc, this.analyticsRepository);
 
   GoRouter get router => GoRouter(
     initialLocation: '/metrashop',
     navigatorKey: _rootNavigator,
-   /* observers: [
+    observers: [
       AnalyticsRouteObserver(analyticsRepository),
-    ],*/
+    ],
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final authState = authBloc.state;
@@ -662,6 +665,42 @@ class AppRouter {
                 path: 'notifications-settings',
                 name: 'notifications-settings',
                 builder: (context, state) => const NotificationsSettingsScreen(),
+              ),
+              // Rutas de marketplace/mapa
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'provider-profile/:locationId',
+                name: 'provider-profile',
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>;
+                  return ProviderProfileScreen(
+                    location: extra['location'],
+                  );
+                },
+                routes: [
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'configure-products',
+                    name: 'configure-products',
+                    builder: (context, state) {
+                      final locationId = state.pathParameters['locationId']!;
+                      return CategorySelectorScreen(locationId: locationId);
+                    },
+                  ),
+                  GoRoute(
+                    parentNavigatorKey: _rootNavigator,
+                    path: 'brand-configurator/:categoryId',
+                    name: 'brand-configurator',
+                    builder: (context, state) {
+                      final locationId = state.pathParameters['locationId']!;
+                      final categoryId = state.pathParameters['categoryId']!;
+                      return BrandConfiguratorScreen(
+                        locationId: locationId,
+                        categoryId: categoryId,
+                      );
+                    },
+                  ),
+                ],
               ),
             ]
           ),

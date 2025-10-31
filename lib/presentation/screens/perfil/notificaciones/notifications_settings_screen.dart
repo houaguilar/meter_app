@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../../config/notifications/notification_repository.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/show_snackbar.dart';
+import '../../../../init_dependencies.dart';
 
 class NotificationsSettingsScreen extends StatefulWidget {
   const NotificationsSettingsScreen({super.key});
@@ -14,17 +17,22 @@ class NotificationsSettingsScreen extends StatefulWidget {
 class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen>
     with WidgetsBindingObserver {
 
+  // Servicios
+  late final NotificationRepository _notificationService;
+  late final SharedPreferences _prefs;
+
   // Estado de las notificaciones
   bool _notificationsEnabled = false;
   bool _isLoading = true;
   bool _permissionDenied = false;
   bool _hasCheckedPermissions = false;
+  String? _fcmToken;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeNotificationSettings();
+    _initializeServices();
   }
 
   @override
@@ -43,22 +51,37 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     }
   }
 
+  Future<void> _initializeServices() async {
+    try {
+      _notificationService = serviceLocator<NotificationRepository>();
+      _prefs = serviceLocator<SharedPreferences>();
+      await _initializeNotificationSettings();
+    } catch (e) {
+      debugPrint('Error initializing services: $e');
+      _showErrorMessage('Error al inicializar los servicios');
+    }
+  }
+
   Future<void> _initializeNotificationSettings() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // Simular carga inicial y verificación de permisos
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // Aquí verificarías los permisos reales
+      // Verificar permisos
       await _checkNotificationPermissions();
 
       // Cargar estado guardado de las notificaciones
       await _loadNotificationPreference();
 
+      // Obtener el token FCM
+      if (!_permissionDenied) {
+        _fcmToken = await _notificationService.getToken();
+        debugPrint('📱 FCM Token loaded: $_fcmToken');
+      }
+
     } catch (e) {
+      debugPrint('Error loading notification settings: $e');
       _showErrorMessage('Error al cargar la configuración de notificaciones');
     } finally {
       if (mounted) {
@@ -72,19 +95,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   Future<void> _checkNotificationPermissions() async {
     try {
-      // Aquí usarías un plugin como firebase_messaging o flutter_local_notifications
-      // para verificar los permisos reales
-
-      // Simulación de verificación de permisos
-      await Future.delayed(const Duration(milliseconds: 200));
-
-      // Ejemplo de lógica:
-      // final messaging = FirebaseMessaging.instance;
-      // final settings = await messaging.getNotificationSettings();
-      // final hasPermission = settings.authorizationStatus == AuthorizationStatus.authorized;
-
-      // Para demostración, simular que tiene permisos
-      const bool hasPermission = true;
+      final hasPermission = await _notificationService.hasPermission();
 
       if (mounted) {
         setState(() {
@@ -103,12 +114,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   Future<void> _loadNotificationPreference() async {
     try {
-      // Aquí cargarías desde SharedPreferences o tu método de almacenamiento preferido
-      // final prefs = await SharedPreferences.getInstance();
-      // final enabled = prefs.getBool('notifications_enabled') ?? false;
-
-      // Simulación de carga
-      const bool enabled = false;
+      final enabled = _prefs.getBool('notifications_enabled') ?? false;
 
       if (mounted) {
         setState(() {
@@ -122,42 +128,27 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   Future<void> _saveNotificationPreference(bool enabled) async {
     try {
-      // Aquí guardarías en SharedPreferences o tu método de almacenamiento preferido
-      // final prefs = await SharedPreferences.getInstance();
-      // await prefs.setBool('notifications_enabled', enabled);
+      await _prefs.setBool('notifications_enabled', enabled);
 
-      // También podrías sincronizar con tu backend
-      // await _syncNotificationSettingsWithBackend(enabled);
-
-      // Simulación de guardado
-      await Future.delayed(const Duration(milliseconds: 300));
+      // Suscribir/desuscribir a topics generales
+      if (enabled) {
+        await _notificationService.subscribeToTopic('general');
+        await _notificationService.subscribeToTopic('updates');
+      } else {
+        await _notificationService.unsubscribeFromTopic('general');
+        await _notificationService.unsubscribeFromTopic('updates');
+      }
 
       debugPrint('Notification preference saved: $enabled');
     } catch (e) {
       debugPrint('Error saving notification preference: $e');
-      throw e;
+      rethrow;
     }
   }
 
   Future<bool> _requestNotificationPermissions() async {
     try {
-      // Aquí solicitarías permisos usando firebase_messaging o flutter_local_notifications
-
-      // Ejemplo con firebase_messaging:
-      // final messaging = FirebaseMessaging.instance;
-      // final settings = await messaging.requestPermission(
-      //   alert: true,
-      //   badge: true,
-      //   sound: true,
-      //   provisional: false,
-      // );
-      // return settings.authorizationStatus == AuthorizationStatus.authorized;
-
-      // Simulación de solicitud de permisos
-      await Future.delayed(const Duration(milliseconds: 1000));
-
-      // Simular que se concedieron los permisos
-      return true;
+      return await _notificationService.requestPermission();
     } catch (e) {
       debugPrint('Error requesting notification permissions: $e');
       return false;
@@ -206,6 +197,10 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           const SizedBox(height: 24),
           if (_permissionDenied) _buildPermissionWarning(),
           if (_notificationsEnabled && !_permissionDenied) _buildSuccessInfo(),
+          if (_fcmToken != null && !_permissionDenied) ...[
+            const SizedBox(height: 24),
+            _buildTokenInfo(),
+          ],
         ],
       ),
     );
@@ -275,7 +270,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ),
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Mantente informado sobre actualizaciones de tus proyectos, nuevos artículos y funcionalidades importantes.',
             style: TextStyle(
               fontSize: 15,
@@ -461,11 +456,11 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          const Text(
             'Para activar las notificaciones, necesitas conceder permisos en la configuración de tu dispositivo. Esto es necesario para enviarte información importante sobre tus proyectos.',
             style: TextStyle(
               fontSize: 14,
-              color: AppColors.error.withOpacity(0.8),
+              color: AppColors.error,
               height: 1.4,
             ),
           ),
@@ -546,6 +541,64 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     );
   }
 
+  Widget _buildTokenInfo() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.neutral100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.neutral300,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.key_rounded,
+                size: 18,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Token FCM',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.copy_rounded, size: 18),
+                onPressed: () {
+                  Clipboard.setData(ClipboardData(text: _fcmToken ?? ''));
+                  _showSuccessMessage('Token copiado al portapapeles');
+                },
+                tooltip: 'Copiar token',
+                color: AppColors.primary,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            _fcmToken ?? '',
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppColors.textSecondary,
+              fontFamily: 'monospace',
+            ),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
   // Métodos de interacción
   Future<void> _onNotificationToggle(bool value) async {
     if (value && _permissionDenied) {
@@ -575,6 +628,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           _showErrorMessage('Se requieren permisos para activar las notificaciones');
           return;
         }
+
+        // Obtener token después de conceder permisos
+        _fcmToken = await _notificationService.getToken();
       }
 
       // Guardar preferencia
@@ -595,6 +651,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
       );
 
     } catch (e) {
+      debugPrint('Error toggling notifications: $e');
       setState(() {
         _isLoading = false;
       });
@@ -627,15 +684,15 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        title: Row(
+        title: const Row(
           children: [
             Icon(
               Icons.notifications_outlined,
               color: AppColors.primary,
               size: 28,
             ),
-            const SizedBox(width: 12),
-            const Expanded(
+            SizedBox(width: 12),
+            Expanded(
               child: Text(
                 'Permisos de notificación',
                 style: TextStyle(
@@ -684,19 +741,9 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   Future<void> _openAppSettings() async {
     try {
-      // Aquí usarías un plugin como app_settings
-      // await AppSettings.openNotificationSettings();
-
-      // Para demostración
+      // Aquí usarías permission_handler que ya tienes en pubspec.yaml
+      // await openAppSettings();
       _showSuccessMessage('Abriendo configuración de la aplicación...');
-
-      // Simular que el usuario fue a configuración y volvió
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Re-verificar permisos cuando vuelva
-      if (mounted) {
-        await _checkNotificationPermissions();
-      }
     } catch (e) {
       _showErrorMessage('No se pudo abrir la configuración');
     }
