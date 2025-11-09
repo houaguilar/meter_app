@@ -10,6 +10,7 @@ import '../../../../../../config/theme/theme.dart';
 import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../../data/models/models.dart';
 import '../../../../../providers/providers.dart';
+import '../../../../../providers/home/muro/custom_brick_providers.dart';
 import '../../../../../widgets/widgets.dart';
 
 class ResultLadrilloScreen extends ConsumerStatefulWidget {
@@ -548,6 +549,10 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       case 'Kingkong1':
       case 'Kingkong2':
         return 'Ladrillos King Kong';
+      case 'Custom':
+        // Para ladrillos custom, mostrar el nombre personalizado
+        final customConfig = ref.watch(customBrickDimensionsProvider);
+        return '${customConfig.customName} (${customConfig.length.toStringAsFixed(1)}×${customConfig.width.toStringAsFixed(1)}×${customConfig.height.toStringAsFixed(1)} cm)';
       default:
         return 'Ladrillos';
     }

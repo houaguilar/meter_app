@@ -2,7 +2,8 @@
 import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
-import '../../../domain/entities/home/losas/losas.dart';
+import '../../../domain/entities/home/estructuras/zapata/zapata.dart';
+import '../../../domain/entities/home/losas/losa.dart';
 import '../../entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import '../../entities/home/estructuras/solado/solado.dart';
@@ -10,6 +11,8 @@ import '../../entities/home/acero/columna/steel_column.dart';
 import '../../entities/home/acero/viga/steel_beam.dart';
 import '../../entities/home/acero/losa_maciza/steel_slab.dart';
 import '../../entities/home/acero/zapata/steel_footing.dart';
+import '../../entities/home/acero/steel_constants.dart';
+import '../losas/losa_service.dart';
 
 /// Calculadora unificada de materiales actualizada con los nuevos cálculos de los providers
 class UnifiedMaterialsCalculator {
@@ -28,14 +31,17 @@ class UnifiedMaterialsCalculator {
       } else if (firstResult is Piso) {
         // Distinguir entre falso piso y contrapiso
         return _calculatePisoMaterials(results.cast<Piso>());
-      } else if (firstResult is LosaAligerada) {
-        return _calculateLosaAligeradaMaterials(results.cast<LosaAligerada>());
+      } else if (firstResult is Losa) {
+        // Arquitectura unificada de losas (3 tipos)
+        return _calculateLosaMaterials(results.cast<Losa>());
       } else if (firstResult is Tarrajeo) {
         return _calculateTarrajeoMaterials(results.cast<Tarrajeo>());
       } else if (firstResult is Columna) {
         return _calculateColumnaMaterials(results.cast<Columna>());
       } else if (firstResult is Viga) {
         return _calculateVigaMaterials(results.cast<Viga>());
+      } else if (firstResult is Zapata) {
+        return _calculateZapataMaterials(results.cast<Zapata>());
       } else if (firstResult is Sobrecimiento) {
         return _calculateSobrecimientoMaterials(results.cast<Sobrecimiento>());
       } else if (firstResult is CimientoCorrido) {
@@ -392,72 +398,61 @@ class UnifiedMaterialsCalculator {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // CÁLCULOS PARA LOSAS ALIGERADAS - ACTUALIZADOS
+  // CÁLCULOS PARA LOSAS - ARQUITECTURA UNIFICADA (3 tipos)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  static CalculationResult _calculateLosaAligeradaMaterials(List<LosaAligerada> losas) {
-    // Volumen de concreto por m² según altura y material (desde losas_aligeradas_providers)
-    const Map<String, Map<String, double>> volumenConcretoM2 = {
-      'Ladrillo Hueco': {
-        '17 cm': 0.08,
-        '20 cm': 0.0875,
-        '25 cm': 0.1001,
-      },
-      'Bovedillas': {
-        '17 cm': 0.0616,
-        '20 cm': 0.0712,
-        '25 cm': 0.085,
-      },
-    };
-
-    // Factores según resistencia del concreto
-    const Map<String, Map<String, double>> factoresConcreto = {
-      '140 kg/cm²': {'cemento': 7.01, 'arena': 0.56, 'piedra': 0.64, 'agua': 0.184},
-      '175 kg/cm²': {'cemento': 8.43, 'arena': 0.54, 'piedra': 0.55, 'agua': 0.185},
-      '210 kg/cm²': {'cemento': 9.73, 'arena': 0.52, 'piedra': 0.53, 'agua': 0.186},
-      '245 kg/cm²': {'cemento': 11.50, 'arena': 0.50, 'piedra': 0.51, 'agua': 0.187},
-      '280 kg/cm²': {'cemento': 13.34, 'arena': 0.45, 'piedra': 0.51, 'agua': 0.189},
-    };
-
+  static CalculationResult _calculateLosaMaterials(List<Losa> losas) {
     double totalArea = 0.0;
     double cementoTotal = 0.0;
     double arenaTotal = 0.0;
     double piedraTotal = 0.0;
     double aguaTotal = 0.0;
-    double ladrillosTotal = 0.0;
+    double aditivoTotal = 0.0;
+
+    // Map para agrupar materiales aligerantes por descripción
+    final Map<String, double> materialesAligerantes = {};
 
     for (var losa in losas) {
       double area = _calcularAreaLosa(losa);
       totalArea += area;
 
-      // Obtener volumen de concreto por m²
-      double volConcretoM2 = volumenConcretoM2[losa.materialAligerado]?[losa.altura] ?? 0.08;
-      double volConcretoTotal = volConcretoM2 * area;
+      // Obtener el servicio de cálculo según el tipo de losa
+      final service = LosaService(losa.tipoLosa);
 
-      // Factores de desperdicio
-      double desperdicioConcreto = (double.tryParse(losa.desperdicioConcreto) ?? 5.0) / 100.0;
-      double desperdicioLadrillo = (double.tryParse(losa.desperdicioLadrillo) ?? 5.0) / 100.0;
+      // Calcular materiales de concreto (desperdicio ya incluido en el servicio)
+      cementoTotal += service.calcularCemento(losa);
+      arenaTotal += service.calcularArenaGruesa(losa);
+      piedraTotal += service.calcularPiedraChancada(losa);
+      aguaTotal += service.calcularAgua(losa);
+      aditivoTotal += service.calcularAditivoPlastificante(losa);
 
-      // Factores de materiales según resistencia
-      final factores = factoresConcreto[losa.resistenciaConcreto] ?? factoresConcreto['175 kg/cm²']!;
+      // Calcular material aligerante si aplica (desperdicio ya incluido)
+      final cantidadAligerante = service.calcularMaterialAligerante(losa);
+      if (cantidadAligerante != null && cantidadAligerante > 0) {
+        final descripcionAligerante = service.obtenerDescripcionMaterialAligerante(losa);
 
-      // Calcular materiales de concreto
-      cementoTotal += factores['cemento']! * volConcretoTotal * (1 + desperdicioConcreto);
-      arenaTotal += factores['arena']! * volConcretoTotal * (1 + desperdicioConcreto);
-      piedraTotal += factores['piedra']! * volConcretoTotal * (1 + desperdicioConcreto);
-      aguaTotal += factores['agua']! * volConcretoTotal * (1 + desperdicioConcreto);
-
-      // Calcular ladrillos aligerantes (aproximadamente 9 por m²)
-      ladrillosTotal += 9 * area * (1 + desperdicioLadrillo);
+        materialesAligerantes[descripcionAligerante] =
+            (materialesAligerantes[descripcionAligerante] ?? 0.0) + cantidadAligerante;
+      }
     }
 
+    // Construir lista de materiales
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
       Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
       Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
       Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
-      Material(description: 'Ladrillo hueco', unit: 'und', quantity: ladrillosTotal.ceil().toString()),
+      Material(description: 'Aditivo plastificante', unit: 'L', quantity: aditivoTotal.toStringAsFixed(2)),
     ];
+
+    // Agregar materiales aligerantes si existen
+    materialesAligerantes.forEach((descripcion, cantidad) {
+      materials.add(Material(
+        description: descripcion,
+        unit: 'und',
+        quantity: cantidad.ceil().toString(),
+      ));
+    });
 
     final measurements = losas.map((losa) => MeasurementData(
       description: losa.description,
@@ -472,11 +467,14 @@ class UnifiedMaterialsCalculator {
       totalValue: totalArea,
       totalUnit: 'm²',
       additionalInfo: {
+        'tipoLosa': losas.first.tipoLosa.displayName,
         'altura': losas.first.altura,
-        'materialAligerado': losas.first.materialAligerado,
         'resistenciaConcreto': losas.first.resistenciaConcreto,
         'desperdicioConcreto': '${losas.first.desperdicioConcreto}%',
-        'desperdicioLadrillo': '${losas.first.desperdicioLadrillo}%',
+        if (losas.first.materialAligerante != null)
+          'materialAligerante': losas.first.materialAligerante!,
+        if (losas.first.desperdicioMaterialAligerante != null)
+          'desperdicioMaterialAligerante': '${losas.first.desperdicioMaterialAligerante}%',
       },
     );
   }
@@ -708,6 +706,81 @@ class UnifiedMaterialsCalculator {
     );
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  // CÁLCULOS PARA ZAPATAS - ACTUALIZADOS DESDE structural_element_providers
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  static CalculationResult _calculateZapataMaterials(List<Zapata> zapatas) {
+    // Factores según resistencia del concreto (mismo que columnas y vigas)
+    const Map<String, Map<String, double>> factoresConcreto = {
+      "175 kg/cm²": {
+        "cemento": 8.43,
+        "arenaGruesa": 0.54,
+        "piedraConcreto": 0.55,
+        "agua": 0.185,
+      },
+      "210 kg/cm²": {
+        "cemento": 9.73,
+        "arenaGruesa": 0.52,
+        "piedraConcreto": 0.53,
+        "agua": 0.186,
+      },
+      "280 kg/cm²": {
+        "cemento": 11.5,
+        "arenaGruesa": 0.5,
+        "piedraConcreto": 0.51,
+        "agua": 0.187,
+      },
+    };
+
+    double totalVolumen = 0.0;
+    double cementoTotal = 0.0;
+    double arenaTotal = 0.0;
+    double piedraTotal = 0.0;
+    double aguaTotal = 0.0;
+
+    for (var zapata in zapatas) {
+      double volumen = _calcularVolumenElemento(zapata);
+      totalVolumen += volumen;
+
+      final factores = factoresConcreto[zapata.resistencia];
+
+      if (factores != null && volumen > 0) {
+        final desperdicio = (double.tryParse(zapata.factorDesperdicio) ?? 5.0) / 100.0;
+
+        cementoTotal += factores['cemento']! * volumen * (1 + desperdicio);
+        arenaTotal += factores['arenaGruesa']! * volumen * (1 + desperdicio);
+        piedraTotal += factores['piedraConcreto']! * volumen * (1 + desperdicio);
+        aguaTotal += factores['agua']! * volumen * (1 + desperdicio);
+      }
+    }
+
+    final materials = <Material>[
+      Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+    ];
+
+    final measurements = zapatas.map((zapata) => MeasurementData(
+      description: zapata.description,
+      value: _calcularVolumenElemento(zapata),
+      unit: 'm³',
+    )).toList();
+
+    return CalculationResult(
+      type: CalculationType.zapata,
+      materials: materials,
+      details: measurements,
+      totalValue: totalVolumen,
+      totalUnit: 'm³',
+      additionalInfo: {
+        'resistencia': zapatas.first.resistencia,
+        'desperdicio': '${double.tryParse(zapatas.first.factorDesperdicio) ?? 5}%',
+      },
+    );
+  }
+
   static CalculationResult _calculateSobrecimientoMaterials(List<Sobrecimiento> sobrecimientos) {
     const Map<String, Map<String, double>> factoresSobrecimiento = {
       "175 kg/cm²": {
@@ -716,13 +789,6 @@ class UnifiedMaterialsCalculator {
         "piedraChancada": 0.40,
         "piedraGrande": 0.25,
         "agua": 0.139,
-      },
-      "140 kg/cm²": {
-        "cemento": 7.50,
-        "arenaGruesa": 0.50,
-        "piedraChancada": 0.45,
-        "piedraGrande": 0.30,
-        "agua": 0.145,
       },
       "210 kg/cm²": {
         "cemento": 9.20,
@@ -825,13 +891,6 @@ class UnifiedMaterialsCalculator {
         "piedraZanja": 0.30,
         "agua": 0.139,
       },
-      "140 kg/cm²": {
-        "cemento": 7.50,
-        "arenaGruesa": 0.50,
-        "piedraChancada": 0.40,
-        "piedraZanja": 0.35,
-        "agua": 0.145,
-      },
       "210 kg/cm²": {
         "cemento": 9.20,
         "arenaGruesa": 0.42,
@@ -931,12 +990,6 @@ class UnifiedMaterialsCalculator {
         "arenaGruesa": 0.54,
         "piedraChancada": 0.55,
         "agua": 0.185,
-      },
-      "140 kg/cm²": {
-        "cemento": 7.50,
-        "arenaGruesa": 0.59,
-        "piedraChancada": 0.60,
-        "agua": 0.190,
       },
       "210 kg/cm²": {
         "cemento": 9.20,
@@ -1115,8 +1168,8 @@ class UnifiedMaterialsCalculator {
     return 0.0;
   }
 
-  /// Calcula el área de una losa aligerada
-  static double _calcularAreaLosa(LosaAligerada losa) {
+  /// Calcula el área de una losa
+  static double _calcularAreaLosa(Losa losa) {
     if (losa.area != null && losa.area!.isNotEmpty) {
       return double.tryParse(losa.area!) ?? 0.0;
     } else {
@@ -1142,34 +1195,124 @@ class UnifiedMaterialsCalculator {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static CalculationResult _calculateSteelColumnMaterials(List<SteelColumn> steelColumns) {
-    final materials = <Material>[];
+    final Map<String, double> consolidatedByDiameter = {};
+    double totalWeight = 0;
+    double totalWire = 0;
     final measurements = <MeasurementData>[];
-    int totalElements = 0;
 
+    // Calcular cada columna
     for (var column in steelColumns) {
-      totalElements += column.elements;
+      final Map<String, double> totalesPorDiametro = {};
+
+      // CÁLCULO DE ACERO LONGITUDINAL
+      for (final steelBar in column.steelBars) {
+        // Longitud básica por barra
+        final longitudBasica = column.elements * steelBar.quantity * column.height;
+        totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudBasica;
+
+        // Agregar empalme si está habilitado
+        if (column.useSplice) {
+          final longitudEmpalme = column.elements * steelBar.quantity * (SteelConstants.spliceLengths[steelBar.diameter] ?? 0.6);
+          totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
+        }
+
+        // Agregar doblez de zapata si está habilitada
+        if (column.hasFooting) {
+          final longitudDoblez = column.elements * steelBar.quantity * column.footingBend;
+          totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudDoblez;
+        }
+      }
+
+      // CÁLCULO DE ESTRIBOS
+      double longitudCubierta = 0;
+      int cantidadEstribosDistribucion = 0;
+
+      for (final distribution in column.stirrupDistributions) {
+        longitudCubierta += distribution.quantity * distribution.separation;
+        cantidadEstribosDistribucion += distribution.quantity * 2; // x2 para ambos extremos
+      }
+
+      // Calcular estribos del resto
+      final longitudRestante = column.height - (longitudCubierta * 2);
+      int estribosResto = 0;
+      if (column.restSeparation > 0 && longitudRestante > 0) {
+        estribosResto = (longitudRestante / column.restSeparation).floor();
+      }
+
+      // Total de estribos
+      final totalEstribos = estribosResto + cantidadEstribosDistribucion;
+
+      // Calcular perímetro del estribo
+      final perimetroEstribo = (column.length - (column.cover / 100)) * 2 +
+          (column.width - (column.cover / 100)) * 2 +
+          column.stirrupBendLength * 2;
+
+      // Longitud total de estribos
+      final longitudTotalEstribos = column.elements * totalEstribos * perimetroEstribo;
+      totalesPorDiametro[column.stirrupDiameter] =
+          (totalesPorDiametro[column.stirrupDiameter] ?? 0.0) + longitudTotalEstribos;
+
+      // CONSOLIDAR Y CALCULAR PESO
+      double pesoColumna = 0;
+      totalesPorDiametro.forEach((diameter, longitud) {
+        if (longitud > 0) {
+          // Consolidar longitudes
+          consolidatedByDiameter[diameter] = (consolidatedByDiameter[diameter] ?? 0.0) + longitud;
+
+          // Calcular peso
+          final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
+          pesoColumna += longitud * weightPerMeter;
+        }
+      });
+
+      totalWeight += pesoColumna;
+
+      // Agregar medición por columna
       measurements.add(MeasurementData(
         description: column.description,
-        value: column.elements.toDouble(),
-        unit: 'und',
+        value: pesoColumna * (1 + column.waste),
+        unit: 'kg',
       ));
     }
 
+    // Calcular alambre
+    totalWire = totalWeight * SteelConstants.wirePercentage * (1 + steelColumns.first.waste);
+
+    // GENERAR MATERIALES POR DIÁMETRO
+    final materials = <Material>[];
+    consolidatedByDiameter.forEach((diameter, longitud) {
+      if (longitud > 0) {
+        // Convertir a varillas
+        final varillas = longitud / SteelConstants.standardRodLength;
+        final varillasConDesperdicio = (varillas * (1 + steelColumns.first.waste)).ceil();
+
+        if (varillasConDesperdicio > 0) {
+          materials.add(Material(
+            description: 'Acero $diameter',
+            unit: 'varillas',
+            quantity: varillasConDesperdicio.toString(),
+          ));
+        }
+      }
+    });
+
+    // Agregar alambre
     materials.add(Material(
-      description: 'Elementos de acero',
-      unit: 'und',
-      quantity: totalElements.toString(),
+      description: 'Alambre #16',
+      unit: 'kg',
+      quantity: totalWire.toStringAsFixed(2),
     ));
 
     return CalculationResult(
       type: CalculationType.steelColumn,
       materials: materials,
       details: measurements,
-      totalValue: totalElements.toDouble(),
-      totalUnit: 'und',
+      totalValue: totalWeight * (1 + steelColumns.first.waste),
+      totalUnit: 'kg',
       additionalInfo: {
         'desperdicio': '${(steelColumns.first.waste * 100).toStringAsFixed(1)}%',
         'recubrimiento': '${(steelColumns.first.cover * 100).toStringAsFixed(1)} cm',
+        'pesoAlambre': '${totalWire.toStringAsFixed(2)} kg',
       },
     );
   }
@@ -1179,34 +1322,96 @@ class UnifiedMaterialsCalculator {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static CalculationResult _calculateSteelBeamMaterials(List<SteelBeam> steelBeams) {
-    final materials = <Material>[];
+    final Map<String, double> consolidatedByDiameter = {};
+    double totalWeight = 0;
+    double totalWire = 0;
     final measurements = <MeasurementData>[];
-    int totalElements = 0;
 
     for (var beam in steelBeams) {
-      totalElements += beam.elements;
+      final Map<String, double> totalesPorDiametro = {};
+
+      // CÁLCULO DE ACERO LONGITUDINAL
+      for (final steelBar in beam.steelBars) {
+        // Longitud con apoyos y doblez
+        final longitudTotal = beam.elements * steelBar.quantity *
+            (beam.length + beam.supportA1 + beam.supportA2 + beam.bendLength);
+        totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudTotal;
+
+        // Empalme si está habilitado
+        if (beam.useSplice) {
+          final longitudEmpalme = beam.elements * steelBar.quantity * (SteelConstants.spliceLengths[steelBar.diameter] ?? 0.6);
+          totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
+        }
+      }
+
+      // CÁLCULO DE ESTRIBOS (similar a columnas)
+      double longitudCubierta = 0;
+      int cantidadEstribosDistribucion = 0;
+
+      for (final distribution in beam.stirrupDistributions) {
+        longitudCubierta += distribution.quantity * distribution.separation;
+        cantidadEstribosDistribucion += distribution.quantity * 2;
+      }
+
+      final longitudRestante = beam.length - (longitudCubierta * 2);
+      int estribosResto = 0;
+      if (beam.restSeparation > 0 && longitudRestante > 0) {
+        estribosResto = (longitudRestante / beam.restSeparation).floor();
+      }
+
+      final totalEstribos = estribosResto + cantidadEstribosDistribucion;
+      final perimetroEstribo = (beam.height - (beam.cover / 100)) * 2 +
+          (beam.width - (beam.cover / 100)) * 2 + beam.stirrupBendLength * 2;
+      final longitudTotalEstribos = beam.elements * totalEstribos * perimetroEstribo;
+      totalesPorDiametro[beam.stirrupDiameter] = (totalesPorDiametro[beam.stirrupDiameter] ?? 0.0) + longitudTotalEstribos;
+
+      // Calcular peso
+      double pesoViga = 0;
+      totalesPorDiametro.forEach((diameter, longitud) {
+        consolidatedByDiameter[diameter] = (consolidatedByDiameter[diameter] ?? 0.0) + longitud;
+        pesoViga += longitud * (SteelConstants.steelWeights[diameter] ?? 0.0);
+      });
+      totalWeight += pesoViga;
+
       measurements.add(MeasurementData(
         description: beam.description,
-        value: beam.elements.toDouble(),
-        unit: 'und',
+        value: pesoViga * (1 + beam.waste),
+        unit: 'kg',
       ));
     }
 
+    totalWire = totalWeight * SteelConstants.wirePercentage * (1 + steelBeams.first.waste);
+
+    final materials = <Material>[];
+    consolidatedByDiameter.forEach((diameter, longitud) {
+      if (longitud > 0) {
+        final varillasConDesperdicio = ((longitud / SteelConstants.standardRodLength) * (1 + steelBeams.first.waste)).ceil();
+        if (varillasConDesperdicio > 0) {
+          materials.add(Material(
+            description: 'Acero $diameter',
+            unit: 'varillas',
+            quantity: varillasConDesperdicio.toString(),
+          ));
+        }
+      }
+    });
+
     materials.add(Material(
-      description: 'Elementos de acero',
-      unit: 'und',
-      quantity: totalElements.toString(),
+      description: 'Alambre #16',
+      unit: 'kg',
+      quantity: totalWire.toStringAsFixed(2),
     ));
 
     return CalculationResult(
       type: CalculationType.steelBeam,
       materials: materials,
       details: measurements,
-      totalValue: totalElements.toDouble(),
-      totalUnit: 'und',
+      totalValue: totalWeight * (1 + steelBeams.first.waste),
+      totalUnit: 'kg',
       additionalInfo: {
         'desperdicio': '${(steelBeams.first.waste * 100).toStringAsFixed(1)}%',
         'recubrimiento': '${(steelBeams.first.cover * 100).toStringAsFixed(1)} cm',
+        'pesoAlambre': '${totalWire.toStringAsFixed(2)} kg',
       },
     );
   }
@@ -1216,33 +1421,96 @@ class UnifiedMaterialsCalculator {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static CalculationResult _calculateSteelSlabMaterials(List<SteelSlab> steelSlabs) {
-    final materials = <Material>[];
+    final Map<String, double> consolidatedByDiameter = {};
+    double totalWeight = 0;
+    double totalWire = 0;
     final measurements = <MeasurementData>[];
-    int totalElements = 0;
 
     for (var slab in steelSlabs) {
-      totalElements += slab.elements;
+      final Map<String, double> totalesPorDiametro = {};
+
+      // CÁLCULO DE BARRAS DE MALLA
+      for (final meshBar in slab.meshBars) {
+        double longitudTotal = 0;
+
+        // Calcular longitud según dirección
+        if (meshBar.direction.name == 'horizontal') {
+          // Cantidad de barras: ancho / separación + 1
+          final cantidad = ((slab.width / meshBar.separation) + 1).floor();
+          // Longitud por barra: largo + 2*doblez
+          final longitudPorBarra = slab.length + (2 * slab.bendLength);
+          longitudTotal = slab.elements * cantidad * longitudPorBarra;
+        } else {
+          // Vertical
+          // Cantidad de barras: largo / separación + 1
+          final cantidad = ((slab.length / meshBar.separation) + 1).floor();
+          // Longitud por barra: ancho + 2*doblez
+          final longitudPorBarra = slab.width + (2 * slab.bendLength);
+          longitudTotal = slab.elements * cantidad * longitudPorBarra;
+        }
+
+        // Agregar al total por diámetro
+        totalesPorDiametro[meshBar.diameter] =
+            (totalesPorDiametro[meshBar.diameter] ?? 0.0) + longitudTotal;
+      }
+
+      // Calcular peso de la losa
+      double pesoLosa = 0;
+      totalesPorDiametro.forEach((diameter, longitud) {
+        if (longitud > 0) {
+          consolidatedByDiameter[diameter] = (consolidatedByDiameter[diameter] ?? 0.0) + longitud;
+          final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
+          pesoLosa += longitud * weightPerMeter;
+        }
+      });
+
+      totalWeight += pesoLosa;
+
+      // Agregar medición por losa
       measurements.add(MeasurementData(
         description: slab.description,
-        value: slab.elements.toDouble(),
-        unit: 'und',
+        value: pesoLosa * (1 + slab.waste),
+        unit: 'kg',
       ));
     }
 
+    // Calcular alambre (1.5% del peso total con desperdicio)
+    totalWire = totalWeight * SteelConstants.wirePercentage * (1 + steelSlabs.first.waste);
+
+    // GENERAR MATERIALES POR DIÁMETRO
+    final materials = <Material>[];
+    consolidatedByDiameter.forEach((diameter, longitud) {
+      if (longitud > 0) {
+        // Convertir a varillas
+        final varillas = longitud / SteelConstants.standardRodLength;
+        final varillasConDesperdicio = (varillas * (1 + steelSlabs.first.waste)).ceil();
+
+        if (varillasConDesperdicio > 0) {
+          materials.add(Material(
+            description: 'Acero $diameter',
+            unit: 'varillas',
+            quantity: varillasConDesperdicio.toString(),
+          ));
+        }
+      }
+    });
+
+    // Agregar alambre
     materials.add(Material(
-      description: 'Elementos de acero',
-      unit: 'und',
-      quantity: totalElements.toString(),
+      description: 'Alambre #16',
+      unit: 'kg',
+      quantity: totalWire.toStringAsFixed(2),
     ));
 
     return CalculationResult(
       type: CalculationType.steelSlab,
       materials: materials,
       details: measurements,
-      totalValue: totalElements.toDouble(),
-      totalUnit: 'und',
+      totalValue: totalWeight * (1 + steelSlabs.first.waste),
+      totalUnit: 'kg',
       additionalInfo: {
         'desperdicio': '${(steelSlabs.first.waste * 100).toStringAsFixed(1)}%',
+        'pesoAlambre': '${totalWire.toStringAsFixed(2)} kg',
       },
     );
   }
@@ -1252,34 +1520,113 @@ class UnifiedMaterialsCalculator {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static CalculationResult _calculateSteelFootingMaterials(List<SteelFooting> steelFootings) {
-    final materials = <Material>[];
+    final Map<String, double> consolidatedByDiameter = {};
+    double totalWeight = 0;
+    double totalWire = 0;
     final measurements = <MeasurementData>[];
-    int totalElements = 0;
 
     for (var footing in steelFootings) {
-      totalElements += footing.elements;
+      final Map<String, double> totalesPorDiametro = {};
+
+      // CÁLCULO DE MALLA INFERIOR (siempre presente)
+      // Barras horizontales
+      final inferiorHorizontalQuantity = ((footing.width / footing.inferiorHorizontalSeparation) + 1).floor();
+      final inferiorHorizontalLength = footing.length - (2 * footing.cover) + (2 * footing.inferiorBendLength);
+      final inferiorHorizontalTotal = footing.elements * inferiorHorizontalQuantity * inferiorHorizontalLength;
+
+      // Barras verticales
+      final inferiorVerticalQuantity = ((footing.length / footing.inferiorVerticalSeparation) + 1).floor();
+      final inferiorVerticalLength = footing.width - (2 * footing.cover) + (2 * footing.inferiorBendLength);
+      final inferiorVerticalTotal = footing.elements * inferiorVerticalQuantity * inferiorVerticalLength;
+
+      // Agregar malla inferior
+      totalesPorDiametro[footing.inferiorHorizontalDiameter] =
+          (totalesPorDiametro[footing.inferiorHorizontalDiameter] ?? 0.0) + inferiorHorizontalTotal;
+      totalesPorDiametro[footing.inferiorVerticalDiameter] =
+          (totalesPorDiametro[footing.inferiorVerticalDiameter] ?? 0.0) + inferiorVerticalTotal;
+
+      // CÁLCULO DE MALLA SUPERIOR (opcional)
+      if (footing.hasSuperiorMesh &&
+          footing.superiorHorizontalSeparation != null &&
+          footing.superiorVerticalSeparation != null &&
+          footing.superiorHorizontalDiameter != null &&
+          footing.superiorVerticalDiameter != null) {
+
+        // Barras horizontales superiores
+        final superiorHorizontalQuantity = ((footing.width / footing.superiorHorizontalSeparation!) + 1).floor();
+        final superiorHorizontalLength = footing.length - (2 * footing.cover) + (2 * footing.inferiorBendLength);
+        final superiorHorizontalTotal = footing.elements * superiorHorizontalQuantity * superiorHorizontalLength;
+
+        // Barras verticales superiores
+        final superiorVerticalQuantity = ((footing.length / footing.superiorVerticalSeparation!) + 1).floor();
+        final superiorVerticalLength = footing.width - (2 * footing.cover) + (2 * footing.inferiorBendLength);
+        final superiorVerticalTotal = footing.elements * superiorVerticalQuantity * superiorVerticalLength;
+
+        // Agregar malla superior
+        totalesPorDiametro[footing.superiorHorizontalDiameter!] =
+            (totalesPorDiametro[footing.superiorHorizontalDiameter!] ?? 0.0) + superiorHorizontalTotal;
+        totalesPorDiametro[footing.superiorVerticalDiameter!] =
+            (totalesPorDiametro[footing.superiorVerticalDiameter!] ?? 0.0) + superiorVerticalTotal;
+      }
+
+      // Calcular peso de la zapata
+      double pesoZapata = 0;
+      totalesPorDiametro.forEach((diameter, longitud) {
+        if (longitud > 0) {
+          consolidatedByDiameter[diameter] = (consolidatedByDiameter[diameter] ?? 0.0) + longitud;
+          final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
+          pesoZapata += longitud * weightPerMeter;
+        }
+      });
+
+      totalWeight += pesoZapata;
+
+      // Agregar medición por zapata
       measurements.add(MeasurementData(
         description: footing.description,
-        value: footing.elements.toDouble(),
-        unit: 'und',
+        value: pesoZapata * (1 + footing.waste),
+        unit: 'kg',
       ));
     }
 
+    // Calcular alambre (1.5% del peso total con desperdicio * 0.8)
+    totalWire = totalWeight * SteelConstants.wirePercentage * (1 + steelFootings.first.waste) * 0.8;
+
+    // GENERAR MATERIALES POR DIÁMETRO
+    final materials = <Material>[];
+    consolidatedByDiameter.forEach((diameter, longitud) {
+      if (longitud > 0) {
+        // Convertir a varillas
+        final varillas = longitud / SteelConstants.standardRodLength;
+        final varillasConDesperdicio = (varillas * (1 + steelFootings.first.waste)).ceil();
+
+        if (varillasConDesperdicio > 0) {
+          materials.add(Material(
+            description: 'Acero $diameter',
+            unit: 'varillas',
+            quantity: varillasConDesperdicio.toString(),
+          ));
+        }
+      }
+    });
+
+    // Agregar alambre
     materials.add(Material(
-      description: 'Elementos de acero',
-      unit: 'und',
-      quantity: totalElements.toString(),
+      description: 'Alambre #16',
+      unit: 'kg',
+      quantity: totalWire.toStringAsFixed(2),
     ));
 
     return CalculationResult(
       type: CalculationType.steelFooting,
       materials: materials,
       details: measurements,
-      totalValue: totalElements.toDouble(),
-      totalUnit: 'und',
+      totalValue: totalWeight * (1 + steelFootings.first.waste),
+      totalUnit: 'kg',
       additionalInfo: {
         'desperdicio': '${(steelFootings.first.waste * 100).toStringAsFixed(1)}%',
         'recubrimiento': '${(steelFootings.first.cover * 100).toStringAsFixed(1)} cm',
+        'pesoAlambre': '${totalWire.toStringAsFixed(2)} kg',
       },
     );
   }
@@ -1297,6 +1644,7 @@ enum CalculationType {
   tarrajeo,
   columna,
   viga,
+  zapata,
   sobrecimiento,
   cimientoCorrido,
   solado,

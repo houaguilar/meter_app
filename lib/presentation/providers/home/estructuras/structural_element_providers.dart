@@ -8,6 +8,7 @@ import '../../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento
 import '../../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../../domain/entities/home/estructuras/viga/viga.dart';
+import '../../../../domain/entities/home/estructuras/zapata/zapata.dart';
 import '../../../../presentation/assets/images.dart';
 
 part 'structural_element_providers.g.dart';
@@ -100,7 +101,7 @@ const Map<String, Map<String, double>> factoresConcreto = {
     "piedraConcreto": 0.53, // m³ por m³
     "agua": 0.186, // m³ por m³
   },
-  "245 kg/cm²": {
+  "280 kg/cm²": {
     "cemento": 11.5, // bolsas por m³
     "arenaGruesa": 0.5, // m³ por m³
     "piedraConcreto": 0.51, // m³ por m³
@@ -339,6 +340,64 @@ class VigaResult extends _$VigaResult {
   }
 }
 
+// === Provider: Zapata ===
+@riverpod
+class ZapataResult extends _$ZapataResult {
+  @override
+  List<Zapata> build() => [];
+
+  void createZapata(
+      String description,
+      String resistencia,
+      String factorDesperdicio, {
+        String? largo,
+        String? ancho,
+        String? altura,
+        String? volumen,
+      }) {
+    final newZapata = Zapata(
+      idZapata: uuid.v4(),
+      description: description,
+      resistencia: resistencia,
+      factorDesperdicio: factorDesperdicio,
+      largo: largo,
+      ancho: ancho,
+      altura: altura,
+      volumen: volumen,
+    );
+
+    // Validar que la zapata tenga datos suficientes
+    final volumenCalculado = calcularVolumenElemento(newZapata);
+    if (volumenCalculado <= 0) {
+      throw Exception("La zapata debe tener largo, ancho y altura o volumen definidos.");
+    }
+
+    print('✅ Nueva zapata creada: ${newZapata.description}, volumen: $volumenCalculado m³');
+    state = [...state, newZapata];
+  }
+
+  void clearList() {
+    print('🧹 Limpiando lista de zapatas');
+    state = [];
+  }
+}
+
+@riverpod
+List<double> volumenZapata(VolumenZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  final volumenes = zapatas.map((zapata) => calcularVolumenElemento(zapata)).toList();
+  print('📊 Volúmenes de zapatas calculados: $volumenes');
+  return volumenes;
+}
+
+@riverpod
+List<String> descriptionZapata(DescriptionZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  final descripciones = zapatas.map((zapata) => zapata.description).toList();
+  print('📝 Descripciones de zapatas: $descripciones');
+  return descripciones;
+}
+
 @riverpod
 List<double> volumenViga(VolumenVigaRef ref) {
   final vigas = ref.watch(vigaResultProvider);
@@ -449,6 +508,92 @@ double cantidadAguaViga(CantidadAguaVigaRef ref) {
     if (factores != null && volumen > 0) {
       final aguaPorM3 = factores['agua']!;
       final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, viga.factorDesperdicio);
+      aguaTotal += aguaConDesperdicio * volumen;
+    }
+  }
+
+  return aguaTotal;
+}
+
+// === Cálculo de materiales: Zapata ===
+
+@riverpod
+double cantidadCementoZapata(CantidadCementoZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  if (zapatas.isEmpty) return 0.0;
+
+  double cementoTotal = 0.0;
+
+  for (final zapata in zapatas) {
+    final volumen = calcularVolumenElemento(zapata);
+    final factores = factoresConcreto[zapata.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final cementoPorM3 = factores['cemento']!;
+      final cementoConDesperdicio = aplicarDesperdicio(cementoPorM3, zapata.factorDesperdicio);
+      cementoTotal += cementoConDesperdicio * volumen;
+    }
+  }
+
+  return cementoTotal;
+}
+
+@riverpod
+double cantidadArenaZapata(CantidadArenaZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  if (zapatas.isEmpty) return 0.0;
+
+  double arenaTotal = 0.0;
+
+  for (final zapata in zapatas) {
+    final volumen = calcularVolumenElemento(zapata);
+    final factores = factoresConcreto[zapata.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final arenaPorM3 = factores['arenaGruesa']!;
+      final arenaConDesperdicio = aplicarDesperdicio(arenaPorM3, zapata.factorDesperdicio);
+      arenaTotal += arenaConDesperdicio * volumen;
+    }
+  }
+
+  return arenaTotal;
+}
+
+@riverpod
+double cantidadPiedraZapata(CantidadPiedraZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  if (zapatas.isEmpty) return 0.0;
+
+  double piedraTotal = 0.0;
+
+  for (final zapata in zapatas) {
+    final volumen = calcularVolumenElemento(zapata);
+    final factores = factoresConcreto[zapata.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final piedraPorM3 = factores['piedraConcreto']!;
+      final piedraConDesperdicio = aplicarDesperdicio(piedraPorM3, zapata.factorDesperdicio);
+      piedraTotal += piedraConDesperdicio * volumen;
+    }
+  }
+
+  return piedraTotal;
+}
+
+@riverpod
+double cantidadAguaZapata(CantidadAguaZapataRef ref) {
+  final zapatas = ref.watch(zapataResultProvider);
+  if (zapatas.isEmpty) return 0.0;
+
+  double aguaTotal = 0.0;
+
+  for (final zapata in zapatas) {
+    final volumen = calcularVolumenElemento(zapata);
+    final factores = factoresConcreto[zapata.resistencia];
+
+    if (factores != null && volumen > 0) {
+      final aguaPorM3 = factores['agua']!;
+      final aguaConDesperdicio = aplicarDesperdicio(aguaPorM3, zapata.factorDesperdicio);
       aguaTotal += aguaConDesperdicio * volumen;
     }
   }

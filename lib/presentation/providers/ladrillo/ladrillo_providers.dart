@@ -36,6 +36,23 @@ class LadrilloResult extends _$LadrilloResult {
         String? altura,
         String? area,
       }) {
+    // ✅ NUEVO: Si es Custom, obtener dimensiones del provider
+    double? brickLength;
+    double? brickWidth;
+    double? brickHeight;
+
+    if (tipoLadrillo == 'Custom') {
+      try {
+        final customConfig = ref.read(customBrickDimensionsProvider);
+        brickLength = customConfig.length;
+        brickWidth = customConfig.width;
+        brickHeight = customConfig.height;
+        print('✅ Guardando dimensiones custom: ${brickLength}×${brickWidth}×${brickHeight} cm');
+      } catch (e) {
+        print('⚠️ Error obteniendo dimensiones custom: $e');
+      }
+    }
+
     final newLadrillo = Ladrillo(
       idLadrillo: uuid.v4(),
       description: description,
@@ -47,6 +64,9 @@ class LadrilloResult extends _$LadrilloResult {
       largo: largo,
       altura: altura,
       area: area,
+      brickLength: brickLength,   // ✅ NUEVO
+      brickWidth: brickWidth,      // ✅ NUEVO
+      brickHeight: brickHeight,    // ✅ NUEVO
     );
 
     if (!_ladrilloService.esValido(newLadrillo)) {
@@ -217,7 +237,19 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ladrillo
 
     // Obtener dimensiones del tipo de ladrillo
     final tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
-    final specs = especificacionesLadrillos[tipoLadrilloKey] ?? especificacionesLadrillos["Pandereta"]!;
+
+    // ✅ NUEVO: Si es Custom Y tiene dimensiones guardadas, usarlas directamente
+    Map<String, double> specs;
+    if (tipoLadrilloKey == 'Custom' && ladrillo.brickLength != null && ladrillo.brickWidth != null && ladrillo.brickHeight != null) {
+      specs = {
+        "largo": ladrillo.brickLength!,
+        "ancho": ladrillo.brickWidth!,
+        "alto": ladrillo.brickHeight!,
+      };
+      print('📦 Usando dimensiones guardadas del ladrillo: ${specs}');
+    } else {
+      specs = especificacionesLadrillos[tipoLadrilloKey] ?? especificacionesLadrillos["Pandereta"]!;
+    }
 
     // Debug: Agregar información para depuración
     print('🔍 DEBUG LADRILLO:');
@@ -396,14 +428,21 @@ $datosMetrado
 Map<String, double> _obtenerDimensionesCustom(LadrilloMaterialsRef ref) {
   try {
     final customConfig = ref.read(customBrickDimensionsProvider);
-    return {
+    final dimensiones = {
       "largo": customConfig.length,
       "ancho": customConfig.width,
       "alto": customConfig.height,
     };
+    print('📏 LEYENDO dimensiones custom para cálculo:');
+    print('   Nombre: ${customConfig.customName}');
+    print('   Largo: ${customConfig.length} cm');
+    print('   Ancho: ${customConfig.width} cm');
+    print('   Alto: ${customConfig.height} cm');
+    return dimensiones;
   } catch (e) {
     // Si falla, usar valores por defecto
     print('⚠️ Error leyendo dimensiones custom: $e');
+    print('   Usando valores por defecto de King Kong');
     return {"largo": 24.0, "ancho": 13.0, "alto": 9.0};
   }
 }

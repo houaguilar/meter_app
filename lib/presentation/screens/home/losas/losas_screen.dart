@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/losas/slab.dart';
+import '../../../../domain/entities/home/losas/tipo_losa.dart';
 import '../../../providers/home/losa/slab_providers.dart';
 import '../../../widgets/cards/generic_item_card.dart';
 import '../../../widgets/config/generic_module_config.dart';
@@ -128,20 +129,26 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
   /// Navega a losa disponible
   void _navigateToAvailableSlab(Slab slab) {
     try {
+      TipoLosa? tipoLosa;
+
       switch (slab.id) {
-        case '1': // Losa aligerada
-          context.pushNamed('losas-aligeradas');
+        case '1': // Losa aligerada con viguetas prefabricadas
+          tipoLosa = TipoLosa.viguetasPrefabricadas;
           break;
-        case '2': // Losa maciza (si se añade en el futuro)
-          context.pushNamed('losas-aligeradas');
+        case '2': // Losa aligerada tradicional
+          tipoLosa = TipoLosa.tradicional;
           break;
-        case '3': // Losa maciza (si se añade en el futuro)
-          context.pushNamed('losas-aligeradas');
+        case '3': // Losa maciza
+          tipoLosa = TipoLosa.maciza;
           break;
         default:
           _showErrorMessage('Tipo de losa no reconocido');
           _logError('Losa ID no reconocida: ${slab.id}');
+          return;
       }
+
+      // Navegar usando la ruta dinámica
+      context.push('/home/losas/datos/${tipoLosa.routePath}');
     } catch (e, stackTrace) {
       _handleNavigationError(e, stackTrace);
     }
@@ -159,7 +166,8 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
 
   /// Determina si una losa está disponible
   bool _isSlabAvailable(String slabId) {
-    const availableIds = ['1']; // Solo losa aligerada por ahora
+    // Todas las losas están ahora disponibles con la nueva arquitectura
+    const availableIds = ['1', '2', '3'];
     return availableIds.contains(slabId);
   }
 
@@ -247,7 +255,8 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
 extension SlabUI on Slab {
   /// Determina si la losa está disponible
   bool get isAvailable {
-    const availableIds = ['1']; // Solo losa aligerada disponible
+    // Todas las losas están disponibles con la nueva arquitectura
+    const availableIds = ['1', '2', '3'];
     return availableIds.contains(id);
   }
 

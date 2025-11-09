@@ -32,7 +32,10 @@ class ModernSteelTextFormField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       controller: controller,
-      keyboardType: keyboardType,
+      // Usar teclado decimal en iOS para campos numéricos
+      keyboardType: keyboardType == TextInputType.number
+          ? const TextInputType.numberWithOptions(decimal: true)
+          : keyboardType,
       inputFormatters: inputFormatters,
       validator: validator,
       onChanged: onChanged,

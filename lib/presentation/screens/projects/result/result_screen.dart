@@ -689,6 +689,8 @@ class _ResultScreenState extends State<ResultScreen>
         return Colors.orange;
       case CalculationType.viga:
         return Colors.purple;
+      case CalculationType.zapata:
+        return Colors.green;
       case CalculationType.sobrecimiento:
         return Colors.red;
       case CalculationType.cimientoCorrido:
@@ -720,6 +722,8 @@ class _ResultScreenState extends State<ResultScreen>
         return Icons.view_column_outlined;
       case CalculationType.viga:
         return Icons.horizontal_rule_outlined;
+        case CalculationType.zapata:
+        return Icons.grid_4x4_outlined;
       case CalculationType.sobrecimiento:
         return Icons.foundation;
       case CalculationType.cimientoCorrido:
@@ -751,6 +755,8 @@ class _ResultScreenState extends State<ResultScreen>
         return 'Columna';
       case CalculationType.viga:
         return 'Viga';
+        case CalculationType.zapata:
+        return 'Zapata';
       case CalculationType.sobrecimiento:
         return 'Sobrecimiento';
       case CalculationType.cimientoCorrido:

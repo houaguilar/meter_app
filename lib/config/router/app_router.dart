@@ -39,7 +39,9 @@ import '../../presentation/screens/home/acero/viga/result/result_steel_beam_scre
 import '../../presentation/screens/home/estructuras/data/datos_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
-import '../../presentation/screens/home/losas/resultado/result_losas_screen.dart';
+import '../../presentation/screens/home/losas/datos/datos_losa_screen.dart';
+import '../../presentation/screens/home/losas/resultado/result_losa_screen.dart';
+import '../../domain/entities/home/losas/tipo_losa.dart';
 import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
 import '../../presentation/screens/home/pisos/contrapiso/datos/datos_contrapiso_screen.dart';
 import '../../presentation/screens/home/tarrajeo/result/result_tarrajeo_screen.dart';
@@ -371,15 +373,19 @@ class AppRouter {
                 routes: [
                   GoRoute(
                     parentNavigatorKey: _rootNavigator,
-                    path: 'losas-aligeradas',
-                    name: 'losas-aligeradas',
-                    builder: (context, state) => const DatosLosasAligeradasScreen(),
+                    path: 'datos/:tipo',
+                    name: 'losas-datos',
+                    builder: (context, state) {
+                      final tipoStr = state.pathParameters['tipo']!;
+                      final tipo = TipoLosa.fromString(tipoStr);
+                      return DatosLosaScreen(tipoLosa: tipo);
+                    },
                     routes: [
                       GoRoute(
                         parentNavigatorKey: _rootNavigator,
-                        path: 'losas-aligeradas-results',
-                        name: 'losas-aligeradas-results',
-                        builder: (context, state) => const ResultLosasScreen(),
+                        path: 'resultados',
+                        name: 'losas-resultados',
+                        builder: (context, state) => const ResultLosaScreen(),
                         routes: [
                           GoRoute(
                               parentNavigatorKey: _rootNavigator,

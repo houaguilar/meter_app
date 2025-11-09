@@ -383,7 +383,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
                   hintText: '1',
                   suffixText: 'und',
                   prefixIcon: Icons.copy,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                   ],

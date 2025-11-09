@@ -1,9 +1,8 @@
-// lib/config/utils/pdf_factory.dart
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../presentation/providers/home/estructuras/structural_element_providers.dart';
 import '../../../presentation/providers/ladrillo/ladrillo_providers.dart';
-import '../../../presentation/providers/losas/losas_aligeradas_providers.dart';
+import '../../../presentation/providers/losas/losa_providers.dart';
 import '../../../presentation/providers/pisos/contrapiso_providers.dart';
 import '../../../presentation/providers/pisos/falso_piso_providers.dart';
 import '../../../presentation/providers/tarrajeo/tarrajeo_providers.dart';
@@ -70,19 +69,19 @@ class PDFFactory {
     );
   }
 
-  /// Genera PDF para resultados de losas aligeradas
+  /// Genera PDF para resultados de losas (sistema unificado: 3 tipos)
   static Future<File> generateLosaAligeradaPDF(WidgetRef ref) async {
-    final losas = ref.read(losaAligeradaResultProvider);
+    final losas = ref.read(losaResultProvider);
 
     if (losas.isEmpty) {
       throw Exception("No hay datos de losas para generar el PDF");
     }
 
-    final cantidadCemento = ref.read(cantidadCementoLosaAligeradaProvider);
-    final cantidadArena = ref.read(cantidadArenaGruesaLosaAligeradaProvider);
-    final cantidadPiedra = ref.read(cantidadPiedraChancadaLosaAligeradaProvider);
-    final cantidadAgua = ref.read(cantidadAguaLosaAligeradaProvider);
-    final volumenConcreto = ref.read(volumenConcretoLosaAligeradaProvider);
+    final cantidadCemento = ref.read(cantidadCementoLosaProvider);
+    final cantidadArena = ref.read(cantidadArenaGruesaLosaProvider);
+    final cantidadPiedra = ref.read(cantidadPiedraChancadaLosaProvider);
+    final cantidadAgua = ref.read(cantidadAguaLosaProvider);
+    final volumenConcreto = ref.read(volumenConcretoLosaProvider);
 
     final pdfData = PDFData(
       titulo: 'Lista de Materiales',
@@ -120,8 +119,10 @@ class PDFFactory {
       )).toList(),
       observaciones: [
         'Los desperdicios están incluidos en las cantidades mostradas',
+        'Tipo de losa: ${losas.first.tipoLosa.displayName}',
         'Altura de losa: ${losas.first.altura}',
-        'Material aligerado: ${losas.first.materialAligerado}',
+        if (losas.first.materialAligerante != null)
+          'Material aligerante: ${losas.first.materialAligerante}',
         'Resistencia concreto: ${losas.first.resistenciaConcreto}',
         'Desperdicio concreto: ${losas.first.desperdicioConcreto}%',
         'Volumen total concreto: ${volumenConcreto.toStringAsFixed(2)} m³',

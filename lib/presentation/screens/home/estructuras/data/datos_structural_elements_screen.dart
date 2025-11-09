@@ -315,7 +315,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
               label: 'Desperdicio',
               suffix: '%',
               validator: _validatePercentage,
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               prefixIcon: Icons.construction,
             ),
           ],
@@ -465,7 +465,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 label: 'Volumen',
                 suffix: 'm³',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.view_in_ar,
               ),
             ],
@@ -506,7 +506,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                       label: 'Largo',
                       suffix: 'm',
                       validator: _validateNumeric,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
                   ),
@@ -517,7 +517,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                       label: 'Ancho',
                       suffix: 'm',
                       validator: _validateNumeric,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.width_full,
                     ),
                   ),
@@ -529,7 +529,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 label: 'Altura',
                 suffix: 'm',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
             ],
@@ -564,7 +564,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           label: 'Volumen',
           suffix: 'm³',
           validator: _validateNumeric,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.view_in_ar,
         ),
       ],
@@ -592,7 +592,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 label: 'Largo',
                 suffix: 'm',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
             ),
@@ -603,7 +603,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 label: 'Ancho',
                 suffix: 'm',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.width_full,
               ),
             ),
@@ -615,7 +615,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           label: 'Altura',
           suffix: 'm',
           validator: _validateNumeric,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.height,
         ),
       ],
@@ -697,6 +697,8 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
         _processColumnaData();
       } else if (tipoActual == 'viga') {
         _processVigaData();
+      } else if (tipoActual == 'zapata') {
+        _processZapataData();
       } else if (tipoActual == 'sobrecimiento') {
         _processSobrecimientoData();
       } else if (tipoActual == 'cimiento_corrido') {
@@ -712,6 +714,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       // Observar cambios en los providers
       ref.watch(vigaResultProvider);
       ref.watch(columnaResultProvider);
+      ref.watch(zapataResultProvider);
       ref.watch(sobrecimientoResultProvider);
       ref.watch(cimientoCorridoResultProvider);
       ref.watch(soladoResultProvider);
@@ -886,6 +889,74 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     }
   }
 
+  void _processZapataData() {
+    var datosZapata = ref.read(zapataResultProvider.notifier);
+    datosZapata.clearList();
+
+    try {
+      if (_currentIndex == 0) {
+        // Tab de volumen
+        if (_descriptionAreaController.text.isNotEmpty &&
+            _volumenTextController.text.isNotEmpty) {
+          datosZapata.createZapata(
+            _descriptionAreaController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            volumen: _volumenTextController.text,
+          );
+        }
+
+        for (var field in _volumenFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['volumen']!.text.isNotEmpty) {
+            datosZapata.createZapata(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              volumen: field['volumen']!.text,
+            );
+          }
+        }
+      } else {
+        // Tab de dimensiones
+        if (_descriptionMedidasController.text.isNotEmpty &&
+            _lengthTextController.text.isNotEmpty &&
+            _widthTextController.text.isNotEmpty &&
+            _heightTextController.text.isNotEmpty) {
+          datosZapata.createZapata(
+            _descriptionMedidasController.text,
+            _selectedResistencia!,
+            _factorController.text,
+            largo: _lengthTextController.text,
+            ancho: _widthTextController.text,
+            altura: _heightTextController.text,
+          );
+        }
+
+        for (var field in _dimensionesFields) {
+          if (field['description']!.text.isNotEmpty &&
+              field['largo']!.text.isNotEmpty &&
+              field['ancho']!.text.isNotEmpty &&
+              field['altura']!.text.isNotEmpty) {
+            datosZapata.createZapata(
+              field['description']!.text,
+              _selectedResistencia!,
+              _factorController.text,
+              largo: field['largo']!.text,
+              ancho: field['ancho']!.text,
+              altura: field['altura']!.text,
+            );
+          }
+        }
+      }
+
+      final zapatasCreadas = ref.read(zapataResultProvider);
+      print("✅ Zapatas creadas: ${zapatasCreadas.length}");
+    } catch (e) {
+      print("❌ Error creando zapatas: $e");
+      _showErrorMessage('Error al procesar datos de zapata: $e');
+    }
+  }
 
   void _processSobrecimientoData() {
     var datosSobrecimiento = ref.read(sobrecimientoResultProvider.notifier);

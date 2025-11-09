@@ -180,7 +180,7 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
         return 'viga';
       case '3':
         print('🌉 Seleccionando ZAPATA para ID: $elementId');
-        return 'Zapata';
+        return 'zapata';
       case '4':
         print('🌉 Seleccionando CIMIENTO CORRIDO para ID: $elementId');
         return 'cimiento_corrido';

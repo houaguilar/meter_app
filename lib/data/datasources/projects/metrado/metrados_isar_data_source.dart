@@ -1,5 +1,3 @@
-// lib/data/datasources/projects/metrado/metrados_isar_data_source.dart
-
 import 'package:isar/isar.dart';
 import 'package:meter_app/domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
@@ -7,7 +5,6 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
-import 'package:meter_app/domain/entities/home/losas/losas.dart';
 
 import '../../../../config/constants/error/exceptions.dart';
 import '../../../../config/constants/error/failures.dart';
@@ -168,7 +165,7 @@ class MetradosIsarDataSource implements MetradosLocalDataSource {
     await isar.ladrillos.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.pisos.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.tarrajeos.filter().metradoIdEqualTo(metradoId).deleteAll();
-    await isar.losaAligeradas.filter().metradoIdEqualTo(metradoId).deleteAll();
+    await isar.losas.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.columnas.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.vigas.filter().metradoIdEqualTo(metradoId).deleteAll();
     await isar.sobrecimientos.filter().metradoIdEqualTo(metradoId).deleteAll();

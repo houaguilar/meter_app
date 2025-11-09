@@ -246,6 +246,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     switch (tipoElemento) {
       case 'columna': return 'Columnas';
       case 'viga': return 'Vigas';
+      case 'zapata': return 'Zapatas';
       case 'sobrecimiento': return 'Sobrecimientos';
       case 'cimiento_corrido': return 'Cimientos Corridos';
       case 'solado': return 'Solados';
@@ -782,6 +783,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadCementoColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadCementoVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(cantidadCementoZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(cantidadCementoSobrecimientoProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
@@ -797,6 +800,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadArenaColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadArenaVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(cantidadArenaZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(cantidadArenaSobrecimientoProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
@@ -812,6 +817,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadPiedraColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadPiedraVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(cantidadPiedraZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(cantidadPiedraChancadaSobrecimientoProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
@@ -827,6 +834,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(cantidadAguaColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(cantidadAguaVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(cantidadAguaZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(cantidadAguaSobrecimientoProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
