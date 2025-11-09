@@ -4,7 +4,6 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
-import 'package:meter_app/domain/entities/home/losas/losas.dart';
 
 import '../../../../../config/constants/error/exceptions.dart';
 import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
@@ -46,7 +45,8 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .metradoIdEqualTo(metradoIdInt)
           .findAll();
 
-      final losas = await isarService.losaAligeradas
+      // Losas del sistema unificado (3 tipos)
+      final losas = await isarService.losas
           .filter()
           .metradoIdEqualTo(metradoIdInt)
           .findAll();
@@ -138,7 +138,8 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .metradoIdEqualTo(metradoId)
           .deleteAll();
 
-      await isarService.losaAligeradas
+      // Limpiar losas del sistema unificado
+      await isarService.losas
           .filter()
           .metradoIdEqualTo(metradoId)
           .deleteAll();
@@ -256,15 +257,17 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         await isarService.tarrajeos.put(newResult);
         await newResult.metrado.save();
 
-      } else if (result is LosaAligerada) {
-        final newResult = LosaAligerada(
-          idLosaAligerada: result.idLosaAligerada,
+      } else if (result is Losa) {
+        // Guardar losa del sistema unificado (3 tipos)
+        final newResult = Losa(
+          idLosa: result.idLosa,
           description: result.description,
+          tipo: result.tipo,
           altura: result.altura,
-          materialAligerado: result.materialAligerado,
           resistenciaConcreto: result.resistenciaConcreto,
           desperdicioConcreto: result.desperdicioConcreto,
-          desperdicioLadrillo: result.desperdicioLadrillo,
+          materialAligerante: result.materialAligerante,
+          desperdicioMaterialAligerante: result.desperdicioMaterialAligerante,
           largo: result.largo,
           ancho: result.ancho,
           area: result.area,
@@ -273,7 +276,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         newResult.metradoId = metradoId;
         newResult.metrado.value = metrado;
 
-        await isarService.losaAligeradas.put(newResult);
+        await isarService.losas.put(newResult);
         await newResult.metrado.save();
 
       } else if (result is Columna) {
@@ -613,7 +616,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .metradoIdEqualTo(metradoIdInt)
           .count();
 
-      stats['losas'] = await isarService.losaAligeradas
+      stats['losas'] = await isarService.losas
           .filter()
           .metradoIdEqualTo(metradoIdInt)
           .count();

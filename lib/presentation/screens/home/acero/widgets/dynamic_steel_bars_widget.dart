@@ -99,7 +99,7 @@ class _DynamicSteelBarsWidgetState extends State<DynamicSteelBarsWidget> {
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 setState(() {
                   widget.steelBars[index] = bar.copyWith(

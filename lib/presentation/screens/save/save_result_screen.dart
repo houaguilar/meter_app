@@ -15,7 +15,7 @@ import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import '../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
-import '../../../domain/entities/home/losas/losas.dart';
+import '../../../domain/entities/home/losas/losa.dart';
 import '../../blocs/projects/metrados/metrados_bloc.dart';
 import '../../blocs/projects/metrados/result/result_bloc.dart';
 import '../../blocs/projects/projects_bloc.dart';
@@ -23,6 +23,7 @@ import '../../providers/home/acero/columna/steel_column_providers.dart';
 import '../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
 import '../../providers/home/acero/viga/steel_beam_providers.dart';
 import '../../providers/home/acero/zapata/steel_footing_providers.dart';
+import '../../providers/losas/losa_providers.dart';
 import '../../providers/providers.dart';
 
 class SaveResultScreen extends ConsumerStatefulWidget {
@@ -566,7 +567,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
             () => ref.read(contrapisoResultProvider),
             () => ref.read(tarrajeoResultProvider),
             () => ref.read(tarrajeoDerrameResultProvider),
-            () => ref.read(losaAligeradaResultProvider),
+            () => ref.read(losaResultProvider), // Sistema unificado de losas (3 tipos)
             () => ref.read(columnaResultProvider),
             () => ref.read(vigaResultProvider),
             () => ref.read(sobrecimientoResultProvider),
@@ -604,7 +605,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     if (result is Ladrillo) return 'Ladrillos';
     if (result is Piso) return 'Pisos';
     if (result is Tarrajeo) return 'Tarrajeos';
-    if (result is LosaAligerada) return 'Losas Aligeradas';
+    if (result is Losa) return 'Losas';
     if (result is Columna) return 'Columnas';
     if (result is Viga) return 'Vigas';
     if (result is Sobrecimiento) return 'Sobrecimientos';
@@ -624,7 +625,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       case 'Ladrillos': return Icons.grid_view;
       case 'Pisos': return Icons.grid_on;
       case 'Tarrajeos': return Icons.brush;
-      case 'Losas Aligeradas': return Icons.layers;
+      case 'Losas': return Icons.layers;
       case 'Columnas': return Icons.view_column;
       case 'Vigas': return Icons.horizontal_rule;
       case 'Sobrecimientos': return Icons.foundation;
@@ -838,6 +839,9 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         largo: result.largo,
         altura: result.altura,
         area: result.area,
+        brickLength: result.brickLength,   // ✅ NUEVO
+        brickWidth: result.brickWidth,      // ✅ NUEVO
+        brickHeight: result.brickHeight,    // ✅ NUEVO
       );
     } else if (result is Columna) {
       return Columna(
@@ -897,6 +901,22 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         ancho: result.ancho,
         area: result.area,
         espesorFijo: result.espesorFijo,
+      );
+    }
+    // ✅ NUEVO: Copia de Losa (sistema unificado)
+    else if (result is Losa) {
+      return Losa(
+        idLosa: result.idLosa,
+        description: result.description,
+        tipo: result.tipo,
+        altura: result.altura,
+        resistenciaConcreto: result.resistenciaConcreto,
+        desperdicioConcreto: result.desperdicioConcreto,
+        materialAligerante: result.materialAligerante,
+        desperdicioMaterialAligerante: result.desperdicioMaterialAligerante,
+        largo: result.largo,
+        ancho: result.ancho,
+        area: result.area,
       );
     }
     // ✅ COPIAS DE RESULTADOS DE ACERO

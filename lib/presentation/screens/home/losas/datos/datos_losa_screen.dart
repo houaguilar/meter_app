@@ -7,19 +7,33 @@ import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
 
 import '../../../../../config/theme/theme.dart';
 import '../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../domain/entities/home/losas/tipo_losa.dart';
+import '../../../../../domain/services/losas/losa_service.dart';
 import '../../../../providers/providers.dart';
 import '../../../../widgets/modern_widgets.dart';
 import '../../../../widgets/widgets.dart';
 
-class DatosLosasAligeradasScreen extends ConsumerStatefulWidget {
-  const DatosLosasAligeradasScreen({super.key});
-  static const String route = 'datos-losas-aligeradas';
+/// Pantalla adaptativa de datos para todos los tipos de losas
+///
+/// Se adapta según el [tipoLosa] recibido:
+/// - Viguetas PRE: Muestra bovedillas fijo
+/// - Tradicional: Selector de tipo de ladrillo
+/// - Maciza: Sin material aligerante, altura desde 15cm
+class DatosLosaScreen extends ConsumerStatefulWidget {
+  final TipoLosa tipoLosa;
+
+  const DatosLosaScreen({
+    required this.tipoLosa,
+    super.key,
+  });
+
+  static const String route = 'datos-losa';
 
   @override
-  ConsumerState<DatosLosasAligeradasScreen> createState() => _DatosLosasAligeradasScreenState();
+  ConsumerState<DatosLosaScreen> createState() => _DatosLosaScreenState();
 }
 
-class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligeradasScreen>
+class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
     with TickerProviderStateMixin, AutomaticKeepAliveClientMixin, TutorialMixin {
 
   @override
@@ -34,7 +48,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   bool _isLoading = false;
 
   // Controladores de texto
-  final TextEditingController _desperdicioLadrilloController = TextEditingController(text: '5');
+  final TextEditingController _desperdicioMaterialController = TextEditingController(text: '7');
   final TextEditingController _desperdicioConcretoController = TextEditingController(text: '5');
   final TextEditingController _descriptionAreaController = TextEditingController();
   final TextEditingController _descriptionMedidasController = TextEditingController();
@@ -46,7 +60,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
 
   // Estados de selección
   String? _selectedAlturaLosa;
-  String? _selectedMaterialAligerado;
+  String? _selectedMaterialAligerante;
   String? _selectedResistenciaConcreto;
 
   // Listas dinámicas
@@ -60,10 +74,14 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     _initializeAnimations();
     initializeTutorial();
     _checkAndShowTutorial();
+
+    // Pre-seleccionar material para viguetas
+    if (widget.tipoLosa == TipoLosa.viguetasPrefabricadas) {
+      _selectedMaterialAligerante = LosaService.getMaterialFijo(widget.tipoLosa);
+    }
   }
 
   void _checkAndShowTutorial() {
-    // Mostrar tutorial específico para tarrajeo
     showModuleTutorial('losa');
   }
 
@@ -103,7 +121,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
   void dispose() {
     _tabController.dispose();
     _animationController.dispose();
-    _desperdicioLadrilloController.dispose();
+    _desperdicioMaterialController.dispose();
     _desperdicioConcretoController.dispose();
     _descriptionAreaController.dispose();
     _descriptionMedidasController.dispose();
@@ -139,7 +157,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
 
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
-      titleAppBar: 'Losa Aligerada',
+      titleAppBar: widget.tipoLosa.displayName,
       isVisibleTutorial: true,
       showTutorial: _showTutorialManually,
     );
@@ -226,7 +244,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Losa Aligerada',
+                      widget.tipoLosa.shortName,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
@@ -239,8 +257,13 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
           ),
           const SizedBox(height: 20),
           _buildAlturaSelection(),
-          const SizedBox(height: 16),
-          _buildMaterialSelection(),
+
+          // CONDITIONAL: Solo para losas aligeradas (no maciza)
+          if (widget.tipoLosa.tieneMaterialAligerante) ...[
+            const SizedBox(height: 16),
+            _buildMaterialAligeranteSection(),
+          ],
+
           const SizedBox(height: 16),
           _buildResistenciaSelection(),
         ],
@@ -261,45 +284,73 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
               icon: Icons.tune,
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: ModernTextField(
-                    controller: _desperdicioLadrilloController,
-                    label: 'Desperdicio Ladrillo',
-                    suffix: '%',
-                    validator: _validatePercentage,
-                    keyboardType: TextInputType.number,
-                    prefixIcon: Icons.construction,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: ModernTextField(
-                    controller: _desperdicioConcretoController,
-                    label: 'Desperdicio Concreto',
-                    suffix: '%',
-                    validator: _validatePercentage,
-                    keyboardType: TextInputType.number,
-                    prefixIcon: Icons.water_drop,
-                  ),
-                ),
-              ],
-            ),
+            _buildDesperdiciosSection(),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildDesperdiciosSection() {
+    // Losa maciza: Solo desperdicio de concreto
+    if (!widget.tipoLosa.tieneMaterialAligerante) {
+      return ModernTextField(
+        controller: _desperdicioConcretoController,
+        label: 'Desperdicio Concreto',
+        suffix: '%',
+        validator: _validatePercentage,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        prefixIcon: Icons.water_drop,
+      );
+    }
+
+    // Losas aligeradas: Desperdicio de material + concreto
+    return Row(
+      children: [
+        Expanded(
+          child: ModernTextField(
+            controller: _desperdicioMaterialController,
+            label: 'Desperdicio ${_getMaterialLabel()}',
+            suffix: '%',
+            validator: _validatePercentage,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.construction,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: ModernTextField(
+            controller: _desperdicioConcretoController,
+            label: 'Desperdicio Concreto',
+            suffix: '%',
+            validator: _validatePercentage,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            prefixIcon: Icons.water_drop,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getMaterialLabel() {
+    switch (widget.tipoLosa) {
+      case TipoLosa.viguetasPrefabricadas:
+        return 'Bovedillas';
+      case TipoLosa.tradicional:
+        return 'Ladrillo';
+      case TipoLosa.maciza:
+        return '';
+    }
+  }
+
   Widget _buildAlturaSelection() {
-    const alturas = ["17 cm", "20 cm", "25 cm"];
+    final alturas = widget.tipoLosa.alturasValidas;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Altura de Losa Aligerada',
+          'Altura de Losa',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
@@ -320,36 +371,89 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     );
   }
 
-  Widget _buildMaterialSelection() {
-    const materiales = ["Ladrillo Hueco", "Poliestireno"];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Material de Aligerado',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+  Widget _buildMaterialAligeranteSection() {
+    // Viguetas: Material fijo (Bovedillas)
+    if (widget.tipoLosa == TipoLosa.viguetasPrefabricadas) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Material Aligerante',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        ModernChoiceChips(
-          options: materiales,
-          selectedValue: _selectedMaterialAligerado,
-          onSelected: (value) {
-            setState(() {
-              _selectedMaterialAligerado = value;
-            });
-          },
-        ),
-      ],
-    );
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.blueMetraShop.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.blueMetraShop.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.blueMetraShop,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Material: Bovedillas (pre-seleccionado)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Tradicional: Selector de tipo de ladrillo
+    if (widget.tipoLosa == TipoLosa.tradicional) {
+      final tiposLadrillo = LosaService.getTiposLadrilloValidos(widget.tipoLosa) ?? [];
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Tipo de Ladrillo',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ModernChoiceChips(
+            options: tiposLadrillo,
+            selectedValue: _selectedMaterialAligerante,
+            onSelected: (value) {
+              setState(() {
+                _selectedMaterialAligerante = value;
+              });
+            },
+          ),
+        ],
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   Widget _buildResistenciaSelection() {
-    const resistencias = ["210 kg/cm²", "280 kg/cm²"];
+    final resistencias = LosaService.getResistenciasValidas(widget.tipoLosa);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +573,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                 label: 'Área Total',
                 suffix: 'm²',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.crop_square,
               ),
             ],
@@ -510,7 +614,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                       label: 'Largo',
                       suffix: 'm',
                       validator: _validateNumeric,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
                   ),
@@ -521,7 +625,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                       label: 'Ancho',
                       suffix: 'm',
                       validator: _validateNumeric,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.height,
                     ),
                   ),
@@ -559,7 +663,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
           label: 'Área',
           suffix: 'm²',
           validator: _validateNumeric,
-          keyboardType: TextInputType.number,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.crop_square,
         ),
       ],
@@ -587,7 +691,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                 label: 'Largo',
                 suffix: 'm',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
             ),
@@ -598,7 +702,7 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
                 label: 'Ancho',
                 suffix: 'm',
                 validator: _validateNumeric,
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
             ),
@@ -669,22 +773,21 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     });
 
     try {
-      await _createLosaAligeradaData();
-      print(ref.watch(losaAligeradaResultProvider));
-      context.pushNamed('losas-aligeradas-results');
+      await _createLosaData();
 
-      /*context.showCalculationLoader(
-        message: 'Calculando materiales',
-        description: 'Aplicando fórmulas actualizadas...',
-      );*/
+      // Solo navegar si no hubo errores
+      await Future.delayed(const Duration(milliseconds: 300));
 
-      await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
-      //  context.hideLoader();
+        context.pushNamed(
+          'losas-resultados',
+          pathParameters: {'tipo': widget.tipoLosa.routePath},
+        );
       }
     } catch (e) {
       _showErrorMessage('Error al procesar los datos: ${e.toString()}');
+      // No navegar si hay error
     } finally {
       if (mounted) {
         setState(() {
@@ -705,8 +808,11 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
       return false;
     }
 
-    if (_selectedMaterialAligerado == null) {
-      _showErrorMessage('Selecciona el material de aligerado');
+    // Validar material aligerante para losas aligeradas
+    if (widget.tipoLosa.tieneMaterialAligerante &&
+        widget.tipoLosa == TipoLosa.tradicional &&
+        _selectedMaterialAligerante == null) {
+      _showErrorMessage('Selecciona el tipo de ladrillo');
       return false;
     }
 
@@ -718,35 +824,58 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
     return true;
   }
 
-  Future<void> _createLosaAligeradaData() async {
-    final losaAligeradaResult = ref.read(losaAligeradaResultProvider.notifier);
-    losaAligeradaResult.clearList();
+  Future<void> _createLosaData() async {
+    final losaResult = ref.read(losaResultProvider.notifier);
+    losaResult.clearList();
+
+    debugPrint('🔍 Creando losas - Tipo: ${widget.tipoLosa.displayName}');
+    debugPrint('🔍 Index actual: $_currentIndex');
 
     if (_currentIndex == 0) {
       // Tab de área
+      debugPrint('🔍 Tab de área');
+      debugPrint('🔍 Descripción: ${_descriptionAreaController.text}');
+      debugPrint('🔍 Área: ${_areaTextController.text}');
+
       if (_descriptionAreaController.text.isNotEmpty &&
           _areaTextController.text.isNotEmpty) {
-        losaAligeradaResult.createLosaAligerada(
-          _descriptionAreaController.text,
-          _selectedAlturaLosa!,
-          _selectedMaterialAligerado!,
-          _selectedResistenciaConcreto!,
-          _desperdicioLadrilloController.text,
-          _desperdicioConcretoController.text,
+        debugPrint('✅ Intentando crear losa principal...');
+        debugPrint('   - Altura: $_selectedAlturaLosa');
+        debugPrint('   - Resistencia: $_selectedResistenciaConcreto');
+        debugPrint('   - Desperdicio concreto: ${_desperdicioConcretoController.text}');
+        debugPrint('   - Material aligerante: $_selectedMaterialAligerante');
+        debugPrint('   - Desperdicio material: ${_desperdicioMaterialController.text}');
+
+        losaResult.createLosa(
+          tipo: widget.tipoLosa,
+          description: _descriptionAreaController.text,
+          altura: _selectedAlturaLosa!,
+          resistenciaConcreto: _selectedResistenciaConcreto!,
+          desperdicioConcreto: _desperdicioConcretoController.text,
+          materialAligerante: _selectedMaterialAligerante,
+          desperdicioMaterialAligerante: widget.tipoLosa.tieneMaterialAligerante
+              ? _desperdicioMaterialController.text
+              : null,
           area: _areaTextController.text,
         );
+        debugPrint('✅ Losa principal creada exitosamente');
+      } else {
+        debugPrint('⚠️ Datos de losa principal incompletos');
       }
 
       for (var field in _areaFields) {
         if (field['description']!.text.isNotEmpty &&
             field['measure']!.text.isNotEmpty) {
-          losaAligeradaResult.createLosaAligerada(
-            field['description']!.text,
-            _selectedAlturaLosa!,
-            _selectedMaterialAligerado!,
-            _selectedResistenciaConcreto!,
-            _desperdicioLadrilloController.text,
-            _desperdicioConcretoController.text,
+          losaResult.createLosa(
+            tipo: widget.tipoLosa,
+            description: field['description']!.text,
+            altura: _selectedAlturaLosa!,
+            resistenciaConcreto: _selectedResistenciaConcreto!,
+            desperdicioConcreto: _desperdicioConcretoController.text,
+            materialAligerante: _selectedMaterialAligerante,
+            desperdicioMaterialAligerante: widget.tipoLosa.tieneMaterialAligerante
+                ? _desperdicioMaterialController.text
+                : null,
             area: field['measure']!.text,
           );
         }
@@ -756,13 +885,16 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
       if (_descriptionMedidasController.text.isNotEmpty &&
           _largoTextController.text.isNotEmpty &&
           _anchoTextController.text.isNotEmpty) {
-        losaAligeradaResult.createLosaAligerada(
-          _descriptionMedidasController.text,
-          _selectedAlturaLosa!,
-          _selectedMaterialAligerado!,
-          _selectedResistenciaConcreto!,
-          _desperdicioLadrilloController.text,
-          _desperdicioConcretoController.text,
+        losaResult.createLosa(
+          tipo: widget.tipoLosa,
+          description: _descriptionMedidasController.text,
+          altura: _selectedAlturaLosa!,
+          resistenciaConcreto: _selectedResistenciaConcreto!,
+          desperdicioConcreto: _desperdicioConcretoController.text,
+          materialAligerante: _selectedMaterialAligerante,
+          desperdicioMaterialAligerante: widget.tipoLosa.tieneMaterialAligerante
+              ? _desperdicioMaterialController.text
+              : null,
           largo: _largoTextController.text,
           ancho: _anchoTextController.text,
         );
@@ -772,18 +904,28 @@ class _DatosLosasAligeradasScreenState extends ConsumerState<DatosLosasAligerada
         if (field['descriptionMeasure']!.text.isNotEmpty &&
             field['largoMeasure']!.text.isNotEmpty &&
             field['anchoMeasure']!.text.isNotEmpty) {
-          losaAligeradaResult.createLosaAligerada(
-            field['descriptionMeasure']!.text,
-            _selectedAlturaLosa!,
-            _selectedMaterialAligerado!,
-            _selectedResistenciaConcreto!,
-            _desperdicioLadrilloController.text,
-            _desperdicioConcretoController.text,
+          losaResult.createLosa(
+            tipo: widget.tipoLosa,
+            description: field['descriptionMeasure']!.text,
+            altura: _selectedAlturaLosa!,
+            resistenciaConcreto: _selectedResistenciaConcreto!,
+            desperdicioConcreto: _desperdicioConcretoController.text,
+            materialAligerante: _selectedMaterialAligerante,
+            desperdicioMaterialAligerante: widget.tipoLosa.tieneMaterialAligerante
+                ? _desperdicioMaterialController.text
+                : null,
             largo: field['largoMeasure']!.text,
             ancho: field['anchoMeasure']!.text,
           );
         }
       }
+    }
+
+    // Verificar cuántas losas se crearon
+    final losasCreadas = ref.read(losaResultProvider);
+    debugPrint('📊 Total de losas creadas: ${losasCreadas.length}');
+    if (losasCreadas.isEmpty) {
+      debugPrint('❌ ERROR: No se creó ninguna losa!');
     }
   }
 

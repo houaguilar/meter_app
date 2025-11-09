@@ -242,7 +242,10 @@ class _ModernTextFieldState extends State<ModernTextField>
                   });
                   return result;
                 },
-                keyboardType: widget.keyboardType,
+                // Usar teclado decimal en iOS para campos numéricos
+                keyboardType: widget.keyboardType == TextInputType.number
+                    ? const TextInputType.numberWithOptions(decimal: true)
+                    : widget.keyboardType,
                 obscureText: widget.obscureText,
                 maxLines: widget.maxLines,
                 enabled: widget.enabled,

@@ -80,11 +80,332 @@ class _MultiCountryLocationPickerState
   AdministrativeLevel3? _selectedLevel3;
   AdministrativeLevel4? _selectedLevel4;
 
+  // Flag para evitar loops infinitos en los listeners
+  bool _isUpdatingInternally = false;
+
   @override
   void initState() {
     super.initState();
     _initializeRepository();
     _restoreSelectedValues();
+    _setupControllerListeners();
+  }
+
+  @override
+  void dispose() {
+    _removeControllerListeners();
+    super.dispose();
+  }
+
+  /// Configura listeners en los controllers para detectar cambios externos
+  void _setupControllerListeners() {
+    widget.countryController.addListener(_onCountryControllerChanged);
+    widget.level2Controller.addListener(_onLevel2ControllerChanged);
+    widget.level3Controller.addListener(_onLevel3ControllerChanged);
+    widget.level4Controller.addListener(_onLevel4ControllerChanged);
+  }
+
+  /// Remueve los listeners de los controllers
+  void _removeControllerListeners() {
+    widget.countryController.removeListener(_onCountryControllerChanged);
+    widget.level2Controller.removeListener(_onLevel2ControllerChanged);
+    widget.level3Controller.removeListener(_onLevel3ControllerChanged);
+    widget.level4Controller.removeListener(_onLevel4ControllerChanged);
+  }
+
+  /// Listener para cambios en el controller de país
+  void _onCountryControllerChanged() {
+    if (_isUpdatingInternally) return;
+
+    // Si el texto del controller no coincide con el país actual, revalidar
+    if (_repository != null &&
+        widget.countryController.text != _repository!.getCountry().name) {
+      _handleExternalCountryChange();
+    }
+  }
+
+  /// Listener para cambios en el controller de nivel 2
+  void _onLevel2ControllerChanged() {
+    if (_isUpdatingInternally) return;
+
+    // Si el texto cambió y no coincide con la selección actual, revalidar
+    if (_selectedLevel2?.name != widget.level2Controller.text) {
+      _handleExternalLevel2Change();
+    }
+  }
+
+  /// Listener para cambios en el controller de nivel 3
+  void _onLevel3ControllerChanged() {
+    if (_isUpdatingInternally) return;
+
+    // Si el texto cambió y no coincide con la selección actual, revalidar
+    if (_selectedLevel3?.name != widget.level3Controller.text) {
+      _handleExternalLevel3Change();
+    }
+  }
+
+  /// Listener para cambios en el controller de nivel 4
+  void _onLevel4ControllerChanged() {
+    if (_isUpdatingInternally) return;
+
+    // Si el texto cambió y no coincide con la selección actual, revalidar
+    if (_selectedLevel4?.name != widget.level4Controller.text) {
+      _handleExternalLevel4Change();
+    }
+  }
+
+  /// Maneja cambios externos en el país
+  void _handleExternalCountryChange() {
+    final newCountryName = widget.countryController.text;
+    if (newCountryName.isEmpty) return;
+
+    final country = _detectCountryFromName(newCountryName);
+    if (country != null && country.code != _repository?.getCountry().code) {
+      setState(() {
+        _isUpdatingInternally = true;
+        _repository = LocationRepositoryFactory.create(country.code);
+
+        // Validar y limpiar cascadas si es necesario
+        _validateAndCleanCascade();
+
+        _isUpdatingInternally = false;
+      });
+    }
+  }
+
+  /// Maneja cambios externos en el nivel 2
+  void _handleExternalLevel2Change() {
+    if (_repository == null) return;
+
+    final newLevel2Name = widget.level2Controller.text;
+    if (newLevel2Name.isEmpty) {
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel2 = null;
+        _selectedLevel3 = null;
+        _selectedLevel4 = null;
+        widget.level3Controller.clear();
+        widget.level4Controller.clear();
+        _isUpdatingInternally = false;
+      });
+      return;
+    }
+
+    // Intentar encontrar el nivel 2 en el repositorio actual
+    final level2List = _repository!.getLevel2();
+    try {
+      final level2 = level2List.firstWhere((item) => item.name == newLevel2Name);
+      if (level2 != _selectedLevel2) {
+        setState(() {
+          _isUpdatingInternally = true;
+          _selectedLevel2 = level2;
+
+          // Validar nivel 3 y 4
+          _validateLevel3AndLevel4();
+
+          _isUpdatingInternally = false;
+        });
+      }
+    } catch (e) {
+      // El valor no existe en este país, limpiar cascada
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel2 = null;
+        _selectedLevel3 = null;
+        _selectedLevel4 = null;
+        widget.level2Controller.clear();
+        widget.level3Controller.clear();
+        widget.level4Controller.clear();
+        _isUpdatingInternally = false;
+      });
+    }
+  }
+
+  /// Maneja cambios externos en el nivel 3
+  void _handleExternalLevel3Change() {
+    if (_repository == null || _selectedLevel2 == null) return;
+
+    final newLevel3Name = widget.level3Controller.text;
+    if (newLevel3Name.isEmpty) {
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel3 = null;
+        _selectedLevel4 = null;
+        widget.level4Controller.clear();
+        _isUpdatingInternally = false;
+      });
+      return;
+    }
+
+    // Intentar encontrar el nivel 3 en el repositorio actual
+    final level3List = _repository!.getLevel3(_selectedLevel2!.code);
+    try {
+      final level3 = level3List.firstWhere((item) => item.name == newLevel3Name);
+      if (level3 != _selectedLevel3) {
+        setState(() {
+          _isUpdatingInternally = true;
+          _selectedLevel3 = level3;
+
+          // Validar nivel 4
+          _validateLevel4();
+
+          _isUpdatingInternally = false;
+        });
+      }
+    } catch (e) {
+      // El valor no existe, limpiar
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel3 = null;
+        _selectedLevel4 = null;
+        widget.level3Controller.clear();
+        widget.level4Controller.clear();
+        _isUpdatingInternally = false;
+      });
+    }
+  }
+
+  /// Maneja cambios externos en el nivel 4
+  void _handleExternalLevel4Change() {
+    if (_repository == null || _selectedLevel2 == null || _selectedLevel3 == null) return;
+
+    final newLevel4Name = widget.level4Controller.text;
+    if (newLevel4Name.isEmpty) {
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel4 = null;
+        _isUpdatingInternally = false;
+      });
+      return;
+    }
+
+    // Intentar encontrar el nivel 4 en el repositorio actual
+    final level4List = _repository!.getLevel4(_selectedLevel2!.code, _selectedLevel3!.code);
+    try {
+      final level4 = level4List.firstWhere((item) => item.name == newLevel4Name);
+      if (level4 != _selectedLevel4) {
+        setState(() {
+          _isUpdatingInternally = true;
+          _selectedLevel4 = level4;
+          _isUpdatingInternally = false;
+        });
+      }
+    } catch (e) {
+      // El valor no existe, limpiar
+      setState(() {
+        _isUpdatingInternally = true;
+        _selectedLevel4 = null;
+        widget.level4Controller.clear();
+        _isUpdatingInternally = false;
+      });
+    }
+  }
+
+  /// Valida y limpia la cascada completa cuando cambia el país
+  void _validateAndCleanCascade() {
+    if (_repository == null) return;
+
+    bool needsCleanup = false;
+
+    // Validar nivel 2
+    if (widget.level2Controller.text.isNotEmpty) {
+      final level2List = _repository!.getLevel2();
+      try {
+        _selectedLevel2 = level2List.firstWhere(
+          (item) => item.name == widget.level2Controller.text,
+        );
+      } catch (e) {
+        _selectedLevel2 = null;
+        widget.level2Controller.clear();
+        needsCleanup = true;
+      }
+    }
+
+    // Validar nivel 3
+    if (!needsCleanup &&
+        widget.level3Controller.text.isNotEmpty &&
+        _selectedLevel2 != null) {
+      final level3List = _repository!.getLevel3(_selectedLevel2!.code);
+      try {
+        _selectedLevel3 = level3List.firstWhere(
+          (item) => item.name == widget.level3Controller.text,
+        );
+      } catch (e) {
+        _selectedLevel3 = null;
+        widget.level3Controller.clear();
+        needsCleanup = true;
+      }
+    } else if (_selectedLevel2 == null) {
+      _selectedLevel3 = null;
+      widget.level3Controller.clear();
+    }
+
+    // Validar nivel 4
+    if (!needsCleanup &&
+        widget.level4Controller.text.isNotEmpty &&
+        _selectedLevel2 != null &&
+        _selectedLevel3 != null) {
+      final level4List = _repository!.getLevel4(_selectedLevel2!.code, _selectedLevel3!.code);
+      try {
+        _selectedLevel4 = level4List.firstWhere(
+          (item) => item.name == widget.level4Controller.text,
+        );
+      } catch (e) {
+        _selectedLevel4 = null;
+        widget.level4Controller.clear();
+      }
+    } else if (_selectedLevel2 == null || _selectedLevel3 == null) {
+      _selectedLevel4 = null;
+      widget.level4Controller.clear();
+    }
+  }
+
+  /// Valida nivel 3 y 4 cuando cambia nivel 2
+  void _validateLevel3AndLevel4() {
+    if (_repository == null || _selectedLevel2 == null) return;
+
+    // Validar nivel 3
+    if (widget.level3Controller.text.isNotEmpty) {
+      final level3List = _repository!.getLevel3(_selectedLevel2!.code);
+      try {
+        _selectedLevel3 = level3List.firstWhere(
+          (item) => item.name == widget.level3Controller.text,
+        );
+
+        // Si nivel 3 es válido, validar nivel 4
+        _validateLevel4();
+      } catch (e) {
+        // Nivel 3 no válido, limpiar cascada
+        _selectedLevel3 = null;
+        _selectedLevel4 = null;
+        widget.level3Controller.clear();
+        widget.level4Controller.clear();
+      }
+    } else {
+      _selectedLevel3 = null;
+      _selectedLevel4 = null;
+      widget.level4Controller.clear();
+    }
+  }
+
+  /// Valida nivel 4 cuando cambia nivel 3
+  void _validateLevel4() {
+    if (_repository == null || _selectedLevel2 == null || _selectedLevel3 == null) return;
+
+    if (widget.level4Controller.text.isNotEmpty) {
+      final level4List = _repository!.getLevel4(_selectedLevel2!.code, _selectedLevel3!.code);
+      try {
+        _selectedLevel4 = level4List.firstWhere(
+          (item) => item.name == widget.level4Controller.text,
+        );
+      } catch (e) {
+        // Nivel 4 no válido, limpiar
+        _selectedLevel4 = null;
+        widget.level4Controller.clear();
+      }
+    } else {
+      _selectedLevel4 = null;
+    }
   }
 
   /// Inicializa el repositorio basado en el país inicial
@@ -120,6 +441,8 @@ class _MultiCountryLocationPickerState
   void _restoreSelectedValues() {
     if (_repository == null) return;
 
+    _isUpdatingInternally = true;
+
     // Restaurar nivel 2
     if (widget.level2Controller.text.isNotEmpty) {
       final level2List = _repository!.getLevel2();
@@ -128,11 +451,13 @@ class _MultiCountryLocationPickerState
           (item) => item.name == widget.level2Controller.text,
         );
       } catch (e) {
+        // Si no se encuentra, limpiar el controller
         _selectedLevel2 = null;
+        widget.level2Controller.clear();
       }
     }
 
-    // Restaurar nivel 3
+    // Restaurar nivel 3 solo si nivel 2 es válido
     if (widget.level3Controller.text.isNotEmpty && _selectedLevel2 != null) {
       final level3List = _repository!.getLevel3(_selectedLevel2!.code);
       try {
@@ -140,11 +465,16 @@ class _MultiCountryLocationPickerState
           (item) => item.name == widget.level3Controller.text,
         );
       } catch (e) {
+        // Si no se encuentra, limpiar el controller
         _selectedLevel3 = null;
+        widget.level3Controller.clear();
       }
+    } else if (widget.level3Controller.text.isNotEmpty && _selectedLevel2 == null) {
+      // Si hay un valor en nivel 3 pero no hay nivel 2, limpiar
+      widget.level3Controller.clear();
     }
 
-    // Restaurar nivel 4
+    // Restaurar nivel 4 solo si nivel 2 y 3 son válidos
     if (widget.level4Controller.text.isNotEmpty &&
         _selectedLevel2 != null &&
         _selectedLevel3 != null) {
@@ -155,9 +485,17 @@ class _MultiCountryLocationPickerState
           (item) => item.name == widget.level4Controller.text,
         );
       } catch (e) {
+        // Si no se encuentra, limpiar el controller
         _selectedLevel4 = null;
+        widget.level4Controller.clear();
       }
+    } else if (widget.level4Controller.text.isNotEmpty &&
+        (_selectedLevel2 == null || _selectedLevel3 == null)) {
+      // Si hay un valor en nivel 4 pero no hay nivel 2 o 3, limpiar
+      widget.level4Controller.clear();
     }
+
+    _isUpdatingInternally = false;
   }
 
   @override
@@ -499,6 +837,8 @@ class _MultiCountryLocationPickerState
   /// Maneja el cambio de país
   void _onCountryChanged(Country country) {
     setState(() {
+      _isUpdatingInternally = true;
+
       _repository = LocationRepositoryFactory.create(country.code);
       _selectedLevel2 = null;
       _selectedLevel3 = null;
@@ -508,6 +848,8 @@ class _MultiCountryLocationPickerState
       widget.level2Controller.clear();
       widget.level3Controller.clear();
       widget.level4Controller.clear();
+
+      _isUpdatingInternally = false;
     });
 
     widget.onCountryChanged?.call();
@@ -516,6 +858,8 @@ class _MultiCountryLocationPickerState
   /// Maneja el cambio de nivel 2
   void _onLevel2Changed(AdministrativeLevel2? level2) {
     setState(() {
+      _isUpdatingInternally = true;
+
       _selectedLevel2 = level2;
       _selectedLevel3 = null;
       _selectedLevel4 = null;
@@ -523,6 +867,8 @@ class _MultiCountryLocationPickerState
       widget.level2Controller.text = level2?.name ?? '';
       widget.level3Controller.clear();
       widget.level4Controller.clear();
+
+      _isUpdatingInternally = false;
     });
 
     widget.onLevel2Changed?.call();
@@ -531,11 +877,15 @@ class _MultiCountryLocationPickerState
   /// Maneja el cambio de nivel 3
   void _onLevel3Changed(AdministrativeLevel3? level3) {
     setState(() {
+      _isUpdatingInternally = true;
+
       _selectedLevel3 = level3;
       _selectedLevel4 = null;
 
       widget.level3Controller.text = level3?.name ?? '';
       widget.level4Controller.clear();
+
+      _isUpdatingInternally = false;
     });
 
     widget.onLevel3Changed?.call();
@@ -544,8 +894,12 @@ class _MultiCountryLocationPickerState
   /// Maneja el cambio de nivel 4
   void _onLevel4Changed(AdministrativeLevel4? level4) {
     setState(() {
+      _isUpdatingInternally = true;
+
       _selectedLevel4 = level4;
       widget.level4Controller.text = level4?.name ?? '';
+
+      _isUpdatingInternally = false;
     });
 
     widget.onLevel4Changed?.call();

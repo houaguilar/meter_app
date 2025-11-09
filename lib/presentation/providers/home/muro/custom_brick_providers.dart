@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 part 'custom_brick_providers.g.dart';
 
 /// Provider para dimensiones del ladrillo personalizado actual
-@riverpod
+@Riverpod(keepAlive: true)
 class CustomBrickDimensions extends _$CustomBrickDimensions {
   @override
   CustomDimensions build() => const CustomDimensions();
@@ -24,6 +24,7 @@ class CustomBrickDimensions extends _$CustomBrickDimensions {
       height: height,
       customName: name,
     );
+    print('✅ CustomBrickDimensions ACTUALIZADO: ${state.toString()}');
   }
 
   void clearDimensions() {

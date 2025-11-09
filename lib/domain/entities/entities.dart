@@ -9,6 +9,10 @@ export 'article/article.dart';
 export 'home/inicio/measurement.dart';
 export 'home/tarrajeo/tarrajeo.dart';
 
+// Losas entities
+export 'home/losas/losa.dart';
+export 'home/losas/tipo_losa.dart';
+
 // Map entities
 export 'map/location.dart';
 export 'map/location_with_distance.dart';

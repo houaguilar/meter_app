@@ -481,7 +481,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.wasteController,
                   label: 'Desperdicio (%)',
                   prefixIcon: Icons.warning_amber,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -500,7 +500,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.elementsController,
                   label: 'Elementos similares',
                   prefixIcon: Icons.copy,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                   ],
@@ -520,7 +520,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
             controller: widget.columnData.coverController,
             label: 'Recubrimiento (cm)',
             prefixIcon: Icons.layers,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
             ],
@@ -557,7 +557,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.heightController,
                   label: 'Alto (m)',
                   prefixIcon: Icons.height,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -575,7 +575,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.lengthController,
                   label: 'Largo (m)',
                   prefixIcon: Icons.straighten,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -593,7 +593,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.widthController,
                   label: 'Ancho (m)',
                   prefixIcon: Icons.width_normal,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -673,7 +673,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     controller: widget.columnData.footingHeightController,
                     label: 'Altura Zapata (m)',
                     prefixIcon: Icons.foundation,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                     ],
@@ -692,7 +692,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     controller: widget.columnData.footingBendController,
                     label: 'Doblez Zapata (m)',
                     prefixIcon: Icons.turn_right,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                     ],
@@ -858,7 +858,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                   controller: widget.columnData.stirrupBendLengthController,
                   label: 'Doblado (m)',
                   prefixIcon: Icons.turn_right,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -877,7 +877,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
             controller: widget.columnData.restSeparationController,
             label: 'Separación del resto (m)',
             prefixIcon: Icons.space_bar,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
             ],

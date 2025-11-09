@@ -11,8 +11,8 @@ export 'pisos/pisos_providers.dart';
 // Providers de Tarrajeo
 export 'tarrajeo/tarrajeo_providers.dart';
 
-// Providers de Losas
-export 'losas/losas_aligeradas_providers.dart';
+// Providers de Losas (arquitectura unificada)
+export 'losas/losa_providers.dart';
 
 // Providers de Estructuras
 export 'home/estructuras/structural_element_providers.dart';

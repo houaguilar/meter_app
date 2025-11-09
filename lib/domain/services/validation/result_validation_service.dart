@@ -1,9 +1,7 @@
-// lib/domain/services/validation/result_validation_service.dart
 
 import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
-import '../../../domain/entities/home/losas/losas.dart';
 
 /// Servicio de validación para resultados de cálculos
 class ResultValidationService {
@@ -28,8 +26,8 @@ class ResultValidationService {
         return _validateLadrillos(results.cast<Ladrillo>());
       } else if (firstResult is Piso) {
         return _validatePisos(results.cast<Piso>());
-      } else if (firstResult is LosaAligerada) {
-        return _validateLosas(results.cast<LosaAligerada>());
+      } else if (firstResult is Losa) {
+        return _validateLosas(results.cast<Losa>());
       } else if (firstResult is Tarrajeo) {
         return _validateTarrajeos(results.cast<Tarrajeo>());
       } else if (firstResult is Columna) {
@@ -188,8 +186,8 @@ class ResultValidationService {
     );
   }
 
-  /// Valida losas aligeradas
-  static ValidationResult _validateLosas(List<LosaAligerada> losas) {
+  /// Valida losas (sistema unificado: 3 tipos)
+  static ValidationResult _validateLosas(List<Losa> losas) {
     final errors = <String>[];
     final warnings = <String>[];
 

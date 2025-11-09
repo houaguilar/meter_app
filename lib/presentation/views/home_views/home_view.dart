@@ -52,7 +52,7 @@ class _HomeViewState extends ConsumerState<HomeView>
       ref.read(falsoPisoResultProvider.notifier).clearList();
       ref.read(contrapisoResultProvider.notifier).clearList();
       ref.read(tarrajeoResultProvider.notifier).clearList();
-      ref.read(losaAligeradaResultProvider.notifier).clearList();
+      ref.read(losaResultProvider.notifier).clearList();
       ref.read(columnaResultProvider.notifier).clearList();
       ref.read(vigaResultProvider.notifier).clearList();
 

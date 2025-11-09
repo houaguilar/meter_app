@@ -254,7 +254,7 @@ class _DatosSteelFootingScreenState extends ConsumerState<DatosSteelFootingScree
                 child: ModernSteelTextFormField(
                   controller: formData.elementsController,
                   label: 'Elementos',
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                   ],

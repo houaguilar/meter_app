@@ -16,7 +16,6 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
-import 'package:meter_app/domain/entities/home/losas/losas.dart';
 import 'package:meter_app/domain/entities/home/muro/custom_brick.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -60,7 +59,7 @@ Future<void> registerCoreModule(GetIt sl) async {
       PisoSchema,
       LadrilloSchema,
       TarrajeoSchema,
-      LosaAligeradaSchema,
+      LosaSchema, // Sistema unificado de losas (3 tipos)
       ColumnaSchema,
       VigaSchema,
       SteelBeamSchema,

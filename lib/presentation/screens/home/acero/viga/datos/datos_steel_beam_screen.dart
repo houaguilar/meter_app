@@ -482,7 +482,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.wasteController,
                   label: 'Desperdicio (%)',
                   prefixIcon: Icons.warning_amber,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -502,7 +502,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.elementsController,
                   label: 'Elementos similares',
                   prefixIcon: Icons.copy,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Requerido';
@@ -521,7 +521,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
             controller: widget.beamData.coverController,
             label: 'Recubrimiento (cm)',
             prefixIcon: Icons.straighten,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
             ],
@@ -556,7 +556,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.heightController,
                   label: 'Alto (m)',
                   prefixIcon: Icons.height,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -574,7 +574,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.lengthController,
                   label: 'Largo (m)',
                   prefixIcon: Icons.straighten,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -592,7 +592,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.widthController,
                   label: 'Ancho (m)',
                   prefixIcon: Icons.width_normal,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -614,7 +614,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.supportA1Controller,
                   label: 'Apoyo A1 (m)',
                   prefixIcon: Icons.support,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -632,7 +632,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.supportA2Controller,
                   label: 'Apoyo A2 (m)',
                   prefixIcon: Icons.support,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -670,7 +670,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.bendLengthController,
                   label: 'Longitud de doblado (m)',
                   prefixIcon: Icons.turn_right,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -768,7 +768,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
                   controller: widget.beamData.stirrupBendLengthController,
                   label: 'Doblado (m)',
                   prefixIcon: Icons.turn_right,
-                  keyboardType: TextInputType.number,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: [
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
@@ -787,7 +787,7 @@ class _BeamFormWidgetState extends State<BeamFormWidget> {
             controller: widget.beamData.restSeparationController,
             label: 'Separación del resto (m)',
             prefixIcon: Icons.space_bar,
-            keyboardType: TextInputType.number,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
             ],

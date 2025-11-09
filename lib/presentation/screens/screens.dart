@@ -14,7 +14,6 @@ export 'home/pisos/contrapiso/result/result_contrapiso_screen.dart';
 
 //Losas
 export 'home/losas/losas_screen.dart';
-export 'home/losas/datos/datos_losas_aligeradas_screen.dart';
 
 //Lista
 export 'projects/projects_screen.dart';

@@ -6,7 +6,6 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
-import 'package:meter_app/domain/entities/home/losas/losas.dart';
 
 import '../../../config/constants/error/exceptions.dart';
 import '../../../config/constants/error/failures.dart';
@@ -279,13 +278,13 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
       await isar.tarrajeos.delete(item.id);
     }
 
-    // Eliminar losas aligeradas
-    final losasToDelete = await isar.losaAligeradas
+    // Eliminar losas (sistema unificado)
+    final losasToDelete = await isar.losas
         .filter()
         .metradoIdEqualTo(metradoId)
         .findAll();
     for (var item in losasToDelete) {
-      await isar.losaAligeradas.delete(item.id);
+      await isar.losas.delete(item.id);
     }
 
     // Eliminar columnas
@@ -391,7 +390,7 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
             .filter()
             .metradoIdEqualTo(metrado.id)
             .count();
-        final losasCount = await isar.losaAligeradas
+        final losasCount = await isar.losas
             .filter()
             .metradoIdEqualTo(metrado.id)
             .count();

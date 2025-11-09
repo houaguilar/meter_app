@@ -98,7 +98,7 @@ class _DynamicStirrupDistributionsWidgetState extends State<DynamicStirrupDistri
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 setState(() {
                   widget.stirrupDistributions[index] = distribution.copyWith(
@@ -121,7 +121,7 @@ class _DynamicStirrupDistributionsWidgetState extends State<DynamicStirrupDistri
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 isDense: true,
               ),
-              keyboardType: TextInputType.number,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
               onChanged: (value) {
                 setState(() {
                   widget.stirrupDistributions[index] = distribution.copyWith(
