@@ -9,7 +9,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/entities.dart';
-import '../../../../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../widgets/widgets.dart';
 
 class ResultContrapisoScreen extends ConsumerStatefulWidget {
@@ -327,7 +327,7 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
           return _buildTableRow([
             piso.description,
             'm²',
-            area.toStringAsFixed(2),
+            area.toStringAsFixed(1),
           ]);
         }).toList(),
         _buildTableRow([

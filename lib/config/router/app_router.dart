@@ -40,7 +40,7 @@ import '../../presentation/screens/home/estructuras/data/datos_structural_elemen
 import '../../presentation/screens/home/estructuras/result/result_structural_elements_screen.dart';
 import '../../presentation/screens/home/estructuras/structural_element_screen.dart';
 import '../../presentation/screens/home/losas/datos/datos_losa_screen.dart';
-import '../../presentation/screens/home/losas/resultado/result_losa_screen.dart';
+import '../../presentation/screens/home/losas/result/result_losa_screen.dart';
 import '../../domain/entities/home/losas/tipo_losa.dart';
 import '../../presentation/screens/home/muro/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
 import '../../presentation/screens/home/pisos/contrapiso/datos/datos_contrapiso_screen.dart';
@@ -55,12 +55,15 @@ import '../../presentation/screens/projects/result/result_screen.dart';
 class AppRouter {
   final AuthBloc authBloc;
   final AnalyticsRepository analyticsRepository;
+  final GlobalKey<NavigatorState>? rootNavigatorKey;
 
   // GlobalKeys as instance variables to prevent conflicts during hot reload
-  final GlobalKey<NavigatorState> _rootNavigator = GlobalKey(debugLabel: 'root');
+  late final GlobalKey<NavigatorState> _rootNavigator;
   final GlobalKey<NavigatorState> _shellNavigator = GlobalKey(debugLabel: 'shell');
 
-  AppRouter(this.authBloc, this.analyticsRepository);
+  AppRouter(this.authBloc, this.analyticsRepository, {this.rootNavigatorKey}) {
+    _rootNavigator = rootNavigatorKey ?? GlobalKey(debugLabel: 'root');
+  }
 
   GoRouter get router => GoRouter(
     initialLocation: '/metrashop',
@@ -93,9 +96,9 @@ class AppRouter {
         return '/welcome';
       }
 
-      if (currentLocation == '/welcome' && !isFirstTime) {
+      /*if (currentLocation == '/welcome' && !isFirstTime) {
         return '/home';
-      }
+      }*/
 
       return null;
     },

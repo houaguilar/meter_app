@@ -3,11 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../../config/theme/theme.dart';
-import '../../../../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../widgets/widgets.dart';
 
 class ResultTarrajeoDerrameScreen extends ConsumerStatefulWidget {
@@ -269,8 +270,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               ])).toList(),
               _buildTableRow([
                 'TOTAL',
-                '${totalArea.toStringAsFixed(2)} m²',
-                '${totalVolumen.toStringAsFixed(4)} m³',
+                '${totalArea.toStringAsFixed(1)} m²',
+                '${totalVolumen.toStringAsFixed(1)} m³',
               ], isTotal: true),
             ],
           ),
@@ -602,8 +603,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         // Fila de totales
         _buildTableRow([
           'TOTAL',
-          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.area).toStringAsFixed(2)}',
-          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.volumen).toStringAsFixed(4)}',
+          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.area).toStringAsFixed(1)}',
+          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.volumen).toStringAsFixed(1)}',
         ], isTotal: true),
       ],
     );
@@ -851,8 +852,136 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
     context.pushNamed('save-tarrajeo-derrame');
   }
 
-  void _showShareOptions() async {
+  void _showShareOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Compartir Resultados',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildShareOption(
+                    icon: Icons.picture_as_pdf,
+                    label: 'Compartir PDF',
+                    color: Colors.red,
+                    onTap: () => _sharePDF(),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildShareOption(
+                    icon: Icons.text_fields,
+                    label: 'Compartir Texto',
+                    color: AppColors.blueMetraShop,
+                    onTap: () => _shareText(),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close),
+              label: const Text('Cancelar'),
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 48),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildShareOption({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 32, color: color),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _sharePDF() async {
     try {
+      // Cerrar el bottom sheet usando rootNavigator para no activar PopScope del scaffold
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: false).pop();
+      }
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+
+      // Generar PDF usando PDFFactory
+      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(ref);
+
+      context.hideLoader();
+
+      // Compartir PDF
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        subject: 'Resultados de Tarrajeo Derrame',
+      );
+
+      if (result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
+    } catch (e) {
+      context.hideLoader();
+      _showErrorMessage('Error al generar PDF: $e');
+    }
+  }
+
+  Future<void> _shareText() async {
+    try {
+      // Cerrar el bottom sheet usando rootNavigator para no activar PopScope del scaffold
+      if (Navigator.canPop(context)) {
+        Navigator.of(context, rootNavigator: false).pop();
+      }
+
       final materiales = ref.read(tarrajeoDerrrameMaterialesProvider);
       final shareText = '''
 🏗️ Resultados - Tarrajeo Derrame
@@ -878,12 +1007,19 @@ Calculado con MetraShop 📱
         description: 'Creando documento...',
       );
 
-      // Simular generación de PDF (aquí integrarías con PDFFactory)
-      await Future.delayed(const Duration(seconds: 2));
+      // Generar PDF usando PDFFactory
+      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(ref);
 
       if (mounted) {
         context.hideLoader();
         _showSuccessMessage('PDF generado exitosamente');
+
+        // Compartir PDF
+        final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+
+        if (result.status == ShareResultStatus.success) {
+          _showSuccessMessage('PDF compartido exitosamente');
+        }
       }
     } catch (e) {
       if (mounted) {

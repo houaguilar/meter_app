@@ -3,7 +3,7 @@ export 'home/home_screen.dart';
 
 //Muro
 export 'home/muro/wall_screen.dart';
-export 'home/muro/ladrillo/result_ladrillo/result_ladrillo_screen.dart';
+export 'home/muro/ladrillo/result/result_ladrillo_screen.dart';
 
 //Columna
 export 'home/tarrajeo/tarrajeo_screen.dart';

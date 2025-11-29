@@ -25,6 +25,10 @@ abstract class NotificationRepository {
   /// Configura el listener para cuando el usuario toca una notificación
   void onMessageOpenedApp(Function(Map<String, dynamic>) handler);
 
+  /// Obtiene el mensaje inicial si la app se abrió desde una notificación
+  /// mientras estaba terminada
+  Future<Map<String, dynamic>?> getInitialMessage();
+
   /// Elimina el token FCM (útil para logout)
   Future<void> deleteToken();
 }

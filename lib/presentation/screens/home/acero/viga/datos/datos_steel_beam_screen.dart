@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/viga/datos/models/beam_form_data.dart';
@@ -10,7 +11,9 @@ import 'package:uuid/uuid.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../../../../../../domain/entities/home/acero/viga/steel_beam.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
+import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../widgets/dynamic_steel_bars_widget.dart';
@@ -238,6 +241,23 @@ class _DatosSteelBeamScreenState extends ConsumerState<DatosSteelBeamScreen>
         title: const Text('Acero en Vigas'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
+        centerTitle: false,
+        actions: [
+          TextButton(
+            onPressed: () {
+              ConfirmDialog.show(
+                  context: context,
+                  title: '¿Seguro que deseas salir?',
+                  content: 'Si sales del resumen se perderá todo el progreso.',
+                  confirmText: 'Salir',
+                  cancelText: 'Cancelar',
+                  onConfirm: () {context.goNamed('home');},
+                  onCancel: () {context.pop();},
+                  isVisible: true);
+            },
+            child: SvgPicture.asset(AppIcons.closeDialogIcon, width: 32, height: 32,),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
@@ -281,20 +301,24 @@ class _DatosSteelBeamScreenState extends ConsumerState<DatosSteelBeamScreen>
         ),
       ),
       backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: TabBarView(
-          controller: _tabController,
-          children: _beams.asMap().entries.map((entry) {
-            final index = entry.key;
-            final beam = entry.value;
-            return BeamFormWidget(
-              key: ValueKey('beam_$index'),
-              beamData: beam,
-              beamIndex: index,
-              onDataChanged: () => setState(() {}),
-            );
-          }).toList(),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: TabBarView(
+            controller: _tabController,
+            children: _beams.asMap().entries.map((entry) {
+              final index = entry.key;
+              final beam = entry.value;
+              return BeamFormWidget(
+                key: ValueKey('beam_$index'),
+                beamData: beam,
+                beamIndex: index,
+                onDataChanged: () => setState(() {}),
+              );
+            }).toList(),
+          ),
         ),
       ),
       floatingActionButton: Column(

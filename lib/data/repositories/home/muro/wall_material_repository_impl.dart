@@ -2,7 +2,7 @@
 
 import '../../../../domain/entities/home/muro/wall_material.dart';
 import '../../../../domain/repositories/home/muro/wall_material_repository.dart';
-import '../../../../presentation/assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 class WallMaterialRepositoryImpl implements WallMaterialRepository {
   @override
@@ -29,21 +29,10 @@ class WallMaterialRepositoryImpl implements WallMaterialRepository {
       WallMaterial(
         id: '1',
         name: 'Pandereta 1',
-        image: AppImages.panderetaFirstImg,
-        size: '23cm x 12cm x 9cm',
+        image: AppImages.panderetaImg,
+        size: '23cm x 11cm x 9cm',
         lengthBrick: 23,
-        widthBrick: 12,
-        heightBrick: 9,
-        details: '· Ladrillo para muros no portantes.\n· Absorción de agua máx. 22%.\n· Dimensiones: 23×12×9 cm.\n· Rendimiento: 44 u/m² en soga.',
-      ),
-
-      WallMaterial(
-        id: '2',
-        name: 'Pandereta 2',
-        image: AppImages.pandereta2Img,
-        size: '23cm x 12cm x 9cm',
-        lengthBrick: 23,
-        widthBrick: 12,
+        widthBrick: 11,
         heightBrick: 9,
         details: '· Ladrillo para muros no portantes.\n· Absorción de agua máx. 22%.\n· Dimensiones: 23×12×9 cm.\n· Rendimiento: 44 u/m² en soga.',
       ),
@@ -51,23 +40,12 @@ class WallMaterialRepositoryImpl implements WallMaterialRepository {
       // KING KONG
       WallMaterial(
         id: '3',
-        name: 'King Kong 1',
-        image: AppImages.kingkong1Img,
-        size: '24cm x 13cm x 9cm',
-        lengthBrick: 24,
-        widthBrick: 13,
-        heightBrick: 9,
-        details: '· Ladrillo resistente para muros portantes.\n· Absorción de agua máx. 22%.\n· Dimensiones: 24×13×9 cm.\n· Rendimiento: 47 u/m² en soga.',
-      ),
-
-      WallMaterial(
-        id: '4',
-        name: 'King Kong 2',
-        image: AppImages.kingkong2Img,
-        size: '24cm x 13cm x 9cm',
-        lengthBrick: 24,
-        widthBrick: 13,
-        heightBrick: 9,
+        name: 'King Kong 18H',
+        image: AppImages.kingkongImg,
+        size: '23cm x 9cm x 12.5cm',
+        lengthBrick: 23,
+        widthBrick: 9,
+        heightBrick: 12.5,
         details: '· Ladrillo resistente para muros portantes.\n· Absorción de agua máx. 22%.\n· Dimensiones: 24×13×9 cm.\n· Rendimiento: 47 u/m² en soga.',
       ),
 
@@ -76,10 +54,10 @@ class WallMaterialRepositoryImpl implements WallMaterialRepository {
         id: '5',
         name: 'Tabicón',
         image: AppImages.tabiconImg,
-        size: '20cm x 20cm x 15cm',
-        lengthBrick: 20,
-        widthBrick: 20,
-        heightBrick: 15,
+        size: '28cm x 17cm x 12cm',
+        lengthBrick: 28,
+        widthBrick: 17,
+        heightBrick: 12,
         details: '· Bloque hueco para tabiquería.\n· Excelente aislamiento térmico.\n· Dimensiones: 20×20×15 cm.\n· Instalación rápida y eficiente.',
       ),
 
@@ -87,11 +65,11 @@ class WallMaterialRepositoryImpl implements WallMaterialRepository {
       WallMaterial(
         id: 'custom',
         name: 'Ladrillo Personalizado',
-        image: AppImages.tabiconImg, // Reutilizando imagen existente
+        image: AppImages.personalizadoImg,
         size: 'Configurable',
         lengthBrick: null, // Se configurará dinámicamente
-        widthBrick: null,
-        heightBrick: null,
+        widthBrick: null, // Se configurará dinámicamente
+        heightBrick: null, // Se configurará dinámicamente
         details: '· Personaliza las dimensiones según tu proyecto.\n· Largo, ancho y alto configurables.\n· Cálculos precisos con tus medidas exactas.\n· Ideal para proyectos especiales.',
       ),
     ];

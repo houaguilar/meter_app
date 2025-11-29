@@ -5,6 +5,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
 
 class ResultSteelColumnScreen extends ConsumerStatefulWidget { // cambio de ResultSteelBeamScreen
@@ -20,6 +21,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  bool _isGeneratingPDF = false; // Flag para prevenir limpieza durante generación de PDF
 
   @override
   void initState() {
@@ -89,40 +91,40 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultados de Acero en Columnas'), // cambio de título
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            onPressed: _shareResults,
-            icon: const Icon(Icons.share),
-            tooltip: 'Compartir resultados',
-          ),
-          IconButton(
-            onPressed: _generatePDF,
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Generar PDF',
-          ),
-        ],
-      ),
-      backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Stack(
-            children: [
-              _buildBody(),
-              // Botones de acción en la parte inferior (como ResultLosasScreen)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomActionBar(),
-              ),
-            ],
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (bool didPop) {
+        if (didPop && !_isGeneratingPDF) {
+          // ✅ LIMPIA al retroceder solo si NO se está generando PDF
+          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
+          ref.read(steelColumnResultProvider.notifier).clearList();
+        } else if (didPop && _isGeneratingPDF) {
+          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Resultados de Acero en Columnas'), // cambio de título
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+        backgroundColor: AppColors.background,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Stack(
+              children: [
+                _buildBody(),
+                // Botones de acción en la parte inferior (como ResultLosasScreen)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomActionBar(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -429,9 +431,9 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
   // MÉTODOS DE COMPARTIR (ADAPTADOS PARA COLUMNAS)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _sharePDF() async {
+  Future<void> _sharePDF() async {
     try {
-      _generatePDF();
+      await _generatePDF();
     } catch (e) {
       _showErrorMessage('Error al generar PDF: $e');
     }
@@ -461,7 +463,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
     for (int i = 0; i < consolidatedResult.columnResults.length; i++) { // cambio de beamResults a columnResults
       final column = consolidatedResult.columnResults[i]; // cambio de beam a column
       content.writeln('Columna ${i + 1}: ${column.description}'); // cambio de Viga a Columna
-      content.writeln('  • Peso total: ${column.totalWeight.toStringAsFixed(2)} kg');
+      content.writeln('  • Peso total: ${column.totalWeight.toStringAsFixed(1)} kg');
       // Agregar info específica de columna
       if (column.hasFooting) {
         content.writeln('  • Con zapata: Sí');
@@ -474,9 +476,79 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
     );
   }
 
-  void _generatePDF() {
-    // Implementar generación de PDF similar a otras pantallas
-    _showErrorMessage('Funcionalidad de PDF en desarrollo');
+  Future<void> _generatePDF() async {
+    try {
+      print('📄 Iniciando generación de PDF...');
+
+      // Activar flag para prevenir limpieza de datos
+      if (!mounted) return;
+      setState(() {
+        _isGeneratingPDF = true;
+      });
+      print('✅ Flag activado: $_isGeneratingPDF');
+
+      // Mostrar loader (NO cerramos el bottom sheet aún)
+      if (!mounted) {
+        print('⚠️ Widget desmontado antes de mostrar loader');
+        return;
+      }
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+      print('✅ Loader mostrado');
+
+      // Generar PDF usando PDFFactory
+      print('📝 Llamando a PDFFactory.generateSteelColumnPDF...');
+      final pdfFile = await PDFFactory.generateSteelColumnPDF(ref);
+      print('✅ PDF generado exitosamente: ${pdfFile.path}');
+
+      // Ocultar loader solo si el widget está montado
+      if (mounted) {
+        context.hideLoader();
+        print('✅ Loader ocultado');
+      } else {
+        print('⚠️ Widget desmontado, no se puede ocultar loader');
+        return;
+      }
+
+      // Compartir PDF (esto cerrará automáticamente el bottom sheet)
+      print('📤 Compartiendo PDF...');
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        subject: 'Resultados de Columnas de Acero',
+      );
+      print('✅ PDF compartido con estado: ${result.status}');
+
+      // Mostrar feedback solo si el widget está montado
+      if (mounted && result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
+    } catch (e, stackTrace) {
+      print('❌ ERROR en _generatePDF: $e');
+      print('❌ StackTrace: $stackTrace');
+
+      // Asegurarse de ocultar el loader solo si está montado
+      if (mounted) {
+        try {
+          context.hideLoader();
+          print('✅ Loader ocultado después del error');
+        } catch (loaderError) {
+          print('⚠️ Error al ocultar loader: $loaderError');
+        }
+
+        _showErrorMessage('Error al generar PDF: $e');
+      }
+    } finally {
+      // Desactivar flag después de generar PDF
+      if (mounted) {
+        setState(() {
+          _isGeneratingPDF = false;
+        });
+        print('✅ Flag desactivado en finally');
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -577,8 +649,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Columnas', '${quickStats['totalColumns']}'), // cambio de Vigas a Columnas
-            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(2)} kg'), // cambio de estadística
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(2)} kg'), // cambio de estadística
+            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'), // cambio de estadística
+            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'), // cambio de estadística
           ],
         ],
       ),
@@ -828,7 +900,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${column.totalWeight.toStringAsFixed(2)} kg',
+                  'Peso total: ${column.totalWeight.toStringAsFixed(1)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
@@ -928,6 +1000,21 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         SnackBar(
           content: Text(message),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

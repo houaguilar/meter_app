@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/muro/ladrillo/custom_brick_config_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -227,7 +226,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           ),
           const SizedBox(height: 24),
           SizedBox(
-            height: 400,
+            height: 500,
             child: Stack(
               alignment: Alignment.center,
               children: [
@@ -235,7 +234,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 _build3DBrick(),
                 // Controles de dimensiones
                 Positioned(
-                  top: 20,
+                  top: 40,
                   right: 40,
                   child: _buildDimensionControl(
                     'Largo',
@@ -249,8 +248,8 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                   ),
                 ),
                 Positioned(
-                  bottom: 20,
-                  right: 110,
+                  bottom: 40,
+                  left: 20,
                   child: _buildDimensionControl(
                     'Ancho',
                     _widthController,
@@ -263,8 +262,8 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                   ),
                 ),
                 Positioned(
-                  bottom: 20,
-                  left: 110,
+                  bottom: 40,
+                  right: 20,
                   child: _buildDimensionControl(
                     'Alto',
                     _heightController,
@@ -317,7 +316,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
       Color color,
       ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -336,21 +335,21 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(width: 8),
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
                   color: color,
                   fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                  fontSize: 13,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           SizedBox(
-            width: 80,
+            width: 75,
             child: TextFormField(
               controller: controller,
               focusNode: focusNode,
@@ -384,8 +383,8 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
               ),
               validator: (value) {
                 final numValue = double.tryParse(value ?? '');
@@ -401,12 +400,12 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
               onFieldSubmitted: (_) => _focusNextField(focusNode),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             '${min.toInt()}-${max.toInt()} cm',
             style: TextStyle(
-              color: color.withOpacity(0.7),
-              fontSize: 10,
+              color: color.withOpacity(0.6),
+              fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -505,7 +504,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
             ),
             icon: const Icon(Icons.calculate, size: 20),
             label: const Text(
-              'Continuar con Cálculo',
+              'Crear ladrillo',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,

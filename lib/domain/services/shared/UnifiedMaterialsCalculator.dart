@@ -833,8 +833,8 @@ class UnifiedMaterialsCalculator {
     final materials = <Material>[
       Material(
         description: 'Cemento',
-        unit: 'bolsas',
-        quantity: cementoTotal.toStringAsFixed(2),
+        unit: 'bls',
+        quantity: cementoTotal.ceil().toString(),
       ),
       Material(
         description: 'Arena gruesa',
@@ -934,8 +934,8 @@ class UnifiedMaterialsCalculator {
     final materials = <Material>[
       Material(
         description: 'Cemento',
-        unit: 'bolsas',
-        quantity: cementoTotal.toStringAsFixed(2),
+        unit: 'bls',
+        quantity: cementoTotal.ceil().toString(),
       ),
       Material(
         description: 'Arena gruesa',
@@ -1034,23 +1034,23 @@ class UnifiedMaterialsCalculator {
     final materials = <Material>[
       Material(
         description: 'Cemento',
-        unit: 'bolsas',
-        quantity: cementoTotal.toStringAsFixed(3),
+        unit: 'bls',
+        quantity: cementoTotal.ceil().toString(),
       ),
       Material(
         description: 'Arena gruesa',
         unit: 'm³',
-        quantity: arenaTotal.toStringAsFixed(6),
+        quantity: arenaTotal.toStringAsFixed(3),
       ),
       Material(
         description: 'Piedra chancada',
         unit: 'm³',
-        quantity: piedraChancadaTotal.toStringAsFixed(6),
+        quantity: piedraChancadaTotal.toStringAsFixed(3),
       ),
       Material(
         description: 'Agua',
         unit: 'm³',
-        quantity: aguaTotal.toStringAsFixed(6),
+        quantity: aguaTotal.toStringAsFixed(3),
       ),
     ];
 

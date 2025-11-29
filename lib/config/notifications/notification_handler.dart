@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 /// Handler para procesar notificaciones y navegar según el tipo
 class NotificationHandler {
@@ -16,11 +17,8 @@ class NotificationHandler {
     debugPrint('Body: $body');
     debugPrint('Data: $data');
 
-    // Mostrar un SnackBar o diálogo cuando la notificación llega en foreground
-    _showForegroundNotification(context, title, body);
-
-    // Procesar según el tipo de notificación
-    _processNotificationData(context, data);
+    // Mostrar un SnackBar cuando la notificación llega en foreground
+    _showForegroundNotification(context, title, body, data: data);
   }
 
   /// Maneja cuando el usuario toca una notificación
@@ -51,41 +49,67 @@ class NotificationHandler {
     final type = data['type'] as String?;
     final route = data['route'] as String?;
     final id = data['id'] as String?;
+    final projectName = data['projectName'] as String?;
+    final articleTitle = data['articleTitle'] as String?;
+    final videoId = data['videoId'] as String?;
 
-    debugPrint('Processing notification - Type: $type, Route: $route, ID: $id');
+    debugPrint('📍 Processing notification - Type: $type, Route: $route, ID: $id');
+
+    if (!context.mounted) {
+      debugPrint('❌ Context not mounted, cannot navigate');
+      return;
+    }
 
     // Navegar según el tipo de notificación
     switch (type) {
       case 'project':
-        if (id != null) {
-          // Navigator.of(context).pushNamed('/project/$id');
-          debugPrint('Navigate to project: $id');
+        if (id != null && projectName != null) {
+          context.push('/projects/$id/$projectName');
+          debugPrint('✅ Navigating to project: $id');
+        } else {
+          // Si no hay ID específico, ir a la lista de proyectos
+          context.push('/projects');
+          debugPrint('✅ Navigating to projects list');
         }
         break;
 
       case 'article':
-        if (id != null) {
-          // Navigator.of(context).pushNamed('/article/$id');
-          debugPrint('Navigate to article: $id');
+        if (id != null && articleTitle != null) {
+          // Navegar al detalle del artículo
+          final title = Uri.encodeComponent(articleTitle);
+          final video = videoId ?? '';
+          context.push('/home/detail/$id/$title/$video');
+          debugPrint('✅ Navigating to article: $id');
+        } else {
+          // Si no hay ID específico, ir a la lista de artículos
+          context.push('/articles');
+          debugPrint('✅ Navigating to articles list');
         }
         break;
 
       case 'update':
-        // Navigator.of(context).pushNamed('/updates');
-        debugPrint('Navigate to updates');
+        // Navegar a la pantalla de inicio donde se muestran las actualizaciones
+        context.go('/home');
+        debugPrint('✅ Navigating to home (updates)');
         break;
 
       case 'location':
-        if (id != null) {
-          // Navigator.of(context).pushNamed('/location/$id');
-          debugPrint('Navigate to location: $id');
-        }
+        // Navegar al mapa
+        context.push('/home/home-to-provider');
+        debugPrint('✅ Navigating to map/location');
         break;
 
       default:
+        // Si hay una ruta personalizada, usarla
         if (route != null) {
-          // Navigator.of(context).pushNamed(route);
-          debugPrint('Navigate to custom route: $route');
+          try {
+            context.push(route);
+            debugPrint('✅ Navigating to custom route: $route');
+          } catch (e) {
+            debugPrint('❌ Error navigating to route: $route - $e');
+          }
+        } else {
+          debugPrint('⚠️ Unknown notification type: $type');
         }
     }
   }
@@ -94,8 +118,9 @@ class NotificationHandler {
   static void _showForegroundNotification(
     BuildContext context,
     String title,
-    String body,
-  ) {
+    String body, {
+    Map<String, dynamic>? data,
+  }) {
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -120,14 +145,16 @@ class NotificationHandler {
         ),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'Ver',
-          textColor: Colors.white,
-          onPressed: () {
-            // Aquí podrías navegar a la pantalla correspondiente
-            debugPrint('SnackBar action tapped');
-          },
-        ),
+        action: data != null && data.isNotEmpty
+            ? SnackBarAction(
+                label: 'Ver',
+                textColor: Colors.white,
+                onPressed: () {
+                  // Navegar a la pantalla correspondiente
+                  _processNotificationData(context, data);
+                },
+              )
+            : null,
       ),
     );
   }

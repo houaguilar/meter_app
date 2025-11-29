@@ -1,38 +1,36 @@
+// lib/presentation/screens/perfil/notificaciones/notifications_settings_screen_v2.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../config/notifications/notification_repository.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/show_snackbar.dart';
-import '../../../../init_dependencies.dart';
+import '../../../../domain/entities/notifications/notification_settings.dart';
+import '../../../providers/notifications/notification_settings_providers.dart';
 
-class NotificationsSettingsScreen extends StatefulWidget {
+/// Versión mejorada de NotificationsSettingsScreen usando Riverpod
+/// con notificaciones granulares y manejo robusto de errores
+class NotificationsSettingsScreen extends ConsumerStatefulWidget {
   const NotificationsSettingsScreen({super.key});
 
   @override
-  State<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
+  ConsumerState<NotificationsSettingsScreen> createState() =>
+      _NotificationsSettingsScreenState();
 }
 
-class _NotificationsSettingsScreenState extends State<NotificationsSettingsScreen>
+class _NotificationsSettingsScreenState
+    extends ConsumerState<NotificationsSettingsScreen>
     with WidgetsBindingObserver {
-
-  // Servicios
-  late final NotificationRepository _notificationService;
-  late final SharedPreferences _prefs;
-
-  // Estado de las notificaciones
-  bool _notificationsEnabled = false;
-  bool _isLoading = true;
-  bool _permissionDenied = false;
-  bool _hasCheckedPermissions = false;
-  String? _fcmToken;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeServices();
+
+    // Cargar configuración inicial
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationSettingsNotifierProvider.notifier).reload();
+    });
   }
 
   @override
@@ -46,117 +44,26 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     super.didChangeAppLifecycleState(state);
 
     // Verificar permisos cuando la app vuelve del foreground
-    if (state == AppLifecycleState.resumed && _hasCheckedPermissions) {
-      _checkNotificationPermissions();
-    }
-  }
-
-  Future<void> _initializeServices() async {
-    try {
-      _notificationService = serviceLocator<NotificationRepository>();
-      _prefs = serviceLocator<SharedPreferences>();
-      await _initializeNotificationSettings();
-    } catch (e) {
-      debugPrint('Error initializing services: $e');
-      _showErrorMessage('Error al inicializar los servicios');
-    }
-  }
-
-  Future<void> _initializeNotificationSettings() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Verificar permisos
-      await _checkNotificationPermissions();
-
-      // Cargar estado guardado de las notificaciones
-      await _loadNotificationPreference();
-
-      // Obtener el token FCM
-      if (!_permissionDenied) {
-        _fcmToken = await _notificationService.getToken();
-        debugPrint('📱 FCM Token loaded: $_fcmToken');
-      }
-
-    } catch (e) {
-      debugPrint('Error loading notification settings: $e');
-      _showErrorMessage('Error al cargar la configuración de notificaciones');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-          _hasCheckedPermissions = true;
-        });
-      }
-    }
-  }
-
-  Future<void> _checkNotificationPermissions() async {
-    try {
-      final hasPermission = await _notificationService.hasPermission();
-
-      if (mounted) {
-        setState(() {
-          _permissionDenied = !hasPermission;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error checking notification permissions: $e');
-      if (mounted) {
-        setState(() {
-          _permissionDenied = true;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadNotificationPreference() async {
-    try {
-      final enabled = _prefs.getBool('notifications_enabled') ?? false;
-
-      if (mounted) {
-        setState(() {
-          _notificationsEnabled = enabled;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading notification preference: $e');
-    }
-  }
-
-  Future<void> _saveNotificationPreference(bool enabled) async {
-    try {
-      await _prefs.setBool('notifications_enabled', enabled);
-
-      // Suscribir/desuscribir a topics generales
-      if (enabled) {
-        await _notificationService.subscribeToTopic('general');
-        await _notificationService.subscribeToTopic('updates');
-      } else {
-        await _notificationService.unsubscribeFromTopic('general');
-        await _notificationService.unsubscribeFromTopic('updates');
-      }
-
-      debugPrint('Notification preference saved: $enabled');
-    } catch (e) {
-      debugPrint('Error saving notification preference: $e');
-      rethrow;
-    }
-  }
-
-  Future<bool> _requestNotificationPermissions() async {
-    try {
-      return await _notificationService.requestPermission();
-    } catch (e) {
-      debugPrint('Error requesting notification permissions: $e');
-      return false;
+    if (state == AppLifecycleState.resumed) {
+      ref
+          .read(notificationSettingsNotifierProvider.notifier)
+          .checkPermissionStatus();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Escuchar errores
+    ref.listen<String?>(notificationErrorMessageProvider, (previous, next) {
+      if (next != null) {
+        showSnackBar(context, next);
+        // Limpiar el error después de mostrarlo
+        Future.delayed(const Duration(seconds: 3), () {
+          ref.read(notificationErrorMessageProvider.notifier).clear();
+        });
+      }
+    });
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: _buildAppBar(),
@@ -178,11 +85,30 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           color: AppColors.white,
         ),
       ),
+      actions: [
+        // Botón para resetear configuración (solo en modo debug)
+        if (const bool.fromEnvironment('dart.vm.product') == false)
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () async {
+              await ref
+                  .read(notificationSettingsNotifierProvider.notifier)
+                  .reset();
+              if (mounted) {
+                _showSuccessMessage('Configuración reseteada');
+              }
+            },
+            tooltip: 'Resetear configuración',
+          ),
+      ],
     );
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
+    final isLoading = ref.watch(isNotificationLoadingProvider);
+    final settings = ref.watch(notificationSettingsNotifierProvider);
+
+    if (isLoading) {
       return _buildLoadingState();
     }
 
@@ -193,13 +119,106 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         children: [
           _buildHeaderCard(),
           const SizedBox(height: 32),
-          _buildNotificationToggle(),
-          const SizedBox(height: 24),
-          if (_permissionDenied) _buildPermissionWarning(),
-          if (_notificationsEnabled && !_permissionDenied) _buildSuccessInfo(),
-          if (_fcmToken != null && !_permissionDenied) ...[
+
+          // Sección de permisos del sistema
+          if (!settings.systemPermissionGranted) _buildPermissionWarning(),
+          if (settings.systemPermissionGranted) ...[
+            _buildSystemPermissionGranted(),
             const SizedBox(height: 24),
-            _buildTokenInfo(),
+          ],
+
+          const SizedBox(height: 16),
+
+          // Título de categorías
+          const Text(
+            'Categorías de notificaciones',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Selecciona qué tipo de notificaciones deseas recibir',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Opciones granulares
+          _buildNotificationOption(
+            title: 'Notificaciones generales',
+            description: 'Información general sobre la aplicación',
+            icon: Icons.notifications_active_rounded,
+            enabled: settings.generalEnabled,
+            onChanged: settings.systemPermissionGranted
+                ? (value) => ref
+                    .read(notificationSettingsNotifierProvider.notifier)
+                    .toggleGeneral(value)
+                : null,
+          ),
+          const SizedBox(height: 12),
+          _buildNotificationOption(
+            title: 'Actualizaciones',
+            description: 'Nuevas funcionalidades y mejoras de la app',
+            icon: Icons.system_update_rounded,
+            enabled: settings.updatesEnabled,
+            onChanged: settings.systemPermissionGranted
+                ? (value) => ref
+                    .read(notificationSettingsNotifierProvider.notifier)
+                    .toggleUpdates(value)
+                : null,
+          ),
+          const SizedBox(height: 12),
+          _buildNotificationOption(
+            title: 'Proyectos',
+            description: 'Cambios y actualizaciones en tus proyectos',
+            icon: Icons.folder_open_rounded,
+            enabled: settings.projectsEnabled,
+            onChanged: settings.systemPermissionGranted
+                ? (value) => ref
+                    .read(notificationSettingsNotifierProvider.notifier)
+                    .toggleProjects(value)
+                : null,
+          ),
+          const SizedBox(height: 12),
+          _buildNotificationOption(
+            title: 'Artículos',
+            description: 'Nuevos artículos y contenido relevante',
+            icon: Icons.article_rounded,
+            enabled: settings.articlesEnabled,
+            onChanged: settings.systemPermissionGranted
+                ? (value) => ref
+                    .read(notificationSettingsNotifierProvider.notifier)
+                    .toggleArticles(value)
+                : null,
+          ),
+          const SizedBox(height: 12),
+          _buildNotificationOption(
+            title: 'Ubicación',
+            description: 'Tiendas cercanas y puntos de interés',
+            icon: Icons.location_on_rounded,
+            enabled: settings.locationEnabled,
+            onChanged: settings.systemPermissionGranted
+                ? (value) => ref
+                    .read(notificationSettingsNotifierProvider.notifier)
+                    .toggleLocation(value)
+                : null,
+          ),
+
+          // Botones de acción rápida
+          if (settings.systemPermissionGranted) ...[
+            const SizedBox(height: 24),
+            _buildQuickActions(settings),
+          ],
+
+          // Token FCM (solo si está disponible)
+          if (settings.fcmToken != null && settings.systemPermissionGranted) ...[
+            const SizedBox(height: 24),
+            _buildTokenInfo(settings.fcmToken!),
           ],
         ],
       ),
@@ -216,7 +235,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           ),
           SizedBox(height: 16),
           Text(
-            'Verificando configuración...',
+            'Cargando configuración...',
             style: TextStyle(
               fontSize: 16,
               color: AppColors.textSecondary,
@@ -271,7 +290,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           ),
           const SizedBox(height: 12),
           const Text(
-            'Mantente informado sobre actualizaciones de tus proyectos, nuevos artículos y funcionalidades importantes.',
+            'Personaliza las notificaciones que deseas recibir. Mantente informado sobre lo que más te importa.',
             style: TextStyle(
               fontSize: 15,
               color: AppColors.textSecondary,
@@ -279,137 +298,6 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ),
             textAlign: TextAlign.center,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNotificationToggle() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _notificationsEnabled
-                      ? AppColors.success.withOpacity(0.2)
-                      : AppColors.neutral300.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  _notificationsEnabled
-                      ? Icons.notifications_active_rounded
-                      : Icons.notifications_off_rounded,
-                  size: 28,
-                  color: _notificationsEnabled
-                      ? AppColors.success
-                      : AppColors.neutral500,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Recibir notificaciones',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: _notificationsEnabled
-                            ? AppColors.textPrimary
-                            : AppColors.neutral600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _notificationsEnabled
-                          ? 'Las notificaciones están activadas'
-                          : 'Las notificaciones están desactivadas',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _notificationsEnabled
-                            ? AppColors.success
-                            : AppColors.neutral500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Transform.scale(
-                scale: 1.2,
-                child: Switch.adaptive(
-                  value: _notificationsEnabled,
-                  onChanged: _onNotificationToggle,
-                  activeColor: AppColors.success,
-                  activeTrackColor: AppColors.success.withOpacity(0.3),
-                  inactiveThumbColor: AppColors.neutral400,
-                  inactiveTrackColor: AppColors.neutral200,
-                ),
-              ),
-            ],
-          ),
-
-          if (_notificationsEnabled || _permissionDenied) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: _permissionDenied
-                    ? AppColors.warning.withOpacity(0.1)
-                    : AppColors.info.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _permissionDenied
-                      ? AppColors.warning.withOpacity(0.3)
-                      : AppColors.info.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _permissionDenied
-                        ? Icons.warning_rounded
-                        : Icons.info_outline_rounded,
-                    size: 20,
-                    color: _permissionDenied
-                        ? AppColors.warning
-                        : AppColors.info,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      _permissionDenied
-                          ? 'Para recibir notificaciones, necesitas activar los permisos en la configuración de tu dispositivo.'
-                          : 'Recibirás notificaciones sobre actualizaciones importantes y contenido relevante.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: _permissionDenied
-                            ? AppColors.warning
-                            : AppColors.info,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
         ],
       ),
     );
@@ -457,7 +345,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           ),
           const SizedBox(height: 12),
           const Text(
-            'Para activar las notificaciones, necesitas conceder permisos en la configuración de tu dispositivo. Esto es necesario para enviarte información importante sobre tus proyectos.',
+            'Para recibir notificaciones, necesitas conceder permisos en la configuración del sistema. Esto te permitirá estar al tanto de información importante.',
             style: TextStyle(
               fontSize: 14,
               color: AppColors.error,
@@ -465,33 +353,52 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _openAppSettings,
-              icon: const Icon(Icons.settings_rounded),
-              label: const Text('Abrir configuración'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.error,
-                foregroundColor: AppColors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _requestPermission,
+                  icon: const Icon(Icons.shield_rounded),
+                  label: const Text('Solicitar permisos'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: AppColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openAppSettings,
+                  icon: const Icon(Icons.settings_rounded),
+                  label: const Text('Configuración'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSuccessInfo() {
+  Widget _buildSystemPermissionGranted() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.success.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: AppColors.success.withOpacity(0.3),
           width: 1,
@@ -507,33 +414,19 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
             ),
             child: const Icon(
               Icons.check_circle_rounded,
-              size: 24,
+              size: 20,
               color: AppColors.success,
             ),
           ),
           const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '¡Listo para recibir notificaciones!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.success,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Te mantendremos informado sobre las actualizaciones más importantes.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppColors.success.withOpacity(0.8),
-                    height: 1.3,
-                  ),
-                ),
-              ],
+          const Expanded(
+            child: Text(
+              'Permisos otorgados correctamente',
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
             ),
           ),
         ],
@@ -541,7 +434,152 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     );
   }
 
-  Widget _buildTokenInfo() {
+  Widget _buildNotificationOption({
+    required String title,
+    required String description,
+    required IconData icon,
+    required bool enabled,
+    required void Function(bool)? onChanged,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: enabled
+              ? AppColors.primary.withOpacity(0.3)
+              : AppColors.neutral300,
+          width: 1,
+        ),
+        boxShadow: [
+          if (enabled)
+            BoxShadow(
+              color: AppColors.primary.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onChanged != null ? () => onChanged(!enabled) : null,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: enabled
+                        ? AppColors.primary.withOpacity(0.1)
+                        : AppColors.neutral200,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 24,
+                    color: enabled ? AppColors.primary : AppColors.neutral500,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: enabled
+                              ? AppColors.textPrimary
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: enabled
+                              ? AppColors.textSecondary
+                              : AppColors.neutral500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: enabled,
+                  onChanged: onChanged,
+                  activeColor: AppColors.primary,
+                  activeTrackColor: AppColors.primary.withOpacity(0.3),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(NotificationSettings settings) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              HapticFeedback.lightImpact();
+              await ref
+                  .read(notificationSettingsNotifierProvider.notifier)
+                  .enableAll();
+              if (mounted) {
+                _showSuccessMessage('Todas las notificaciones activadas');
+              }
+            },
+            icon: const Icon(Icons.check_circle_outline_rounded, size: 18),
+            label: const Text('Activar todas'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: const BorderSide(color: AppColors.primary),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              HapticFeedback.lightImpact();
+              await ref
+                  .read(notificationSettingsNotifierProvider.notifier)
+                  .disableAll();
+              if (mounted) {
+                _showSuccessMessage('Todas las notificaciones desactivadas');
+              }
+            },
+            icon: const Icon(Icons.cancel_outlined, size: 18),
+            label: const Text('Desactivar todas'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              side: const BorderSide(color: AppColors.neutral300),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTokenInfo(String token) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -575,7 +613,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
               IconButton(
                 icon: const Icon(Icons.copy_rounded, size: 18),
                 onPressed: () {
-                  Clipboard.setData(ClipboardData(text: _fcmToken ?? ''));
+                  Clipboard.setData(ClipboardData(text: token));
                   _showSuccessMessage('Token copiado al portapapeles');
                 },
                 tooltip: 'Copiar token',
@@ -585,7 +623,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           ),
           const SizedBox(height: 8),
           Text(
-            _fcmToken ?? '',
+            token,
             style: const TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
@@ -599,81 +637,23 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
     );
   }
 
-  // Métodos de interacción
-  Future<void> _onNotificationToggle(bool value) async {
-    if (value && _permissionDenied) {
-      // Si intenta activar pero no tiene permisos, solicitar permisos
-      await _requestAndHandlePermissions();
-      return;
-    }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MÉTODOS DE INTERACCIÓN
+  // ═══════════════════════════════════════════════════════════════════════════
 
-    // Feedback háptico
+  Future<void> _requestPermission() async {
     HapticFeedback.lightImpact();
 
-    try {
-      // Mostrar loading durante el proceso
-      setState(() {
-        _isLoading = true;
-      });
+    final granted = await ref
+        .read(notificationSettingsNotifierProvider.notifier)
+        .requestPermission();
 
-      if (value) {
-        // Solicitar permisos si es la primera vez
-        final hasPermission = await _requestNotificationPermissions();
-
-        if (!hasPermission) {
-          setState(() {
-            _permissionDenied = true;
-            _isLoading = false;
-          });
-          _showErrorMessage('Se requieren permisos para activar las notificaciones');
-          return;
-        }
-
-        // Obtener token después de conceder permisos
-        _fcmToken = await _notificationService.getToken();
-      }
-
-      // Guardar preferencia
-      await _saveNotificationPreference(value);
-
-      // Actualizar estado
-      setState(() {
-        _notificationsEnabled = value;
-        _permissionDenied = false;
-        _isLoading = false;
-      });
-
-      // Mostrar mensaje de confirmación
-      _showSuccessMessage(
-          value
-              ? 'Notificaciones activadas correctamente'
-              : 'Notificaciones desactivadas'
-      );
-
-    } catch (e) {
-      debugPrint('Error toggling notifications: $e');
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorMessage('Error al actualizar la configuración');
-    }
-  }
-
-  Future<void> _requestAndHandlePermissions() async {
-    try {
-      final hasPermission = await _requestNotificationPermissions();
-
-      if (hasPermission) {
-        setState(() {
-          _permissionDenied = false;
-        });
-        // Intentar activar las notificaciones nuevamente
-        await _onNotificationToggle(true);
+    if (mounted) {
+      if (granted) {
+        _showSuccessMessage('Permisos otorgados correctamente');
       } else {
         _showPermissionDialog();
       }
-    } catch (e) {
-      _showErrorMessage('Error al solicitar permisos');
     }
   }
 
@@ -705,7 +685,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
           ],
         ),
         content: const Text(
-          'Para recibir notificaciones importantes sobre tus proyectos y actualizaciones de MetraShop, necesitas activar los permisos en la configuración de tu dispositivo.',
+          'Para recibir notificaciones importantes, necesitas activar los permisos en la configuración de tu dispositivo.',
           style: TextStyle(
             fontSize: 14,
             color: AppColors.textSecondary,
@@ -741,11 +721,16 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
 
   Future<void> _openAppSettings() async {
     try {
-      // Aquí usarías permission_handler que ya tienes en pubspec.yaml
-      // await openAppSettings();
-      _showSuccessMessage('Abriendo configuración de la aplicación...');
+      final opened = await openAppSettings();
+      if (opened && mounted) {
+        _showSuccessMessage('Abriendo configuración...');
+      } else if (mounted) {
+        showSnackBar(context, 'No se pudo abrir la configuración');
+      }
     } catch (e) {
-      _showErrorMessage('No se pudo abrir la configuración');
+      if (mounted) {
+        showSnackBar(context, 'Error al abrir la configuración');
+      }
     }
   }
 
@@ -767,11 +752,5 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         duration: const Duration(seconds: 2),
       ),
     );
-  }
-
-  void _showErrorMessage(String message) {
-    if (!mounted) return;
-
-    showSnackBar(context, message);
   }
 }

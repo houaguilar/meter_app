@@ -160,14 +160,14 @@ class UnifiedResultsCombiner {
     // Agua (todas se agrupan)
     if (name.contains('agua')) return 'Agua';
 
-    // Piedra
-    if (name.contains('piedra chancada 3/4')) return 'Piedra chancada 3/4"';
+    // Piedra - ordenar de más específico a menos específico
+    if (name.contains('3/4')) return 'Piedra chancada 3/4"';
+    if (name.contains('piedra grande') && name.contains('10')) return 'Piedra grande (máx. 10")';
+    if ((name.contains('piedra de zanja') || name.contains('piedra zanja')) && name.contains('10')) return 'Piedra de zanja (máx. 10")';
     if (name.contains('piedra chancada')) return 'Piedra chancada';
-    if (name.contains('piedra grande') && name.contains('máx. 10')) return 'Piedra grande (máx. 10")';
-    if (name.contains('piedra de zanja') && name.contains('máx. 10')) return 'Piedra de zanja (máx. 10")';
-    if (name.contains('piedra grande')) return 'Piedra grande';
-    if (name.contains('piedra de zanja')) return 'Piedra de zanja';
-    if (name.contains('piedra')) return 'Piedra';
+    if (name.contains('piedra grande')) return 'Piedra grande (máx. 10")';
+    if (name.contains('piedra de zanja') || name.contains('piedra zanja')) return 'Piedra de zanja (máx. 10")';
+    if (name.contains('piedra')) return 'Piedra chancada'; // Default al tipo más común
 
     // Acero
     if (name.contains('acero')) return 'Acero';

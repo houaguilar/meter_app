@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 
 import '../../../config/theme/theme.dart';
 

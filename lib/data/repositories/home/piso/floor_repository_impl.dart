@@ -2,7 +2,7 @@
 import 'package:meter_app/domain/entities/home/piso/floor.dart';
 import 'package:meter_app/domain/repositories/home/piso/floor_repository.dart';
 
-import '../../../../presentation/assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 class FloorRepositoryImpl implements FloorRepository {
   @override

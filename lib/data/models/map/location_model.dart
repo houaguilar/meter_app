@@ -60,7 +60,7 @@ class LocationModel extends LocationMap {
       phone: map['phone']?.toString(),
       verificationStatus: map['verification_status'] != null
           ? VerificationStatus.fromString(map['verification_status'].toString())
-          : VerificationStatus.pendingApproval,
+          : VerificationStatus.pending,
       scheduledDate: map['scheduled_date'] != null
           ? DateTime.tryParse(map['scheduled_date'].toString())
           : null,
@@ -69,7 +69,7 @@ class LocationModel extends LocationMap {
       approvedAt: map['approved_at'] != null
           ? DateTime.tryParse(map['approved_at'].toString())
           : null,
-      approvedByName: map['approved_by_name']?.toString(),
+      approvedByName: map['approved_by']?.toString(),
       verificationNotes: map['verification_notes']?.toString(),
       // Contacto
       whatsapp: map['whatsapp']?.toString(),
@@ -77,7 +77,9 @@ class LocationModel extends LocationMap {
           ? jsonEncode(map['business_hours'])
           : null,
       paymentMethodStrings: map['payment_methods'] != null
-          ? (map['payment_methods'] as List<dynamic>).map((e) => e.toString()).toList()
+          ? (map['payment_methods'] is List
+              ? (map['payment_methods'] as List<dynamic>).map((e) => e.toString()).toList()
+              : null)
           : null,
       // Estadísticas
       rating: (map['rating'] as num?)?.toDouble() ?? 0.0,
@@ -114,7 +116,7 @@ class LocationModel extends LocationMap {
       'scheduled_time': scheduledTime,
       'approval_token': approvalToken,
       'approved_at': approvedAt?.toIso8601String(),
-      'approved_by_name': approvedByName,
+      'approved_by': approvedByName,
       'verification_notes': verificationNotes,
       // Contacto
       'whatsapp': whatsapp,
@@ -140,10 +142,10 @@ class LocationModel extends LocationMap {
       map['created_at'] = createdAt!.toIso8601String();
     }
 
-    // PostGIS point (si hay lat/lng)
-    if (latitude != 0.0 && longitude != 0.0) {
-      map['location_point'] = 'POINT($longitude $latitude)';
-    }
+    // Nota: Si en el futuro agregas la columna location_point (PostGIS) a Supabase, descomenta:
+    // if (latitude != 0.0 && longitude != 0.0) {
+    //   map['location_point'] = 'POINT($longitude $latitude)';
+    // }
 
     return map;
   }

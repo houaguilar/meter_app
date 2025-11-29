@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
@@ -10,7 +11,9 @@ import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_t
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/columna/steel_column.dart';
 import '../../../../../../domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
+import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';
@@ -44,14 +47,14 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
   void initState() {
     super.initState();
     _initializeAnimations();
-    _initializeColumns(); // cambio de _initializeBeams
+    _initializeColumns();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _animationController.dispose();
-    _disposeColumnControllers(); // cambio de _disposeBeamControllers
+    _disposeColumnControllers();
     super.dispose();
   }
 
@@ -190,7 +193,8 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
           description: columnData.descriptionController.text,
           waste: double.parse(columnData.wasteController.text) / 100,
           elements: int.parse(columnData.elementsController.text),
-          cover: double.parse(columnData.coverController.text) / 100,
+          cover: double.parse(columnData.coverController.text),
+          stirrupCover: double.parse(columnData.stirrupCoverController.text),
           height: double.parse(columnData.heightController.text),
           length: double.parse(columnData.lengthController.text),
           width: double.parse(columnData.widthController.text),
@@ -245,7 +249,23 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
         title: const Text('Acero en Columnas'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
-        // ✅ CAMBIO: Tabs ahora en el AppBar con botón X para eliminar
+        centerTitle: false,
+        actions: [
+          TextButton(
+            onPressed: () {
+              ConfirmDialog.show(
+                  context: context,
+                  title: '¿Seguro que deseas salir?',
+                  content: 'Si sales del resumen se perderá todo el progreso.',
+                  confirmText: 'Salir',
+                  cancelText: 'Cancelar',
+                  onConfirm: () {context.goNamed('home');},
+                  onCancel: () {context.pop();},
+                  isVisible: true);
+            },
+            child: SvgPicture.asset(AppIcons.closeDialogIcon, width: 32, height: 32,),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
@@ -289,21 +309,25 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
         ),
       ),
       backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: TabBarView(
-          controller: _tabController,
-          children: _columns.asMap().entries.map((entry) {
-            final index = entry.key;
-            final columnData = entry.value;
-            return _ColumnFormView(
-              columnData: columnData,
-              columnIndex: index,
-              onDataChanged: () => setState(() {}),
-              onRemoveColumn: () => _removeColumn(index),
-              canRemove: _columns.length > 1,
-            );
-          }).toList(),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: TabBarView(
+            controller: _tabController,
+            children: _columns.asMap().entries.map((entry) {
+              final index = entry.key;
+              final columnData = entry.value;
+              return _ColumnFormView(
+                columnData: columnData,
+                columnIndex: index,
+                onDataChanged: () => setState(() {}),
+                onRemoveColumn: () => _removeColumn(index),
+                canRemove: _columns.length > 1,
+              );
+            }).toList(),
+          ),
         ),
       ),
       floatingActionButton: Column(
@@ -377,9 +401,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
         key: _formKey,
         child: Column(
           children: [
-            // Header de la columna
-            _buildColumnHeader(),
-            const SizedBox(height: 20),
+            const SizedBox(height: 5),
 
             // Datos generales
             _buildGeneralDataSection(),
@@ -398,53 +420,6 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
             const SizedBox(height: 100), // Espacio para FAB
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildColumnHeader() {
-    return ModernCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.view_column, // cambio de Icons.view_in_ar
-                  color: AppColors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Columna ${widget.columnIndex + 1}', // cambio de 'Viga'
-                      style: AppTypography.titleMedium.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    Text(
-                      'Configure los parámetros de esta columna', // cambio de 'viga'
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
@@ -516,21 +491,46 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
             ],
           ),
           const SizedBox(height: 16),
-          ModernSteelTextFormField(
-            controller: widget.columnData.coverController,
-            label: 'Recubrimiento (cm)',
-            prefixIcon: Icons.layers,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
+          Row(
+            children: [
+              Expanded(
+                child: ModernSteelTextFormField(
+                  controller: widget.columnData.coverController,
+                  label: 'Recub. columna (cm)',
+                  prefixIcon: Icons.layers,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Requerido';
+                    final cover = double.tryParse(value);
+                    if (cover == null || cover <= 0) return 'Debe ser mayor a 0';
+                    return null;
+                  },
+                  onChanged: (value) => widget.onDataChanged(),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ModernSteelTextFormField(
+                  controller: widget.columnData.stirrupCoverController,
+                  label: 'Recub. estribos (cm)',
+                  prefixIcon: Icons.build_circle,
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
+                  ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return 'Requerido';
+                    final stirrupCover = double.tryParse(value);
+                    if (stirrupCover == null || stirrupCover <= 0) return 'Debe ser mayor a 0';
+                    return null;
+                  },
+                  onChanged: (value) => widget.onDataChanged(),
+                ),
+              ),
             ],
-            validator: (value) {
-              if (value == null || value.isEmpty) return 'Requerido';
-              final cover = double.tryParse(value);
-              if (cover == null || cover <= 0) return 'Debe ser mayor a 0';
-              return null;
-            },
-            onChanged: (value) => widget.onDataChanged(),
           ),
         ],
       ),
@@ -769,35 +769,6 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Nota sobre diferencias con vigas
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.info.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: AppColors.info,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Las columnas no requieren doblez de acero longitudinal como las vigas. El doblez solo aplica si hay zapata.',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.info,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // Barras de acero dinámicas
           DynamicSteelBarsWidget(
             steelBars: widget.columnData.steelBars,
@@ -837,7 +808,7 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                       border: OutlineInputBorder(),
                       contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),
-                    items: SteelConstants.availableDiameters.map((diameter) {
+                    items: SteelConstants.availableDiametersSturrips.map((diameter) {
                       return DropdownMenuItem(
                         value: diameter,
                         child: Text(diameter),

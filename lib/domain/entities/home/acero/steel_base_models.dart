@@ -1,4 +1,3 @@
-// lib/domain/entities/home/acero/shared/steel_base_models.dart
 
 /// Cantidad de material calculado para un diámetro específico
 ///

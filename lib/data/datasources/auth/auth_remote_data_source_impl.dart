@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -115,8 +116,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   @override
   Future<UserModel?> signInWithGoogle() async {
+    // Client IDs de Google Cloud Console
+    // IMPORTANTE: Estos deben coincidir con los configurados en:
+    // 1. Google Cloud Console (OAuth 2.0 Client IDs)
+    // 2. Supabase Dashboard (Authentication → Providers → Google)
     const webClientId = '194976078807-jn7jhikh5s84tjhplur8j3onsosimpah.apps.googleusercontent.com';
     const iosClientId = '194976078807-6oevpfa8e61mtprl13akdf332rf48edd.apps.googleusercontent.com';
+
+    print('🔐 Iniciando Google Sign-In...');
+    print('📱 Package: com.jrd.metrashop');
 
     final GoogleSignIn googleSignIn = GoogleSignIn(
       clientId: iosClientId,
@@ -124,40 +132,100 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     );
 
     try {
+      // Paso 1: Obtener usuario de Google
+      print('Paso 1: Solicitando inicio de sesión de Google...');
       final googleUser = await googleSignIn.signIn();
+
       if (googleUser == null) {
-        return null;
+        print('❌ Usuario canceló el inicio de sesión');
+        throw const ServerException('El usuario canceló el inicio de sesión');
       }
 
+      print('✅ Usuario de Google obtenido: ${googleUser.email}');
+
+      // Paso 2: Obtener tokens de autenticación
+      print('Paso 2: Obteniendo tokens de autenticación...');
       final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
+      if (idToken == null) {
+        print('❌ No se pudo obtener el ID token');
+        throw const ServerException('Error al obtener credenciales de Google');
+      }
+
+      print('✅ Tokens obtenidos correctamente');
+
+      // Paso 3: Autenticar con Supabase usando el ID token
+      print('Paso 3: Autenticando con Supabase...');
       final response = await supabaseClient.auth.signInWithIdToken(
         provider: OAuthProvider.google,
-        idToken: idToken!,
+        idToken: idToken,
         accessToken: accessToken,
       );
 
       if (response.user == null) {
-        return null;
+        print('❌ Supabase no devolvió un usuario');
+        throw const ServerException('Error al autenticar con Supabase');
       }
 
-      // Crear un perfil para el usuario si es su primera vez
+      print('✅ Usuario autenticado con Supabase: ${response.user!.email}');
+
+      // Paso 4: Crear o actualizar perfil del usuario
+      // NOTA: En Supabase, no hay diferencia entre "login" y "register" con Google.
+      // Si el usuario no existe, se crea automáticamente. Si existe, se autentica.
+      print('Paso 4: Creando/actualizando perfil...');
       await _createInitialUserProfile(
         userId: response.user!.id,
-        name: response.user!.userMetadata?['name'] ?? response.user!.email ?? '',
+        name: response.user!.userMetadata?['name'] ??
+              response.user!.email?.split('@')[0] ??
+              'Usuario',
         email: response.user!.email ?? '',
       );
+
+      print('✅ Google Sign-In completado exitosamente');
 
       return UserModel(
         id: response.user!.id,
-        name: response.user!.userMetadata?['name'] ?? '',
+        name: response.user!.userMetadata?['name'] ??
+             response.user!.email?.split('@')[0] ??
+             'Usuario',
         email: response.user!.email ?? '',
       );
-    } catch (e) {
-      print('Error en signInWithGoogle: $e');
-      return null;
+    } on AuthException catch (e) {
+      // Errores específicos de Supabase Auth
+      print('❌ Error de Supabase Auth: ${e.message}');
+      print('   Status Code: ${e.statusCode}');
+
+      if (e.statusCode == '556' || e.statusCode == 556) {
+        throw const ServerException(
+          'Error de configuración de Google Sign-In. '
+          'Por favor, verifica que:\n'
+          '1. Los SHA-1 y SHA-256 están actualizados en Google Cloud Console\n'
+          '2. El package name "com.jrd.metrashop" está configurado correctamente\n'
+          '3. Supabase tiene configurado el proveedor de Google\n\n'
+          'Consulta GOOGLE_SIGNIN_SETUP.md para más detalles.'
+        );
+      }
+
+      throw ServerException(e.message);
+    } on PlatformException catch (e) {
+      // Errores de la plataforma (Android/iOS)
+      print('❌ Error de plataforma: ${e.message}');
+      print('   Code: ${e.code}');
+
+      if (e.code == 'sign_in_failed' || e.code == 'network_error') {
+        throw const ServerException(
+          'Error al conectar con Google. Verifica tu conexión a internet.'
+        );
+      }
+
+      throw ServerException(e.message ?? 'Error desconocido de la plataforma');
+    } catch (e, stackTrace) {
+      // Cualquier otro error
+      print('❌ Error inesperado en signInWithGoogle: $e');
+      print('   Stack trace: $stackTrace');
+      throw ServerException(e.toString());
     }
   }
 

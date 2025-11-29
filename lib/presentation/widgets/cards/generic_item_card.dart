@@ -183,35 +183,39 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
   }
 
   Widget _buildImageWidget(String imagePath, double size) {
-    switch (widget.imageType) {
-      case ImageType.svg:
-        return SvgPicture.asset(
-          imagePath,
-          fit: BoxFit.contain,
-          width: size,
-          height: size,
-          placeholderBuilder: (context) => _buildImagePlaceholder(size),
-        );
-      case ImageType.network:
-        return Image.network(
-          imagePath,
-          fit: BoxFit.cover,
-          width: size,
-          height: size,
-          errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return _buildImagePlaceholder(size);
-          },
-        );
-      case ImageType.asset:
-        return Image.asset(
-          imagePath,
-          fit: BoxFit.cover,
-          width: size,
-          height: size,
-          errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
-        );
+    // Auto-detectar el tipo de imagen si es SVG, si no detectar automáticamente
+    final isSvg = imagePath.toLowerCase().endsWith('.svg');
+    final isNetwork = imagePath.startsWith('http://') || imagePath.startsWith('https://');
+
+    if (isNetwork) {
+      return Image.network(
+        imagePath,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return _buildImagePlaceholder(size);
+        },
+      );
+    } else if (isSvg) {
+      return SvgPicture.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        width: size,
+        height: size,
+        placeholderBuilder: (context) => _buildImagePlaceholder(size),
+      );
+    } else {
+      // PNG, JPG, etc.
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        width: size,
+        height: size,
+        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
+      );
     }
   }
 

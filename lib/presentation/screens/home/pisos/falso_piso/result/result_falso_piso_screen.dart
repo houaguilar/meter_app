@@ -8,7 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/piso/piso.dart';
-import '../../../../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../providers/pisos/falso_piso_providers.dart';
 import '../../../../../widgets/widgets.dart';
 
@@ -375,7 +375,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           return _buildTableRow([
             piso.description,
             'm²',
-            area.toStringAsFixed(2),
+            area.toStringAsFixed(1),
           ]);
         }).toList(),
         _buildTableRow([

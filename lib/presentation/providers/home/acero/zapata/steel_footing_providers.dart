@@ -86,8 +86,8 @@ final consolidatedFootingSummaryProvider = Provider<String>((ref) {
 
   summary += "📊 RESULTADOS GENERALES:\n";
   summary += "• Número de zapatas: ${result.numberOfElements}\n";
-  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
-  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n\n";
+  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
+  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n\n";
 
   summary += "📋 MATERIALES CONSOLIDADOS:\n";
   result.consolidatedMaterials.forEach((diameter, material) {
@@ -98,18 +98,18 @@ final consolidatedFootingSummaryProvider = Provider<String>((ref) {
   for (int i = 0; i < result.footingResults.length; i++) {
     final footingResult = result.footingResults[i];
     summary += "\n${i + 1}. ${footingResult.description}:\n";
-    summary += "   • Peso: ${footingResult.totalWeight.toStringAsFixed(2)} kg\n";
-    summary += "   • Alambre: ${footingResult.wireWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Peso: ${footingResult.totalWeight.toStringAsFixed(1)} kg\n";
+    summary += "   • Alambre: ${footingResult.wireWeight.toStringAsFixed(1)} kg\n";
 
     // Detalles de mallas
     summary += "   • Malla inferior:\n";
-    summary += "     - Horizontal: ${footingResult.inferiorMesh.horizontalQuantity} barras x ${footingResult.inferiorMesh.horizontalLength.toStringAsFixed(2)}m\n";
-    summary += "     - Vertical: ${footingResult.inferiorMesh.verticalQuantity} barras x ${footingResult.inferiorMesh.verticalLength.toStringAsFixed(2)}m\n";
+    summary += "     - Horizontal: ${footingResult.inferiorMesh.horizontalQuantity} barras x ${footingResult.inferiorMesh.horizontalLength.toStringAsFixed(1)}m\n";
+    summary += "     - Vertical: ${footingResult.inferiorMesh.verticalQuantity} barras x ${footingResult.inferiorMesh.verticalLength.toStringAsFixed(1)}m\n";
 
     if (footingResult.superiorMesh != null) {
       summary += "   • Malla superior:\n";
-      summary += "     - Horizontal: ${footingResult.superiorMesh!.horizontalQuantity} barras x ${footingResult.superiorMesh!.horizontalLength.toStringAsFixed(2)}m\n";
-      summary += "     - Vertical: ${footingResult.superiorMesh!.verticalQuantity} barras x ${footingResult.superiorMesh!.verticalLength.toStringAsFixed(2)}m\n";
+      summary += "     - Horizontal: ${footingResult.superiorMesh!.horizontalQuantity} barras x ${footingResult.superiorMesh!.horizontalLength.toStringAsFixed(1)}m\n";
+      summary += "     - Vertical: ${footingResult.superiorMesh!.verticalQuantity} barras x ${footingResult.superiorMesh!.verticalLength.toStringAsFixed(1)}m\n";
     }
   }
 
@@ -226,7 +226,7 @@ SteelFootingCalculationResult _calculateSteelForFooting(SteelFooting footing) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
       final varillas = longitud / SteelConstants.standardRodLength;
-      final varillasConDesperdicio = (varillas * (1 + footing.waste)).ceil().toDouble();
+      final varillasConDesperdicio = varillas * (1 + footing.waste);  // Mantiene decimales (Excel no redondea)
 
       // Calcular peso
       final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
@@ -248,7 +248,7 @@ SteelFootingCalculationResult _calculateSteelForFooting(SteelFooting footing) {
   return SteelFootingCalculationResult(
     footingId: footing.idSteelFooting,
     description: footing.description,
-    totalWeight: pesoTotal * (1 + footing.waste),
+    totalWeight: pesoTotal,  // Peso sin desperdicio (Excel no aplica desperdicio al peso)
     wireWeight: alambreKg,
     materials: materials,
     totalsByDiameter: totalesPorDiametro,

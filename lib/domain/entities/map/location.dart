@@ -89,7 +89,7 @@ class LocationMap {
     this.document,
     this.documentType,
     this.phone,
-    this.verificationStatus = VerificationStatus.pendingApproval,
+    this.verificationStatus = VerificationStatus.pending,
     this.scheduledDate,
     this.scheduledTime,
     this.approvalToken,
@@ -147,14 +147,12 @@ class LocationMap {
 
   /// Si puede configurar productos
   bool get canConfigureProducts {
-    return verificationStatus == VerificationStatus.approved ||
-        verificationStatus == VerificationStatus.active;
+    return verificationStatus == VerificationStatus.approved;
   }
 
   /// Si está aprobado (cualquier nivel)
   bool get isApproved {
-    return verificationStatus == VerificationStatus.approved ||
-        verificationStatus == VerificationStatus.active;
+    return verificationStatus == VerificationStatus.approved;
   }
 
   /// Rating formateado

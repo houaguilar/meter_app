@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:uuid/uuid.dart';
@@ -9,7 +10,9 @@ import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 import '../../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import '../../../../../../domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
+import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../widgets/slab_floating_action_button.dart';
@@ -103,7 +106,24 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
       appBar: AppBar(
         title: const Text('Acero en Losa Maciza'),
         backgroundColor: AppColors.primary,
+        centerTitle: false,
         foregroundColor: AppColors.white,
+        actions: [
+          TextButton(
+            onPressed: () {
+              ConfirmDialog.show(
+                  context: context,
+                  title: '¿Seguro que deseas salir?',
+                  content: 'Si sales del resumen se perderá todo el progreso.',
+                  confirmText: 'Salir',
+                  cancelText: 'Cancelar',
+                  onConfirm: () {context.goNamed('home');},
+                  onCancel: () {context.pop();},
+                  isVisible: true);
+            },
+            child: SvgPicture.asset(AppIcons.closeDialogIcon, width: 32, height: 32,),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
@@ -147,14 +167,18 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
         ),
       ),
       backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: TabBarView(
-          controller: _tabController,
-          children: _slabs.asMap().entries.map((entry) {
-            final index = entry.key;
-            return _buildSlabForm(index); // ← Usa el método existente
-          }).toList(),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: TabBarView(
+            controller: _tabController,
+            children: _slabs.asMap().entries.map((entry) {
+              final index = entry.key;
+              return _buildSlabForm(index);
+            }).toList(),
+          ),
         ),
       ),
       floatingActionButton: Column(
@@ -666,6 +690,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
     setState(() {
       final newSlab = SlabFormData.initial();
       _slabs.add(newSlab);
+      _formKeys.add(GlobalKey<FormState>());  // ✅ BUG FIX: Agregar FormKey para nueva losa
 
       _tabController.removeListener(_onTabChanged);
       _tabController.dispose();
@@ -689,6 +714,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
     setState(() {
       _slabs[index].dispose();
       _slabs.removeAt(index);
+      _formKeys.removeAt(index);  // ✅ BUG FIX: Eliminar FormKey correspondiente
 
       _tabController.removeListener(_onTabChanged);
       _tabController.dispose();

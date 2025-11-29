@@ -5,67 +5,84 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../../assets/assets.dart';
+
 /// Clase para generar PDFs estandarizados para MetraShop
 class MetraShopPDFGenerator {
-  static const String _logoPath = 'assets/images/metrashop.png';
+  static const String _logoPath = AppIcons.metrashopIcon;
 
   /// Genera un PDF con el formato estandarizado de MetraShop
   static Future<File> generatePDF({
     required PDFData data,
     String? customFileName,
   }) async {
-    final pdf = pw.Document();
+    try {
+      print('🔧 MetraShopPDFGenerator.generatePDF - Iniciando...');
+      final pdf = pw.Document();
 
-    // Cargar logo
-    final Uint8List? logoBytes = await _loadLogo();
+      // Cargar logo
+      print('🔧 Cargando logo...');
+      final Uint8List? logoBytes = await _loadLogo();
+      print('🔧 Logo cargado: ${logoBytes != null}');
 
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
-        build: (context) => pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            // Header con logo y título
-            _buildHeader(logoBytes, data.titulo),
-            pw.SizedBox(height: 30),
+      print('🔧 Construyendo página PDF...');
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(40),
+          build: (context) => pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              // Header con logo y título
+              _buildHeader(logoBytes, data.titulo),
+              pw.SizedBox(height: 30),
 
-            // Información del proyecto
-            _buildProjectInfo(data),
-            pw.SizedBox(height: 25),
-
-            // Tabla de materiales
-            _buildMaterialsTable(data.materiales),
-            pw.SizedBox(height: 25),
-
-            // Tabla de metrado (si existe)
-            if (data.metrado.isNotEmpty) ...[
-              _buildMetradoTable(data.metrado),
+              // Información del proyecto
+              _buildProjectInfo(data),
               pw.SizedBox(height: 25),
-            ],
 
-            // Observaciones (si existen)
-            if (data.observaciones.isNotEmpty) ...[
-              _buildObservations(data.observaciones),
+              // Tabla de materiales
+              _buildMaterialsTable(data.materiales),
               pw.SizedBox(height: 25),
-            ],
 
-            // Marcas aliadas
-            pw.Spacer(),
-            _buildFooter(),
-          ],
+              // Tabla de metrado (si existe)
+              if (data.metrado.isNotEmpty) ...[
+                _buildMetradoTable(data.metrado),
+                pw.SizedBox(height: 25),
+              ],
+
+              // Observaciones (si existen)
+              if (data.observaciones.isNotEmpty) ...[
+                _buildObservations(data.observaciones),
+                pw.SizedBox(height: 25),
+              ],
+
+              // Marcas aliadas
+              pw.Spacer(),
+              _buildFooter(),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+      print('🔧 Página PDF construida');
 
-    // Guardar archivo
-    final output = await getTemporaryDirectory();
-    final fileName = customFileName ??
-        'lista_materiales_${DateTime.now().millisecondsSinceEpoch}.pdf';
-    final file = File('${output.path}/$fileName');
-    await file.writeAsBytes(await pdf.save());
+      // Guardar archivo
+      print('🔧 Obteniendo directorio temporal...');
+      final output = await getTemporaryDirectory();
+      final fileName = customFileName ??
+          'lista_materiales_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final file = File('${output.path}/$fileName');
 
-    return file;
+      print('🔧 Guardando PDF en: ${file.path}');
+      await file.writeAsBytes(await pdf.save());
+      print('🔧 PDF guardado exitosamente');
+
+      return file;
+    } catch (e, stackTrace) {
+      print('❌ ERROR en MetraShopPDFGenerator.generatePDF: $e');
+      print('❌ StackTrace: $stackTrace');
+      rethrow;
+    }
   }
 
   /// Carga el logo de MetraShop
@@ -178,6 +195,8 @@ class MetraShopPDFGenerator {
         children: [
           _buildInfoRow('Fecha:', data.fecha),
           _buildInfoRow('Número de cotización:', data.numeroCotizacion),
+          if (data.nombreUsuario != null && data.nombreUsuario!.isNotEmpty)
+            _buildInfoRow('Generado por:', data.nombreUsuario!),
           _buildInfoRow('Proyecto:', data.proyecto),
           _buildInfoRow('Obra:', data.obra),
           _buildInfoRow('Partida de trabajo:', data.partida),
@@ -352,7 +371,7 @@ class MetraShopPDFGenerator {
         ...observaciones.map((obs) => pw.Padding(
           padding: const pw.EdgeInsets.only(bottom: 4),
           child: pw.Text(
-            '• $obs',
+            '- $obs',
             style: pw.TextStyle(
               fontSize: 10,
               color: PdfColors.grey700,
@@ -448,6 +467,7 @@ class PDFData {
   final List<MaterialItem> materiales;
   final List<MetradoItem> metrado;
   final List<String> observaciones;
+  final String? nombreUsuario; // Nombre completo del usuario que genera el PDF
 
   PDFData({
     required this.titulo,
@@ -459,6 +479,7 @@ class PDFData {
     required this.materiales,
     this.metrado = const [],
     this.observaciones = const [],
+    this.nombreUsuario,
   });
 }
 

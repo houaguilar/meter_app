@@ -5,6 +5,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../providers/home/acero/zapata/steel_footing_providers.dart';
 
 class ResultSteelFootingScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,8 @@ class ResultSteelFootingScreen extends ConsumerStatefulWidget {
 
 class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScreen>
     with SingleTickerProviderStateMixin {
+
+  bool _isGeneratingPDF = false; // Flag para prevenir limpieza durante generación de PDF
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -89,40 +92,39 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultados de Acero en Zapatas'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            onPressed: _shareResults,
-            icon: const Icon(Icons.share),
-            tooltip: 'Compartir resultados',
-          ),
-          IconButton(
-            onPressed: _generatePDF,
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Generar PDF',
-          ),
-        ],
-      ),
-      backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Stack(
-            children: [
-              _buildBody(),
-              // Botones de acción en la parte inferior (como ResultLosasScreen)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomActionBar(),
-              ),
-            ],
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (bool didPop) {
+        if (didPop && !_isGeneratingPDF) {
+          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
+          ref.read(steelFootingResultProvider.notifier).clearList();
+        } else if (didPop && _isGeneratingPDF) {
+          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Resultados de Acero en Zapatas'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+        backgroundColor: AppColors.background,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Stack(
+              children: [
+                _buildBody(),
+                // Botones de acción en la parte inferior (como ResultLosasScreen)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomActionBar(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -426,9 +428,9 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
   // MÉTODOS DE COMPARTIR (ADAPTADOS PARA ZAPATAS)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _sharePDF() async {
+  Future<void> _sharePDF() async {
     try {
-      _generatePDF();
+      await _generatePDF();
     } catch (e) {
       _showErrorMessage('Error al generar PDF: $e');
     }
@@ -463,18 +465,18 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
     for (int i = 0; i < consolidatedResult.footingResults.length; i++) {
       final footing = consolidatedResult.footingResults[i];
       content.writeln('\n${i + 1}. ${footing.description}:');
-      content.writeln('   • Peso: ${footing.totalWeight.toStringAsFixed(2)} kg');
-      content.writeln('   • Alambre: ${footing.wireWeight.toStringAsFixed(2)} kg');
+      content.writeln('   • Peso: ${footing.totalWeight.toStringAsFixed(1)} kg');
+      content.writeln('   • Alambre: ${footing.wireWeight.toStringAsFixed(1)} kg');
 
       // Detalles de mallas
       content.writeln('   • Malla inferior:');
-      content.writeln('     - Horizontal: ${footing.inferiorMesh.horizontalQuantity} barras x ${footing.inferiorMesh.horizontalLength.toStringAsFixed(2)}m');
-      content.writeln('     - Vertical: ${footing.inferiorMesh.verticalQuantity} barras x ${footing.inferiorMesh.verticalLength.toStringAsFixed(2)}m');
+      content.writeln('     - Horizontal: ${footing.inferiorMesh.horizontalQuantity} barras x ${footing.inferiorMesh.horizontalLength.toStringAsFixed(1)}m');
+      content.writeln('     - Vertical: ${footing.inferiorMesh.verticalQuantity} barras x ${footing.inferiorMesh.verticalLength.toStringAsFixed(1)}m');
 
       if (footing.superiorMesh != null) {
         content.writeln('   • Malla superior:');
-        content.writeln('     - Horizontal: ${footing.superiorMesh!.horizontalQuantity} barras x ${footing.superiorMesh!.horizontalLength.toStringAsFixed(2)}m');
-        content.writeln('     - Vertical: ${footing.superiorMesh!.verticalQuantity} barras x ${footing.superiorMesh!.verticalLength.toStringAsFixed(2)}m');
+        content.writeln('     - Horizontal: ${footing.superiorMesh!.horizontalQuantity} barras x ${footing.superiorMesh!.horizontalLength.toStringAsFixed(1)}m');
+        content.writeln('     - Vertical: ${footing.superiorMesh!.verticalQuantity} barras x ${footing.superiorMesh!.verticalLength.toStringAsFixed(1)}m');
       }
     }
 
@@ -486,9 +488,59 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
     );
   }
 
-  void _generatePDF() {
-    // Implementar generación de PDF similar a otras pantallas
-    _showErrorMessage('Funcionalidad de PDF en desarrollo');
+  Future<void> _generatePDF() async {
+    try {
+      // Activar flag para prevenir limpieza de datos
+      if (!mounted) return;
+      setState(() {
+        _isGeneratingPDF = true;
+      });
+
+      // Mostrar loader (NO cerramos el bottom sheet)
+      if (!mounted) return;
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+
+      // Generar PDF usando PDFFactory
+      final pdfFile = await PDFFactory.generateSteelFootingPDF(ref);
+
+      // Ocultar loader solo si el widget está montado
+      if (mounted) {
+        context.hideLoader();
+      } else {
+        return;
+      }
+
+      // Compartir PDF (esto cerrará automáticamente el bottom sheet)
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        subject: 'Resultados de Zapatas de Acero',
+      );
+
+      // Mostrar feedback solo si el widget está montado
+      if (mounted && result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          context.hideLoader();
+        } catch (loaderError) {
+          // Ignorar error si no se puede ocultar loader
+        }
+        _showErrorMessage('Error al generar PDF: $e');
+      }
+    } finally {
+      // Desactivar flag después de completar o fallar
+      if (mounted) {
+        setState(() {
+          _isGeneratingPDF = false;
+        });
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -589,8 +641,8 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Zapatas', '${quickStats['totalFootings']}'),
-            _buildStatRow('Peso Total', '${quickStats['totalWeight']?.toStringAsFixed(2)} kg'),
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(2)} kg'),
+            _buildStatRow('Peso Total', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
           ],
         ],
       ),
@@ -843,7 +895,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${footing.totalWeight.toStringAsFixed(2)} kg',
+                  'Peso total: ${footing.totalWeight.toStringAsFixed(1)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
@@ -852,7 +904,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
               ),
               Expanded(
                 child: Text(
-                  'Alambre: ${footing.wireWeight.toStringAsFixed(2)} kg',
+                  'Alambre: ${footing.wireWeight.toStringAsFixed(1)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.secondary,
@@ -898,14 +950,14 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
             children: [
               Expanded(
                 child: Text(
-                  'H: ${mesh.horizontalQuantity} × ${mesh.horizontalLength.toStringAsFixed(2)}m',
+                  'H: ${mesh.horizontalQuantity} × ${mesh.horizontalLength.toStringAsFixed(1)}m',
                   style: AppTypography.bodySmall.copyWith(fontSize: 11),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'V: ${mesh.verticalQuantity} × ${mesh.verticalLength.toStringAsFixed(2)}m',
+                  'V: ${mesh.verticalQuantity} × ${mesh.verticalLength.toStringAsFixed(1)}m',
                   style: AppTypography.bodySmall.copyWith(fontSize: 11),
                 ),
               ),
@@ -922,6 +974,21 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
         SnackBar(
           content: Text(message),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

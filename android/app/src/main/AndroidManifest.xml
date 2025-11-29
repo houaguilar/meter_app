@@ -22,7 +22,7 @@
     <application
         android:usesCleartextTraffic="true"
         android:label="MetraShop"
-        android:name="${applicationName}"
+        android:name=".MetraShopApplication"
         android:icon="@mipmap/launcher_icon">
 
         <meta-data android:name="com.google.android.geo.API_KEY"

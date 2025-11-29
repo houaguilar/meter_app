@@ -68,7 +68,7 @@ String datosShareFalsoPiso(DatosShareFalsoPisoRef ref) {
   String datos = "";
   if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m²\n";  // ✅ Cambio: m³ → m²
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(1)} m²\n";  // ✅ Cambio: m³ → m²
     }
     datos = datos.substring(0, datos.length - 2);
   }
@@ -286,12 +286,12 @@ class FalsoPisoMaterials {
   /// Formatear cemento como entero (bolsas)
   int get cementoBolsas => cemento.ceil();
 
-  /// Formatear materiales con 2 decimales
-  String get arenaFormateada => arena.toStringAsFixed(2);
-  String get piedraFormateada => piedra.toStringAsFixed(2);
-  String get aguaFormateada => agua.toStringAsFixed(2);
-  String get volumenFormateado => volumenTotal.toStringAsFixed(2);
-  String get areaTotalFormateada => areaTotal.toStringAsFixed(2);  // 🆕 NUEVO método
+  /// Formatear materiales con 1 decimal
+  String get arenaFormateada => arena.toStringAsFixed(1);
+  String get piedraFormateada => piedra.toStringAsFixed(1);
+  String get aguaFormateada => agua.toStringAsFixed(1);
+  String get volumenFormateado => volumenTotal.toStringAsFixed(1);
+  String get areaTotalFormateada => areaTotal.toStringAsFixed(1);  // 🆕 NUEVO método
 
   @override
   String toString() {

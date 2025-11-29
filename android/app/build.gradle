@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.8.21'
+    ext.kotlin_version = '2.1.0'
 }
 
 plugins {
@@ -31,15 +31,15 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace = "com.example.metrashop"
-    compileSdk = 34
+    namespace = "com.jrd.metrashop"
+    compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
 
-        coreLibraryDesugaringEnabled false
+        coreLibraryDesugaringEnabled true
 
     }
 
@@ -53,7 +53,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 35
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
         multiDexEnabled true
@@ -79,8 +79,7 @@ flutter {
 configurations.all {
     resolutionStrategy.eachDependency { details ->
         if (details.requested.group == 'org.jetbrains.kotlin') {
-       //     details.useVersion '1.8.0' // Fuerza una versión estable de Kotlin
-            details.useVersion '1.8.21' // Alinea la versión de Kotlin con la que has configurado en otros lugares
+            details.useVersion '2.1.0' // Alinea la versión de Kotlin con la que has configurado en otros lugares
         }
 
         if (details.requested.group == 'com.google.android.gms' && details.requested.name == 'play-services-location') {
@@ -96,7 +95,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.2' // Versión estable
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.8.21"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:2.1.0"
 
     implementation 'com.google.android.gms:play-services-location:21.0.0'
     implementation 'com.google.android.gms:play-services-maps:18.1.0'

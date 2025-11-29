@@ -21,7 +21,7 @@ extension StringExtension on String {
   }
 }
 
-/// Pantalla de detalle de ubicación mejorada con el tema de MetraShop
+/// Pantalla de detalle de ubicación con layout vertical continuo
 class LocationDetailScreen extends StatefulWidget {
   final LocationMap location;
 
@@ -35,36 +35,43 @@ class LocationDetailScreen extends StatefulWidget {
 }
 
 class _LocationDetailScreenState extends State<LocationDetailScreen>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  late ScrollController _scrollController;
 
   List<Product> _products = [];
   bool _loadingProducts = false;
+  bool _showTitle = false;
+
+  // Posición del FAB arrastrable
+  Offset _fabPosition = const Offset(20, 24);
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _scrollController = ScrollController()..addListener(_onScroll);
+
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
+
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+        curve: const Interval(0.0, 0.5, curve: Curves.easeOut),
       ),
     );
+
     _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
+      begin: const Offset(0, 0.2),
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
         parent: _animationController,
-        curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
+        curve: const Interval(0.3, 1.0, curve: Curves.easeOutCubic),
       ),
     );
 
@@ -72,10 +79,18 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     _loadProducts();
   }
 
+  void _onScroll() {
+    final offset = _scrollController.offset;
+    // Mostrar título cuando se haya scrolleado más de 200px
+    setState(() {
+      _showTitle = offset > 200;
+    });
+  }
+
   @override
   void dispose() {
-    _tabController.dispose();
     _animationController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -106,33 +121,41 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
             showSnackBar(context, 'Error al cargar productos: ${state.message}');
           }
         },
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: CustomScrollView(
-            slivers: [
-              _buildSliverAppBar(),
-              SliverToBoxAdapter(
-                child: SlideTransition(
-                  position: _slideAnimation,
-                  child: Column(
-                    children: [
-                      _buildLocationInfo(),
-                      const SizedBox(height: 16),
-                      _buildVerificationBadge(),
-                      if (_isProvider) ...[
-                        const SizedBox(height: 24),
-                        _buildTabSection(),
-                      ] else ...[
-                        const SizedBox(height: 24),
-                        _buildBasicLocationContent(),
-                      ],
-                      const SizedBox(height: 24),
-                    ],
+        child: Stack(
+          children: [
+            CustomScrollView(
+              controller: _scrollController,
+              slivers: [
+                _buildModernSliverAppBar(),
+                SliverToBoxAdapter(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          if (_isProvider) _buildQuickStats(),
+                          if (_isProvider) const SizedBox(height: 24),
+                          _buildLocationInfo(),
+                          if (_isProvider) ...[
+                            const SizedBox(height: 32),
+                            _buildProductsSection(),
+                          ] else ...[
+                            const SizedBox(height: 32),
+                            _buildBasicLocationContent(),
+                          ],
+                          const SizedBox(height: 100), // Espacio para FAB
+                        ],
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
+            // FAB del carrito
+            if (_isProvider) _buildCartFAB(),
+          ],
         ),
       ),
     );
@@ -143,144 +166,92 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         widget.location.isActive;
   }
 
-  Widget _buildSliverAppBar() {
+  Widget _buildModernSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 300,
+      expandedHeight: 320,
       pinned: true,
+      stretch: true,
       backgroundColor: AppColors.primary,
       elevation: 0,
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(14),
+          color: Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.2),
-            width: 1,
+            color: Colors.white.withOpacity(0.3),
+            width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.3),
-              blurRadius: 12,
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
         ),
         child: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+              color: Colors.white, size: 20),
           onPressed: () => context.pop(),
           padding: EdgeInsets.zero,
         ),
       ),
-      actions: [
-        // Badge de carrito
-        if (_isProvider)
-          BlocBuilder<CartBloc, CartState>(
-            builder: (context, state) {
-              final itemCount = state is CartLoaded ? state.totalItems : 0;
-
-              return Container(
-                margin: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Stack(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.shopping_cart_rounded,
-                          color: Colors.white),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CartScreen(),
-                          ),
-                        );
-                      },
-                    ),
-                    if (itemCount > 0)
-                      Positioned(
-                        right: 4,
-                        top: 4,
-                        child: Container(
-                          padding: const EdgeInsets.all(5),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                AppColors.accent,
-                                AppColors.warning,
-                              ],
-                            ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.accent.withOpacity(0.5),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 20,
-                            minHeight: 20,
-                          ),
-                          child: Text(
-                            '$itemCount',
-                            style: const TextStyle(
-                              color: AppColors.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
+      title: AnimatedOpacity(
+        opacity: _showTitle ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        child: Text(
+          widget.location.title ?? 'Sin nombre',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
           ),
+        ),
+      ),
+      actions: [
+        // Botón de información
         Container(
-          margin: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+          margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(14),
+            color: Colors.black.withOpacity(0.6),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
+              color: Colors.white.withOpacity(0.3),
+              width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.3),
-                blurRadius: 12,
+                blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
             ],
           ),
           child: IconButton(
-            icon: const Icon(Icons.share_rounded, color: Colors.white),
-            onPressed: _shareLocation,
+            icon: const Icon(Icons.info_outline_rounded, color: Colors.white),
+            onPressed: _showInfoBottomSheet,
+            tooltip: 'Información',
           ),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
+        stretchModes: const [
+          StretchMode.zoomBackground,
+          StretchMode.blurBackground,
+        ],
         background: Stack(
           fit: StackFit.expand,
           children: [
             _buildLocationImage(),
-            _buildGradientOverlay(),
-            _buildTitleSection(),
+            _buildModernGradientOverlay(),
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: _buildModernTitleSection(),
+            ),
           ],
         ),
       ),
@@ -301,13 +272,13 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               end: Alignment.bottomRight,
               colors: [
                 AppColors.primary,
-                AppColors.secondary.withOpacity(0.7),
+                AppColors.secondary,
               ],
             ),
           ),
           child: const Center(
             child: CircularProgressIndicator(
-              color: AppColors.accent,
+              color: Colors.white,
               strokeWidth: 3,
             ),
           ),
@@ -327,145 +298,141 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.secondary.withOpacity(0.8),
+            AppColors.secondary,
           ],
         ),
       ),
       child: Center(
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 2,
-            ),
-          ),
-          child: const Icon(
-            Icons.store_rounded,
-            size: 80,
-            color: Colors.white,
-          ),
+        child: Icon(
+          Icons.store_mall_directory_rounded,
+          size: 100,
+          color: Colors.white.withOpacity(0.3),
         ),
       ),
     );
   }
 
-  Widget _buildGradientOverlay() {
+  Widget _buildModernGradientOverlay() {
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          stops: const [0.0, 0.4, 1.0],
+          stops: const [0.0, 0.3, 0.7, 1.0],
           colors: [
-            Colors.black.withOpacity(0.3),
+            Colors.black.withOpacity(0.4),
             Colors.transparent,
-            Colors.black.withOpacity(0.85),
+            Colors.black.withOpacity(0.3),
+            Colors.black.withOpacity(0.9),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTitleSection() {
-    return Positioned(
-      bottom: 20,
-      left: 20,
-      right: 20,
+  Widget _buildModernTitleSection() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.accent.withOpacity(0.9),
-                  AppColors.warning.withOpacity(0.9),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accent.withOpacity(0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.verified_rounded,
-                  size: 16,
-                  color: AppColors.primary,
-                ),
-                SizedBox(width: 6),
-                Text(
-                  'MetraShop',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.accent,
+                      AppColors.warning,
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withOpacity(0.5),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.verified_rounded,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      'MetraShop',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            widget.location.title ?? 'Sin nombre',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              height: 1.2,
+              letterSpacing: -0.5,
+              shadows: [
+                Shadow(
+                  offset: const Offset(0, 4),
+                  blurRadius: 12,
+                  color: Colors.black.withOpacity(0.8),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            widget.location.title ?? 'Sin nombre',
-            style: AppTypography.h2.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              height: 1.2,
-              shadows: [
-                Shadow(
-                  offset: const Offset(0, 3),
-                  blurRadius: 8,
-                  color: Colors.black.withOpacity(0.7),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: AppColors.accent,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accent.withOpacity(0.4),
+                      color: AppColors.accent.withOpacity(0.5),
                       blurRadius: 8,
-                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
                 child: const Icon(
                   Icons.location_on_rounded,
-                  color: AppColors.primary,
-                  size: 14,
+                  color: Colors.white,
+                  size: 16,
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   widget.location.address ?? 'Dirección no disponible',
-                  style: AppTypography.bodyMedium.copyWith(
+                  style: TextStyle(
                     color: Colors.white,
-                    fontWeight: FontWeight.w500,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    height: 1.3,
                     shadows: [
                       Shadow(
                         offset: const Offset(0, 2),
-                        blurRadius: 4,
-                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 6,
+                        color: Colors.black.withOpacity(0.7),
                       ),
                     ],
                   ),
@@ -480,19 +447,120 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     );
   }
 
-  Widget _buildLocationInfo() {
+  Widget _buildQuickStats() {
+    if (!_isProvider) return const SizedBox.shrink();
+
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 20,
+            blurRadius: 24,
             offset: const Offset(0, 8),
-            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildStatItem(
+              icon: Icons.star_rounded,
+              iconColor: AppColors.warning,
+              label: 'Rating',
+              value: widget.location.formattedRating,
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: AppColors.neutral200,
+          ),
+          Expanded(
+            child: _buildStatItem(
+              icon: Icons.rate_review_rounded,
+              iconColor: AppColors.secondary,
+              label: 'Reseñas',
+              value: '${widget.location.reviewsCount}',
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: AppColors.neutral200,
+          ),
+          Expanded(
+            child: _buildStatItem(
+              icon: Icons.shopping_bag_rounded,
+              iconColor: AppColors.accent,
+              label: 'Pedidos',
+              value: '${widget.location.ordersCount}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem({
+    required IconData icon,
+    required Color iconColor,
+    required String label,
+    required String value,
+  }) {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: iconColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: AppTypography.h5.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLocationInfo() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: AppColors.secondary.withOpacity(0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.06),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -502,19 +570,19 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       AppColors.secondary,
-                      AppColors.secondary.withOpacity(0.7),
+                      AppColors.secondary.withOpacity(0.8),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.secondary.withOpacity(0.3),
-                      blurRadius: 12,
+                      blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
                   ],
@@ -525,104 +593,25 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 14),
-              Text(
-                'Información General',
-                style: AppTypography.h3.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  'Acerca de',
+                  style: AppTypography.h4.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppColors.secondary.withOpacity(0.1),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              widget.location.description ?? 'Sin descripción disponible',
-              style: AppTypography.bodyLarge.copyWith(
-                height: 1.6,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerificationBadge() {
-    final status = widget.location.verificationStatus;
-
-    Color badgeColor;
-    IconData badgeIcon;
-    String badgeText;
-
-    if (status.isApproved) {
-      badgeColor = AppColors.success;
-      badgeIcon = Icons.verified_rounded;
-      badgeText = 'Negocio Verificado';
-    } else if (status.isPendingApproval) {
-      badgeColor = AppColors.warning;
-      badgeIcon = Icons.pending_rounded;
-      badgeText = 'Verificación Pendiente';
-    } else {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            badgeColor.withOpacity(0.15),
-            badgeColor.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: badgeColor.withOpacity(0.4),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: badgeColor.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              badgeIcon,
-              size: 20,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 12),
+          const SizedBox(height: 20),
           Text(
-            badgeText,
-            style: AppTypography.bodyMedium.copyWith(
-              color: badgeColor,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+            widget.location.description ?? 'Sin descripción disponible',
+            style: AppTypography.bodyLarge.copyWith(
+              height: 1.6,
+              color: AppColors.textSecondary,
+              fontSize: 15,
             ),
           ),
         ],
@@ -630,95 +619,35 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     );
   }
 
-  Widget _buildTabSection() {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20),
-          decoration: BoxDecoration(
-            color: AppColors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withOpacity(0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: TabBar(
-            controller: _tabController,
-            indicator: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.secondary,
-                  AppColors.secondary.withOpacity(0.8),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.secondary.withOpacity(0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            labelColor: Colors.white,
-            unselectedLabelColor: AppColors.textSecondary,
-            labelStyle: AppTypography.buttonMedium.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-            unselectedLabelStyle: AppTypography.buttonMedium.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-            indicatorPadding: const EdgeInsets.all(6),
-            dividerColor: Colors.transparent,
-            tabs: const [
-              Tab(
-                icon: Icon(Icons.inventory_2_rounded, size: 20),
-                text: 'Productos',
-              ),
-              Tab(
-                icon: Icon(Icons.contact_phone_rounded, size: 20),
-                text: 'Contacto',
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          height: 500,
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildProductsTab(),
-              _buildContactTab(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProductsTab() {
+  Widget _buildProductsSection() {
     if (_loadingProducts) {
       return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              color: AppColors.secondary,
-              strokeWidth: 3,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Cargando productos...',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textSecondary,
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.secondary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: CircularProgressIndicator(
+                  color: AppColors.secondary,
+                  strokeWidth: 3,
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 20),
+              Text(
+                'Cargando productos...',
+                style: AppTypography.h6.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -726,27 +655,24 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     if (_products.isEmpty) {
       return Container(
         margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.05),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: AppColors.neutral200,
+            width: 2,
+          ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(28),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.secondary.withOpacity(0.1),
+                    AppColors.secondary.withOpacity(0.15),
                     AppColors.secondary.withOpacity(0.05),
                   ],
                 ),
@@ -754,23 +680,24 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               ),
               child: Icon(
                 Icons.inventory_2_outlined,
-                size: 64,
+                size: 72,
                 color: AppColors.secondary,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Text(
-              'No hay productos configurados',
-              style: AppTypography.h4.copyWith(
+              'No hay productos',
+              style: AppTypography.h3.copyWith(
                 color: AppColors.primary,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
-              'El proveedor aún no ha agregado productos',
-              style: AppTypography.bodyMedium.copyWith(
+              'Este proveedor aún no ha agregado productos a su catálogo',
+              style: AppTypography.bodyLarge.copyWith(
                 color: AppColors.textSecondary,
+                height: 1.5,
               ),
               textAlign: TextAlign.center,
             ),
@@ -786,64 +713,93 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
       groupedProducts.putIfAbsent(categoryId, () => []).add(product);
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      itemCount: groupedProducts.length,
-      itemBuilder: (context, index) {
-        final categoryId = groupedProducts.keys.elementAt(index);
-        final categoryProducts = groupedProducts[categoryId]!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: groupedProducts.entries.map((entry) {
+        final categoryId = entry.key;
+        final categoryProducts = entry.value;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (index > 0) const SizedBox(height: 24),
-            _buildCategoryHeader(categoryId),
-            const SizedBox(height: 12),
-            ...categoryProducts.map((product) => _buildProductCard(product)),
+            _buildCategoryHeader(categoryId, categoryProducts.length),
+            const SizedBox(height: 16),
+            _buildProductCarousel(categoryProducts),
+            const SizedBox(height: 32),
           ],
         );
-      },
+      }).toList(),
     );
   }
 
-  Widget _buildCategoryHeader(String categoryId) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.accent.withOpacity(0.15),
-            AppColors.accent.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.accent.withOpacity(0.3),
-          width: 2,
-        ),
-      ),
+  Widget _buildCategoryHeader(String categoryId, int productCount) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
           Container(
-            width: 4,
-            height: 20,
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [AppColors.accent, AppColors.warning],
               ),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.category_rounded,
+              size: 22,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            categoryId.toUpperCase(),
-            style: AppTypography.h4.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  categoryId.toUpperCase(),
+                  style: AppTypography.h5.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                Text(
+                  '$productCount ${productCount == 1 ? 'producto' : 'productos'}',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildProductCarousel(List<Product> products) {
+    return SizedBox(
+      height: 220,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return Padding(
+            padding: EdgeInsets.only(right: index < products.length - 1 ? 16 : 0),
+            child: _buildProductCard(product),
+          );
+        },
       ),
     );
   }
@@ -852,22 +808,22 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     final bool isAvailable = product.stockAvailable;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      width: 280,
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isAvailable
-              ? AppColors.secondary.withOpacity(0.15)
-              : AppColors.neutral200,
+              ? AppColors.secondary.withOpacity(0.2)
+              : AppColors.neutral300,
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
             color: isAvailable
-                ? AppColors.secondary.withOpacity(0.08)
-                : Colors.black.withOpacity(0.03),
-            blurRadius: isAvailable ? 12 : 8,
+                ? AppColors.secondary.withOpacity(0.12)
+                : Colors.black.withOpacity(0.04),
+            blurRadius: isAvailable ? 16 : 8,
             offset: const Offset(0, 4),
           ),
         ],
@@ -875,132 +831,156 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
-          onTap: isAvailable ? () => _showProductDetail(product) : null,
+          borderRadius: BorderRadius.circular(20),
+          onTap: isAvailable ? () => _showModernProductDetail(product) : null,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Hero(
-                  tag: 'product_${product.id}',
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isAvailable
+                // Imagen del producto
+                Center(
+                  child: Hero(
+                    tag: 'product_${product.id}',
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: isAvailable
+                              ? [
+                                  AppColors.secondary,
+                                  AppColors.secondary.withOpacity(0.8),
+                                ]
+                              : [
+                                  AppColors.neutral400,
+                                  AppColors.neutral300,
+                                ],
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: isAvailable
                             ? [
-                                AppColors.secondary,
-                                AppColors.secondary.withOpacity(0.7),
+                                BoxShadow(
+                                  color: AppColors.secondary.withOpacity(0.4),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
                               ]
-                            : [
-                                AppColors.neutral400,
-                                AppColors.neutral300,
-                              ],
+                            : null,
                       ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: isAvailable
-                          ? [
-                              BoxShadow(
-                                color: AppColors.secondary.withOpacity(0.3),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : null,
-                    ),
-                    child: const Icon(
-                      Icons.inventory_2_rounded,
-                      color: Colors.white,
-                      size: 32,
+                      child: Icon(
+                        Icons.inventory_2_rounded,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              product.attributes?['brand'] ?? product.name ?? 'Sin nombre',
-                              style: AppTypography.h5.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: isAvailable
-                                    ? AppColors.primary
-                                    : AppColors.textSecondary,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (!isAvailable)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.error.withOpacity(0.15),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: AppColors.error.withOpacity(0.3),
-                                ),
-                              ),
-                              child: Text(
-                                'Agotado',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.error,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ),
-                        ],
+                const SizedBox(height: 16),
+                // Nombre del producto
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        product.attributes?['brand'] ?? product.name ?? 'Sin nombre',
+                        style: AppTypography.h6.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: isAvailable
+                              ? AppColors.primary
+                              : AppColors.textSecondary,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 6),
+                    ),
+                    if (!isAvailable)
                       Container(
                         padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.error.withOpacity(0.4),
+                          ),
+                        ),
+                        child: Text(
+                          'Agotado',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const Spacer(),
+                // Precio
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 6,
+                          vertical: 8,
                         ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.accent.withOpacity(0.2),
-                              AppColors.accent.withOpacity(0.1),
+                              AppColors.accent.withOpacity(0.25),
+                              AppColors.accent.withOpacity(0.15),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppColors.accent.withOpacity(0.3),
+                          ),
                         ),
                         child: Text(
                           product.priceWithUnit,
-                          style: AppTypography.h5.copyWith(
+                          style: AppTypography.bodyMedium.copyWith(
                             color: AppColors.primary,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    if (isAvailable) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.secondary,
+                              AppColors.secondary.withOpacity(0.9),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.secondary.withOpacity(0.4),
+                              blurRadius: 12,
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          Icons.add_shopping_cart_rounded,
+                          size: 18,
+                          color: Colors.white,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
-                if (isAvailable)
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 16,
-                      color: AppColors.secondary,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -1009,377 +989,20 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     );
   }
 
-  Widget _buildContactTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-      child: Column(
-        children: [
-          _buildContactButtons(),
-          const SizedBox(height: 20),
-          if (widget.location.businessHours != null &&
-              widget.location.businessHours!.isNotEmpty)
-            _buildBusinessHours(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactButtons() {
-    final phone = widget.location.phone;
-    final whatsapp = widget.location.whatsapp;
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.accent,
-                      AppColors.warning,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.accent.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.phone_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                'Contacto',
-                style: AppTypography.h3.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          if (whatsapp != null || phone != null) ...[
-            if (whatsapp != null) ...[
-              _buildContactButton(
-                icon: Icons.chat_bubble_rounded,
-                label: 'WhatsApp',
-                subtitle: 'Enviar mensaje',
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF25D366), Color(0xFF128C7E)],
-                ),
-                onTap: () => _launchWhatsApp(whatsapp),
-              ),
-              if (phone != null) const SizedBox(height: 12),
-            ],
-            if (phone != null) ...[
-              _buildContactButton(
-                icon: Icons.phone_rounded,
-                label: 'Llamar',
-                subtitle: 'Realizar llamada',
-                gradient: LinearGradient(
-                  colors: [
-                    AppColors.secondary,
-                    AppColors.secondary.withOpacity(0.7),
-                  ],
-                ),
-                onTap: () => _makePhoneCall(phone),
-              ),
-            ],
-          ] else ...[
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: AppColors.neutral200,
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    color: AppColors.textSecondary,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'No hay información de contacto disponible',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactButton({
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Gradient gradient,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: gradient.colors.isNotEmpty
-                    ? gradient.colors.first.withOpacity(0.3)
-                    : Colors.black.withOpacity(0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: AppTypography.h5.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBusinessHours() {
-    final businessHours = widget.location.businessHours;
-    if (businessHours == null || businessHours.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.warning,
-                      AppColors.accent,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.warning.withOpacity(0.4),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.access_time_rounded,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Text(
-                'Horarios de Atención',
-                style: AppTypography.h3.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Column(
-              children: businessHours.entries.map((entry) {
-                final day = entry.key;
-                final hours = entry.value;
-                final isToday = _isToday(day);
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isToday ? AppColors.accent.withOpacity(0.1) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: isToday
-                        ? Border.all(
-                            color: AppColors.accent.withOpacity(0.3),
-                            width: 2,
-                          )
-                        : null,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          if (isToday) ...[
-                            Icon(
-                              Icons.circle,
-                              size: 8,
-                              color: AppColors.accent,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                          Text(
-                            day.capitalize(),
-                            style: AppTypography.bodyLarge.copyWith(
-                              fontWeight: isToday ? FontWeight.w700 : FontWeight.w600,
-                              color: isToday ? AppColors.primary : AppColors.textPrimary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: hours.closed
-                              ? AppColors.error.withOpacity(0.1)
-                              : AppColors.success.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: hours.closed
-                                ? AppColors.error.withOpacity(0.2)
-                                : AppColors.success.withOpacity(0.2),
-                          ),
-                        ),
-                        child: Text(
-                          hours.closed ? 'Cerrado' : '${hours.open} - ${hours.close}',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: hours.closed ? AppColors.error : AppColors.success,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  bool _isToday(String day) {
-    final now = DateTime.now();
-    final days = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
-    final todayIndex = now.weekday - 1;
-    return days[todayIndex] == day.toLowerCase();
-  }
-
   Widget _buildBasicLocationContent() {
     return Container(
       margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.secondary.withOpacity(0.05),
-            AppColors.primary.withOpacity(0.02),
+            AppColors.secondary.withOpacity(0.08),
+            AppColors.primary.withOpacity(0.04),
           ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
         border: Border.all(
           color: AppColors.secondary.withOpacity(0.2),
           width: 2,
@@ -1387,7 +1010,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withOpacity(0.08),
-            blurRadius: 20,
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
@@ -1395,7 +1018,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
@@ -1406,37 +1029,122 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent.withOpacity(0.4),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
+                  color: AppColors.accent.withOpacity(0.5),
+                  blurRadius: 24,
+                  spreadRadius: 4,
                 ),
               ],
             ),
             child: const Icon(
               Icons.location_on_rounded,
-              size: 64,
-              color: AppColors.primary,
+              size: 72,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Text(
             'Ubicación Registrada',
             style: AppTypography.h2.copyWith(
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.w900,
               color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
-            'Esta ubicación está en proceso de verificación o no está configurada como proveedor.',
+            'Esta ubicación está en proceso de verificación o no está configurada como proveedor activo.',
             style: AppTypography.bodyLarge.copyWith(
               color: AppColors.textSecondary,
               height: 1.6,
+              fontSize: 15,
             ),
             textAlign: TextAlign.center,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildCartFAB() {
+    return BlocBuilder<CartBloc, CartState>(
+      builder: (context, state) {
+        final itemCount = state is CartLoaded ? state.totalItems : 0;
+        final screenSize = MediaQuery.of(context).size;
+
+        return Positioned(
+          bottom: _fabPosition.dy,
+          right: _fabPosition.dx,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                // Actualizar posición del FAB (invertido porque right/bottom son desde el borde)
+                _fabPosition = Offset(
+                  (_fabPosition.dx - details.delta.dx).clamp(16.0, screenSize.width - 180),
+                  (_fabPosition.dy - details.delta.dy).clamp(16.0, screenSize.height - 200),
+                );
+              });
+            },
+            child: FloatingActionButton.extended(
+              heroTag: 'cart_fab',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => CartScreen(),
+                  ),
+                );
+              },
+              backgroundColor: AppColors.accent,
+              elevation: 8,
+              icon: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  if (itemCount > 0)
+                    Positioned(
+                      right: -8,
+                      top: -8,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        child: Text(
+                          '$itemCount',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              label: Text(
+                'Carrito',
+                style: AppTypography.buttonMedium.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1463,292 +1171,1014 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
     }
   }
 
-  void _shareLocation() {
-    showSnackBar(context, 'Funcionalidad de compartir en desarrollo');
-  }
-
-  void _showProductDetail(Product product) {
+  void _showModernProductDetail(Product product) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildProductDetailModal(product),
+      builder: (context) => _ModernProductDetailModal(
+        product: product,
+        location: widget.location,
+      ),
     );
   }
 
-  Widget _buildProductDetailModal(Product product) {
+  void _showInfoBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _InfoBottomSheet(location: widget.location),
+    );
+  }
+
+  bool _isToday(String day) {
+    final now = DateTime.now();
+    final days = [
+      'lunes',
+      'martes',
+      'miércoles',
+      'jueves',
+      'viernes',
+      'sábado',
+      'domingo'
+    ];
+    final todayIndex = now.weekday - 1;
+    return days[todayIndex] == day.toLowerCase();
+  }
+}
+
+/// Bottom Sheet de información del negocio
+class _InfoBottomSheet extends StatelessWidget {
+  final LocationMap location;
+
+  const _InfoBottomSheet({required this.location});
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(
-        top: MediaQuery.of(context).size.height * 0.1,
+        top: MediaQuery.of(context).size.height * 0.2,
       ),
       decoration: const BoxDecoration(
-        color: AppColors.white,
+        color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(28),
-          topRight: Radius.circular(28),
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Handle bar
           Container(
-            alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Container(
-              width: 40,
-              height: 4,
+              width: 48,
+              height: 5,
               decoration: BoxDecoration(
                 color: AppColors.neutral300,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(3),
               ),
             ),
           ),
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+              padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Título
                   Row(
                     children: [
-                      Hero(
-                        tag: 'product_${product.id}',
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppColors.secondary,
-                                AppColors.secondary.withOpacity(0.7),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.secondary.withOpacity(0.3),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
-                              ),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.accent,
+                              AppColors.warning,
                             ],
                           ),
-                          child: const Icon(
-                            Icons.inventory_2_rounded,
-                            color: Colors.white,
-                            size: 40,
-                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accent.withOpacity(0.4),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.info_rounded,
+                          color: Colors.white,
+                          size: 28,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              product.attributes?['brand'] ?? product.name ?? 'Sin nombre',
-                              style: AppTypography.h3.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              product.categoryId?.toUpperCase() ?? '',
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          'Información',
+                          style: AppTypography.h3.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: AppColors.primary,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  // Precio
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.accent.withOpacity(0.2),
-                          AppColors.accent.withOpacity(0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(
-                        color: AppColors.accent.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.price_change_rounded,
-                            color: AppColors.primary,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Precio',
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              product.priceWithUnit,
-                              style: AppTypography.h3.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (product.description != null &&
-                      product.description!.isNotEmpty) ...[
-                    const SizedBox(height: 24),
-                    Text(
-                      'Descripción',
-                      style: AppTypography.h5.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        product.description!,
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textSecondary,
-                          height: 1.6,
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  // Disponibilidad
-                  Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: product.stockAvailable
-                            ? [
-                                AppColors.success.withOpacity(0.15),
-                                AppColors.success.withOpacity(0.05),
-                              ]
-                            : [
-                                AppColors.error.withOpacity(0.15),
-                                AppColors.error.withOpacity(0.05),
-                              ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: product.stockAvailable
-                            ? AppColors.success.withOpacity(0.3)
-                            : AppColors.error.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: product.stockAvailable
-                                ? AppColors.success
-                                : AppColors.error,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            product.stockAvailable
-                                ? Icons.check_circle_rounded
-                                : Icons.cancel_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Text(
-                          product.stockAvailable ? 'Disponible' : 'No disponible',
-                          style: AppTypography.h5.copyWith(
-                            color: product.stockAvailable
-                                ? AppColors.success
-                                : AppColors.error,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  // Botón de agregar al carrito
-                  if (product.stockAvailable)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 58,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          context.read<CartBloc>().add(AddToCart(
-                                product: product,
-                                locationId: widget.location.id ?? '',
-                                locationName: widget.location.title,
-                              ));
-                          Navigator.pop(context);
-                          showSnackBar(
-                            context,
-                            '${product.attributes?['brand'] ?? product.name} agregado al carrito',
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.shopping_cart_rounded, size: 22),
-                            const SizedBox(width: 12),
-                            Text(
-                              'Agregar al Carrito',
-                              style: AppTypography.buttonLarge.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 32),
+                  // Botones de contacto
+                  _buildContactSection(context),
+                  const SizedBox(height: 32),
+                  // Horarios
+                  if (location.businessHours != null &&
+                      location.businessHours!.isNotEmpty)
+                    _buildBusinessHoursSection(context),
                 ],
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildContactSection(BuildContext context) {
+    final phone = location.phone;
+    final whatsapp = location.whatsapp;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Contacto',
+          style: AppTypography.h5.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        if (whatsapp != null || phone != null) ...[
+          if (whatsapp != null) ...[
+            _buildContactButton(
+              context: context,
+              icon: Icons.chat_bubble_rounded,
+              label: 'WhatsApp',
+              subtitle: 'Enviar mensaje ahora',
+              gradient: const LinearGradient(
+                colors: [Color(0xFF25D366), Color(0xFF128C7E)],
+              ),
+              onTap: () => _launchWhatsApp(context, whatsapp),
+            ),
+            if (phone != null) const SizedBox(height: 12),
+          ],
+          if (phone != null) ...[
+            _buildContactButton(
+              context: context,
+              icon: Icons.phone_rounded,
+              label: 'Llamar',
+              subtitle: 'Realizar llamada directa',
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.secondary,
+                  AppColors.secondary.withOpacity(0.8),
+                ],
+              ),
+              onTap: () => _makePhoneCall(context, phone),
+            ),
+          ],
+        ] else ...[
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: AppColors.neutral300,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: AppColors.textSecondary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'No hay información de contacto disponible',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildContactButton({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required String subtitle,
+    required Gradient gradient,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: gradient.colors.isNotEmpty
+                    ? gradient.colors.first.withOpacity(0.4)
+                    : Colors.black.withOpacity(0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.25),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.h6.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.white.withOpacity(0.95),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Colors.white,
+                size: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBusinessHoursSection(BuildContext context) {
+    final businessHours = location.businessHours;
+    if (businessHours == null || businessHours.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Horarios de Atención',
+          style: AppTypography.h5.copyWith(
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: AppColors.neutral200,
+            ),
+          ),
+          child: Column(
+            children: businessHours.entries.map((entry) {
+              final day = entry.key;
+              final hours = entry.value;
+              final isToday = _isToday(day);
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: isToday
+                      ? LinearGradient(
+                          colors: [
+                            AppColors.accent.withOpacity(0.15),
+                            AppColors.accent.withOpacity(0.08),
+                          ],
+                        )
+                      : null,
+                  color: isToday ? null : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isToday
+                        ? AppColors.accent.withOpacity(0.4)
+                        : AppColors.neutral200,
+                    width: isToday ? 2 : 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    if (isToday) ...[
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accent.withOpacity(0.6),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: Text(
+                        day.capitalize(),
+                        style: AppTypography.bodyLarge.copyWith(
+                          fontWeight:
+                              isToday ? FontWeight.w800 : FontWeight.w600,
+                          color:
+                              isToday ? AppColors.primary : AppColors.textPrimary,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: hours.closed
+                            ? AppColors.error.withOpacity(0.15)
+                            : AppColors.success.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: hours.closed
+                              ? AppColors.error.withOpacity(0.3)
+                              : AppColors.success.withOpacity(0.3),
+                        ),
+                      ),
+                      child: Text(
+                        hours.closed ? 'Cerrado' : '${hours.open} - ${hours.close}',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: hours.closed ? AppColors.error : AppColors.success,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  bool _isToday(String day) {
+    final now = DateTime.now();
+    final days = [
+      'lunes',
+      'martes',
+      'miércoles',
+      'jueves',
+      'viernes',
+      'sábado',
+      'domingo'
+    ];
+    final todayIndex = now.weekday - 1;
+    return days[todayIndex] == day.toLowerCase();
+  }
+
+  Future<void> _launchWhatsApp(BuildContext context, String phoneNumber) async {
+    final uri = Uri.parse('https://wa.me/$phoneNumber');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        showSnackBar(context, 'No se pudo abrir WhatsApp');
+      }
+    }
+  }
+
+  Future<void> _makePhoneCall(BuildContext context, String phoneNumber) async {
+    final uri = Uri.parse('tel:$phoneNumber');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      if (context.mounted) {
+        showSnackBar(context, 'No se pudo realizar la llamada');
+      }
+    }
+  }
+}
+
+/// Modal moderno de detalle de producto con selector de cantidad
+class _ModernProductDetailModal extends StatefulWidget {
+  final Product product;
+  final LocationMap location;
+
+  const _ModernProductDetailModal({
+    required this.product,
+    required this.location,
+  });
+
+  @override
+  State<_ModernProductDetailModal> createState() =>
+      _ModernProductDetailModalState();
+}
+
+class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
+    with SingleTickerProviderStateMixin {
+  int _quantity = 1;
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<Offset> _slideAnimation;
+  late TextEditingController _quantityController;
+  late FocusNode _quantityFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _quantityController = TextEditingController(text: '1');
+    _quantityFocusNode = FocusNode();
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutBack,
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _quantityController.dispose();
+    _quantityFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _incrementQuantity() {
+    setState(() {
+      _quantity++;
+      _quantityController.text = '$_quantity';
+    });
+  }
+
+  void _decrementQuantity() {
+    if (_quantity > 1) {
+      setState(() {
+        _quantity--;
+        _quantityController.text = '$_quantity';
+      });
+    }
+  }
+
+  void _updateQuantityFromText(String value) {
+    final newQuantity = int.tryParse(value);
+    if (newQuantity != null && newQuantity > 0) {
+      setState(() {
+        _quantity = newQuantity;
+      });
+    } else if (value.isEmpty) {
+      // No actualizar cantidad si está vacío, esperar a que termine de escribir
+    } else {
+      // Si el valor no es válido, restaurar el valor anterior
+      _quantityController.text = '$_quantity';
+      _quantityController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _quantityController.text.length),
+      );
+    }
+  }
+
+  double get _totalPrice {
+    return (widget.product.price ?? 0.0) * _quantity;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SlideTransition(
+      position: _slideAnimation,
+      child: ScaleTransition(
+        scale: _scaleAnimation,
+        child: Container(
+          margin: EdgeInsets.only(
+            top: MediaQuery.of(context).size.height * 0.15,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(32),
+              topRight: Radius.circular(32),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: AppColors.neutral300,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(28, 8, 28, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Hero image
+                      Center(
+                        child: Hero(
+                          tag: 'product_${widget.product.id}',
+                          child: Container(
+                            width: 140,
+                            height: 140,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.secondary,
+                                  AppColors.secondary.withOpacity(0.8),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.secondary.withOpacity(0.4),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.inventory_2_rounded,
+                              color: Colors.white,
+                              size: 64,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      // Título y categoría
+                      Text(
+                        widget.product.attributes?['brand'] ??
+                            widget.product.name ??
+                            'Sin nombre',
+                        style: AppTypography.h2.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: AppColors.primary,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (widget.product.categoryId != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.secondary.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            widget.product.categoryId!.toUpperCase(),
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.secondary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 28),
+                      // Precio por unidad
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.accent.withOpacity(0.2),
+                              AppColors.accent.withOpacity(0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.accent.withOpacity(0.4),
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    AppColors.accent,
+                                    AppColors.warning,
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(14),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.accent.withOpacity(0.4),
+                                    blurRadius: 12,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.price_change_rounded,
+                                color: Colors.white,
+                                size: 26,
+                              ),
+                            ),
+                            const SizedBox(width: 18),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Precio por ${widget.product.unit?.displayName ?? 'unidad'}',
+                                    style: AppTypography.bodyMedium.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    widget.product.formattedPrice,
+                                    style: AppTypography.h3.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      // Descripción
+                      if (widget.product.description != null &&
+                          widget.product.description!.isNotEmpty) ...[
+                        const SizedBox(height: 28),
+                        Text(
+                          'Descripción',
+                          style: AppTypography.h5.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          padding: const EdgeInsets.all(18),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: AppColors.neutral200,
+                            ),
+                          ),
+                          child: Text(
+                            widget.product.description!,
+                            style: AppTypography.bodyLarge.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.6,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 28),
+                      // Selector de cantidad
+                      Text(
+                        'Cantidad',
+                        style: AppTypography.h5.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppColors.secondary.withOpacity(0.3),
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Botón decrementar
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _decrementQuantity,
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: _quantity > 1
+                                        ? LinearGradient(
+                                            colors: [
+                                              AppColors.secondary,
+                                              AppColors.secondary
+                                                  .withOpacity(0.9),
+                                            ],
+                                          )
+                                        : null,
+                                    color: _quantity > 1
+                                        ? null
+                                        : AppColors.neutral200,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Icon(
+                                    Icons.remove_rounded,
+                                    color: _quantity > 1
+                                        ? Colors.white
+                                        : AppColors.textSecondary,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Campo editable de cantidad
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  _quantityFocusNode.requestFocus();
+                                  _quantityController.selection = TextSelection(
+                                    baseOffset: 0,
+                                    extentOffset: _quantityController.text.length,
+                                  );
+                                },
+                                child: Column(
+                                  children: [
+                                    TextField(
+                                      controller: _quantityController,
+                                      focusNode: _quantityFocusNode,
+                                      keyboardType: TextInputType.number,
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.h2.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                        color: AppColors.primary,
+                                      ),
+                                      decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.zero,
+                                        isDense: true,
+                                      ),
+                                      onChanged: _updateQuantityFromText,
+                                      onSubmitted: (value) {
+                                        _updateQuantityFromText(value);
+                                        _quantityFocusNode.unfocus();
+                                        // Si el campo está vacío al finalizar, establecer 1
+                                        if (value.isEmpty) {
+                                          setState(() {
+                                            _quantity = 1;
+                                            _quantityController.text = '1';
+                                          });
+                                        }
+                                      },
+                                    ),
+                                    Text(
+                                      widget.product.unit?.displayName ??
+                                          'unidad(es)',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Botón incrementar
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _incrementQuantity,
+                                borderRadius: BorderRadius.circular(16),
+                                child: Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.secondary,
+                                        AppColors.secondary.withOpacity(0.9),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color:
+                                            AppColors.secondary.withOpacity(0.4),
+                                        blurRadius: 12,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_rounded,
+                                    color: Colors.white,
+                                    size: 28,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      // Total
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppColors.primary,
+                              AppColors.primary.withOpacity(0.9),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withOpacity(0.3),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Total a pagar',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${widget.product.currency.symbol} ${_totalPrice.toStringAsFixed(2)}',
+                                  style: AppTypography.h3.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '$_quantity × ${widget.product.formattedPrice}',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      // Botón agregar al carrito
+                      if (widget.product.stockAvailable)
+                        SizedBox(
+                          width: double.infinity,
+                          height: 64,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              context.read<CartBloc>().add(AddToCart(
+                                    product: widget.product,
+                                    locationId: widget.location.id ?? '',
+                                    locationName: widget.location.title,
+                                    quantity: _quantity,
+                                  ));
+                              Navigator.pop(context);
+                              showSnackBar(
+                                context,
+                                '$_quantity × ${widget.product.attributes?['brand'] ?? widget.product.name} agregado al carrito',
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.accent,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 0,
+                              shadowColor: AppColors.accent.withOpacity(0.5),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.shopping_cart_rounded,
+                                  size: 26,
+                                ),
+                                const SizedBox(width: 14),
+                                Text(
+                                  'Agregar al Carrito',
+                                  style: AppTypography.h5.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

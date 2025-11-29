@@ -1,4 +1,3 @@
-// lib/presentation/screens/perfil/profile_settings/profile_information_tab.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
@@ -19,6 +18,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   late TextEditingController _phoneController;
   late TextEditingController _employmentController;
   late TextEditingController _districtController;
+  late TextEditingController _customOccupationController;
 
   // Controllers para el nuevo widget de ubicación (mantienen la misma función)
   final TextEditingController _countryController = TextEditingController();
@@ -29,18 +29,15 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     'Seleccione una ocupación',
     'Arquitecto',
     'Ingeniero Civil',
-    'Contratista',
-    'Albañil',
     'Operario',
     'Maestro de Obra',
     'Técnico en Construcción',
-    'Inspector de Obras',
-    'Supervisor de Proyectos',
     'Otro'
   ];
 
   bool _formChanged = false;
   bool _isLoading = false;
+  bool _showCustomOccupationField = false;
 
   @override
   void initState() {
@@ -67,6 +64,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _phoneController = TextEditingController();
     _employmentController = TextEditingController();
     _districtController = TextEditingController();
+    _customOccupationController = TextEditingController();
 
     final state = context.read<ProfileBloc>().state;
     if (state is ProfileLoaded) {
@@ -81,9 +79,20 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     if (_phoneController.text != (profile.phone ?? '')) {
       _phoneController.text = profile.phone ?? '';
     }
-    if (_employmentController.text != (profile.employment ?? '')) {
-      _employmentController.text = profile.employment ?? '';
+
+    // Manejar ocupación: si no está en la lista, es personalizada
+    final employment = profile.employment ?? '';
+    if (employment.isNotEmpty && !_occupations.contains(employment)) {
+      // Es una ocupación personalizada
+      _employmentController.text = 'Otro';
+      _customOccupationController.text = employment;
+      _showCustomOccupationField = true;
+    } else {
+      _employmentController.text = employment;
+      _customOccupationController.text = '';
+      _showCustomOccupationField = false;
     }
+
     if (_districtController.text != (profile.district ?? '')) {
       _districtController.text = profile.district ?? '';
     }
@@ -102,6 +111,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _nameController.addListener(_onFormChanged);
     _phoneController.addListener(_onFormChanged);
     _employmentController.addListener(_onFormChanged);
+    _customOccupationController.addListener(_onFormChanged);
     _districtController.addListener(_onFormChanged);
     _countryController.addListener(_onFormChanged);
     _stateController.addListener(_onFormChanged);
@@ -130,6 +140,7 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
     _nameController.dispose();
     _phoneController.dispose();
     _employmentController.dispose();
+    _customOccupationController.dispose();
     _districtController.dispose();
     _countryController.dispose();
     _stateController.dispose();
@@ -137,18 +148,33 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
   }
 
   void _saveChanges() {
-    // =============== MANTENER: Sin validación obligatoria ===============
+    // Validar el formulario si hay ocupación personalizada
+    if (_showCustomOccupationField && !_formKey.currentState!.validate()) {
+      return;
+    }
+
     setState(() {
       _isLoading = true;
     });
 
     final profileBloc = context.read<ProfileBloc>();
 
+    // Determinar el valor de employment
+    String? employmentValue;
+    if (_employmentController.text.trim().isNotEmpty &&
+        _employmentController.text.trim() != 'Seleccione una ocupación') {
+      // Si seleccionó "Otro", usar el valor del campo personalizado
+      if (_employmentController.text.trim() == 'Otro' && _customOccupationController.text.trim().isNotEmpty) {
+        employmentValue = _customOccupationController.text.trim();
+      } else if (_employmentController.text.trim() != 'Otro') {
+        employmentValue = _employmentController.text.trim();
+      }
+    }
+
     profileBloc.add(UpdateProfile(
       name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : null,
       phone: _phoneController.text.trim().isNotEmpty ? _phoneController.text.trim() : null,
-      employment: _employmentController.text.trim().isNotEmpty && _employmentController.text.trim() != 'Seleccione una ocupación'
-          ? _employmentController.text.trim() : null,
+      employment: employmentValue,
       nationality: _countryController.text.trim().isNotEmpty ? _countryController.text.trim() : null,
       province: _stateController.text.trim().isNotEmpty ? _stateController.text.trim() : null,
       city: _cityController.text.trim().isNotEmpty ? _cityController.text.trim() : null,
@@ -358,10 +384,43 @@ class _ImprovedProfileInformationTabState extends State<ImprovedProfileInformati
             icon: Icons.work_outline_rounded,
             onChanged: (value) {
               if (value != null && value != _occupations.first) {
-                _employmentController.text = value;
+                setState(() {
+                  _employmentController.text = value;
+                  _showCustomOccupationField = (value == 'Otro');
+
+                  // Si no es "Otro", limpiar el campo personalizado
+                  if (value != 'Otro') {
+                    _customOccupationController.clear();
+                  }
+                });
                 _onFormChanged();
               }
             },
+          ),
+
+          // Campo personalizado con animación
+          AnimatedSize(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            child: _showCustomOccupationField
+                ? Column(
+                    children: [
+                      const SizedBox(height: 16),
+                      _buildTextFormField(
+                        controller: _customOccupationController,
+                        label: 'Especifica tu ocupación',
+                        hint: 'Ejemplo: Supervisor, Electricista, etc.',
+                        icon: Icons.edit_outlined,
+                        validator: (value) {
+                          if (_showCustomOccupationField && (value == null || value.trim().isEmpty)) {
+                            return 'Por favor especifica tu ocupación';
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  )
+                : const SizedBox.shrink(),
           ),
         ],
       ),

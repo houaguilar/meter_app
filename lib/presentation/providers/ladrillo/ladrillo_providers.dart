@@ -105,7 +105,7 @@ String datosShareLadrillo(DatosShareLadrilloRef ref) {
   String datos = "";
   if (description.length == area.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${area[i].toStringAsFixed(2)} m²\n";
+      datos += "* ${description[i]}: ${area[i].toStringAsFixed(1)} m²\n";
     }
     datos = datos.substring(0, datos.length - 2);
   }
@@ -376,7 +376,7 @@ class LadrilloMaterials {
 
   @override
   String toString() {
-    return 'LadrilloMaterials(ladrillos: ${ladrillos.toStringAsFixed(0)}, cemento: ${cemento.toStringAsFixed(2)} bls, arena: ${arena.toStringAsFixed(3)} m³, agua: ${agua.toStringAsFixed(3)} m³, areaTotal: ${areaTotal.toStringAsFixed(2)} m²)';
+    return 'LadrilloMaterials(ladrillos: ${ladrillos.toStringAsFixed(0)}, cemento: ${cemento.toStringAsFixed(1)} bls, arena: ${arena.toStringAsFixed(1)} m³, agua: ${agua.toStringAsFixed(1)} m³, areaTotal: ${areaTotal.toStringAsFixed(1)} m²)';
   }
 
   /// Método para generar texto compartible
@@ -389,11 +389,11 @@ $datosMetrado
 
 📊 MATERIALES NECESARIOS:
 • Ladrillos: ${ladrillos.toStringAsFixed(0)} und
-• Cemento: ${cemento.toStringAsFixed(2)} bolsas
-• Arena: ${arena.toStringAsFixed(3)} m³
-• Agua: ${agua.toStringAsFixed(3)} m³
+• Cemento: ${cemento.toStringAsFixed(1)} bolsas
+• Arena: ${arena.toStringAsFixed(1)} m³
+• Agua: ${agua.toStringAsFixed(1)} m³
 
-📐 ÁREA TOTAL: ${areaTotal.toStringAsFixed(2)} m²
+📐 ÁREA TOTAL: ${areaTotal.toStringAsFixed(1)} m²
 
 ''';
   }

@@ -8,7 +8,7 @@ import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dar
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../widgets/widgets.dart';
 
 class ResultTarrajeoScreen extends ConsumerStatefulWidget {
@@ -765,7 +765,7 @@ class _TarrajeoMetradoTable extends ConsumerWidget {
       );
     }
 
-    double volumenTotal = metrados.fold(0.0, (sum, m) => sum + m.volumen);
+    double areaTotal = metrados.fold(0.0, (sum, m) => sum + m.area);
 
     return Table(
       columnWidths: const {
@@ -774,16 +774,16 @@ class _TarrajeoMetradoTable extends ConsumerWidget {
         2: FlexColumnWidth(1.5),
       },
       children: [
-        _buildTableRow(['Descripción', 'Und.', 'Volumen'], isHeader: true),
+        _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),
         ...metrados.map((metrado) => _buildTableRow([
           metrado.descripcion,
-          'm³',
-          metrado.volumenFormateado,
+          'm²',
+          metrado.areaFormateada,
         ])).toList(),
         _buildTableRow([
           'Total:',
-          'm³',
-          volumenTotal.toStringAsFixed(3),
+          'm²',
+          areaTotal.toStringAsFixed(1),
         ], isTotal: true),
       ],
     );

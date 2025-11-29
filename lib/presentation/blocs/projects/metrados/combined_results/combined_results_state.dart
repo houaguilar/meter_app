@@ -229,7 +229,7 @@ class MetradoUIInfo {
   String get statusText {
     if (!isValid) return 'Error: ${validationError ?? "Metrado inválido"}';
     if (resultCount == 0) return 'Sin resultados';
-    return '${resultCount} resultado${resultCount != 1 ? 's' : ''}';
+    return '$resultCount resultado${resultCount != 1 ? 's' : ''}';
   }
 
   /// Icono recomendado para el tipo de metrado

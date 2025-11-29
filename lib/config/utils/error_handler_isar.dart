@@ -234,6 +234,15 @@ class ErrorHandlerIsar {
 
       case FailureType.server:
         return 'Error server';
+      case FailureType.network:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case FailureType.notFound:
+        // TODO: Handle this case.
+        throw UnimplementedError();
+      case FailureType.unauthorized:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
   }
 

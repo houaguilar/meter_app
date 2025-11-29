@@ -76,8 +76,14 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
 
   // **CÁLCULO DE ACERO LONGITUDINAL** - Ahora usando column.steelBars directamente
   for (final steelBar in column.steelBars) {
-    // Longitud básica por barra: elementos × cantidad × altura de columna
-    final longitudBasica = column.elements * steelBar.quantity * column.height;
+    // Calcular altura total (columna + zapata si está habilitada)
+    double alturaTotal = column.height;
+    if (column.hasFooting) {
+      alturaTotal += column.footingHeight;
+    }
+
+    // Longitud básica por barra: elementos × cantidad × altura total
+    final longitudBasica = column.elements * steelBar.quantity * alturaTotal;
     totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudBasica;
 
     // Agregar empalme si está habilitado
@@ -94,6 +100,12 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
   }
 
   // **CÁLCULO DE ESTRIBOS** - Ahora usando column.stirrupDistributions directamente
+  // Calcular altura total para estribos (columna + zapata si está habilitada)
+  double alturaTotalEstribos = column.height;
+  if (column.hasFooting) {
+    alturaTotalEstribos += column.footingHeight;
+  }
+
   // Calcular longitud cubierta por distribuciones
   double longitudCubierta = 0;
   int cantidadEstribosDistribucion = 0;
@@ -103,8 +115,8 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
     cantidadEstribosDistribucion += distribution.quantity * 2; // x2 para ambos extremos
   }
 
-  // Calcular estribos del resto
-  final longitudRestante = column.height - (longitudCubierta * 2);
+  // Calcular estribos del resto usando altura total
+  final longitudRestante = alturaTotalEstribos - (longitudCubierta * 2);
   int estribosResto = 0;
   if (column.restSeparation > 0 && longitudRestante > 0) {
     estribosResto = (longitudRestante / column.restSeparation).floor();
@@ -114,8 +126,10 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
   final totalEstribos = estribosResto + cantidadEstribosDistribucion;
 
   // Calcular perímetro del estribo (columna rectangular)
-  final perimetroEstribo = (column.length - (column.cover / 100)) * 2 +
-      (column.width - (column.cover / 100)) * 2 +
+  // Nota: El recubrimiento de estribos se resta dos veces (ambos lados)
+  // Usa stirrupCover (no cover) como en el Excel
+  final perimetroEstribo = (column.length - (column.stirrupCover / 100 * 2)) * 2 +
+      (column.width - (column.stirrupCover / 100 * 2)) * 2 +
       column.stirrupBendLength * 2;
 
   // Longitud total de estribos
@@ -131,7 +145,7 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
       final varillas = longitud / SteelConstants.standardRodLength;
-      final varillasConDesperdicio = (varillas * (1 + column.waste)).ceil().toDouble();
+      final varillasConDesperdicio = varillas * (1 + column.waste);
 
       // Calcular peso
       final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
@@ -153,7 +167,7 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
   return SteelColumnCalculationResult(
     columnId: column.idSteelColumn,
     description: column.description,
-    totalWeight: pesoTotal * (1 + column.waste),
+    totalWeight: pesoTotal,  // Peso sin desperdicio (el desperdicio ya se aplicó a las varillas)
     wireWeight: alambreKg,
     totalStirrups: totalEstribos * column.elements,
     stirrupPerimeter: perimetroEstribo,
@@ -205,8 +219,8 @@ final consolidatedColumnSummaryProvider = Provider<String>((ref) {
 
   summary += "📊 RESULTADOS GENERALES:\n";
   summary += "• Número de columnas: ${result.numberOfColumns}\n";
-  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
-  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n";
+  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
+  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n";
   summary += "• Total de estribos: ${result.totalStirrups}\n\n";
 
   summary += "📋 MATERIALES CONSOLIDADOS:\n";
@@ -218,8 +232,8 @@ final consolidatedColumnSummaryProvider = Provider<String>((ref) {
   for (int i = 0; i < result.columnResults.length; i++) {
     final columnResult = result.columnResults[i];
     summary += "\n${i + 1}. ${columnResult.description}:\n";
-    summary += "   • Peso: ${columnResult.totalWeight.toStringAsFixed(2)} kg\n";
-    summary += "   • Alambre: ${columnResult.wireWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Peso: ${columnResult.totalWeight.toStringAsFixed(1)} kg\n";
+    summary += "   • Alambre: ${columnResult.wireWeight.toStringAsFixed(1)} kg\n";
     summary += "   • Estribos: ${columnResult.totalStirrups}\n";
     if (columnResult.hasFooting) {
       summary += "   • Con zapata: Sí\n";

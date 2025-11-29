@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:meter_app/presentation/widgets/app_bar/app_bar_perfil_widget.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/map/location.dart';
@@ -49,7 +50,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       },
       child: Scaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBarWidget(titleAppBar: 'Mi Perfil'),
+        appBar: AppBarPerfilWidget(titleAppBar: 'Mi Negocio'),
         body: SingleChildScrollView(
           child: Column(
             children: [
@@ -250,7 +251,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           ),
 
           // Información de verificación programada
-          if (status == VerificationStatus.pendingApproval &&
+          if (status == VerificationStatus.pending &&
               widget.location.scheduledDate != null) ...[
             const SizedBox(height: 16),
             Container(
@@ -812,39 +813,39 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
   Color _getStatusColor(VerificationStatus status) {
     switch (status) {
-      case VerificationStatus.pendingApproval:
+      case VerificationStatus.pending:
         return AppColors.warning;
       case VerificationStatus.approved:
         return AppColors.success;
       case VerificationStatus.rejected:
         return AppColors.error;
-      case VerificationStatus.active:
+      case VerificationStatus.approved:
         return AppColors.success;
     }
   }
 
   IconData _getStatusIcon(VerificationStatus status) {
     switch (status) {
-      case VerificationStatus.pendingApproval:
+      case VerificationStatus.pending:
         return Icons.hourglass_empty;
       case VerificationStatus.approved:
         return Icons.check_circle;
       case VerificationStatus.rejected:
         return Icons.cancel;
-      case VerificationStatus.active:
+      case VerificationStatus.approved:
         return Icons.verified;
     }
   }
 
   String _getStatusMessage(VerificationStatus status) {
     switch (status) {
-      case VerificationStatus.pendingApproval:
+      case VerificationStatus.pending:
         return 'Tu solicitud está siendo revisada. Un verificador visitará tu negocio en la fecha programada.';
       case VerificationStatus.approved:
         return 'Tu negocio ha sido verificado y aprobado. Ahora puedes configurar tus productos.';
       case VerificationStatus.rejected:
         return 'Tu solicitud ha sido rechazada. Por favor, revisa las notas del verificador.';
-      case VerificationStatus.active:
+      case VerificationStatus.approved:
         return 'Tu negocio está activo y visible en el mapa para los clientes.';
     }
   }

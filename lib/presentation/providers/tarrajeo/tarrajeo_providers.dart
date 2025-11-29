@@ -170,9 +170,9 @@ class TarrajeoMateriales {
 
   // Getters para valores formateados
   String get cementoFormateado => cemento.ceil().toString();
-  String get arenaFormateada => arena.toStringAsFixed(2);
-  String get aguaFormateada => agua.toStringAsFixed(2);
-  String get volumenFormateado => volumenTotal.toStringAsFixed(3);
+  String get arenaFormateada => arena.toStringAsFixed(1);
+  String get aguaFormateada => agua.toStringAsFixed(1);
+  String get volumenFormateado => volumenTotal.toStringAsFixed(1);
 
   // Para compartir/PDF
   String get resumenTexto => '''
@@ -204,8 +204,8 @@ class TarrajeoMetrado {
     required this.area,
   });
 
-  String get volumenFormateado => volumen.toStringAsFixed(3);
-  String get areaFormateada => area.toStringAsFixed(2);
+  String get volumenFormateado => volumen.toStringAsFixed(1);
+  String get areaFormateada => area.toStringAsFixed(1);
 }
 
 // ===== PROVIDERS REACTIVOS =====
@@ -273,7 +273,7 @@ String datosShareTarrajeo(DatosShareTarrajeoRef ref) {
 
   String datos = "";
   for (int i = 0; i < metrados.length; i++) {
-    datos += "* ${metrados[i].descripcion}: ${metrados[i].volumenFormateado} m³\n";
+    datos += "* ${metrados[i].descripcion}: ${metrados[i].areaFormateada} m²\n";
   }
 
   return datos.isNotEmpty ? datos.substring(0, datos.length - 1) : datos;

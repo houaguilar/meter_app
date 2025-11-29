@@ -222,10 +222,10 @@ class TarrajeoDerrrameMaterialesData {
   }
 
   // Getters formateados para UI
-  String get cementoFormateado => cemento.toStringAsFixed(2);
-  String get arenaFormateada => arena.toStringAsFixed(4);
-  String get aguaFormateada => agua.toStringAsFixed(5);
-  String get volumenFormateado => volumen.toStringAsFixed(4);
+  String get cementoFormateado => cemento.toStringAsFixed(1);
+  String get arenaFormateada => arena.toStringAsFixed(1);
+  String get aguaFormateada => agua.toStringAsFixed(1);
+  String get volumenFormateado => volumen.toStringAsFixed(1);
   String get areaTotalFormateada => "Calculada en metrados";
 }
 
@@ -244,7 +244,7 @@ class TarrajeoDerrameMetradoData {
   });
 
   // Getters formateados para UI
-  String get areaFormateada => area.toStringAsFixed(2);
-  String get volumenFormateado => volumen.toStringAsFixed(4);
+  String get areaFormateada => area.toStringAsFixed(1);
+  String get volumenFormateado => volumen.toStringAsFixed(1);
   String get espesorFormateado => espesor.toStringAsFixed(1);
 }

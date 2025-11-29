@@ -5,6 +5,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
 
 class ResultSteelSlabScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,8 @@ class ResultSteelSlabScreen extends ConsumerStatefulWidget {
 
 class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
     with SingleTickerProviderStateMixin {
+
+  bool _isGeneratingPDF = false; // Flag para prevenir limpieza durante generación de PDF
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -89,40 +92,39 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultados de Acero en Losa'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            onPressed: _shareResults,
-            icon: const Icon(Icons.share),
-            tooltip: 'Compartir resultados',
-          ),
-          IconButton(
-            onPressed: _generatePDF,
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Generar PDF',
-          ),
-        ],
-      ),
-      backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Stack(
-            children: [
-              _buildBody(),
-              // Botones de acción en la parte inferior
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomActionBar(),
-              ),
-            ],
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (bool didPop) {
+        if (didPop && !_isGeneratingPDF) {
+          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
+          ref.read(steelSlabResultProvider.notifier).clearList();
+        } else if (didPop && _isGeneratingPDF) {
+          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Resultados de Acero en Losa'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+        backgroundColor: AppColors.background,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Stack(
+              children: [
+                _buildBody(),
+                // Botones de acción en la parte inferior
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomActionBar(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -429,9 +431,9 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
   // MÉTODOS DE COMPARTIR
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _sharePDF() async {
+  Future<void> _sharePDF() async {
     try {
-      _generatePDF();
+      await _generatePDF();
     } catch (e) {
       _showErrorMessage('Error al generar PDF: $e');
     }
@@ -461,8 +463,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
     for (int i = 0; i < consolidatedResult.slabResults.length; i++) {
       final slab = consolidatedResult.slabResults[i];
       content.writeln('Losa ${i + 1}: ${slab.description}');
-      content.writeln('  • Peso total: ${slab.totalWeight.toStringAsFixed(2)} kg');
-      content.writeln('  • Alambre #16: ${slab.wireWeight.toStringAsFixed(2)} kg');
+      content.writeln('  • Peso total: ${slab.totalWeight.toStringAsFixed(1)} kg');
+      content.writeln('  • Alambre #16: ${slab.wireWeight.toStringAsFixed(1)} kg');
       if (slab.hasSuperiorMesh) {
         content.writeln('  • Incluye malla superior');
       }
@@ -476,9 +478,59 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
     );
     }
 
-  void _generatePDF() {
-    // Implementar generación de PDF similar a otras pantallas
-    _showErrorMessage('Funcionalidad de PDF en desarrollo');
+  Future<void> _generatePDF() async {
+    try {
+      // Activar flag para prevenir limpieza de datos
+      if (!mounted) return;
+      setState(() {
+        _isGeneratingPDF = true;
+      });
+
+      // Mostrar loader (NO cerramos el bottom sheet)
+      if (!mounted) return;
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+
+      // Generar PDF usando PDFFactory
+      final pdfFile = await PDFFactory.generateSteelSlabPDF(ref);
+
+      // Ocultar loader solo si el widget está montado
+      if (mounted) {
+        context.hideLoader();
+      } else {
+        return;
+      }
+
+      // Compartir PDF (esto cerrará automáticamente el bottom sheet)
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        subject: 'Resultados de Losas Macizas de Acero',
+      );
+
+      // Mostrar feedback solo si el widget está montado
+      if (mounted && result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          context.hideLoader();
+        } catch (loaderError) {
+          // Ignorar error si no se puede ocultar loader
+        }
+        _showErrorMessage('Error al generar PDF: $e');
+      }
+    } finally {
+      // Desactivar flag después de completar o fallar
+      if (mounted) {
+        setState(() {
+          _isGeneratingPDF = false;
+        });
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -579,8 +631,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Losas', '${quickStats['totalSlabs']}'),
-            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(2)} kg'),
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(2)} kg'),
+            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
           ],
         ],
       ),
@@ -828,7 +880,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${slab.totalWeight.toStringAsFixed(2)} kg',
+                  'Peso total: ${slab.totalWeight.toStringAsFixed(1)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
@@ -915,6 +967,21 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         SnackBar(
           content: Text(message),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

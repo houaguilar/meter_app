@@ -1,4 +1,3 @@
-// lib/presentation/screens/mapa/widgets/map_loading_overlay.dart
 import 'package:flutter/material.dart';
 import '../../../../config/theme/theme.dart';
 

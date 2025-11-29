@@ -4,13 +4,17 @@ import 'package:meta/meta.dart';
 import '../../../../../config/constants/error/failures.dart';
 import '../../../../../domain/usecases/projects/metrados/result/load_results_use_case.dart';
 import '../../../../../domain/usecases/projects/metrados/result/save_results_use_case.dart';
+import '../../../common/error_handler_mixin.dart';
 
 part 'result_event.dart';
 part 'result_state.dart';
 
-class ResultBloc extends Bloc<ResultEvent, ResultState> {
+class ResultBloc extends Bloc<ResultEvent, ResultState> with ErrorHandlerMixin {
   final SaveResultsUseCase saveResultsUseCase;
   final LoadResultsUseCase loadResultsUseCase;
+
+  @override
+  String get blocContext => 'ResultBloc';
 
   ResultBloc({
     required this.saveResultsUseCase,
@@ -22,7 +26,7 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
   }
 
   void _onSaveResult(SaveResultEvent event, Emitter<ResultState> emit) async {
-    print('🔄 ResultBloc: Iniciando guardado de resultados...');
+    logInfo('Iniciando guardado de resultados para metrado ${event.metradoId}');
     emit(ResultLoading());
 
     try {
@@ -32,32 +36,48 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
       ));
 
       result.fold(
-            (failure) {
-          print('❌ ResultBloc: Error al guardar - ${failure.message}');
-          emit(ResultFailure(_mapFailureToMessage(failure)));
+        (failure) {
+          final message = mapFailureToMessage(failure);
+          emit(ResultFailure(message));
         },
-            (_) {
-          print('✅ ResultBloc: Resultados guardados exitosamente');
+        (_) {
+          logInfo('Resultados guardados exitosamente');
           emit(ResultSuccess(event.results));
         },
       );
-    } catch (e) {
-      print('❌ ResultBloc: Excepción no controlada - $e');
-      emit(ResultFailure('Error inesperado: $e'));
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ResultFailure(message));
     }
   }
 
   void _onLoadResults(LoadResultsEvent event, Emitter<ResultState> emit) async {
+    logInfo('Cargando resultados para metrado ${event.metradoId}');
     emit(ResultLoading());
-    final result = await loadResultsUseCase(LoadResultsParams(metradoId: event.metradoId));
-    result.fold(
-          (failure) => emit(ResultFailure(failure.message)),
-          (results) => emit(ResultSuccess(results)),
-    );
+
+    try {
+      final result = await loadResultsUseCase(
+        LoadResultsParams(metradoId: event.metradoId),
+      );
+
+      result.fold(
+        (failure) {
+          final message = mapFailureToMessage(failure);
+          emit(ResultFailure(message));
+        },
+        (results) {
+          logInfo('Resultados cargados exitosamente: ${results.length} items');
+          emit(ResultSuccess(results));
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ResultFailure(message));
+    }
   }
 
   void _onResetResultState(ResetResultStateEvent event, Emitter<ResultState> emit) async {
-    print('🔄 ResultBloc: Reseteando estado...');
+    logInfo('Reseteando estado del BLoC');
 
     // Forzar emisión de estado inicial
     if (!emit.isDone) {
@@ -67,21 +87,6 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> {
     // Limpiar cualquier cache interno
     await Future.delayed(const Duration(milliseconds: 50));
 
-    print('✅ ResultBloc: Estado reseteado a inicial');
-  }
-
-  String _mapFailureToMessage(Failure failure) {
-    print('🔍 Mapeando failure: ${failure.type} - ${failure.message}');
-
-    switch (failure.type) {
-      case FailureType.duplicateName:
-        return failure.message;
-      case FailureType.general:
-        return failure.message.isNotEmpty ? failure.message : 'Error al guardar resultados';
-      case FailureType.unknown:
-        return 'Error inesperado al procesar los resultados';
-      default:
-        return 'Error del servidor al guardar resultados';
-    }
+    logInfo('Estado reseteado a inicial');
   }
 }

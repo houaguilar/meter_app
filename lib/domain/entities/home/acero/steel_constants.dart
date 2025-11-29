@@ -28,16 +28,16 @@ class SteelConstants {
   ///
   /// **Aplicable a:** Vigas, Columnas, Zapatas, Losas Macizas
   static const Map<String, double> steelWeights = {
-    '6mm': 0.222,
-    '1/4"': 0.250,
-    '8mm': 0.395,
+  //  '6mm': 0.222,
+  //  '1/4"': 0.250,
+  //  '8mm': 0.395,
     '3/8"': 0.560,
-    '12mm': 0.888,
+  //  '12mm': 0.888,
     '1/2"': 0.994,
     '5/8"': 1.552,
     '3/4"': 2.235,
     '1"': 3.973,
-    '1 3/8"': 7.907, // Presente en Excel, faltaba en código anterior
+  //  '1 3/8"': 7.907,
   };
 
   // ===========================================================================
@@ -85,16 +85,29 @@ class SteelConstants {
   ///
   /// **Total:** 10 diámetros estándar
   static const List<String> availableDiameters = [
-    '6mm',
-    '1/4"',
-    '8mm',
+  //  '6mm',
+  //  '1/4"',
+  //  '8mm',
     '3/8"',
-    '12mm',
+  //  '12mm',
     '1/2"',
     '5/8"',
     '3/4"',
     '1"',
-    '1 3/8"',
+  //  '1 3/8"',
+  ];
+
+  static const List<String> availableDiametersSturrips = [
+    '6mm',
+    '1/4"',
+    '8mm',
+    '3/8"',
+    //  '12mm',
+    '1/2"',
+    //  '5/8"',
+    //  '3/4"',
+    //  '1"',
+    //  '1 3/8"',
   ];
 
   // ===========================================================================

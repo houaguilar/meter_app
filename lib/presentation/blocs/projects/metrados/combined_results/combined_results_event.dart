@@ -20,14 +20,20 @@ class LoadCombinedResultsEvent extends CombinedResultsEvent {
 class RefreshCombinedResultsEvent extends CombinedResultsEvent {}
 
 /// Evento para generar PDF de los resultados combinados
-class GenerateCombinedPdfEvent extends CombinedResultsEvent {}
+class GenerateCombinedPdfEvent extends CombinedResultsEvent {
+  final String? nombreUsuario;
+
+  GenerateCombinedPdfEvent({this.nombreUsuario});
+}
 
 /// Evento para compartir los resultados combinados
 class ShareCombinedResultsEvent extends CombinedResultsEvent {
   final ShareFormat format;
+  final String? nombreUsuario;
 
   ShareCombinedResultsEvent({
     required this.format,
+    this.nombreUsuario,
   });
 }
 
@@ -43,6 +49,5 @@ class UpdateSelectedMetradosEvent extends CombinedResultsEvent {
 /// Formatos de compartir disponibles
 enum ShareFormat {
   pdf,
-  excel,
   text,
 }
