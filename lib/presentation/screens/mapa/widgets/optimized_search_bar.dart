@@ -1,4 +1,3 @@
-// lib/presentation/screens/mapa/widgets/optimized_search_bar.dart
 import 'package:flutter/material.dart';
 import '../../../../config/theme/theme.dart';
 

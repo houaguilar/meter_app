@@ -30,7 +30,7 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.194976078807-6oevpfa8e61mtprl13akdf332rf48edd</string>
-				<string>com.example.meterApp</string>
+				<string>com.jrd.metrashop</string>
 			</array>
 		</dict>
 	</array>
@@ -55,7 +55,7 @@
 		<true/>
 	</dict>
 	<key>NSCameraUsageDescription</key>
-	<string>We need access to your camera to take pictures.</string>
+	<string>La aplicación necesita acceso a tu cámara para tomar fotos del negocio y registrarte como proveedor.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>La aplicación necesita acceso a tu ubicación para mostrar el mapa correctamente.</string>
 	<key>NSLocationAlwaysUsageDescription</key>

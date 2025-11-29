@@ -10,3 +10,6 @@ export 'buttons/custom_text_blue_button.dart';
 export '../../config/utils/loader.dart';
 
 export 'shared/measurement_section.dart';
+
+// Dialogs
+export 'dialogs/feature_status_dialog.dart';

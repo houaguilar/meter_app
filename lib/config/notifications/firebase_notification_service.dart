@@ -188,7 +188,16 @@ class FirebaseNotificationService implements NotificationRepository {
   }
 
   /// Obtiene el mensaje inicial si la app fue abierta desde una notificación
-  Future<RemoteMessage?> getInitialMessage() async {
-    return await _messaging.getInitialMessage();
+  @override
+  Future<Map<String, dynamic>?> getInitialMessage() async {
+    final message = await _messaging.getInitialMessage();
+    if (message == null) return null;
+
+    return {
+      'messageId': message.messageId ?? '',
+      'title': message.notification?.title ?? '',
+      'body': message.notification?.body ?? '',
+      'data': message.data,
+    };
   }
 }

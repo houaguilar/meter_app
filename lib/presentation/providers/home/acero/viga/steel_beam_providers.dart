@@ -80,9 +80,9 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
 
   // **CÁLCULO DE ACERO LONGITUDINAL** - Ahora usando beam.steelBars directamente
   for (final steelBar in beam.steelBars) {
-    // Longitud básica: elementos × cantidad × (largo - apoyo A1 - apoyo A2 + doblez×2)
-    final longitudBasica = beam.elements * steelBar.quantity *
-        (beam.length - beam.supportA1 - beam.supportA2 + (beam.bendLength * 2));
+    // ✅ BUG FIX #1: Longitud básica solo usa ALTURA (no largo, no apoyos)
+    // Fórmula Excel: elementos × cantidad × altura
+    final longitudBasica = beam.elements * steelBar.quantity * beam.height;
 
     totalesPorDiametro[steelBar.diameter] =
         (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudBasica;
@@ -94,6 +94,12 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
       totalesPorDiametro[steelBar.diameter] =
           (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
     }
+
+    // ✅ BUG FIX #1: Doblez se suma por separado (igual que en Excel)
+    // Fórmula Excel: elementos × cantidad × doblez (en filas separadas del Excel)
+    final longitudDoblez = beam.elements * steelBar.quantity * (beam.bendLength * 2);
+    totalesPorDiametro[steelBar.diameter] =
+        (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudDoblez;
   }
 
   // **CÁLCULO DE ESTRIBOS** - Ahora usando beam.stirrupDistributions directamente
@@ -106,8 +112,13 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
     cantidadEstribosDistribucion += distribution.quantity * 2; // x2 para ambos extremos
   }
 
-  // Calcular estribos del resto
-  final longitudRestante = beam.length - (longitudCubierta * 2);
+  // ✅ BUG FIX #2: Calcular altura efectiva restando los apoyos
+  // Fórmula Excel: altura_efectiva = altura - apoyo1 - apoyo2
+  final alturaEfectiva = beam.height - beam.supportA1 - beam.supportA2;
+
+  // ✅ BUG FIX #2: Usar altura efectiva en lugar de beam.length
+  // Fórmula Excel: longitud_restante = altura_efectiva - (longitud_cubierta*2)
+  final longitudRestante = alturaEfectiva - (longitudCubierta * 2);
   int estribosResto = 0;
   if (beam.restSeparation > 0 && longitudRestante > 0) {
     estribosResto = (longitudRestante / beam.restSeparation).floor();
@@ -134,7 +145,7 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
       final varillas = longitud / SteelConstants.standardRodLength;
-      final varillasConDesperdicio = (varillas * (1 + beam.waste)).ceil().toDouble();
+      final varillasConDesperdicio = varillas * (1 + beam.waste);  // Mantiene decimales (Excel no redondea)
 
       // Calcular peso
       final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
@@ -156,7 +167,7 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
   return SteelBeamCalculationResult(
     beamId: beam.idSteelBeam,
     description: beam.description,
-    totalWeight: pesoTotal * (1 + beam.waste),
+    totalWeight: pesoTotal,  // Peso sin desperdicio (Excel no aplica desperdicio al peso)
     wireWeight: alambreKg,
     totalStirrups: totalEstribos * beam.elements,
     stirrupPerimeter: perimetroEstribo,
@@ -250,8 +261,8 @@ final consolidatedSummaryProvider = Provider<String>((ref) {
 
   summary += "📊 RESULTADOS GENERALES:\n";
   summary += "• Número de vigas: ${result.numberOfBeams}\n";
-  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
-  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n";
+  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
+  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n";
   summary += "• Total de estribos: ${result.totalStirrups}\n\n";
 
   summary += "📋 MATERIALES CONSOLIDADOS:\n";
@@ -263,8 +274,8 @@ final consolidatedSummaryProvider = Provider<String>((ref) {
   for (int i = 0; i < result.beamResults.length; i++) {
     final beamResult = result.beamResults[i];
     summary += "\n${i + 1}. ${beamResult.description}:\n";
-    summary += "   • Peso: ${beamResult.totalWeight.toStringAsFixed(2)} kg\n";
-    summary += "   • Alambre: ${beamResult.wireWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Peso: ${beamResult.totalWeight.toStringAsFixed(1)} kg\n";
+    summary += "   • Alambre: ${beamResult.wireWeight.toStringAsFixed(1)} kg\n";
     summary += "   • Estribos: ${beamResult.totalStirrups}\n";
   }
 

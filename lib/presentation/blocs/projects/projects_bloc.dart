@@ -8,15 +8,19 @@ import '../../../config/usecase/usecase.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/usecases/projects/delete_project.dart';
 import '../../../domain/usecases/projects/edit_project.dart';
+import '../common/error_handler_mixin.dart';
 
 part 'projects_event.dart';
 part 'projects_state.dart';
 
-class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
+class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> with ErrorHandlerMixin {
   final CreateProject _createProject;
   final GetAllProjects _getAllProjects;
   final DeleteProject _deleteProject;
   final EditProject _editProject;
+
+  @override
+  String get blocContext => 'ProjectsBloc';
 
   ProjectsBloc({
     required CreateProject createProject,
@@ -36,106 +40,137 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> {
   }
 
   void _onCreateProject(CreateProjectEvent event, Emitter<ProjectsState> emit) async {
+    logInfo('Creando proyecto: ${event.name}');
     emit(ProjectLoading());
-    final result = await _createProject(CreateProjectParams(name: event.name));
-    result.fold(
-          (failure) {
-        if (failure.type == FailureType.duplicateName) {
-          print('ProjectNameAlreadyExists create failure');
-          emit(ProjectNameAlreadyExists(failure.message));
-       //   add(LoadProjectsEvent());
-        } else {
-          print('ProjectFailure create failure');
-          emit(ProjectFailure(failure.message));
-        }
-      },
-          (_) async {
-          //  await _syncService.syncProjects();
-            add(LoadProjectsEvent());
-      },
-    );
+
+    try {
+      final result = await _createProject(CreateProjectParams(name: event.name));
+      result.fold(
+        (failure) {
+          if (failure.type == FailureType.duplicateName) {
+            logWarning('Nombre de proyecto duplicado: ${event.name}');
+            emit(ProjectNameAlreadyExists(failure.message));
+          } else {
+            final message = mapFailureToMessage(failure);
+            emit(ProjectFailure(message));
+          }
+        },
+        (_) {
+          logInfo('Proyecto creado exitosamente: ${event.name}');
+          add(LoadProjectsEvent());
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ProjectFailure(message));
+    }
   }
 
   void _onLoadProjects(
-      LoadProjectsEvent event,
-      Emitter<ProjectsState> emit,
-      ) async {
-    print('LoadProjectsEvent called');
+    LoadProjectsEvent event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    logInfo('Cargando proyectos');
     emit(ProjectLoading());
-    final result = await _getAllProjects(NoParams());
-    result.fold(
-          (failure) => emit(ProjectFailure(failure.message)),
 
-          (projects) => emit(ProjectSuccess(projects)),
-    );
-
-
+    try {
+      final result = await _getAllProjects(NoParams());
+      result.fold(
+        (failure) {
+          final message = mapFailureToMessage(failure);
+          emit(ProjectFailure(message));
+        },
+        (projects) {
+          logInfo('Proyectos cargados exitosamente: ${projects.length} items');
+          emit(ProjectSuccess(projects));
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ProjectFailure(message));
+    }
   }
 
   void _onSaveProject(
-      SaveProject event,
-      Emitter<ProjectsState> emit,
-      ) async {
-    print('SaveProject called with project: ${event.project.name}');
+    SaveProject event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    logInfo('Guardando proyecto: ${event.project.name}');
     emit(ProjectLoading());
-    final result = await _createProject(CreateProjectParams(name: event.project.name));
-    result.fold(
-          (failure) {
-        if (failure.type == FailureType.duplicateName) {
-          print('ProjectNameAlreadyExists save failure');
-          emit(ProjectNameAlreadyExists(failure.message));
-   //       add(LoadProjectsEvent());
 
-        } else {
-          print('ProjectFailure save failure');
-          emit(ProjectFailure(failure.message));
-        }
-      },
-          (_) async {
-         //   await _syncService.syncProjects(); // Sincroniza después de guardar un proyecto
-            print('SaveProject succeeded');
-            emit(ProjectAdded(project: event.project));
-            add(LoadProjectsEvent());
-          },
-    );
+    try {
+      final result = await _createProject(CreateProjectParams(name: event.project.name));
+      result.fold(
+        (failure) {
+          if (failure.type == FailureType.duplicateName) {
+            logWarning('Nombre de proyecto duplicado al guardar: ${event.project.name}');
+            emit(ProjectNameAlreadyExists(failure.message));
+          } else {
+            final message = mapFailureToMessage(failure);
+            emit(ProjectFailure(message));
+          }
+        },
+        (_) {
+          logInfo('Proyecto guardado exitosamente: ${event.project.name}');
+          emit(ProjectAdded(project: event.project));
+          add(LoadProjectsEvent());
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ProjectFailure(message));
+    }
   }
 
   void _onDeleteProject(
-      DeleteProjectEvent event,
-      Emitter<ProjectsState> emit
-      ) async {
+    DeleteProjectEvent event,
+    Emitter<ProjectsState> emit,
+  ) async {
+    logInfo('Eliminando proyecto: ${event.project.name}');
     emit(ProjectLoading());
-    final result = await _deleteProject(DeleteProjectParams(project: event.project));
-    result.fold(
-          (failure) => emit(ProjectFailure(failure.message)),
-          (_) async {
-    //    await _syncService.syncProjects(); // Sincroniza después de eliminar un proyecto
-        add(LoadProjectsEvent());
-      },
-    );
+
+    try {
+      final result = await _deleteProject(DeleteProjectParams(project: event.project));
+      result.fold(
+        (failure) {
+          final message = mapFailureToMessage(failure);
+          emit(ProjectFailure(message));
+        },
+        (_) {
+          logInfo('Proyecto eliminado exitosamente: ${event.project.name}');
+          add(LoadProjectsEvent());
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ProjectFailure(message));
+    }
   }
 
   void _onEditProject(EditProjectEvent event, Emitter<ProjectsState> emit) async {
-    print('EditProjectEvent called');
-    final result = await _editProject(EditProjectParams(project: event.project));
-    result.fold(
-          (failure) {
-        print('EditProjectEvent failure');
-        if (failure.type == FailureType.duplicateName) {
-          print('ProjectNameAlreadyExists failure');
+    logInfo('Editando proyecto: ${event.project.name}');
+    emit(ProjectLoading());
 
-          emit(ProjectNameAlreadyExists(failure.message));
-    //      add(LoadProjectsEvent());
-
-        } else {
-          print('ProjectFailure failure');
-          emit(ProjectFailure(failure.message));
-        }
-      },
-          (_) async {
-   //     await _syncService.syncProjects(); // Sincroniza después de editar un proyecto
-        add(LoadProjectsEvent());
-      },
-    );
+    try {
+      final result = await _editProject(EditProjectParams(project: event.project));
+      result.fold(
+        (failure) {
+          if (failure.type == FailureType.duplicateName) {
+            logWarning('Nombre de proyecto duplicado al editar: ${event.project.name}');
+            emit(ProjectNameAlreadyExists(failure.message));
+          } else {
+            final message = mapFailureToMessage(failure);
+            emit(ProjectFailure(message));
+          }
+        },
+        (_) {
+          logInfo('Proyecto editado exitosamente: ${event.project.name}');
+          add(LoadProjectsEvent());
+        },
+      );
+    } catch (e, stackTrace) {
+      final message = handleException(e, stackTrace: stackTrace);
+      emit(ProjectFailure(message));
+    }
   }
 }

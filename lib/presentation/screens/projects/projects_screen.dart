@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:animations/animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
 import '../../../config/theme/theme.dart';

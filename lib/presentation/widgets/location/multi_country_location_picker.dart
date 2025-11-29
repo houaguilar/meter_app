@@ -9,7 +9,7 @@ import '../../../data/repositories/perfil/location/location_repository.dart';
 import '../../../data/repositories/perfil/location/location_repository_factory.dart';
 
 /// Widget genérico para seleccionar ubicaciones de múltiples países
-/// Soporta Perú 🇵🇪, Colombia 🇨🇴 y Brasil 🇧🇷
+/// Soporta Perú 🇵🇪, Colombia 🇨🇴 y México 🇲🇽
 ///
 /// Uso:
 /// ```dart

@@ -9,6 +9,7 @@ class ColumnFormData {
   late final TextEditingController wasteController;
   late final TextEditingController elementsController;
   late final TextEditingController coverController;
+  late final TextEditingController stirrupCoverController;
 
   // Controladores para dimensiones básicas
   late final TextEditingController heightController;
@@ -46,10 +47,11 @@ class ColumnFormData {
     wasteController = TextEditingController(text: '7');
     elementsController = TextEditingController(text: '1');
     coverController = TextEditingController(text: '4');
+    stirrupCoverController = TextEditingController(text: '4');
 
-    heightController = TextEditingController(text: '3.50');
-    lengthController = TextEditingController(text: '0.60');
-    widthController = TextEditingController(text: '0.40');
+    heightController = TextEditingController(text: '0');
+    lengthController = TextEditingController(text: '0');
+    widthController = TextEditingController(text: '0');
 
     // Datos de zapata (inicialmente vacíos)
     footingHeightController = TextEditingController(text: '0.60');
@@ -61,8 +63,7 @@ class ColumnFormData {
 
   void _initializeDefaultData() {
     // Agregar barras de acero por defecto
-    steelBars.add(SteelBarData(quantity: 6, diameter: '3/4"'));
-    steelBars.add(SteelBarData(quantity: 2, diameter: '1/2"'));
+    steelBars.add(SteelBarData(quantity: 0, diameter: '1/2"'));
 
     // Agregar distribuciones de estribos por defecto
     stirrupDistributions.add(StirrupDistributionData(quantity: 1, separation: 0.05));
@@ -82,6 +83,9 @@ class ColumnFormData {
 
       final cover = double.tryParse(coverController.text);
       if (cover == null || cover <= 0) return false;
+
+      final stirrupCover = double.tryParse(stirrupCoverController.text);
+      if (stirrupCover == null || stirrupCover <= 0) return false;
 
       final height = double.tryParse(heightController.text);
       if (height == null || height <= 0) return false;
@@ -118,6 +122,7 @@ class ColumnFormData {
     wasteController.dispose();
     elementsController.dispose();
     coverController.dispose();
+    stirrupCoverController.dispose();
     heightController.dispose();
     lengthController.dispose();
     widthController.dispose();

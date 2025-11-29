@@ -9,7 +9,7 @@ import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/validators.dart';
-import '../../../assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../widgets/enhanced_auth_text_field.dart';
 import '../widgets/enhanced_register_button.dart';

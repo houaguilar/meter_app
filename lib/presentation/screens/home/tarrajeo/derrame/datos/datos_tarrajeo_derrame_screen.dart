@@ -1,10 +1,9 @@
-// lib/presentation/screens/home/tarrajeo/derrame/datos/datos_tarrajeo_derrame_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 
 import '../../../../../../../config/theme/theme.dart';
@@ -449,7 +448,7 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
                   Expanded(
                     child: ModernTextField(
                       controller: _lengthTextController,
-                      label: 'Longitud',
+                      label: 'Largo',
                       suffix: 'm',
                       validator: _validateNumeric,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -526,7 +525,7 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
             Expanded(
               child: ModernTextField(
                 controller: field['lengthMeasure']!,
-                label: 'Longitud',
+                label: 'Largo',
                 suffix: 'm',
                 validator: _validateNumeric,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),

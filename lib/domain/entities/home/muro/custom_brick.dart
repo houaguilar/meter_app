@@ -1,5 +1,6 @@
 // lib/domain/entities/home/muro/custom_brick.dart
 import 'package:isar/isar.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 part 'custom_brick.g.dart';
 
@@ -69,7 +70,7 @@ class CustomBrick {
     return {
       'id': 'custom_$customId',
       'name': name,
-      'image': 'assets/images/muro/tabicon.png', // Usar imagen genérica
+      'image': AppImages.personalizadoImg,
       'size': displaySize,
       'lengthBrick': length,
       'widthBrick': width,

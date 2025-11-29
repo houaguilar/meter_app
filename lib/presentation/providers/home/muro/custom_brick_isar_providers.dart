@@ -13,7 +13,7 @@ import '../../../../domain/usecases/home/muro/custom_brick/get_all_custom_bricks
 import '../../../../domain/usecases/home/muro/custom_brick/save_custom_brick.dart';
 import '../../../../domain/usecases/home/muro/custom_brick/update_custom_brick.dart';
 import '../../../../init_dependencies.dart';
-import '../../../assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 /// Provider para obtener todos los ladrillos personalizados
 final customBricksProvider = FutureProvider<List<CustomBrick>>((ref) async {
@@ -155,7 +155,7 @@ final wallMaterialsWithCustomProvider = FutureProvider<List<WallMaterial>>((ref)
         lengthBrick: brick.length,
         widthBrick: brick.width,
         heightBrick: brick.height,
-        details: '${brick.description ?? 'Ladrillo personalizado guardado'}\n• Dimensiones: ${brick.displaySize}\n• Volumen: ${brick.volume.toStringAsFixed(3)} litros\n• Creado: ${brick.createdAt.day}/${brick.createdAt.month}/${brick.createdAt.year}',
+        details: '${brick.description ?? 'Ladrillo personalizado guardado'}\n• Dimensiones: ${brick.displaySize}\n• Volumen: ${brick.volume.toStringAsFixed(1)} litros\n• Creado: ${brick.createdAt.day}/${brick.createdAt.month}/${brick.createdAt.year}',
       );
     }).toList();
 

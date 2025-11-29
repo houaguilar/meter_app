@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../config/theme/theme.dart';
-import '../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 
 class ConfirmDialog {
   static Future<void> show({

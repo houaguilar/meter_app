@@ -417,13 +417,14 @@ class LocationDataSourceImpl implements LocationDataSource {
         return await image.readAsBytes();
       }
 
-      // Comprimir imagen
+      // Comprimir imagen con formato JPEG explícito para iOS
       final compressedImage = await FlutterImageCompress.compressWithFile(
         image.absolute.path,
         minWidth: 1024,
         minHeight: 1024,
-        quality: 80,
-        rotate: 0,
+        quality: 85,
+        format: CompressFormat.jpeg, // Importante para iOS
+        keepExif: false, // Remover metadata para reducir tamaño
       );
 
       if (compressedImage == null) {

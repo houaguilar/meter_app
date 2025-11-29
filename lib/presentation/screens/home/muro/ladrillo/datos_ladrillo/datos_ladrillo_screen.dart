@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../data/local/shared_preferences_helper.dart';

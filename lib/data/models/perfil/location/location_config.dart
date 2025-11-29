@@ -47,16 +47,16 @@ class LocationConfig {
     level4Optional: true, // Corregimiento es opcional
   );
 
-  /// Configuración para Brasil 🇧🇷
-  static const LocationConfig brasil = LocationConfig(
-    country: Country(code: 'BR', name: 'Brasil', flag: '🇧🇷'),
+  /// Configuración para México 🇲🇽
+  static const LocationConfig mexico = LocationConfig(
+    country: Country(code: 'MX', name: 'México', flag: '🇲🇽'),
     level2Label: 'Estado',
     level2LabelPlural: 'Estados',
-    level3Label: 'Município',
-    level3LabelPlural: 'Municípios',
-    level4Label: 'Distrito',
-    level4LabelPlural: 'Distritos',
-    level4Optional: true, // Distrito es opcional
+    level3Label: 'Municipio',
+    level3LabelPlural: 'Municipios',
+    level4Label: 'Colonia',
+    level4LabelPlural: 'Colonias',
+    level4Optional: true, // Colonia es opcional
   );
 
   /// Obtiene la configuración por código de país
@@ -66,8 +66,8 @@ class LocationConfig {
         return peru;
       case 'CO':
         return colombia;
-      case 'BR':
-        return brasil;
+      case 'MX':
+        return mexico;
       default:
         return null;
     }
@@ -77,7 +77,7 @@ class LocationConfig {
   static const List<LocationConfig> all = [
     peru,
     colombia,
-    brasil,
+    mexico,
   ];
 
   @override

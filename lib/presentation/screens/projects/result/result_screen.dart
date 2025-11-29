@@ -1,16 +1,14 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:cross_file/cross_file.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/error_handler.dart';
+import '../../../../config/utils/pdf/pdf_generator.dart';
 import '../../../../domain/services/shared/UnifiedMaterialsCalculator.dart';
-import '../../../assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../blocs/profile/profile_bloc.dart';
 import '../../../blocs/projects/metrados/result/result_bloc.dart';
 import '../../../widgets/app_bar/app_bar_projects_widget.dart';
 
@@ -460,7 +458,7 @@ class _ResultScreenState extends State<ResultScreen>
         ...result.details.map((measurement) {
           return _buildTableRow([
             measurement.description,
-            measurement.value.toStringAsFixed(2),
+            measurement.value.toStringAsFixed(1),
             measurement.unit,
           ]);
         }),
@@ -487,7 +485,7 @@ class _ResultScreenState extends State<ResultScreen>
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: Text(
-                result.totalValue.toStringAsFixed(2),
+                result.totalValue.toStringAsFixed(1),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   color: AppColors.accent,
@@ -844,6 +842,12 @@ class _ResultScreenState extends State<ResultScreen>
       final result = UnifiedMaterialsCalculator.calculateMaterials(state.results);
       if (result.hasError) return;
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Mostrar indicador de carga
       if (mounted) {
         showDialog(
@@ -855,10 +859,12 @@ class _ResultScreenState extends State<ResultScreen>
         );
       }
 
-      final pdf = await _createPDF(result);
-      final directory = await getApplicationDocumentsDirectory();
-      final file = File('${directory.path}/resultados_${DateTime.now().millisecondsSinceEpoch}.pdf');
-      await file.writeAsBytes(await pdf.save());
+      // Generar PDF usando MetraShopPDFGenerator
+      final pdfData = _convertToPDFData(result, nombreUsuario: nombreUsuario);
+      final file = await MetraShopPDFGenerator.generatePDF(
+        data: pdfData,
+        customFileName: 'resultados_${DateTime.now().millisecondsSinceEpoch}.pdf',
+      );
 
       if (mounted) {
         Navigator.of(context).pop(); // Cerrar indicador de carga
@@ -877,7 +883,7 @@ class _ResultScreenState extends State<ResultScreen>
     buffer.writeln('📋 RESULTADOS DE METRASHOP');
     buffer.writeln('');
     buffer.writeln('🏗️ TIPO: ${_getTypeDisplayName(result.type)}');
-    buffer.writeln('📐 TOTAL: ${result.totalValue.toStringAsFixed(2)} ${result.totalUnit}');
+    buffer.writeln('📐 TOTAL: ${result.totalValue.toStringAsFixed(1)} ${result.totalUnit}');
     buffer.writeln('');
     buffer.writeln('📊 MATERIALES NECESARIOS:');
 
@@ -898,64 +904,58 @@ class _ResultScreenState extends State<ResultScreen>
     return buffer.toString();
   }
 
-  Future<pw.Document> _createPDF(CalculationResult result) async {
-    final pdf = pw.Document();
+  PDFData _convertToPDFData(CalculationResult result, {String? nombreUsuario}) {
+    // Convertir materiales a MaterialItem
+    final materiales = result.materials.map((material) {
+      return MaterialItem(
+        descripcion: material.description,
+        unidad: material.unit,
+        cantidad: material.quantity,
+      );
+    }).toList();
 
-    pdf.addPage(
-      pw.Page(
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Header(
-                level: 0,
-                child: pw.Text(
-                  'Resultados de MetraShop',
-                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
-                ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.Text(
-                'Tipo: ${_getTypeDisplayName(result.type)}',
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-              ),
-              pw.Text('Total: ${result.totalValue.toStringAsFixed(2)} ${result.totalUnit}'),
-              pw.SizedBox(height: 20),
-              pw.Text(
-                'Materiales:',
-                style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-              ),
-              pw.SizedBox(height: 10),
-              pw.Table.fromTextArray(
-                headers: ['Material', 'Cantidad', 'Unidad'],
-                data: result.materials.map((material) => [
-                  material.description,
-                  material.quantity,
-                  material.unit,
-                ]).toList(),
-              ),
-              if (result.additionalInfo.isNotEmpty) ...[
-                pw.SizedBox(height: 20),
-                pw.Text(
-                  'Configuración:',
-                  style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
-                ),
-                pw.SizedBox(height: 10),
-                ...result.additionalInfo.entries.map((entry) => pw.Text(
-                  '• ${_formatConfigKey(entry.key)}: ${entry.value}',
-                )),
-              ],
-              pw.Spacer(),
-              pw.Text(
-                'Generado el ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}',
-                style: const pw.TextStyle(fontSize: 10),
-              ),
-            ],
-          );
-        },
-      ),
+    // Convertir detalles de medición a MetradoItem
+    final metrado = result.details.map((detail) {
+      return MetradoItem(
+        elemento: detail.description,
+        unidad: detail.unit,
+        medida: detail.value.toStringAsFixed(1),
+      );
+    }).toList();
+
+    // Crear observaciones con información adicional
+    final observaciones = <String>[];
+
+    // Agregar total
+    observaciones.add('Total: ${result.totalValue.toStringAsFixed(1)} ${result.totalUnit}');
+
+    // Agregar configuración si existe
+    if (result.additionalInfo.isNotEmpty) {
+      observaciones.add(''); // Línea en blanco
+      observaciones.add('Configuración:');
+      for (final entry in result.additionalInfo.entries) {
+        observaciones.add('${_formatConfigKey(entry.key)}: ${entry.value}');
+      }
+    }
+
+    // Generar número de cotización
+    final now = DateTime.now();
+    final numeroCotizacion = 'COT-${now.year}${now.month.toString().padLeft(2, '0')}${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}${now.minute.toString().padLeft(2, '0')}';
+
+    // Formatear fecha
+    final fecha = '${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year} ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+
+    return PDFData(
+      titulo: 'Resultados Guardados',
+      fecha: fecha,
+      numeroCotizacion: numeroCotizacion,
+      proyecto: 'MetraShop',
+      obra: _getTypeDisplayName(result.type),
+      partida: 'Resultados del Metrado',
+      materiales: materiales,
+      metrado: metrado,
+      observaciones: observaciones,
+      nombreUsuario: nombreUsuario,
     );
-
-    return pdf;
   }
 }

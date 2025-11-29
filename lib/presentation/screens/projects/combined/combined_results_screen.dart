@@ -1,4 +1,3 @@
-// lib/presentation/screens/projects/combined/combined_results_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,7 +5,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
+import '../../../blocs/profile/profile_bloc.dart';
 import '../../../blocs/projects/metrados/combined_results/combined_results_bloc.dart';
+import 'widgets/material_card.dart';
+import 'widgets/material_detail_dialog.dart';
+import 'widgets/material_helpers.dart';
+import 'widgets/share_options_modal.dart';
+import 'widgets/stats_header.dart';
 
 class CombinedResultsScreen extends StatefulWidget {
   final int projectId;
@@ -201,7 +206,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
           slivers: [
             // Header con estadísticas generales
             SliverToBoxAdapter(
-              child: _buildStatsHeader(result),
+              child: StatsHeader(result: result),
             ),
 
             // Título de materiales unificados
@@ -214,7 +219,11 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
               delegate: SliverChildBuilderDelegate(
                     (context, index) {
                   final material = result.sortedMaterials[index];
-                  return _buildMaterialCard(material, index);
+                  return MaterialCard(
+                    material: material,
+                    index: index,
+                    onTap: () => _showMaterialDetailDialog(material),
+                  );
                 },
                 childCount: result.sortedMaterials.length,
               ),
@@ -226,139 +235,6 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatsHeader(CombinedCalculationResult result) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            AppColors.secondary.withOpacity(0.1),
-            AppColors.accent.withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppColors.secondary.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.merge_type,
-                color: AppColors.secondary,
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Materiales Unificados',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Suma total de ${result.metradoCount} metrados',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Estadísticas en grid
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem(
-                  icon: Icons.category,
-                  label: 'Materiales',
-                  value: '${result.combinedMaterials.length}',
-                  color: AppColors.success,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatItem(
-                  icon: Icons.layers,
-                  label: 'Metrados',
-                  value: '${result.metradoCount}',
-                  color: AppColors.secondary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildStatItem(
-                  icon: Icons.square_foot,
-                  label: 'Área Total',
-                  value: '${result.totalArea.toStringAsFixed(1)} m²',
-                  color: AppColors.accent,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
@@ -401,194 +277,6 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
         ],
       ),
     );
-  }
-
-  Widget _buildMaterialCard(CombinedMaterial material, int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.border,
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.neutral200.withOpacity(0.3),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () => _showMaterialDetailDialog(material),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header del material
-                Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: _getMaterialColor(material.name).withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        _getMaterialIcon(material.name),
-                        color: _getMaterialColor(material.name),
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            material.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            'Suma de ${material.contributions.length} metrado${material.contributions.length != 1 ? 's' : ''}',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          material.totalQuantity.toStringAsFixed(2),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          material.unit,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                // Indicador de contribuciones
-                if (material.contributions.length > 1) ...[
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.merge_type,
-                        size: 14,
-                        color: AppColors.textTertiary,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        'Combinado desde:',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textTertiary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-
-                  // Chips de metrados contribuyentes
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: material.contributions.entries.map((entry) {
-                      final percentage = material.getContributionPercentage(entry.key);
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppColors.secondary.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              entry.key,
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: AppColors.secondary.withOpacity(0.8),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  IconData _getMaterialIcon(String materialName) {
-    final name = materialName.toLowerCase();
-
-    if (name.contains('cemento')) return Icons.circle;
-    if (name.contains('arena')) return Icons.grain;
-    if (name.contains('piedra')) return Icons.scatter_plot;
-    if (name.contains('agua')) return Icons.water_drop;
-    if (name.contains('ladrillo')) return Icons.rectangle;
-    if (name.contains('acero')) return Icons.linear_scale;
-
-    return Icons.category;
-  }
-
-  Color _getMaterialColor(String materialName) {
-    final name = materialName.toLowerCase();
-
-    if (name.contains('cemento')) return const Color(0xFF795548);
-    if (name.contains('arena')) return const Color(0xFFFFB74D);
-    if (name.contains('piedra')) return const Color(0xFF607D8B);
-    if (name.contains('agua')) return const Color(0xFF2196F3);
-    if (name.contains('ladrillo')) return const Color(0xFFD32F2F);
-    if (name.contains('acero')) return const Color(0xFF424242);
-
-    return AppColors.secondary;
   }
 
   Widget _buildErrorState(String message) {
@@ -755,221 +443,31 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
   void _showMaterialDetailDialog(CombinedMaterial material) {
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Container(
-          constraints: const BoxConstraints(maxHeight: 500),
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Icon(
-                    _getMaterialIcon(material.name),
-                    color: _getMaterialColor(material.name),
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          material.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        Text(
-                          'Total: ${material.formattedQuantity}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Contribuciones por metrado
-              Expanded(
-                child: ListView.builder(
-                  itemCount: material.contributions.length,
-                  itemBuilder: (context, index) {
-                    final entry = material.contributions.entries.elementAt(index);
-                    final percentage = material.getContributionPercentage(entry.key);
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.border,
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  entry.key,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  '${entry.value.toStringAsFixed(2)} ${material.unit}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              '${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.secondary,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => MaterialDetailDialog(material: material),
     );
   }
 
   void _showShareOptions() {
+    // Obtener nombre del usuario del ProfileBloc
+    final profileState = context.read<ProfileBloc>().state;
+    final nombreUsuario = profileState is ProfileLoaded
+        ? profileState.userProfile.name
+        : null;
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Compartir Resultados',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+      builder: (context) => ShareOptionsModal(
+        onFormatSelected: (format) {
+          context.read<CombinedResultsBloc>().add(
+            ShareCombinedResultsEvent(
+              format: format,
+              nombreUsuario: nombreUsuario,
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildShareOption(
-                  icon: Icons.picture_as_pdf,
-                  label: 'PDF',
-                  color: Colors.red,
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<CombinedResultsBloc>().add(
-                      ShareCombinedResultsEvent(format: ShareFormat.pdf),
-                    );
-                  },
-                ),
-                _buildShareOption(
-                  icon: Icons.table_chart,
-                  label: 'Excel',
-                  color: Colors.green,
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<CombinedResultsBloc>().add(
-                      ShareCombinedResultsEvent(format: ShareFormat.excel),
-                    );
-                  },
-                ),
-                _buildShareOption(
-                  icon: Icons.text_fields,
-                  label: 'Texto',
-                  color: Colors.blue,
-                  onTap: () {
-                    Navigator.pop(context);
-                    context.read<CombinedResultsBloc>().add(
-                      ShareCombinedResultsEvent(format: ShareFormat.text),
-                    );
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildShareOption({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: color,
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1013,8 +511,8 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
                     final material = result.sortedMaterials[index];
                     return ListTile(
                       leading: Icon(
-                        _getMaterialIcon(material.name),
-                        color: _getMaterialColor(material.name),
+                        MaterialHelpers.getMaterialIcon(material.name),
+                        color: MaterialHelpers.getMaterialColor(material.name),
                       ),
                       title: Text(material.name),
                       subtitle: Text('${material.contributions.length} metrado(s)'),

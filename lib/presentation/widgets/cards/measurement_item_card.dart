@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 
 import '../../../config/theme/theme.dart';
 
@@ -42,10 +42,7 @@ class MeasurementItemCard extends StatelessWidget {
                     color: AppColors.backgroundLight,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: SvgPicture.asset(
-                    imageAsset,
-                    fit: BoxFit.contain,
-                  ),
+                  child: _buildImage(imageAsset),
                 ),
                 const SizedBox(width: 16),
                 // Contenido expandido
@@ -87,5 +84,20 @@ class MeasurementItemCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildImage(String imagePath) {
+    // Auto-detectar si es SVG o PNG
+    if (imagePath.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(
+        imagePath,
+        fit: BoxFit.contain,
+      );
+    } else {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.contain,
+      );
+    }
   }
 }

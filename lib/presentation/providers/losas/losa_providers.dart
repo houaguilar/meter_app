@@ -172,7 +172,7 @@ String datosShareLosa(DatosShareLosaRef ref) {
   String datos = "";
   if (descriptions.length == areas.length) {
     for (int i = 0; i < descriptions.length; i++) {
-      datos += "* ${descriptions[i]}: ${areas[i].toStringAsFixed(2)} m²\n";
+      datos += "* ${descriptions[i]}: ${areas[i].toStringAsFixed(1)} m²\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);

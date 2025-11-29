@@ -5,6 +5,7 @@ import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 
 class ResultSteelBeamScreen extends ConsumerStatefulWidget {
@@ -20,6 +21,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  bool _isGeneratingPDF = false; // Flag para prevenir limpieza durante generación de PDF
 
   @override
   void initState() {
@@ -89,40 +91,40 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Resultados de Acero'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        actions: [
-          IconButton(
-            onPressed: _shareResults,
-            icon: const Icon(Icons.share),
-            tooltip: 'Compartir resultados',
-          ),
-          IconButton(
-            onPressed: _generatePDF,
-            icon: const Icon(Icons.picture_as_pdf),
-            tooltip: 'Generar PDF',
-          ),
-        ],
-      ),
-      backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: Stack(
-            children: [
-              _buildBody(),
-              // Botones de acción en la parte inferior (como ResultLosasScreen)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildBottomActionBar(),
-              ),
-            ],
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (bool didPop) {
+        if (didPop && !_isGeneratingPDF) {
+          // ✅ LIMPIA al retroceder solo si NO se está generando PDF
+          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
+          ref.read(steelBeamResultProvider.notifier).clearList();
+        } else if (didPop && _isGeneratingPDF) {
+          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Resultados de Acero'),
+          backgroundColor: AppColors.primary,
+          foregroundColor: AppColors.white,
+        ),
+        backgroundColor: AppColors.background,
+        body: FadeTransition(
+          opacity: _fadeAnimation,
+          child: SlideTransition(
+            position: _slideAnimation,
+            child: Stack(
+              children: [
+                _buildBody(),
+                // Botones de acción en la parte inferior (como ResultLosasScreen)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: _buildBottomActionBar(),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -429,9 +431,9 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
   // MÉTODOS DE COMPARTIR (MANTENIDOS DE LA VERSIÓN ORIGINAL)
   // ═══════════════════════════════════════════════════════════════════════════
 
-  void _sharePDF() async {
+  Future<void> _sharePDF() async {
     try {
-      _generatePDF();
+      await _generatePDF();
     } catch (e) {
       _showErrorMessage('Error al generar PDF: $e');
     }
@@ -461,7 +463,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     for (int i = 0; i < consolidatedResult.beamResults.length; i++) {
       final beam = consolidatedResult.beamResults[i];
       content.writeln('Viga ${i + 1}: ${beam.description}');
-      content.writeln('  • Peso total: ${beam.totalWeight.toStringAsFixed(2)} kg');
+      content.writeln('  • Peso total: ${beam.totalWeight.toStringAsFixed(1)} kg');
     }
 
     await Share.share(
@@ -470,9 +472,59 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     );
   }
 
-  void _generatePDF() {
-    // Implementar generación de PDF similar a otras pantallas
-    _showErrorMessage('Funcionalidad de PDF en desarrollo');
+  Future<void> _generatePDF() async {
+    try {
+      // Activar flag para prevenir limpieza de datos
+      if (!mounted) return;
+      setState(() {
+        _isGeneratingPDF = true;
+      });
+
+      // Mostrar loader (NO cerramos el bottom sheet)
+      if (!mounted) return;
+
+      context.showCalculationLoader(
+        message: 'Generando PDF...',
+        description: 'Creando documento con los resultados',
+      );
+
+      // Generar PDF usando PDFFactory
+      final pdfFile = await PDFFactory.generateSteelBeamPDF(ref);
+
+      // Ocultar loader solo si el widget está montado
+      if (mounted) {
+        context.hideLoader();
+      } else {
+        return;
+      }
+
+      // Compartir PDF (esto cerrará automáticamente el bottom sheet)
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        subject: 'Resultados de Vigas de Acero',
+      );
+
+      // Mostrar feedback solo si el widget está montado
+      if (mounted && result.status == ShareResultStatus.success) {
+        _showSuccessMessage('PDF compartido exitosamente');
+      }
+    } catch (e) {
+      if (mounted) {
+        try {
+          context.hideLoader();
+        } catch (loaderError) {
+          // Ignorar error si no se puede ocultar loader
+        }
+        _showErrorMessage('Error al generar PDF: $e');
+      }
+    } finally {
+      // Desactivar flag después de generar PDF
+      if (mounted) {
+        setState(() {
+          _isGeneratingPDF = false;
+        });
+      }
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -573,8 +625,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Vigas', '${quickStats['totalBeams']}'),
-            _buildStatRow('Área Total', '${quickStats['totalArea']?.toStringAsFixed(2)} m²'),
-            _buildStatRow('Volumen de Concreto', '${quickStats['concreteVolume']?.toStringAsFixed(2)} m³'),
+            _buildStatRow('Área Total', '${quickStats['totalArea']?.toStringAsFixed(1)} m²'),
+            _buildStatRow('Volumen de Concreto', '${quickStats['concreteVolume']?.toStringAsFixed(1)} m³'),
           ],
         ],
       ),
@@ -822,7 +874,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${beam.totalWeight.toStringAsFixed(2)} kg',
+                  'Peso total: ${beam.totalWeight.toStringAsFixed(1)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
@@ -905,6 +957,21 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         SnackBar(
           content: Text(message),
           backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

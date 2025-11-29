@@ -27,12 +27,7 @@ class ShortcutCard extends StatelessWidget {
         children: [
           Padding(
             padding: const EdgeInsets.all(20.0),
-            child: SvgPicture.asset(
-              imageAssetPath,
-              fit: BoxFit.contain,
-              height: 100,
-              width: 100,
-            ),
+            child: _buildImage(imageAssetPath),
           ),
           Container(
             decoration: const BoxDecoration(
@@ -61,5 +56,24 @@ class ShortcutCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildImage(String imagePath) {
+    // Auto-detectar si es SVG o PNG
+    if (imagePath.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        height: 100,
+        width: 100,
+      );
+    } else {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.contain,
+        height: 100,
+        width: 100,
+      );
+    }
   }
 }

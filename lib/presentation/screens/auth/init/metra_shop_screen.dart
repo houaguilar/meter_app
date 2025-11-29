@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/error_handler.dart';
-import '../../../assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
 class MetraShopScreen extends StatefulWidget {

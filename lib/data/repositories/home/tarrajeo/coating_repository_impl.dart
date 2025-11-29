@@ -1,7 +1,7 @@
 
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
 import 'package:meter_app/domain/repositories/home/tarrajeo/coating_repository.dart';
-import 'package:meter_app/presentation/assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 class CoatingRepositoryImpl implements CoatingRepository {
   @override

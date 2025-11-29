@@ -33,7 +33,8 @@ class SteelColumn {
   final String description;
   final double waste; // Porcentaje de desperdicio (0.07 = 7%)
   final int elements; // Elementos similares
-  final double cover; // Recubrimiento en metros
+  final double cover; // Recubrimiento columna en cm (para acero longitudinal)
+  final double stirrupCover; // Recubrimiento para estribos en cm
 
   // Dimensiones básicas
   final double height; // Alto de columna en metros
@@ -66,6 +67,7 @@ class SteelColumn {
     required this.waste,
     required this.elements,
     required this.cover,
+    required this.stirrupCover,
     required this.height,
     required this.length,
     required this.width,
@@ -88,6 +90,7 @@ class SteelColumn {
     double? waste,
     int? elements,
     double? cover,
+    double? stirrupCover,
     double? height,
     double? length,
     double? width,
@@ -108,6 +111,7 @@ class SteelColumn {
     waste: waste ?? this.waste,
     elements: elements ?? this.elements,
     cover: cover ?? this.cover,
+    stirrupCover: stirrupCover ?? this.stirrupCover,
     height: height ?? this.height,
     length: length ?? this.length,
     width: width ?? this.width,

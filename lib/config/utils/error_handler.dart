@@ -1,8 +1,23 @@
-// lib/config/utils/error_handler.dart
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:logger/logger.dart';
 
+import '../constants/error/failures.dart';
+
+/// Manejador centralizado de errores para la aplicación
+/// Proporciona métodos estáticos para manejo consistente de errores
 class ErrorHandler {
+  static final Logger _logger = Logger(
+    printer: PrettyPrinter(
+      methodCount: 0,
+      errorMethodCount: 5,
+      lineLength: 80,
+      colors: true,
+      printEmojis: true,
+    ),
+  );
+
+  /// Convierte un mensaje de error genérico en uno amigable para el usuario
   static String getErrorMessage(String originalError) {
     final error = originalError.toLowerCase();
 
@@ -30,7 +45,72 @@ class ErrorHandler {
       return 'No tienes permisos para acceder a este contenido.';
     }
 
+    if (error.contains('duplicate')) {
+      return 'Ya existe un elemento con ese nombre.';
+    }
+
     return 'Ocurrió un error inesperado. Inténtalo de nuevo.';
+  }
+
+  /// Mapea un Failure a un mensaje amigable para el usuario
+  static String mapFailureToMessage(Failure failure) {
+    _logger.d('Mapeando failure: ${failure.type} - ${failure.message}');
+
+    switch (failure.type) {
+      case FailureType.duplicateName:
+        return failure.message.isNotEmpty
+            ? failure.message
+            : 'Ya existe un elemento con ese nombre';
+
+      case FailureType.network:
+        return 'Error de conexión. Verifica tu internet.';
+
+      case FailureType.server:
+        return 'Problema con el servidor. Inténtalo más tarde.';
+
+      case FailureType.notFound:
+        return 'El elemento solicitado no fue encontrado.';
+
+      case FailureType.unauthorized:
+        return 'No estás autorizado. Inicia sesión nuevamente.';
+
+      case FailureType.validation:
+        return failure.message.isNotEmpty
+            ? failure.message
+            : 'Los datos ingresados no son válidos';
+
+      case FailureType.general:
+        return failure.message.isNotEmpty
+            ? failure.message
+            : 'Ocurrió un error. Inténtalo de nuevo.';
+
+      case FailureType.unknown:
+      default:
+        return 'Error inesperado. Por favor, inténtalo de nuevo.';
+    }
+  }
+
+  /// Registra un error en el logger
+  static void logError(
+    String message, {
+    dynamic error,
+    StackTrace? stackTrace,
+    String? context,
+  }) {
+    final contextPrefix = context != null ? '[$context] ' : '';
+    _logger.e('$contextPrefix$message', error: error, stackTrace: stackTrace);
+  }
+
+  /// Registra una advertencia en el logger
+  static void logWarning(String message, {String? context}) {
+    final contextPrefix = context != null ? '[$context] ' : '';
+    _logger.w('$contextPrefix$message');
+  }
+
+  /// Registra información en el logger
+  static void logInfo(String message, {String? context}) {
+    final contextPrefix = context != null ? '[$context] ' : '';
+    _logger.i('$contextPrefix$message');
   }
 
   static bool _isConnectionError(String error) {

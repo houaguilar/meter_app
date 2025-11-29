@@ -108,7 +108,7 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
     if (longitud > 0) {
       // Convertir a varillas (9m por varilla)
       final varillas = longitud / SteelConstants.standardRodLength;
-      final varillasConDesperdicio = (varillas * (1 + slab.waste)).ceil().toDouble();
+      final varillasConDesperdicio = varillas * (1 + slab.waste);  // Mantiene decimales (Excel no redondea)
 
       // Calcular peso
       final weightPerMeter = SteelConstants.steelWeights[diameter] ?? 0.0;
@@ -130,7 +130,7 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
   return SteelSlabCalculationResult(
     slabId: slab.idSteelSlab,
     description: slab.description,
-    totalWeight: pesoTotal * (1 + slab.waste),
+    totalWeight: pesoTotal,  // Peso sin desperdicio (Excel no aplica desperdicio al peso)
     wireWeight: alambreKg,
     materials: materials,
     totalsByDiameter: totalesPorDiametro,
@@ -207,8 +207,8 @@ final consolidatedSlabSummaryProvider = Provider<String>((ref) {
 
   summary += "📊 RESULTADOS GENERALES:\n";
   summary += "• Número de losas: ${result.numberOfSlabs}\n";
-  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg\n";
-  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(2)} kg\n\n";
+  summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
+  summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n\n";
 
   summary += "📋 MATERIALES CONSOLIDADOS:\n";
   result.consolidatedMaterials.forEach((diameter, material) {
@@ -219,8 +219,8 @@ final consolidatedSlabSummaryProvider = Provider<String>((ref) {
   for (int i = 0; i < result.slabResults.length; i++) {
     final slabResult = result.slabResults[i];
     summary += "\n${i + 1}. ${slabResult.description}:\n";
-    summary += "   • Peso: ${slabResult.totalWeight.toStringAsFixed(2)} kg\n";
-    summary += "   • Alambre: ${slabResult.wireWeight.toStringAsFixed(2)} kg\n";
+    summary += "   • Peso: ${slabResult.totalWeight.toStringAsFixed(1)} kg\n";
+    summary += "   • Alambre: ${slabResult.wireWeight.toStringAsFixed(1)} kg\n";
     if (slabResult.hasSuperiorMesh) {
       summary += "   • Con malla superior\n";
     }

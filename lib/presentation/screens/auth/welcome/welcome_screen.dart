@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../config/theme/theme.dart';
 import '../../../../data/local/shared_preferences_helper.dart';
 import '../../../../init_dependencies.dart';
-import '../../../assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 /// Pantalla de bienvenida mejorada con onboarding interactivo,
 /// animaciones fluidas y una mejor experiencia de usuario.
@@ -100,37 +100,22 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   void _setupOnboardingData() {
     _pages = [
       OnboardingPageData(
-        title: 'Mediciones Precisas',
-        description: 'Mide tu espacio y calcula la cantidad exacta de material que necesitas para tu proyecto.',
-        imagePath: AppImages.muroImg,
+        title: 'APRENDE CONSTRUYENDO',
+        description: 'Encuentra cursos, videos y una comunidad de expertos',
+        imagePath: AppImages.aprendeConstruyendoImg,
         color: AppColors.secondary,
-        features: [
-          'Cálculos automatizados',
-          'Múltiples tipos de construcción',
-          'Resultados instantáneos',
-        ],
       ),
       OnboardingPageData(
-        title: 'Encuentra Materiales',
-        description: 'Descubre los mejores materiales y conecta con proveedores confiables cerca de ti.',
-        imagePath: AppImages.materialImg,
+        title: 'CÁLCULO DE MATERIALES',
+        description: 'Utiliza plantillas de cálculo y obten resultados precisos',
+        imagePath: AppImages.calculoMaterialesImg,
         color: AppColors.accent,
-        features: [
-          'Catálogo completo',
-          'Proveedores verificados',
-          'Comparación de precios',
-        ],
       ),
       OnboardingPageData(
-        title: 'Aprende y Crece',
-        description: 'Accede a contenido educativo y mejora tus habilidades en construcción continuamente.',
-        imagePath: AppImages.aprendizajeImg,
+        title: 'CONECTA CON PROVEEDORES',
+        description: 'Compara, cotiza y encuentra los mejores materiales cerca de ti',
+        imagePath: AppImages.conectaProveedoresImg,
         color: AppColors.success,
-        features: [
-          'Tutoriales especializados',
-          'Casos de éxito',
-          'Comunidad activa',
-        ],
       ),
     ];
   }
@@ -552,11 +537,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   ],
                 ),
                 child: Center(
-                  child: SvgPicture.asset(
-                    pageData.imagePath,
-                    height: 100,
-                    color: AppColors.white,
-                  ),
+                  child: _buildImage(pageData.imagePath),
                 ),
               ),
             ),
@@ -594,7 +575,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             const SizedBox(height: 24),
 
             // Características - Limitadas para evitar overflow
-            _buildFeaturesList(pageData.features.take(2).toList()),
+       //     _buildFeaturesList(pageData.features.take(2).toList()),
           ],
         ),
       ),
@@ -648,6 +629,26 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       }).toList(),
     );
   }
+
+  Widget _buildImage(String imagePath) {
+    // Auto-detectar si es SVG o PNG
+    if (imagePath.toLowerCase().endsWith('.svg')) {
+      return SvgPicture.asset(
+        imagePath,
+        height: 100,
+        color: AppColors.white,
+      );
+    } else {
+      return Image.asset(
+        imagePath,
+        height: 200,
+        fit: BoxFit.contain,
+        color: AppColors.white,
+        colorBlendMode: BlendMode.srcIn,
+      );
+    }
+  }
+
 
   Widget _buildPageIndicators() {
     return AnimatedBuilder(
@@ -795,13 +796,11 @@ class OnboardingPageData {
   final String description;
   final String imagePath;
   final Color color;
-  final List<String> features;
 
   const OnboardingPageData({
     required this.title,
     required this.description,
     required this.imagePath,
     required this.color,
-    required this.features,
   });
 }

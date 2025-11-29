@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/measurements_bottom_sheet.dart';
 import 'package:meter_app/presentation/widgets/cards/shortcut_card.dart';
 import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles.dart';
@@ -270,7 +270,8 @@ class _HomeViewState extends ConsumerState<HomeView>
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => context.pushNamed('home-to-provider'),
+                  onTap: () => FeatureStatusDialog.showTemporarilyDisabled(context),
+            //      onTap: () => context.pushNamed('home-to-provider'),
                   child: const ShortcutCard(
                     title: 'Proveedores',
                     imageAssetPath: AppImages.proveedoresHomeCardImg,

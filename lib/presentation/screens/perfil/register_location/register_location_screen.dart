@@ -1,12 +1,13 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:meter_app/domain/entities/map/location.dart';
 
@@ -18,6 +19,7 @@ import '../../../../domain/entities/map/document_type.dart';
 import '../../../../domain/entities/map/verification_status.dart';
 import '../../../blocs/map/locations_bloc.dart';
 import '../../../blocs/profile/profile_bloc.dart';
+import 'map_selection_modal.dart';
 
 class RegisterLocationScreen extends StatefulWidget {
   const RegisterLocationScreen({super.key});
@@ -39,20 +41,12 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
   late TextEditingController _addressController;
   late TextEditingController _documentController;
   late TextEditingController _phoneController;
-  late TextEditingController _whatsappController;
 
   final FocusNode _titleFocusNode = FocusNode();
   final FocusNode _descriptionFocusNode = FocusNode();
   final FocusNode _addressFocusNode = FocusNode();
   final FocusNode _documentFocusNode = FocusNode();
   final FocusNode _phoneFocusNode = FocusNode();
-  final FocusNode _whatsappFocusNode = FocusNode();
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  // CONTROLADOR DE GOOGLE MAPS (Solucionando problema de movimiento)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  GoogleMapController? _mapController;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ANIMACIONES
@@ -60,11 +54,9 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
 
   late AnimationController _slideAnimationController;
   late AnimationController _fadeAnimationController;
-  late AnimationController _mapAnimationController;
 
   late Animation<Offset> _slideAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _mapScaleAnimation;
 
   // ═══════════════════════════════════════════════════════════════════════════
   // ESTADO
@@ -101,7 +93,6 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     _addressController = TextEditingController();
     _documentController = TextEditingController();
     _phoneController = TextEditingController();
-    _whatsappController = TextEditingController();
   }
 
   void _initializeAnimations() {
@@ -111,10 +102,6 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     );
     _fadeAnimationController = AnimationController(
       duration: const Duration(milliseconds: 600),
-      vsync: this,
-    );
-    _mapAnimationController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
@@ -132,14 +119,6 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     ).animate(CurvedAnimation(
       parent: _fadeAnimationController,
       curve: Curves.easeIn,
-    ));
-
-    _mapScaleAnimation = Tween<double>(
-      begin: 0.95,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _mapAnimationController,
-      curve: Curves.elasticOut,
     ));
   }
 
@@ -202,19 +181,11 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
   void _startAnimations() {
     _fadeAnimationController.forward();
     _slideAnimationController.forward();
-    _mapAnimationController.forward();
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // SELECCIÓN DE UBICACIÓN EN EL MAPA
+  // OBTENER DIRECCIÓN DESDE COORDENADAS
   // ═══════════════════════════════════════════════════════════════════════════
-
-  void _selectLocation(LatLng position) {
-    setState(() {
-      _pickedLocation = position;
-    });
-    _getAddressFromLatLng(position);
-  }
 
   Future<void> _getAddressFromLatLng(LatLng position) async {
     setState(() {
@@ -255,20 +226,95 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
 
   Future<void> _pickImage() async {
     try {
+      // ImagePicker maneja los permisos automáticamente en iOS/Android
+      // No usar permission_handler ya que puede causar conflictos
       final pickedFile = await ImagePicker().pickImage(
         source: ImageSource.camera,
         maxWidth: 1024,
         maxHeight: 1024,
-        imageQuality: 80,
+        imageQuality: 85,
       );
 
-      if (pickedFile != null) {
+      if (pickedFile != null && mounted) {
+        // Convertir a JPEG inmediatamente para evitar problemas de color en iOS
+        final compressedFile = await _convertToJpeg(File(pickedFile.path));
+
         setState(() {
-          _selectedImage = File(pickedFile.path);
+          _selectedImage = compressedFile;
         });
       }
+    } on PlatformException catch (e) {
+      if (!mounted) return;
+
+      // Manejar errores específicos de permisos
+      if (e.code == 'camera_access_denied' ||
+          e.code == 'photo_access_denied' ||
+          e.message?.contains('denied') == true ||
+          e.message?.contains('permission') == true) {
+
+        final shouldOpenSettings = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Permiso de cámara requerido'),
+            content: const Text(
+              'Para tomar fotos, necesitas habilitar el permiso de cámara en Configuración.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Abrir Configuración'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldOpenSettings == true) {
+          await openAppSettings();
+        }
+      } else {
+        showSnackBar(context, 'Error al abrir la cámara: ${e.message ?? e.code}');
+      }
     } catch (e) {
-      showSnackBar(context, 'Error al seleccionar imagen: ${e.toString()}');
+      if (mounted) {
+        showSnackBar(context, 'Error al seleccionar imagen: ${e.toString()}');
+      }
+    }
+  }
+
+  /// Convierte la imagen a JPEG para evitar problemas de color en iOS
+  Future<File> _convertToJpeg(File imageFile) async {
+    try {
+      // Obtener directorio temporal
+      final tempDir = await getTemporaryDirectory();
+      final targetPath = '${tempDir.path}/temp_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+      // Comprimir y convertir a JPEG con formato explícito
+      final compressedBytes = await FlutterImageCompress.compressWithFile(
+        imageFile.absolute.path,
+        minWidth: 1024,
+        minHeight: 1024,
+        quality: 85,
+        format: CompressFormat.jpeg, // Crucial para iOS
+        keepExif: false, // Remover metadatos
+      );
+
+      if (compressedBytes == null) {
+        // Si falla la compresión, usar imagen original
+        return imageFile;
+      }
+
+      // Guardar imagen comprimida en archivo temporal
+      final compressedFile = File(targetPath);
+      await compressedFile.writeAsBytes(compressedBytes);
+
+      return compressedFile;
+    } catch (e) {
+      // Si hay error en compresión, usar imagen original
+      return imageFile;
     }
   }
 
@@ -369,15 +415,6 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     return result.isValid ? null : result.message;
   }
 
-  String? _validateWhatsApp(String? value) {
-    // WhatsApp es opcional
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-    final result = Validators.validatePhonePeru(value);
-    return result.isValid ? null : result.message;
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
   // LIMPIEZA DE RECURSOS
   // ═══════════════════════════════════════════════════════════════════════════
@@ -389,17 +426,13 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     _addressController.dispose();
     _documentController.dispose();
     _phoneController.dispose();
-    _whatsappController.dispose();
     _titleFocusNode.dispose();
     _descriptionFocusNode.dispose();
     _addressFocusNode.dispose();
     _documentFocusNode.dispose();
     _phoneFocusNode.dispose();
-    _whatsappFocusNode.dispose();
     _slideAnimationController.dispose();
     _fadeAnimationController.dispose();
-    _mapAnimationController.dispose();
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -578,21 +611,12 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
         ),
         const SizedBox(height: 20),
         _buildInputField(
-          label: 'Teléfono',
+          label: 'Teléfono / WhatsApp',
           hintText: 'Ej: 987654321',
           controller: _phoneController,
           focusNode: _phoneFocusNode,
           prefixIcon: Icons.phone,
           validator: _validatePhone,
-        ),
-        const SizedBox(height: 20),
-        _buildInputField(
-          label: 'WhatsApp (Opcional)',
-          hintText: 'Ej: 987654321',
-          controller: _whatsappController,
-          focusNode: _whatsappFocusNode,
-          prefixIcon: Icons.chat,
-          validator: _validateWhatsApp,
         ),
         const SizedBox(height: 20),
         _buildVerificationDateTimeSection(),
@@ -973,72 +997,114 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Selecciona la ubicación en el mapa',
-          style: context.textTheme.titleMedium?.copyWith(
-            color: context.colors.primary,
+        const Text(
+          'Ubicación',
+          style: TextStyle(
+            fontSize: 16,
+            color: AppColors.primaryMetraShop,
             fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 12),
-        ScaleTransition(
-          scale: _mapScaleAnimation,
-          child: Container(
-            height: 300,
+        // Botón para abrir el modal de selección de mapa
+        ElevatedButton.icon(
+          onPressed: _initialLocation != null ? _openMapSelection : null,
+          icon: const Icon(Icons.map, color: AppColors.white),
+          label: Text(
+            _pickedLocation != null
+                ? 'Cambiar ubicación en el mapa'
+                : 'Seleccionar en el mapa',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: AppColors.white,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.blueMetraShop,
+            foregroundColor: AppColors.white,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 2,
+          ),
+        ),
+        if (_pickedLocation != null) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
+              color: AppColors.blueMetraShop.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.blueMetraShop.withOpacity(0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.location_on,
+                  color: AppColors.blueMetraShop,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Ubicación seleccionada',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: AppColors.primaryMetraShop,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Lat: ${_pickedLocation!.latitude.toStringAsFixed(6)}, '
+                        'Lng: ${_pickedLocation!.longitude.toStringAsFixed(6)}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.greyTextColor,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.blueMetraShop,
+                  size: 24,
                 ),
               ],
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: _initialLocation != null
-                  ? GoogleMap(
-                initialCameraPosition: CameraPosition(
-                  target: _initialLocation!,
-                  zoom: 15,
-                ),
-                onMapCreated: (GoogleMapController controller) {
-                  _mapController = controller;
-                },
-                onTap: _selectLocation,
-                // CONFIGURACIÓN CRUCIAL PARA PERMITIR MOVIMIENTO DEL MAPA
-                zoomControlsEnabled: false,
-                myLocationButtonEnabled: true,
-                myLocationEnabled: true,
-                mapType: MapType.normal,
-                gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
-                markers: _pickedLocation == null
-                    ? <Marker>{}
-                    : {
-                  Marker(
-                    markerId: const MarkerId('picked-location'),
-                    position: _pickedLocation!,
-                    icon: BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueBlue,
-                    ),
-                    infoWindow: const InfoWindow(
-                      title: 'Ubicación seleccionada',
-                    ),
-                  ),
-                },
-              )
-                  : Container(
-                color: Colors.grey[300],
-                child: const Center(
-                  child: CircularProgressIndicator(),
-                ),
-              ),
-            ),
           ),
-        ),
+        ],
       ],
     );
+  }
+
+  /// Abre el modal fullscreen para seleccionar ubicación en el mapa
+  Future<void> _openMapSelection() async {
+    final result = await Navigator.of(context).push<Map<String, dynamic>>(
+      MaterialPageRoute(
+        builder: (context) => MapSelectionModal(
+          initialLocation: _pickedLocation ?? _initialLocation!,
+          initialAddress: _addressController.text,
+        ),
+        fullscreenDialog: true,
+      ),
+    );
+
+    if (result != null) {
+      setState(() {
+        _pickedLocation = result['location'] as LatLng;
+        _addressController.text = result['address'] as String;
+      });
+    }
   }
 
   Widget _buildImageSection() {
@@ -1162,11 +1228,9 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           _selectedTime!.minute,
         );
 
-        // Limpiar números de teléfono
+        // Limpiar número de teléfono y usar el mismo para WhatsApp
         final cleanedPhone = Validators.cleanPhone(_phoneController.text);
-        final cleanedWhatsApp = _whatsappController.text.isNotEmpty
-            ? Validators.cleanPhone(_whatsappController.text)
-            : null;
+        final cleanedWhatsApp = cleanedPhone; // Usar el mismo número para ambos
 
         // Crear ubicación con todos los campos de marketplace
         final location = LocationMap(
@@ -1183,7 +1247,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           documentType: _selectedDocumentType,
           phone: cleanedPhone,
           whatsapp: cleanedWhatsApp,
-          verificationStatus: VerificationStatus.pendingApproval,
+          verificationStatus: VerificationStatus.pending,
           scheduledDate: scheduledDateTime,
           scheduledTime: '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
         );

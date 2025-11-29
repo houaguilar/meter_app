@@ -3,7 +3,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/common/cubits/shimmer/loader_cubit.dart';
+import 'package:meter_app/config/notifications/notification_handler.dart';
 import 'package:meter_app/config/notifications/notification_repository.dart';
 import 'package:meter_app/firebase_options.dart';
 import 'package:meter_app/init_dependencies.dart';
@@ -51,6 +53,8 @@ class MyApp extends ConsumerStatefulWidget {
 }
 
 class _MyAppState extends ConsumerState<MyApp> {
+  // GlobalKey para el navigator
+  final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
   late final AuthBloc authBloc;
   late final ProjectsBloc projectsBloc;
@@ -65,6 +69,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final ProductsBloc productsBloc;
   late final CartBloc cartBloc;
   late final NotificationRepository notificationService;
+  late GoRouter _appRouter;
 
   @override
   void initState() {
@@ -91,16 +96,49 @@ class _MyAppState extends ConsumerState<MyApp> {
     // Handler para notificaciones recibidas en foreground
     notificationService.onMessageReceived((notification) {
       debugPrint('🔔 Notification received in foreground');
-      // Aquí podrías mostrar un dialog, snackbar, o actualizar el estado
-      // NotificationHandler.handleForegroundNotification(context, notification);
+      // Usar el context del root navigator
+      final context = _getRootContext();
+      if (context != null) {
+        NotificationHandler.handleForegroundNotification(context, notification);
+      }
     });
 
     // Handler para cuando el usuario toca una notificación
     notificationService.onMessageOpenedApp((notification) {
       debugPrint('📲 User tapped on notification');
       // Navegar a la pantalla correspondiente
-      // NotificationHandler.handleNotificationTap(context, notification);
+      final context = _getRootContext();
+      if (context != null) {
+        NotificationHandler.handleNotificationTap(context, notification);
+      }
     });
+  }
+
+  /// Obtiene el context del root navigator
+  BuildContext? _getRootContext() {
+    return _rootNavigatorKey.currentContext;
+  }
+
+  /// Maneja la notificación inicial cuando la app se abre desde una notificación
+  Future<void> _handleInitialMessage() async {
+    try {
+      // Esperar un frame para que el widget esté completamente montado
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      final initialMessage = await notificationService.getInitialMessage();
+
+      if (initialMessage != null) {
+        debugPrint('📱 App opened from notification');
+        debugPrint('Initial message: $initialMessage');
+
+        final context = _getRootContext();
+        if (context != null) {
+          NotificationHandler.handleNotificationTap(context, initialMessage);
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Error handling initial message: $e');
+    }
   }
 
   @override
@@ -110,14 +148,18 @@ class _MyAppState extends ConsumerState<MyApp> {
     projectsBloc.add(LoadProjectsEvent());
     locationsBloc.add(LoadLocations());
     profileBloc.add(LoadProfile());
+
+    // Manejar notificación inicial (si la app se abrió desde una notificación)
+    _handleInitialMessage();
   }
 
   @override
   Widget build(BuildContext context) {
 
-    final appRouter = AppRouter(
+    _appRouter = AppRouter(
       authBloc,
       serviceLocator<AnalyticsRepository>(),
+      rootNavigatorKey: _rootNavigatorKey,
     ).router;
 
     return MultiBlocProvider(
@@ -189,7 +231,7 @@ class _MyAppState extends ConsumerState<MyApp> {
         child: MaterialApp.router(
           title: 'METRASHOP',
           debugShowCheckedModeBanner: false,
-          routerConfig: appRouter,
+          routerConfig: _appRouter,
           theme: AppTheme.light,
         ),
       ),

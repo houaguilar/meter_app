@@ -1215,7 +1215,7 @@ class _PerfilScreenState extends State<PerfilScreen>
               ),
 
               // Información adicional según el estado
-              if (status.isPendingApproval && location.scheduledDate != null) ...[
+              if (status.isPending && location.scheduledDate != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(12),
@@ -1254,7 +1254,7 @@ class _PerfilScreenState extends State<PerfilScreen>
   Widget _buildProviderActions(LocationMap location) {
     final status = location.verificationStatus;
 
-    if (status.isApproved || status.isActive) {
+    if (status.isApproved) {
       // Si está aprobado, mostrar botón para configurar negocio
       return SizedBox(
         width: double.infinity,
@@ -1294,23 +1294,22 @@ class _PerfilScreenState extends State<PerfilScreen>
   }
 
   Color _getProviderStatusColor(VerificationStatus status) {
-    if (status.isPendingApproval) return AppColors.warning;
-    if (status.isApproved || status.isActive) return AppColors.success;
+    if (status.isPending) return AppColors.warning;
+    if (status.isApproved) return AppColors.success;
     if (status.isRejected) return AppColors.error;
     return AppColors.textSecondary;
   }
 
   IconData _getProviderStatusIcon(VerificationStatus status) {
-    if (status.isPendingApproval) return Icons.hourglass_empty;
-    if (status.isApproved || status.isActive) return Icons.check_circle;
+    if (status.isPending) return Icons.hourglass_empty;
+    if (status.isApproved) return Icons.check_circle;
     if (status.isRejected) return Icons.cancel;
     return Icons.info;
   }
 
   String _getProviderStatusText(VerificationStatus status) {
-    if (status.isPendingApproval) return 'Verificación Pendiente';
+    if (status.isPending) return 'Verificación Pendiente';
     if (status.isApproved) return 'Negocio Verificado - Configura tus productos';
-    if (status.isActive) return 'Negocio Activo';
     if (status.isRejected) return 'Solicitud Rechazada';
     return 'Estado desconocido';
   }

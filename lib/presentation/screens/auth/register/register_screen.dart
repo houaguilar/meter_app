@@ -9,7 +9,7 @@ import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/error_handler.dart';
 import '../../../../config/utils/validators.dart';
-import '../../../assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
 class RegisterScreen extends StatefulWidget {

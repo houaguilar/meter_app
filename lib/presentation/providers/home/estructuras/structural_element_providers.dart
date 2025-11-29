@@ -9,7 +9,7 @@ import '../../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../../domain/entities/home/estructuras/zapata/zapata.dart';
-import '../../../../presentation/assets/images.dart';
+import 'package:meter_app/config/assets/app_images.dart';
 
 part 'structural_element_providers.g.dart';
 
@@ -203,7 +203,7 @@ String datosShareColumna(DatosShareColumnaRef ref) {
   String datos = "";
   if (description.length == volumen.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(1)} m3\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);
@@ -420,7 +420,7 @@ String datosShareViga(DatosShareVigaRef ref) {
   String datos = "";
   if (description.length == volumen.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(1)} m3\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);
@@ -700,7 +700,7 @@ String datosShareSobrecimiento(DatosShareSobrecimientoRef ref) {
   String datos = "";
   if (description.length == volumen.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(1)} m3\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);
@@ -914,7 +914,7 @@ String datosShareCimientoCorrido(DatosShareCimientoCorridoRef ref) {
   String datos = "";
   if (description.length == volumen.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(2)} m3\n";
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(1)} m3\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);
@@ -1159,7 +1159,7 @@ String datosShareSolado(DatosShareSoladoRef ref) {
   String datos = "";
   if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m2\n";
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(1)} m2\n";
     }
     if (datos.length > 2) {
       datos = datos.substring(0, datos.length - 2);

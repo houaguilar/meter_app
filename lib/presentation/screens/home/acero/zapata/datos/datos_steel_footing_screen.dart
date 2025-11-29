@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
 
 import '../../../../../../config/theme/theme.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import '../../../../../providers/home/acero/zapata/steel_footing_providers.dart';
+import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../widgets/mesh_distribution_widget.dart';
@@ -99,6 +102,23 @@ class _DatosSteelFootingScreenState extends ConsumerState<DatosSteelFootingScree
         title: const Text('Acero en Zapatas'),
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
+        centerTitle: false,
+        actions: [
+          TextButton(
+            onPressed: () {
+              ConfirmDialog.show(
+                  context: context,
+                  title: '¿Seguro que deseas salir?',
+                  content: 'Si sales del resumen se perderá todo el progreso.',
+                  confirmText: 'Salir',
+                  cancelText: 'Cancelar',
+                  onConfirm: () {context.goNamed('home');},
+                  onCancel: () {context.pop();},
+                  isVisible: true);
+            },
+            child: SvgPicture.asset(AppIcons.closeDialogIcon, width: 32, height: 32,),
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Container(
@@ -142,11 +162,15 @@ class _DatosSteelFootingScreenState extends ConsumerState<DatosSteelFootingScree
         ),
       ),
       backgroundColor: AppColors.background,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: TabBarView(
-          controller: _tabController,
-          children: _footings.map((footing) => _buildFootingForm(footing)).toList(),
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: TabBarView(
+            controller: _tabController,
+            children: _footings.map((footing) => _buildFootingForm(footing)).toList(),
+          ),
         ),
       ),
       floatingActionButton: Column(

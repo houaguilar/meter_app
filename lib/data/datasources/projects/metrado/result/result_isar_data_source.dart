@@ -392,6 +392,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           waste: result.waste,
           elements: result.elements,
           cover: result.cover,
+          stirrupCover: result.stirrupCover,
           height: result.height,
           length: result.length,
           width: result.width,

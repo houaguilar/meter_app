@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/presentation/assets/icons.dart';
+import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -459,7 +459,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                   Expanded(
                     child: ModernTextField(
                       controller: _lengthTextController,
-                      label: 'Longitud',
+                      label: 'Largo',
                       suffix: 'm',
                       validator: _validateNumeric,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -470,7 +470,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                   Expanded(
                     child: ModernTextField(
                       controller: _heightTextController,
-                      label: 'Ancho',
+                      label: 'Altura',
                       suffix: 'm',
                       validator: _validateNumeric,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -536,7 +536,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
             Expanded(
               child: ModernTextField(
                 controller: field['lengthMeasure']!,
-                label: 'Longitud',
+                label: 'Largo',
                 suffix: 'm',
                 validator: _validateNumeric,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -547,7 +547,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
             Expanded(
               child: ModernTextField(
                 controller: field['heightMeasure']!,
-                label: 'Ancho',
+                label: 'Altura',
                 suffix: 'm',
                 validator: _validateNumeric,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),

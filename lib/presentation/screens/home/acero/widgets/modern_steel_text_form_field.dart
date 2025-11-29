@@ -43,6 +43,9 @@ class ModernSteelTextFormField extends StatelessWidget {
       enabled: enabled,
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(fontSize: 14),
+        floatingLabelStyle: const TextStyle(fontSize: 16, overflow: TextOverflow.visible),
+        floatingLabelBehavior: FloatingLabelBehavior.auto,
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, color: AppColors.primary) : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
