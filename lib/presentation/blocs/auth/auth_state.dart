@@ -18,6 +18,9 @@ final class AuthEmailNotVerified extends AuthState {}
 
 final class AuthEmailVerificationSent extends AuthState {}
 
+final class AuthDeletingAccount extends AuthState {}
+
+final class AuthAccountDeleted extends AuthState {}
 
 final class AuthFailure extends AuthState {
   final String message;

@@ -29,7 +29,7 @@ final calculateConsolidatedColumnSteelProvider = Provider<ConsolidatedColumnStee
   final List<SteelColumnCalculationResult> columnResults = [];
   double totalWeight = 0;
   double totalWire = 0;
-  int totalStirrups = 0;
+  double totalStirrups = 0;
   final Map<String, MaterialQuantity> consolidatedMaterials = {};
 
   // Calcular cada columna individualmente
@@ -92,8 +92,8 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
       totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudEmpalme;
     }
 
-    // Agregar doblez de zapata si está habilitada (solo para zapata)
-    if (column.hasFooting) {
+    // Agregar doblez de zapata si está habilitada y tiene longitud de doblez
+    if (column.footingBend > 0) {
       final longitudDoblez = column.elements * steelBar.quantity * column.footingBend;
       totalesPorDiametro[steelBar.diameter] = (totalesPorDiametro[steelBar.diameter] ?? 0.0) + longitudDoblez;
     }
@@ -117,12 +117,12 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
 
   // Calcular estribos del resto usando altura total
   final longitudRestante = alturaTotalEstribos - (longitudCubierta * 2);
-  int estribosResto = 0;
+  double estribosResto = 0;
   if (column.restSeparation > 0 && longitudRestante > 0) {
-    estribosResto = (longitudRestante / column.restSeparation).floor();
+    estribosResto = longitudRestante / column.restSeparation;
   }
 
-  // Total de estribos
+  // Total de estribos (mantener como double para precisión, como en Excel)
   final totalEstribos = estribosResto + cantidadEstribosDistribucion;
 
   // Calcular perímetro del estribo (columna rectangular)
@@ -154,7 +154,7 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
 
       if (varillasConDesperdicio > 0) {
         materials[diameter] = MaterialQuantity(
-          quantity: varillasConDesperdicio,
+          quantity: varillasConDesperdicio.ceil().toDouble(),
           unit: 'Varillas',
         );
       }
@@ -314,7 +314,7 @@ class SteelColumnCalculationResult {
   final String description;
   final double totalWeight;
   final double wireWeight;
-  final int totalStirrups;
+  final double totalStirrups;
   final double stirrupPerimeter;
   final Map<String, MaterialQuantity> materials;
   final Map<String, double> totalsByDiameter;
@@ -337,7 +337,7 @@ class ConsolidatedColumnSteelResult {
   final int numberOfColumns;
   final double totalWeight;
   final double totalWire;
-  final int totalStirrups;
+  final double totalStirrups;
   final List<SteelColumnCalculationResult> columnResults;
   final Map<String, MaterialQuantity> consolidatedMaterials;
 

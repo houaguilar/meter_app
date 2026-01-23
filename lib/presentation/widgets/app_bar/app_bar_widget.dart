@@ -29,7 +29,8 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         Visibility(
           visible: isVisibleTutorial,
-          child: IconButton(onPressed: showTutorial, icon: const Icon(Icons.info_rounded)),),
+          child: IconButton(onPressed: showTutorial, icon: const Icon(Icons.info_rounded)),
+        ),
         TextButton(
             onPressed: () {
               ConfirmDialog.show(

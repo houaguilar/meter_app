@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../../blocs/profile/profile_bloc.dart';
 import '../../../../widgets/widgets.dart';
 
 class ResultTarrajeoScreen extends ConsumerStatefulWidget {
@@ -554,7 +556,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 
   void _searchProviders() {
-    context.pushNamed('map-screen-tarrajeo');
+    FeatureStatusDialog.showTemporarilyDisabled(context);
+    //  context.pushNamed('map-screen-tarrajeo');
   }
 
   void _showShareOptions() {
@@ -687,7 +690,16 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateTarrajeoPDF(ref);
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
+      final pdfFile = await PDFFactory.generateTarrajeoPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
       final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
       if (result.status == ShareResultStatus.success) {

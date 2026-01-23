@@ -72,8 +72,8 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial();
-    _checkAndShowTutorial();
+  //  initializeTutorial();
+  //  _checkAndShowTutorial();
 
     // Pre-seleccionar material para viguetas
     if (widget.tipoLosa == TipoLosa.viguetasPrefabricadas) {
@@ -158,7 +158,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
       titleAppBar: widget.tipoLosa.displayName,
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }

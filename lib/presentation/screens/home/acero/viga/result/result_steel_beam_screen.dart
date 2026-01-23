@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
@@ -6,7 +7,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../config/utils/pdf/pdf_factory.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
+import '../../../../../widgets/widgets.dart';
 
 class ResultSteelBeamScreen extends ConsumerStatefulWidget {
   const ResultSteelBeamScreen({super.key});
@@ -160,11 +163,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
 
           // Detalle por viga (expandible)
           _buildBeamDetails(consolidatedResult),
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
-          // Gráfico de distribución (opcional)
-          _buildDistributionChart(consolidatedResult),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -285,7 +285,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
 
     if (beams.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      context.pushNamed('map-screen-steel-beam');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+      //    context.pushNamed('map-screen-steel-beam');
     } else {
       _showErrorMessage('No hay datos de vigas de acero');
     }
@@ -488,8 +489,17 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         description: 'Creando documento con los resultados',
       );
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
-      final pdfFile = await PDFFactory.generateSteelBeamPDF(ref);
+      final pdfFile = await PDFFactory.generateSteelBeamPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       // Ocultar loader solo si el widget está montado
       if (mounted) {
@@ -625,8 +635,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Vigas', '${quickStats['totalBeams']}'),
-            _buildStatRow('Área Total', '${quickStats['totalArea']?.toStringAsFixed(1)} m²'),
-            _buildStatRow('Volumen de Concreto', '${quickStats['concreteVolume']?.toStringAsFixed(1)} m³'),
+            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
           ],
         ],
       ),
@@ -852,17 +862,6 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
             children: [
               Expanded(
                 child: Text(
-                  'ID: ${beam.beamId}',
-                  style: AppTypography.bodySmall,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
                   'Descripción: ${beam.description}',
                   style: AppTypography.bodySmall,
                 ),
@@ -882,69 +881,6 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDistributionChart(dynamic result) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.neutral200),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.pie_chart_outline,
-                  color: AppColors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Distribución de Materiales',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            height: 200,
-            child: const Center(
-              child: Text(
-                'Gráfico en desarrollo',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
           ),
         ],
       ),

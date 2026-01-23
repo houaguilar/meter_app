@@ -1,10 +1,10 @@
-// lib/presentation/screens/home/muro/wall_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/theme/theme.dart';
 import '../../../../domain/entities/home/muro/wall_material.dart';
+import '../../../../domain/entities/home/muro/tipo_ladrillo.dart';
 import '../../../providers/home/muro/custom_brick_providers.dart';
 import '../../../providers/home/muro/wall_material_providers_improved.dart';
 import '../../../providers/home/muro/custom_brick_isar_providers.dart';
@@ -86,10 +86,17 @@ class _WallScreenState extends ConsumerState<WallScreen>
       onRetry: () {
         ref.invalidate(wallMaterialsWithCustomProvider);
       },
-      itemBuilder: (material, index) => WallMaterialCard(
-        wallMaterial: material,
-        onTap: () => _handleMaterialSelection(material),
-      ),
+      itemBuilder: (material, index) {
+        // Si es un custom brick guardado, agregar botón de eliminar
+        if (material.id.startsWith('saved_')) {
+          return _buildCustomBrickCard(material);
+        }
+        // Para otros materiales, usar la tarjeta normal
+        return WallMaterialCard(
+          wallMaterial: material,
+          onTap: () => _handleMaterialSelection(material),
+        );
+      },
       header: _buildHeader(),
     );
   }
@@ -232,13 +239,15 @@ class _WallScreenState extends ConsumerState<WallScreen>
         );
 
         // Establecer tipo Custom y continuar flujo
-        ref.read(tipoLadrilloProvider.notifier).selectLadrillo('Custom');
+        ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo('Custom');
         context.pushNamed('ladrillo1');
         return;
       }
 
       // Para el ladrillo personalizable (crear nuevo)
       if (material.id == 'custom') {
+        // Resetear dimensiones a valores default antes de entrar
+        ref.read(customBrickDimensionsProvider.notifier).clearDimensions();
         context.pushNamed('custom-brick-config');
         return;
       }
@@ -247,9 +256,9 @@ class _WallScreenState extends ConsumerState<WallScreen>
       final materialType = _getMaterialType(material.id);
       print('🔧 Estableciendo tipo: "$materialType"');
 
-      ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
+      ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo(materialType);
 
-      final verificacion = ref.read(tipoLadrilloProvider);
+      final verificacion = ref.read(tipoLadrilloNotifierProvider);
       print('🔍 Verificación: "$verificacion"');
       context.pushNamed('ladrillo1');
 
@@ -258,22 +267,10 @@ class _WallScreenState extends ConsumerState<WallScreen>
     }
   }
 
-  /// Obtiene el tipo de material para el provider
+  /// Obtiene el tipo de material para el provider usando ENUM
   String _getMaterialType(String materialId) {
-    switch (materialId) {
-      case '1':
-        return 'Pandereta1';
-      case '2':
-        return 'Pandereta2';
-      case '3':
-        return 'Kingkong1';
-      case '4':
-        return 'Kingkong2';
-      case 'custom':
-        return 'Custom';
-      default:
-        return 'Pandereta1';
-    }
+    final tipo = TipoLadrillo.fromRepositoryId(materialId);
+    return tipo?.providerKey ?? TipoLadrillo.pandereta1.providerKey;
   }
 
   /// Validaciones de seguridad
@@ -334,5 +331,235 @@ class _WallScreenState extends ConsumerState<WallScreen>
       }
       return true;
     }());
+  }
+
+  /// Widget para custom bricks guardados con botón de eliminar
+  Widget _buildCustomBrickCard(WallMaterial material) {
+    return Stack(
+      children: [
+        WallMaterialCard(
+          wallMaterial: material,
+          onTap: () => _handleMaterialSelection(material),
+        ),
+        // Botón de eliminar en la esquina superior derecha
+        Positioned(
+          top: 8,
+          right: 8,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => _handleDeleteCustomBrick(material),
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.9),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.error.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.delete_outline,
+                  color: AppColors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Maneja la eliminación de un custom brick
+  void _handleDeleteCustomBrick(WallMaterial material) {
+    // Extraer el customId del material ID (formato: 'saved_{customId}')
+    final customId = material.id.replaceFirst('saved_', '');
+    final brickName = material.name.replaceFirst('⭐ ', '');
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.warning,
+                size: 28,
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Eliminar Ladrillo',
+                  style: TextStyle(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '¿Estás seguro de que quieres eliminar "$brickName"?',
+                style: const TextStyle(fontSize: 15),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.neutral100,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.neutral300,
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: AppColors.blueMetraShop,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Esto no afectará resultados ya guardados',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                'Cancelar',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _confirmDeleteCustomBrick(customId, brickName);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              icon: const Icon(Icons.delete, size: 18),
+              label: const Text(
+                'Eliminar',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Confirma y ejecuta la eliminación
+  Future<void> _confirmDeleteCustomBrick(String customId, String brickName) async {
+    try {
+      // Mostrar indicador de carga
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('Eliminando "$brickName"...'),
+              ],
+            ),
+            backgroundColor: AppColors.blueMetraShop,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // Ejecutar eliminación
+      await ref.read(customBrickSaveStateProvider.notifier).deleteCustomBrick(customId);
+
+      // Mostrar éxito
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Ladrillo "$brickName" eliminado'),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Error al eliminar: $e'),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }

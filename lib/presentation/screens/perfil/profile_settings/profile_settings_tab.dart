@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import '../../../../config/theme/theme.dart';
+import '../../../../config/utils/url_launcher_helper.dart';
+import '../../../widgets/dialogs/delete_account_dialog.dart';
 
 class ImprovedProfileSettingsTab extends StatefulWidget {
   const ImprovedProfileSettingsTab({super.key});
@@ -121,6 +123,8 @@ class _ImprovedProfileSettingsTabState extends State<ImprovedProfileSettingsTab>
                   _buildPasswordChangeSection(),
                   SizedBox(height: 32),
                   _buildSecurityTips(),
+                  SizedBox(height: 32),
+                  _buildDangerZoneSection(),
                   SizedBox(height: 32),
                 ],
               ),
@@ -702,6 +706,147 @@ class _ImprovedProfileSettingsTabState extends State<ImprovedProfileSettingsTab>
               ],
             ),
           )),
+        ],
+      ),
+    );
+  }
+
+  /// Sección de Zona de Peligro para acciones irreversibles
+  Widget _buildDangerZoneSection() {
+    return Container(
+      padding: EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.error.withOpacity(0.3),
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.error.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.error.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.warning_amber_rounded,
+                  color: AppColors.error,
+                  size: 24,
+                ),
+              ),
+              SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Zona de Peligro',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.error,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Acciones irreversibles',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 20),
+
+          // Advertencia
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.error.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Las acciones en esta sección son permanentes y no se pueden deshacer. '
+                    'Procede con precaución.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // Botón de eliminar cuenta
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                DeleteAccountDialog.show(context);
+              },
+              icon: Icon(
+                Icons.delete_forever_outlined,
+                size: 20,
+              ),
+              label: Text('Eliminar mi cuenta'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.error,
+                side: BorderSide(color: AppColors.error, width: 1.5),
+                padding: EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ),
+
+          SizedBox(height: 12),
+
+          // Texto informativo
+          Text(
+            'Al eliminar tu cuenta se borrarán permanentemente todos tus datos, '
+            'proyectos y configuraciones. Esta acción no se puede deshacer.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
         ],
       ),
     );

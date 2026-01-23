@@ -1,7 +1,16 @@
 // lib/domain/services/shared/unified_results_combiner.dart
 
+import 'dart:math';
+
 import '../../../domain/entities/entities.dart';
 import './UnifiedMaterialsCalculator.dart';
+
+/// Redondea un número hacia arriba con la cantidad de decimales especificada
+/// Similar a la función ROUNDUP de Excel
+double roundUp(double value, int decimals) {
+  final multiplier = pow(10, decimals).toInt();
+  return (value * multiplier).ceil() / multiplier;
+}
 
 /// Servicio para combinar resultados YA CALCULADOS de múltiples metrados
 /// Usa el mismo UnifiedMaterialsCalculator que ResultScreen
@@ -174,9 +183,11 @@ class UnifiedResultsCombiner {
 
     // Ladrillos - mantener el tipo específico
     if (name.contains('ladrillo')) {
+      if (name.contains('custom') || name.contains('personalizado')) return 'Ladrillo Personalizado';
+      if (name.contains('tabic')) return 'Ladrillo Tabicón';
       if (name.contains('king kong')) return 'Ladrillo King Kong';
       if (name.contains('pandereta')) return 'Ladrillo Pandereta';
-      if (name.contains('artesanal')) return 'Ladrillo Artesanal';
+      if (name.contains('artesanal') || name.contains('común')) return 'Ladrillo Artesanal';
       if (name.contains('techo') || name.contains('hueco')) return 'Ladrillo techo';
       return materialName; // Mantener nombre original si no coincide
     }
@@ -312,8 +323,24 @@ class CombinedMaterial {
   }
 
   /// Formatea la cantidad con su unidad
+  /// Usa ROUNDUP (redondeo hacia arriba) para materiales de concreto, similar a Excel
   String get formattedQuantity {
-    return '${totalQuantity.toStringAsFixed(2)} $unit';
+    // Determinar si es un material de concreto basándose en la unidad
+    final isConcreteMaterial = unit == 'm³' || unit == 'bls' || unit == 'bls.' || unit == 'L';
+
+    if (isConcreteMaterial) {
+      // Para materiales de concreto: usar roundUp con 1 decimal (como Excel)
+      if (unit == 'bls' || unit == 'bls.') {
+        // Cemento: redondear hacia arriba a entero
+        return '${totalQuantity.ceil()} $unit';
+      } else {
+        // Arena, Piedra, Agua, Aditivo: redondear hacia arriba con 1 decimal
+        return '${roundUp(totalQuantity, 1)} $unit';
+      }
+    } else {
+      // Otros materiales: mantener 2 decimales
+      return '${totalQuantity.toStringAsFixed(2)} $unit';
+    }
   }
 }
 

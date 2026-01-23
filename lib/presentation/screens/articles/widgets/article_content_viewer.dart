@@ -15,10 +15,6 @@ class ArticleContentViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('🔍 ArticleContentViewer - Article: ${article.title}');
-    print('🔍 ArticleContentViewer - hasImageContent: ${article.hasImageContent}');
-    print('🔍 ArticleContentViewer - contentImages count: ${article.contentImages.length}');
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

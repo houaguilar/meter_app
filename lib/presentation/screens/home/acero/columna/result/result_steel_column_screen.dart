@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
@@ -6,7 +7,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../config/utils/pdf/pdf_factory.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
+import '../../../../../widgets/widgets.dart';
 
 class ResultSteelColumnScreen extends ConsumerStatefulWidget { // cambio de ResultSteelBeamScreen
   const ResultSteelColumnScreen({super.key});
@@ -103,11 +106,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Resultados de Acero en Columnas'), // cambio de título
-          backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.white,
-        ),
+        appBar: AppBarWidget(titleAppBar: 'Resultados'),
         backgroundColor: AppColors.background,
         body: FadeTransition(
           opacity: _fadeAnimation,
@@ -160,11 +159,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
 
           // Detalle por columna (cambio de viga a columna)
           _buildColumnDetails(consolidatedResult), // cambio de _buildBeamDetails
-          const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
-          // Gráfico de distribución (opcional)
-          _buildDistributionChart(consolidatedResult),
-          const SizedBox(height: 20),
         ],
       ),
     );
@@ -271,9 +267,9 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
     final columns = ref.watch(steelColumnResultProvider); // cambio de steelBeamResultProvider
     final consolidatedResult = ref.watch(calculateConsolidatedColumnSteelProvider); // cambio de provider
 
-    if (columns.isNotEmpty && consolidatedResult != null) { // cambio de beams a columns
+    if (columns.isNotEmpty && consolidatedResult != null) {
       // Navegar a pantalla de guardado
-      context.pushNamed('save-steel-column'); // cambio de ruta
+      context.pushNamed('save-steel-column');
     } else {
       _showErrorMessage('No hay datos para guardar');
     }
@@ -285,7 +281,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
 
     if (columns.isNotEmpty && consolidatedResult != null) { // cambio de beams a columns
       // Navegar a mapa de proveedores
-      context.pushNamed('map-screen-steel-column'); // cambio de ruta
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+    //    context.pushNamed('map-screen-steel-column');
     } else {
       _showErrorMessage('No hay datos de columnas de acero'); // cambio de texto
     }
@@ -499,9 +496,18 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
       );
       print('✅ Loader mostrado');
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
       print('📝 Llamando a PDFFactory.generateSteelColumnPDF...');
-      final pdfFile = await PDFFactory.generateSteelColumnPDF(ref);
+      final pdfFile = await PDFFactory.generateSteelColumnPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
       print('✅ PDF generado exitosamente: ${pdfFile.path}');
 
       // Ocultar loader solo si el widget está montado
@@ -878,17 +884,6 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
             children: [
               Expanded(
                 child: Text(
-                  'ID: ${column.columnId}', // cambio de beamId a columnId
-                  style: AppTypography.bodySmall,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
                   'Descripción: ${column.description}',
                   style: AppTypography.bodySmall,
                 ),
@@ -926,69 +921,6 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
               ],
             ),
           ],
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDistributionChart(dynamic result) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.neutral200),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.pie_chart_outline,
-                  color: AppColors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Distribución de Materiales',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            height: 200,
-            child: const Center(
-              child: Text(
-                'Gráfico en desarrollo',
-                style: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );

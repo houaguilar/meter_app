@@ -32,6 +32,11 @@ void registerAuthModule(GetIt sl) {
   sl.registerFactory(() => UserLogout(sl()));
   sl.registerFactory(() => CurrentUser(sl()));
   sl.registerFactory(() => UserSignInWithGoogle(sl()));
+  sl.registerFactory(() => DeleteAccount(sl()));
+  sl.registerFactory(() => ResetPasswordForEmail(sl()));
+  sl.registerFactory(() => VerifyOTP(sl()));
+  sl.registerFactory(() => ResendOTP(sl()));
+  sl.registerFactory(() => VerifyOTPAndUpdatePassword(sl()));
 
   // ==================== USE CASES - Profile ====================
   sl.registerFactory(() => GetUserProfile(sl<AuthRepository>()));
@@ -46,6 +51,7 @@ void registerAuthModule(GetIt sl) {
       currentUser: sl(),
       userLogout: sl(),
       userSignInWithGoogle: sl(),
+      deleteAccount: sl(),
       appUserCubit: sl(),
     ),
   );

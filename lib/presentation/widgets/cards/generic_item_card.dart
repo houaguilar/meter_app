@@ -119,27 +119,48 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       child: Card(
-        elevation: _isPressed ? _elevationAnimation.value : 2.0,
+        elevation: _isPressed ? _elevationAnimation.value : 4.0,
         color: AppColors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: Colors.transparent,
-            width: 1.0,
+            color: _isPressed
+                ? (AppColors.blueMetraShop).withOpacity(0.3)
+                : Colors.transparent,
+            width: 2.0,
           ),
         ),
         child: Container(
-          padding: EdgeInsets.all(isSmallScreen ? 12.0 : 16.0),
+          padding: EdgeInsets.all(isSmallScreen ? 16.0 : 20.0),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.white,
+                AppColors.white,
+              ],
+            ),
+          ),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildImage(isSmallScreen),
-              SizedBox(height: isSmallScreen ? 8 : 12),
-              _buildTitle(isSmallScreen),
-              if (widget.getSubtitle != null) ...[
-                const SizedBox(height: 4),
-                _buildSubtitle(isSmallScreen),
-              ],
+              SizedBox(height: isSmallScreen ? 12 : 16),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildTitle(isSmallScreen),
+                    if (widget.getSubtitle != null) ...[
+                      const SizedBox(height: 6),
+                      _buildSubtitle(isSmallScreen),
+                    ],
+                  ],
+                ),
+              ),
             ],
           ),
         ),
@@ -148,33 +169,42 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
   }
 
   Widget _buildImage(bool isSmallScreen) {
-    final size = isSmallScreen ? 50.0 : 65.0;
+    final size = isSmallScreen ? 100.0 : 140.0;
     final imagePath = widget.getImage(widget.item);
+    final primaryColor = widget.primaryColor ?? AppColors.blueMetraShop;
 
     return Hero(
       tag: '${widget.getId(widget.item)}_${widget.runtimeType}',
       child: Container(
-        width: size,
-        height: size,
+        width: size + 20,
+        height: size + 20,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(16),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              primaryColor.withOpacity(0.08),
+              primaryColor.withOpacity(0.15),
+            ],
+          ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.neutral300.withOpacity(0.3),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              color: primaryColor.withOpacity(0.15),
+              blurRadius: 12,
+              spreadRadius: 2,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: ColorFiltered(
-            colorFilter: const ColorFilter.matrix([
-              1, 0, 0, 0, 0,
-              0, 1, 0, 0, 0,
-              0, 0, 1, 0, 0,
-              0, 0, 0, 1, 0,
-            ]),
+        padding: const EdgeInsets.all(10),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: AppColors.white.withOpacity(0.5),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
             child: _buildImageWidget(imagePath, size),
           ),
         ),
@@ -190,7 +220,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     if (isNetwork) {
       return Image.network(
         imagePath,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         width: size,
         height: size,
         errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
@@ -211,7 +241,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
       // PNG, JPG, etc.
       return Image.asset(
         imagePath,
-        fit: BoxFit.cover,
+        fit: BoxFit.contain,
         width: size,
         height: size,
         errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
@@ -236,9 +266,11 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     return Text(
       widget.getName(widget.item),
       style: TextStyle(
-        fontSize: isSmallScreen ? 14 : 16,
-        fontWeight: FontWeight.bold,
+        fontSize: isSmallScreen ? 15 : 17,
+        fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
+        letterSpacing: -0.3,
+        height: 1.3,
       ),
       textAlign: TextAlign.center,
       maxLines: 2,
@@ -257,8 +289,9 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
         color: AppColors.textSecondary,
       ),
       textAlign: TextAlign.center,
-      maxLines: 1,
+      maxLines: 2,
       overflow: TextOverflow.ellipsis,
+      softWrap: true,
     );
   }
 

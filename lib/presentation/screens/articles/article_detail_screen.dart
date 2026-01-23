@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/screens/articles/widgets/article_content_viewer.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
@@ -25,68 +24,28 @@ class ArticleDetailScreen extends StatefulWidget {
   State<ArticleDetailScreen> createState() => _ArticleDetailScreenState();
 }
 
-class _ArticleDetailScreenState extends State<ArticleDetailScreen>
-    with TickerProviderStateMixin {
-  late YoutubePlayerController? _youtubeController;
-  bool _isFullScreen = false;
+class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
+  YoutubePlayerController? _youtubeController;
   bool _isVideoLoading = true;
   bool _hasVideoError = false;
-  late TabController _tabController;
   ArticleEntity? _currentArticle;
-
-  // Mensajes simulados para la demostración
-  final List<Map<String, String>> _simulatedMessages = [
-    {
-      "message": "¡Excelente artículo! Me ayudó mucho a entender el tema.",
-      "author": "María González",
-      "time": "Hace 2 horas"
-    },
-    {
-      "message": "¿Podrían hacer un video sobre este tema específico?",
-      "author": "Carlos Ruiz",
-      "time": "Hace 4 horas"
-    },
-    {
-      "message": "Muy bien explicado, gracias por compartir el conocimiento.",
-      "author": "Ana López",
-      "time": "Hace 1 día"
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
     _initializeVideo();
     _loadArticleData();
   }
 
   void _loadArticleData() {
-    print('🔍 ========== _loadArticleData ==========');
-    print('🔍 Looking for article ID: ${widget.articleId}');
-    print('🔍 Article name from navigation: ${widget.articleName}');
-
     final articleBloc = context.read<ArticleBloc>();
     if (articleBloc.state is ArticleLoaded) {
       final articles = (articleBloc.state as ArticleLoaded).articles;
-      print('🔍 Available articles in state:');
-      for (var article in articles) {
-        print('🔍 - ${article.id}: ${article.title} (images: ${article.contentImages.length})');
-      }
-
       _currentArticle = articles.where((a) => a.id == widget.articleId).firstOrNull;
-      print('🔍 Found current article: ${_currentArticle?.title ?? 'NULL'}');
-
-      if (_currentArticle != null) {
-        print('🔍 Current article has ${_currentArticle!.contentImages.length} images');
-      }
-    } else {
-      print('🔍 State is not ArticleLoaded: ${articleBloc.state.runtimeType}');
     }
 
     if (_currentArticle == null) {
-      print('🔍 Current article is null, fetching articles...');
-      articleBloc.add(FetchArticles());
+      articleBloc.add(const FetchArticles());
     }
   }
 
@@ -112,10 +71,9 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
             hideControls: false,
             enableCaption: true,
             controlsVisibleAtStart: true,
+            forceHD: false,
           ),
         );
-
-        _youtubeController?.addListener(_youtubeControllerListener);
 
         // Simular que el video terminó de cargar después de un breve delay
         Future.delayed(const Duration(milliseconds: 1000), () {
@@ -140,198 +98,189 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
     }
   }
 
-  void _youtubeControllerListener() {
-    if (_youtubeController?.value.isFullScreen != _isFullScreen) {
-      setState(() {
-        _isFullScreen = _youtubeController?.value.isFullScreen ?? false;
-      });
-
-      if (_isFullScreen) {
-        SystemChrome.setPreferredOrientations([
-          DeviceOrientation.landscapeLeft,
-          DeviceOrientation.landscapeRight,
-        ]);
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-      } else {
-        SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-      }
-    }
-  }
-
   @override
   void dispose() {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    _youtubeController?.removeListener(_youtubeControllerListener);
     _youtubeController?.dispose();
-    _tabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isFullScreen) {
-      return _buildFullScreenPlayer();
-    }
-
-    return Scaffold(
-      body: BlocConsumer<ArticleBloc, ArticleState>(
-        listener: (context, state) {
-          if (state is ArticleError) {
-            _showErrorSnackBar(context, state.message);
-          } else if (state is ArticleLoaded) {
-            final article = state.articles.where((a) => a.id == widget.articleId).firstOrNull;
-            if (article != null) {
-              setState(() {
-                _currentArticle = article;
-              });
-            }
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _youtubeController ?? YoutubePlayerController(
+          initialVideoId: '',
+          flags: const YoutubePlayerFlags(autoPlay: false),
+        ),
+        showVideoProgressIndicator: true,
+        progressIndicatorColor: AppColors.blueMetraShop,
+        progressColors: ProgressBarColors(
+          playedColor: AppColors.blueMetraShop,
+          handleColor: AppColors.yellowMetraShop,
+          bufferedColor: AppColors.blueMetraShop.withOpacity(0.3),
+          backgroundColor: Colors.grey.withOpacity(0.3),
+        ),
+        onReady: () {
+          if (mounted) {
+            setState(() {
+              _isVideoLoading = false;
+            });
           }
         },
-        builder: (context, state) {
-          return _buildContent(context, state);
-        },
       ),
-    );
-  }
-
-  Widget _buildFullScreenPlayer() {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: Center(
-        child: _youtubeController != null
-            ? YoutubePlayer(
-          controller: _youtubeController!,
-          showVideoProgressIndicator: true,
-          progressIndicatorColor: AppColors.blueMetraShop,
-          progressColors: ProgressBarColors(
-            playedColor: AppColors.blueMetraShop,
-            handleColor: AppColors.yellowMetraShop,
-            bufferedColor: AppColors.blueMetraShop.withOpacity(0.3),
-            backgroundColor: Colors.grey.withOpacity(0.3),
+      builder: (context, player) {
+        return Scaffold(
+          body: BlocConsumer<ArticleBloc, ArticleState>(
+            listener: (context, state) {
+              if (state is ArticleError) {
+                _showErrorSnackBar(context, state.message);
+              } else if (state is ArticleLoaded) {
+                final article = state.articles.where((a) => a.id == widget.articleId).firstOrNull;
+                if (article != null) {
+                  setState(() {
+                    _currentArticle = article;
+                  });
+                }
+              }
+            },
+            builder: (context, state) {
+              return _buildContent(context, state, player);
+            },
           ),
-        )
-            : _buildVideoErrorWidget(),
-      ),
-    );
-  }
-
-  Widget _buildVideoPlayer() {
-    if (_hasVideoError) {
-      return _buildVideoErrorWidget();
-    }
-
-    if (_isVideoLoading) {
-      return _buildVideoLoadingWidget();
-    }
-
-    if (_youtubeController == null) {
-      return _buildVideoErrorWidget();
-    }
-
-    return YoutubePlayer(
-      controller: _youtubeController!,
-      showVideoProgressIndicator: true,
-      progressIndicatorColor: AppColors.blueMetraShop,
-      progressColors: ProgressBarColors(
-        playedColor: AppColors.blueMetraShop,
-        handleColor: AppColors.yellowMetraShop,
-        bufferedColor: AppColors.blueMetraShop.withOpacity(0.3),
-        backgroundColor: Colors.grey.withOpacity(0.3),
-      ),
-      onReady: () {
-        setState(() {
-          _isVideoLoading = false;
-        });
-      },
-      onEnded: (metaData) {
-        // Opcional: manejar cuando el video termina
+        );
       },
     );
   }
 
-  Widget _buildVideoLoadingWidget() {
-    return Container(
-      height: 200,
-      color: Colors.black,
-      child: const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(AppColors.yellowMetraShop),
+  Widget _buildVideoPlayer(Widget player) {
+    // Siempre mostramos el player, pero con overlays si hay error o está cargando
+    return SizedBox(
+      height: 220, // Altura fija para evitar saltos visuales
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          player,
+          if (_isVideoLoading)
+            Container(
+              color: Colors.black87,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.yellowMetraShop),
+                              strokeWidth: 3,
+                            ),
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'Preparando video...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            SizedBox(height: 16),
-            Text(
-              'Cargando video...',
-              style: TextStyle(color: Colors.white),
+          if (_hasVideoError)
+            Container(
+              color: Colors.grey.shade900,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.black45,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.video_library_outlined,
+                            size: 48,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Error al cargar el video',
+                            style: TextStyle(
+                              color: Colors.grey[300],
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _hasVideoError = false;
+                                _isVideoLoading = true;
+                              });
+                              _initializeVideo();
+                            },
+                            icon: const Icon(Icons.refresh, size: 18),
+                            label: const Text('Reintentar'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.blueMetraShop,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildVideoErrorWidget() {
-    return Container(
-      height: 200,
-      color: Colors.grey[900],
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.video_library_outlined,
-              size: 48,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Error al cargar el video',
-              style: TextStyle(
-                color: Colors.grey[300],
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: () {
-                setState(() {
-                  _hasVideoError = false;
-                  _isVideoLoading = true;
-                });
-                _initializeVideo();
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Reintentar'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.blueMetraShop,
-                foregroundColor: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, ArticleState state) {
-    final player = _buildVideoPlayer();
+  Widget _buildContent(BuildContext context, ArticleState state, Widget player) {
+    final videoPlayer = _buildVideoPlayer(player);
 
     if (state is ArticleLoading && _currentArticle == null) {
-      return _buildLoadingState(player);
+      return _buildLoadingState(videoPlayer);
     }
 
     if (state is ArticleError && _currentArticle == null) {
-      return _buildErrorState(state.message, player);
+      return _buildErrorState(state.message, videoPlayer);
     }
 
     if (_currentArticle == null) {
-      return _buildNotFoundState(player);
+      return _buildNotFoundState(videoPlayer);
     }
 
-    return _buildLoadedContent(_currentArticle!, player);
+    return _buildLoadedContent(_currentArticle!, videoPlayer);
   }
 
   Widget _buildLoadingState(Widget player) {
@@ -383,11 +332,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   }
 
   Widget _buildLoadedContent(ArticleEntity article, Widget player) {
-
-    print('🔍 ========== _buildLoadedContent ==========');
-    print('🔍 Building loaded content for: ${article.title}');
-    print('🔍 Article has ${article.contentImages.length} images');
-
     return CustomScrollView(
       slivers: [
         _buildAppBar(article.title),
@@ -395,17 +339,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
           child: Column(
             children: [
               player,
-              _buildTabBar(),
-              SizedBox(
-                height: MediaQuery.of(context).size.height - 300,
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildArticleDetails(article),
-                    _buildMessagesSection(),
-                  ],
-                ),
-              ),
+              _buildArticleDetails(article),
             ],
           ),
         ),
@@ -435,29 +369,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.white),
         onPressed: () => Navigator.of(context).pop(),
-      ),
-    );
-  }
-
-  Widget _buildTabBar() {
-    return Container(
-      color: Colors.white,
-      child: TabBar(
-        controller: _tabController,
-        labelColor: AppColors.blueMetraShop,
-        unselectedLabelColor: Colors.grey[600],
-        indicatorColor: AppColors.blueMetraShop,
-        indicatorWeight: 3,
-        tabs: const [
-          Tab(
-            icon: Icon(Icons.article),
-            text: 'Detalles',
-          ),
-          Tab(
-            icon: Icon(Icons.chat_bubble_outline),
-            text: 'Comentarios',
-          ),
-        ],
       ),
     );
   }
@@ -551,422 +462,10 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
   }
 
   Widget _buildArticleDetails(ArticleEntity article) {
-    print('🔍 ========== _buildArticleDetails ==========');
-    print('🔍 Article: ${article.title}');
-    print('🔍 Article ID: ${article.id}');
-    print('🔍 hasImageContent: ${article.hasImageContent}');
-    print('🔍 contentImages count: ${article.contentImages.length}');
-
-    for (var img in article.contentImages) {
-      print('🔍 Image: ${img.imageUrl}');
-      print('🔍 Caption: ${img.caption}');
-    }
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: ArticleContentViewer(
         article: article,
-      ),
-      /*child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Título
-          Text(
-            article.title,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Descripción corta
-          if (article.description.isNotEmpty) ...[
-            Text(
-              article.description,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[700],
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Contenido principal
-          Text(
-            article.articleDetail,
-            style: const TextStyle(
-              fontSize: 16,
-              height: 1.6,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Información adicional
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.backgroundLight,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.schedule, size: 16, color: Colors.grey[600]),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Publicado: ${_formatDate(article.createdAt)}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-                if (article.updatedAt != article.createdAt) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.update, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Actualizado: ${_formatDate(article.updatedAt)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),*/
-    );
-  }
-
-  Widget _buildMessagesSection() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _simulatedMessages.length + 1, // +1 para el header
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return _buildMessagesHeader();
-        }
-
-        final messageIndex = index - 1;
-        final message = _simulatedMessages[messageIndex];
-        return _buildMessageItem(
-          message["message"]!,
-          message["author"]!,
-          message["time"]!,
-          messageIndex,
-        );
-      },
-    );
-  }
-
-  Widget _buildMessagesHeader() {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Comentarios (${_simulatedMessages.length})',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Comparte tu opinión sobre este artículo',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildCommentInput(),
-          const Divider(height: 32),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommentInput() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: AppColors.blueMetraShop,
-            child: Text(
-              'U',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Escribe un comentario...',
-                border: InputBorder.none,
-                hintStyle: TextStyle(color: Colors.grey[500]),
-              ),
-              maxLines: null,
-              enabled: false, // Deshabilitado para la demo
-            ),
-          ),
-          IconButton(
-            onPressed: null, // Deshabilitado para la demo
-            icon: Icon(
-              Icons.send,
-              color: Colors.grey[400],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMessageItem(
-      String message,
-      String author,
-      String time,
-      int index,
-      ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 3,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: _getAvatarColor(index),
-                child: Text(
-                  author[0].toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      author,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color: AppColors.primaryMetraShop,
-                      ),
-                    ),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuButton<String>(
-                icon: Icon(Icons.more_vert, color: Colors.grey[400]),
-                onSelected: (value) {
-                  _handleMessageAction(value, index);
-                },
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'reply',
-                    child: Row(
-                      children: [
-                        Icon(Icons.reply, size: 16),
-                        SizedBox(width: 8),
-                        Text('Responder'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'report',
-                    child: Row(
-                      children: [
-                        Icon(Icons.flag, size: 16),
-                        SizedBox(width: 8),
-                        Text('Reportar'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            message,
-            style: const TextStyle(
-              fontSize: 14,
-              height: 1.4,
-              color: AppColors.primaryMetraShop,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              TextButton.icon(
-                onPressed: () => _handleLike(index),
-                icon: Icon(
-                  Icons.thumb_up_outlined,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                label: Text(
-                  'Me gusta',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(0, 32),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _handleReply(index),
-                icon: Icon(
-                  Icons.reply,
-                  size: 16,
-                  color: Colors.grey[600],
-                ),
-                label: Text(
-                  'Responder',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  minimumSize: const Size(0, 32),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getAvatarColor(int index) {
-    final colors = [
-      AppColors.blueMetraShop,
-      AppColors.yellowMetraShop,
-      AppColors.primaryMetraShop,
-      Colors.green,
-      Colors.purple,
-      Colors.orange,
-    ];
-    return colors[index % colors.length];
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 0) {
-      return 'Hace ${difference.inDays} día${difference.inDays > 1 ? 's' : ''}';
-    } else if (difference.inHours > 0) {
-      return 'Hace ${difference.inHours} hora${difference.inHours > 1 ? 's' : ''}';
-    } else if (difference.inMinutes > 0) {
-      return 'Hace ${difference.inMinutes} minuto${difference.inMinutes > 1 ? 's' : ''}';
-    } else {
-      return 'Hace un momento';
-    }
-  }
-
-  void _handleMessageAction(String action, int index) {
-    switch (action) {
-      case 'reply':
-        _handleReply(index);
-        break;
-      case 'report':
-        _handleReport(index);
-        break;
-    }
-  }
-
-  void _handleLike(int index) {
-    // Implementar lógica de like
-    _showSuccessSnackBar(context, '¡Te gusta este comentario!');
-  }
-
-  void _handleReply(int index) {
-    // Implementar lógica de respuesta
-    _showInfoSnackBar(context, 'Función de respuesta próximamente disponible');
-  }
-
-  void _handleReport(int index) {
-    // Implementar lógica de reporte
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Reportar comentario'),
-        content: const Text('¿Estás seguro de que quieres reportar este comentario?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              _showSuccessSnackBar(context, 'Comentario reportado');
-            },
-            child: const Text('Reportar'),
-          ),
-        ],
       ),
     );
   }
@@ -988,27 +487,4 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen>
     }
   }
 
-  void _showSuccessSnackBar(BuildContext context, String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.green[600],
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  void _showInfoSnackBar(BuildContext context, String message) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.blueMetraShop,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 }

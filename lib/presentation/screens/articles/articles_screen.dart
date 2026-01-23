@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
@@ -103,26 +102,12 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
   }
 
   Widget _buildLoadingState() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GridView.custom(
-        gridDelegate: SliverWovenGridDelegate.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          pattern: [
-            const WovenGridTile(1),
-            const WovenGridTile(
-              5 / 7,
-              crossAxisRatio: 0.9,
-              alignment: AlignmentDirectional.centerEnd,
-            ),
-          ],
-        ),
-        childrenDelegate: SliverChildBuilderDelegate(
-              (context, index) => _buildShimmerCard(),
-          childCount: 6, // Mostrar 6 shimmer cards
-        ),
+    return ListView.builder(
+      padding: const EdgeInsets.all(16.0),
+      itemCount: 6,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.only(bottom: 16.0),
+        child: _buildShimmerCard(),
       ),
     );
   }
@@ -137,6 +122,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
           borderRadius: BorderRadius.circular(15),
         ),
         child: Container(
+          height: 280,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
@@ -151,31 +137,17 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
       return _buildEmptyState();
     }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: GridView.custom(
-        physics: const AlwaysScrollableScrollPhysics(),
-        gridDelegate: SliverWovenGridDelegate.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 8,
-          crossAxisSpacing: 8,
-          pattern: [
-            const WovenGridTile(1),
-            const WovenGridTile(
-              5 / 7,
-              crossAxisRatio: 0.9,
-              alignment: AlignmentDirectional.centerEnd,
-            ),
-          ],
-        ),
-        childrenDelegate: SliverChildBuilderDelegate(
-              (context, index) {
-            final article = articles[index];
-            return _buildArticleCard(context, article, index);
-          },
-          childCount: articles.length,
-        ),
-      ),
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16.0),
+      itemCount: articles.length,
+      itemBuilder: (context, index) {
+        final article = articles[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: _buildArticleCard(context, article, index),
+        );
+      },
     );
   }
 
@@ -303,12 +275,41 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
         borderRadius: BorderRadius.circular(15),
       ),
       elevation: 2,
-      child: Stack(
-        fit: StackFit.expand,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildArticleImage(article),
-          _buildGradientOverlay(),
-          _buildTitleOverlay(article.title),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  article.title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primaryMetraShop,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (article.description.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    article.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                      height: 1.4,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -317,87 +318,43 @@ class _ArticlesScreenState extends State<ArticlesScreen> with AutomaticKeepAlive
   Widget _buildArticleImage(ArticleEntity article) {
     return Hero(
       tag: 'article_${article.id}',
-      child: CachedNetworkImage(
-        imageUrl: article.imageUrl,
-        fit: BoxFit.cover,
+      child: SizedBox(
+        height: 200,
         width: double.infinity,
-        height: double.infinity,
-        placeholder: (context, url) => Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            color: Colors.white,
+        child: CachedNetworkImage(
+          imageUrl: article.imageUrl,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(
+              color: Colors.white,
+            ),
           ),
-        ),
-        errorWidget: (context, url, error) => Container(
-          color: Colors.grey[300],
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.broken_image,
-                size: 40,
-                color: Colors.grey[500],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Error al cargar imagen',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey[600],
+          errorWidget: (context, url, error) => Container(
+            color: Colors.grey[300],
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.broken_image,
+                  size: 40,
+                  color: Colors.grey[500],
                 ),
-                textAlign: TextAlign.center,
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  'Error al cargar imagen',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
-        ),
-        fadeInDuration: const Duration(milliseconds: 200),
-        fadeOutDuration: const Duration(milliseconds: 200),
-      ),
-    );
-  }
-
-  Widget _buildGradientOverlay() {
-    return Positioned.fill(
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.transparent,
-              Colors.black.withOpacity(0.7),
-            ],
-            stops: const [0.6, 1.0],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTitleOverlay(String title) {
-    return Positioned(
-      bottom: 0,
-      left: 0,
-      right: 0,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            shadows: [
-              Shadow(
-                offset: Offset(1, 1),
-                blurRadius: 2,
-                color: Color.fromARGB(150, 0, 0, 0),
-              ),
-            ],
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
+          fadeInDuration: const Duration(milliseconds: 200),
+          fadeOutDuration: const Duration(milliseconds: 200),
         ),
       ),
     );

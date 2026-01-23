@@ -150,7 +150,7 @@ final wallMaterialsWithCustomProvider = FutureProvider<List<WallMaterial>>((ref)
       return WallMaterial(
         id: 'saved_${brick.customId}', // Prefijo 'saved_' para identificar guardados
         name: '⭐ ${brick.name}', // Estrella para distinguir visualmente
-        image: AppImages.tabiconImg,
+        image: AppImages.personalizadoImg,
         size: brick.displaySize,
         lengthBrick: brick.length,
         widthBrick: brick.width,

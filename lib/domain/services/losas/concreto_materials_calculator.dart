@@ -54,8 +54,19 @@ class ConcretoMaterialsCalculator {
 
   /// Obtiene los factores para una resistencia específica
   Map<String, double> _getFactores(String resistencia) {
-    return FACTORES_MATERIALES[resistencia] ??
-           FACTORES_MATERIALES[RESISTENCIA_DEFAULT]!;
+    // Debug: Mostrar la resistencia recibida
+    print('🔍 _getFactores - Resistencia recibida: "$resistencia"');
+    print('🔍 _getFactores - ¿Existe en FACTORES_MATERIALES? ${FACTORES_MATERIALES.containsKey(resistencia)}');
+
+    final factores = FACTORES_MATERIALES[resistencia] ?? FACTORES_MATERIALES[RESISTENCIA_DEFAULT]!;
+
+    if (!FACTORES_MATERIALES.containsKey(resistencia)) {
+      print('⚠️  Resistencia "$resistencia" no encontrada. Usando default: $RESISTENCIA_DEFAULT');
+    } else {
+      print('✅ Factores encontrados para "$resistencia": $factores');
+    }
+
+    return factores;
   }
 
   /// Calcula la cantidad de cemento en bolsas
@@ -65,8 +76,11 @@ class ConcretoMaterialsCalculator {
   ///
   /// Returns: Cantidad de cemento en bolsas
   double calcularCemento(double volumen, String resistencia) {
+    print('📊 calcularCemento - Volumen: $volumen m³, Resistencia: "$resistencia"');
     final factores = _getFactores(resistencia);
-    return volumen * factores['cemento']!;
+    final cemento = volumen * factores['cemento']!;
+    print('📊 calcularCemento - Factor cemento: ${factores['cemento']}, Resultado: $cemento bolsas');
+    return cemento;
   }
 
   /// Calcula la cantidad de arena gruesa en m³
@@ -104,13 +118,22 @@ class ConcretoMaterialsCalculator {
 
   /// Calcula la cantidad de aditivo plastificante en litros
   ///
+  /// Según Excel: Aditivo = ROUNDUP(Cemento_bolsas, 0) × 0.25 litros/bolsa
+  /// IMPORTANTE: Excel redondea el cemento ANTES de calcular el aditivo
+  ///
   /// [volumen] Volumen de concreto en m³
   /// [resistencia] Resistencia del concreto
   ///
   /// Returns: Cantidad de aditivo plastificante en litros
   double calcularAditivoPlastificante(double volumen, String resistencia) {
-    final factores = _getFactores(resistencia);
-    return volumen * factores['aditivo']!;
+    // Calcular primero la cantidad de cemento en bolsas
+    final cementoBolsas = calcularCemento(volumen, resistencia);
+
+    // Redondear cemento hacia arriba como hace Excel (antes de multiplicar)
+    final cementoBolsasRedondeadas = cementoBolsas.ceil().toDouble();
+
+    // Aditivo = 0.25 litros por bolsa de cemento (redondeada)
+    return cementoBolsasRedondeadas * 0.25;
   }
 
   /// Obtiene todas las resistencias disponibles

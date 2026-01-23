@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +10,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../../config/theme/theme.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../widgets/widgets.dart';
 
 class ResultTarrajeoDerrameScreen extends ConsumerStatefulWidget {
@@ -828,7 +830,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => context.pushNamed('map-screen-tarrajeo-derrame'),
+                  onPressed: () => FeatureStatusDialog.showTemporarilyDisabled(context),
+         //         onPressed: () => context.pushNamed('map-screen-tarrajeo-derrame'),
                   icon: const Icon(Icons.map_outlined),
                   label: const Text('Buscar Proveedores'),
                   style: OutlinedButton.styleFrom(
@@ -955,8 +958,17 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         description: 'Creando documento con los resultados',
       );
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
-      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(ref);
+      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       context.hideLoader();
 
@@ -1007,8 +1019,17 @@ Calculado con MetraShop 📱
         description: 'Creando documento...',
       );
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
-      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(ref);
+      final pdfFile = await PDFFactory.generateTarrajeoDerrameoPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       if (mounted) {
         context.hideLoader();

@@ -9,27 +9,27 @@ final List<SteelElement> _steelElements = [
   SteelElement(
     id: '1',
     name: 'Acero en Viga',
-    image: AppImages.concretoImg,
+    image: AppImages.vigaAceroImg,
     details: 'Cálculo de materiales de acero para vigas estructurales.',
   ),
   SteelElement(
     id: '2',
     name: 'Acero en Columna',
-    image: AppImages.concretoImg,
+    image: AppImages.columnaAceroImg,
     details: 'Cálculo de materiales de acero para columnas estructurales.',
   ),
   SteelElement(
     id: '3',
     name: 'Acero en Zapata',
-    image: AppImages.concretoImg,
+    image: AppImages.zapataAceroImg,
     details: 'Cálculo de materiales de acero para zapatas.',
   ),
-  SteelElement(
+  /*SteelElement(
     id: '4',
     name: 'Acero en Losa Maciza',
     image: AppImages.concretoImg,
     details: 'Cálculo de materiales de acero para losa maciza.',
-  ),
+  ),*/
 ];
 
 @riverpod

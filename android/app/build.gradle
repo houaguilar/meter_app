@@ -30,8 +30,14 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
-    namespace = "com.jrd.metrashop"
+    namespace = "com.mts.metrashop"
     compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
@@ -49,7 +55,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.jrd.metrashop"
+        applicationId = "com.mts.metrashop"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = 21
@@ -59,14 +65,35 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            // Soporta ruta absoluta o relativa (para CI/CD)
+            def storeFilePath = keystoreProperties['storeFile']
+            if (storeFilePath != null) {
+                def storeFileObj = file(storeFilePath)
+                if (!storeFileObj.exists()) {
+                    // Si no existe como ruta absoluta, buscar en el directorio app/
+                    storeFileObj = file("${projectDir}/${storeFilePath}")
+                }
+                storeFile storeFileObj.exists() ? storeFileObj : null
+            }
+            storePassword keystoreProperties['storePassword']
+        }
+    }
 
     buildTypes {
-        release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+        debug {
             signingConfig = signingConfigs.debug
             shrinkResources false
             minifyEnabled false
+        }
+        release {
+            signingConfig = signingConfigs.release
+            // Habilitar optimizaciones para producción
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }

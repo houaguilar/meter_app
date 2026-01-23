@@ -15,6 +15,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CurrentUser _currentUser;
   final UserLogout _userLogout;
   final UserSignInWithGoogle _userSignInWithGoogle;
+  final DeleteAccount _deleteAccount;
   final AppUserCubit _appUserCubit;
   AuthBloc({
     required UserSignUp userSignUp,
@@ -22,12 +23,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required CurrentUser currentUser,
     required UserLogout userLogout,
     required UserSignInWithGoogle userSignInWithGoogle,
+    required DeleteAccount deleteAccount,
     required AppUserCubit appUserCubit
   })  :_userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
         _userLogout = userLogout,
         _userSignInWithGoogle = userSignInWithGoogle,
+        _deleteAccount = deleteAccount,
       _appUserCubit = appUserCubit,
         super(AuthInitial()) {
     on<AuthEvent>((_, emit) => emit(AuthLoading()));
@@ -36,6 +39,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
     on<AuthLogout>(_onAuthLogout);
     on<AuthLoginWithGoogle>(_onAuthLoginWithGoogle);
+    on<AuthDeleteAccount>(_onAuthDeleteAccount);
   }
 
   void _isUserLoggedIn(
@@ -88,7 +92,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final res = await _userSignInWithGoogle(NoParams());
 
     res.fold(
-          (failure) => emit(AuthFailure(failure.message)),
+          (failure) {
+        // Detectar cancelación del usuario
+        final errorMessage = failure.message.toLowerCase();
+        final isCancellation = errorMessage.contains('canceló') ||
+            errorMessage.contains('canceled') ||
+            errorMessage.contains('cancelled') ||
+            errorMessage.contains('sign_in_canceled');
+
+        if (isCancellation) {
+          // Si el usuario canceló, volver al estado inicial sin mostrar error
+          emit(AuthInitial());
+        } else {
+          // Para otros errores, emitir el fallo normalmente
+          emit(AuthFailure(failure.message));
+        }
+      },
           (user) => _emitAuthSuccess(user, emit),
     );
   }
@@ -148,5 +167,23 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       ) {
     _appUserCubit.updateUser(user);
     emit(AuthSuccess(user));
+  }
+
+  void _onAuthDeleteAccount(
+      AuthDeleteAccount event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthDeletingAccount());
+    final res = await _deleteAccount(
+      DeleteAccountParams(password: event.password),
+    );
+
+    res.fold(
+          (l) => emit(AuthFailure(l.message)),
+          (_) {
+        _appUserCubit.clearUser();
+        emit(AuthAccountDeleted());
+      },
+    );
   }
 }

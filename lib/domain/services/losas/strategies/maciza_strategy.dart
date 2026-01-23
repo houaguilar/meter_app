@@ -5,29 +5,31 @@ import '../losa_calculation_strategy.dart';
 ///
 /// Características:
 /// - Sin material aligerante
-/// - Alturas: 15, 20, 25 cm
+/// - Alturas: 17, 20, 25 cm
 /// - Resistencias: 210, 280 kg/cm²
 /// - Cálculo directo de volumen: área × espesor
 class MacizaStrategy extends LosaCalculationStrategy {
-  /// Alturas válidas para losa maciza (diferentes de aligeradas)
-  static const List<String> ALTURAS_VALIDAS = ['15 cm', '20 cm', '25 cm'];
+  /// Alturas válidas para losa maciza (consistente con losas aligeradas)
+  static const List<String> ALTURAS_VALIDAS = ['17 cm', '20 cm', '25 cm'];
 
   @override
   double calcularVolumenConcreto(Losa losa) {
     final area = calcularArea(losa);
 
     // Obtener espesor en metros
-    final alturaCm = int.tryParse(losa.altura.replaceAll(' cm', '')) ?? 20;
+    final alturaCm = int.tryParse(losa.altura.replaceAll(' cm', '').trim()) ?? 20;
     final espesorMetros = alturaCm / 100.0;
 
     // Cálculo directo: área × espesor
     final volumenBase = area * espesorMetros;
 
     // Aplicar desperdicio de concreto
-    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto) ?? 5.0;
+    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto.trim()) ?? 5.0;
     final factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
-    return volumenBase * factorDesperdicio;
+    final volumenTotal = volumenBase * factorDesperdicio;
+
+    return volumenTotal;
   }
 
   @override
@@ -52,7 +54,7 @@ class MacizaStrategy extends LosaCalculationStrategy {
   String? validar(Losa losa) {
     // Validar altura
     if (!ALTURAS_VALIDAS.contains(losa.altura)) {
-      return 'Altura inválida para losa maciza. Use: 15, 20 o 25 cm';
+      return 'Altura inválida para losa maciza. Use: 17, 20 o 25 cm';
     }
 
     // Validar resistencia

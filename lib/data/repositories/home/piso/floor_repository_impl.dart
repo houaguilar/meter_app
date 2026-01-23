@@ -11,13 +11,13 @@ class FloorRepositoryImpl implements FloorRepository {
       Floor(
         id: '1',
         name: 'Falso piso',
-        image: AppImages.pisoCardImg,
+        image: AppImages.falsoPisoImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),
       Floor(
         id: '2',
         name: 'Contrapiso',
-        image: AppImages.pisoCardImg,
+        image: AppImages.contrapisoImg,
         details: '· Adecuado para muros portantes y cercos perimetrados. \n· Absorción de agua 18%. \n· Modelo de 6 huecos. \n· Rendimiento 38 u/m2.',
       ),
     ];

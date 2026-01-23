@@ -210,6 +210,9 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           largo: result.largo,
           altura: result.altura,
           area: result.area,
+          brickLength: result.brickLength,
+          brickWidth: result.brickWidth,
+          brickHeight: result.brickHeight,
         );
 
         newResult.metradoId = metradoId;

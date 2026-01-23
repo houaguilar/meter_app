@@ -185,40 +185,11 @@ class _NotificationsSettingsScreenState
                 : null,
           ),
           const SizedBox(height: 12),
-          _buildNotificationOption(
-            title: 'Artículos',
-            description: 'Nuevos artículos y contenido relevante',
-            icon: Icons.article_rounded,
-            enabled: settings.articlesEnabled,
-            onChanged: settings.systemPermissionGranted
-                ? (value) => ref
-                    .read(notificationSettingsNotifierProvider.notifier)
-                    .toggleArticles(value)
-                : null,
-          ),
-          const SizedBox(height: 12),
-          _buildNotificationOption(
-            title: 'Ubicación',
-            description: 'Tiendas cercanas y puntos de interés',
-            icon: Icons.location_on_rounded,
-            enabled: settings.locationEnabled,
-            onChanged: settings.systemPermissionGranted
-                ? (value) => ref
-                    .read(notificationSettingsNotifierProvider.notifier)
-                    .toggleLocation(value)
-                : null,
-          ),
 
           // Botones de acción rápida
           if (settings.systemPermissionGranted) ...[
             const SizedBox(height: 24),
             _buildQuickActions(settings),
-          ],
-
-          // Token FCM (solo si está disponible)
-          if (settings.fcmToken != null && settings.systemPermissionGranted) ...[
-            const SizedBox(height: 24),
-            _buildTokenInfo(settings.fcmToken!),
           ],
         ],
       ),
@@ -576,64 +547,6 @@ class _NotificationsSettingsScreenState
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTokenInfo(String token) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.neutral100,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.neutral300,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.key_rounded,
-                size: 18,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'Token FCM',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.copy_rounded, size: 18),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: token));
-                  _showSuccessMessage('Token copiado al portapapeles');
-                },
-                tooltip: 'Copiar token',
-                color: AppColors.primary,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            token,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
-              fontFamily: 'monospace',
-            ),
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 

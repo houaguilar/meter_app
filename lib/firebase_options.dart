@@ -41,49 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCEZpo-jaMINgkaNvUV5JzmWyfXneUs4w8',
-    appId: '1:1088476245042:web:6bad22eb166388ceaa602b',
-    messagingSenderId: '1088476245042',
-    projectId: 'meterapp-fe4fe',
-    authDomain: 'meterapp-fe4fe.firebaseapp.com',
-    storageBucket: 'meterapp-fe4fe.firebasestorage.app',
-    measurementId: 'G-1Z3N2MPZD4',
+    apiKey: 'AIzaSyBvzEqe_sq-0fyQTy48eLiaAJwdQy9Yyvg',
+    appId: '1:265588480754:web:9a63f352b1b25bccf98e6b',
+    messagingSenderId: '265588480754',
+    projectId: 'metrashop-1d311',
+    authDomain: 'metrashop-1d311.firebaseapp.com',
+    storageBucket: 'metrashop-1d311.firebasestorage.app',
+    measurementId: 'G-M2LRTFB5KB',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDV0QMntbgGXeFJhgwK9FWxWGaDm8QI8SM',
-    appId: '1:1088476245042:android:eba50f6d89a37d35aa602b',
-    messagingSenderId: '1088476245042',
-    projectId: 'meterapp-fe4fe',
-    storageBucket: 'meterapp-fe4fe.firebasestorage.app',
+    apiKey: 'AIzaSyDNQqrJPkAounoQ2aNLQFIVD5oPdSWJ8YQ',
+    appId: '1:265588480754:android:0f04b5af4b05c42df98e6b',
+    messagingSenderId: '265588480754',
+    projectId: 'metrashop-1d311',
+    storageBucket: 'metrashop-1d311.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCKHr89no_A8eizvPTXTXO2jl61S0yY5F0',
-    appId: '1:1088476245042:ios:2a9e686e950980c5aa602b',
-    messagingSenderId: '1088476245042',
-    projectId: 'meterapp-fe4fe',
-    storageBucket: 'meterapp-fe4fe.firebasestorage.app',
-    iosBundleId: 'com.example.meterApp.RunnerTests',
+    apiKey: 'AIzaSyAmhVbXzkDaApbvROotSApkVOw2H538xs0',
+    appId: '1:265588480754:ios:ec3476cb60c687cff98e6b',
+    messagingSenderId: '265588480754',
+    projectId: 'metrashop-1d311',
+    storageBucket: 'metrashop-1d311.firebasestorage.app',
+    iosBundleId: 'com.mts.metrashop',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCKHr89no_A8eizvPTXTXO2jl61S0yY5F0',
-    appId: '1:1088476245042:ios:68aecea3de6ff064aa602b',
-    messagingSenderId: '1088476245042',
-    projectId: 'meterapp-fe4fe',
-    storageBucket: 'meterapp-fe4fe.firebasestorage.app',
-    iosBundleId: 'com.example.meterApp',
+    apiKey: 'AIzaSyAmhVbXzkDaApbvROotSApkVOw2H538xs0',
+    appId: '1:265588480754:ios:04862fd6217c8f83f98e6b',
+    messagingSenderId: '265588480754',
+    projectId: 'metrashop-1d311',
+    storageBucket: 'metrashop-1d311.firebasestorage.app',
+    iosBundleId: 'com.mts.metrashop',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyCEZpo-jaMINgkaNvUV5JzmWyfXneUs4w8',
-    appId: '1:1088476245042:web:3be9387eaf985ae7aa602b',
-    messagingSenderId: '1088476245042',
-    projectId: 'meterapp-fe4fe',
-    authDomain: 'meterapp-fe4fe.firebaseapp.com',
-    storageBucket: 'meterapp-fe4fe.firebasestorage.app',
-    measurementId: 'G-FSZDZTX5KR',
+    apiKey: 'AIzaSyBvzEqe_sq-0fyQTy48eLiaAJwdQy9Yyvg',
+    appId: '1:265588480754:web:49c43568d029fbb2f98e6b',
+    messagingSenderId: '265588480754',
+    projectId: 'metrashop-1d311',
+    authDomain: 'metrashop-1d311.firebaseapp.com',
+    storageBucket: 'metrashop-1d311.firebasestorage.app',
+    measurementId: 'G-CPXXHC1L9H',
   );
 
 }

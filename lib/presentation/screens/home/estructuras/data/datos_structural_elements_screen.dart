@@ -59,8 +59,8 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial();
-    _checkAndShowTutorial();
+  //  initializeTutorial();
+  //  _checkAndShowTutorial();
     _validateAndSetElementType();
   }
 
@@ -193,7 +193,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   PreferredSizeWidget _buildAppBar(String title) {
     return AppBarWidget(
       titleAppBar: title,
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }

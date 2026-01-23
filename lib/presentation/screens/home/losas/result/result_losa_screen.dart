@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -10,8 +13,21 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../config/theme/theme.dart';
 import '../../../../../domain/entities/home/losas/losa.dart';
 import '../../../../../domain/services/losas/losa_service.dart';
+import '../../../../blocs/profile/profile_bloc.dart';
 import '../../../../providers/providers.dart';
 import '../../../../widgets/widgets.dart';
+
+/// Redondea un número hacia arriba con la cantidad de decimales especificada
+/// Similar a la función ROUNDUP de Excel
+///
+/// Ejemplos:
+/// - roundUp(2.39, 1) = 2.4
+/// - roundUp(2.44, 1) = 2.5
+/// - roundUp(44.72, 0) = 45
+double roundUp(double value, int decimals) {
+  final multiplier = pow(10, decimals).toInt();
+  return (value * multiplier).ceil() / multiplier;
+}
 
 class ResultLosaScreen extends ConsumerStatefulWidget {
   const ResultLosaScreen({super.key});
@@ -444,10 +460,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
         _buildTableRow(['Cemento', 'bls', cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(1)]),
-        _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(1)]),
-        _buildTableRow(['Aditivo plastificante', 'L', aditivo.toStringAsFixed(1)]),
-        _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(1)]),
+        _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
+        _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 1).toString()]),
+        _buildTableRow(['Aditivo plastificante', 'L', roundUp(aditivo, 1).toString()]),
+        _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
       ],
     );
   }
@@ -619,10 +635,11 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
     final losas = ref.watch(losaResultProvider);
     if (losas.isNotEmpty) {
       final tipo = losas.first.tipoLosa.routePath;
-      context.pushNamed(
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+      /* context.pushNamed(
         'map-screen-losas',
         pathParameters: {'tipo': tipo},
-      );
+      );*/
     } else {
       _showErrorSnackBar('No hay datos de losas');
     }
@@ -758,8 +775,17 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
         description: 'Creando documento con los resultados',
       );
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
-      final pdfFile = await PDFFactory.generateLosaAligeradaPDF(ref);
+      final pdfFile = await PDFFactory.generateLosaAligeradaPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       // Ocultar loader
       context.hideLoader();
@@ -827,9 +853,9 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
     // Materiales de concreto
     buffer.writeln('MATERIALES DE CONCRETO:');
     buffer.writeln('• Cemento: ${cantidadCemento.ceil()} bls');
-    buffer.writeln('• Arena gruesa: ${cantidadArena.toStringAsFixed(2)} m³');
-    buffer.writeln('• Piedra chancada: ${cantidadPiedra.toStringAsFixed(2)} m³');
-    buffer.writeln('• Aditivo plastificante: ${cantidadAditivo.toStringAsFixed(2)} L');
+    buffer.writeln('• Arena gruesa: ${roundUp(cantidadArena, 1)} m³');
+    buffer.writeln('• Piedra chancada: ${roundUp(cantidadPiedra, 1)} m³');
+    buffer.writeln('• Aditivo plastificante: ${roundUp(cantidadAditivo, 1)} L');
     buffer.writeln('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³');
     buffer.writeln();
 

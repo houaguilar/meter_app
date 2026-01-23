@@ -622,7 +622,7 @@ class TutorialFactory {
         TutorialStepData(
           title: "Medición de Superficies",
           description: "Ingresa las medidas de las superficies que vas a tarrajear. Puedes usar área directa o medidas individuales.",
-          imagePath: "assets/images/coating_measurement.svg",
+          imagePath: "assets/images/categories/tarrajeo.svg",
         ),
         TutorialStepData(
           title: "Espesor y Proporción",

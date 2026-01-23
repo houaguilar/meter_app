@@ -29,4 +29,18 @@ abstract interface class AuthRepository {
 
   Future<Either<Failure, void>> logout();
 
+  Future<Either<Failure, void>> deleteAccount({required String password});
+
+  Future<Either<Failure, void>> resetPasswordForEmail(String email);
+
+  Future<Either<Failure, void>> verifyOTP({required String email, required String token});
+
+  Future<Either<Failure, void>> resendOTP(String email);
+
+  Future<Either<Failure, void>> verifyOTPAndUpdatePassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
+
 }

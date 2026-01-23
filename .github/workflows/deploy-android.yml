@@ -1,0 +1,140 @@
+name: Deploy Android
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0
+  workflow_dispatch:
+    inputs:
+      track:
+        description: 'Release track'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+env:
+  FLUTTER_VERSION: '3.24.0'
+  JAVA_VERSION: '17'
+
+jobs:
+  deploy-android:
+    name: Build & Deploy to Google Play
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      # ============================================
+      # CONFIGURACIÓN DE SECRETOS
+      # ============================================
+      - name: Create .env file
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "GOOGLE_MAPS_API_KEY_ANDROID=${{ secrets.GOOGLE_MAPS_API_KEY_ANDROID }}" >> .env
+          echo "GOOGLE_MAPS_API_KEY_IOS=${{ secrets.GOOGLE_MAPS_API_KEY_IOS }}" >> .env
+          echo "GOOGLE_WEB_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }}" >> .env
+          echo "GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}" >> .env
+          echo "GOOGLE_ANDROID_CLIENT_ID=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}" >> .env
+
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/metrashop-release.jks
+
+      - name: Create key.properties
+        run: |
+          echo "storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=metrashop-release.jks" >> android/key.properties
+
+      # ============================================
+      # BUILD
+      # ============================================
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Extract version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # Extract build number from pubspec.yaml and increment
+          BUILD_NUMBER=$(grep -oP 'version: .*\+\K\d+' pubspec.yaml)
+          NEW_BUILD_NUMBER=$((BUILD_NUMBER + 1))
+          echo "BUILD_NUMBER=$NEW_BUILD_NUMBER" >> $GITHUB_ENV
+
+      - name: Build App Bundle (AAB)
+        run: |
+          if [ -n "$VERSION" ]; then
+            flutter build appbundle --release --build-name=$VERSION --build-number=$BUILD_NUMBER
+          else
+            flutter build appbundle --release
+          fi
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      # ============================================
+      # DEPLOY A GOOGLE PLAY
+      # ============================================
+      - name: Setup Google Play credentials
+        run: |
+          echo '${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}' > google-play-key.json
+
+      - name: Determine release track
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TRACK=${{ github.event.inputs.track }}" >> $GITHUB_ENV
+          else
+            echo "TRACK=internal" >> $GITHUB_ENV
+          fi
+
+      - name: Upload to Google Play
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: google-play-key.json
+          packageName: com.mts.metrashop
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ env.TRACK }}
+          status: completed
+          # Cambiar a 'draft' si prefieres revisarlo antes
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -f android/app/metrashop-release.jks
+          rm -f android/key.properties
+          rm -f google-play-key.json
+
+      # ============================================
+      # NOTIFICACIÓN (Opcional)
+      # ============================================
+      - name: Notify success
+        if: success()
+        run: |
+          echo "🎉 Android build deployed successfully to ${{ env.TRACK }} track!"
+          echo "Package: com.mts.metrashop"
+          echo "Version: ${{ env.VERSION || 'from pubspec' }}"

@@ -14,19 +14,22 @@
     <!-- Permisos para notificaciones push (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+    <!-- Bloquear el permiso AD_ID que algunas bibliotecas agregan automáticamente -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
+
     <!-- Declaración de características de hardware -->
     <uses-feature android:name="android.hardware.telephony" android:required="false"/>
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.location.gps" />
 
     <application
-        android:usesCleartextTraffic="true"
+        android:usesCleartextTraffic="false"
         android:label="MetraShop"
         android:name=".MetraShopApplication"
         android:icon="@mipmap/launcher_icon">
 
         <meta-data android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyCQhVaoFnEm3PMeaUQw6pj5xH8XUDZ5XdQ"/>
+            android:value="AIzaSyDNQqrJPkAounoQ2aNLQFIVD5oPdSWJ8YQ"/>
         <uses-library android:name="org.apache.http.legacy" android:required="false"/>
 
         <activity

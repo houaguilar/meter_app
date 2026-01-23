@@ -2,6 +2,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
 import '../../../data/models/models.dart';
+import '../../../domain/entities/home/muro/tipo_ladrillo.dart' as enums;
 import '../../../domain/services/ladrillo_service.dart';
 import '../home/muro/custom_brick_providers.dart';
 
@@ -9,7 +10,7 @@ part 'ladrillo_providers.g.dart';
 
 @Riverpod(keepAlive: true)
 @riverpod
-class TipoLadrillo extends _$TipoLadrillo {
+class TipoLadrilloNotifier extends _$TipoLadrilloNotifier {
   @override
   String build() => '';
 
@@ -41,16 +42,22 @@ class LadrilloResult extends _$LadrilloResult {
     double? brickWidth;
     double? brickHeight;
 
-    if (tipoLadrillo == 'Custom') {
+    // ✅ Verificación case-insensitive para detectar custom bricks
+    final isCustomBrick = tipoLadrillo.toLowerCase().contains('custom') ||
+                          tipoLadrillo.toLowerCase().contains('personalizado');
+
+    if (isCustomBrick) {
       try {
         final customConfig = ref.read(customBrickDimensionsProvider);
         brickLength = customConfig.length;
         brickWidth = customConfig.width;
         brickHeight = customConfig.height;
-        print('✅ Guardando dimensiones custom: ${brickLength}×${brickWidth}×${brickHeight} cm');
+        print('✅ [createLadrillo] Tipo: "$tipoLadrillo" - Guardando dimensiones custom: ${brickLength}×${brickWidth}×${brickHeight} cm');
       } catch (e) {
-        print('⚠️ Error obteniendo dimensiones custom: $e');
+        print('⚠️ [createLadrillo] Error obteniendo dimensiones custom para tipo "$tipoLadrillo": $e');
       }
+    } else {
+      print('ℹ️ [createLadrillo] Tipo: "$tipoLadrillo" - No es custom, dimensiones = null');
     }
 
     final newLadrillo = Ladrillo(
@@ -68,6 +75,12 @@ class LadrilloResult extends _$LadrilloResult {
       brickWidth: brickWidth,      // ✅ NUEVO
       brickHeight: brickHeight,    // ✅ NUEVO
     );
+
+    // 🔍 Log para debugging
+    print('🏗️ [createLadrillo] Ladrillo creado:');
+    print('   - Tipo: "$tipoLadrillo"');
+    print('   - Descripción: "$description"');
+    print('   - Dimensiones brick: ${brickLength ?? "null"}×${brickWidth ?? "null"}×${brickHeight ?? "null"} cm');
 
     if (!_ladrilloService.esValido(newLadrillo)) {
       throw Exception("El ladrillo debe tener largo y altura o área definida.");
@@ -178,20 +191,8 @@ LadrilloMaterials ladrilloMaterials(LadrilloMaterialsRef ref) {
 
 /// Función auxiliar para calcular materiales basada en el análisis 100% validado vs Excel
 LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, LadrilloMaterialsRef ref) {
-  // Especificaciones EXACTAS validadas contra Excel
-  Map<String, Map<String, double>> especificacionesLadrillos = {
-    "King Kong": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-    "Pandereta": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-    "Artesanal": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
-    // Alias para compatibilidad con tu nomenclatura actual
-    "Kingkong": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-    "Kingkong1": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-    "Kingkong2": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-    "Pandereta1": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-    "Pandereta2": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-    "Común": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
-    "Custom": _obtenerDimensionesCustom(ref),
-  };
+  // NOTA: Las especificaciones ahora vienen del ENUM TipoLadrillo
+  // No se usa más el Map hardcodeado
 
   // Factores EXACTOS validados contra Excel para TODAS las proporciones
   const Map<String, Map<String, double>> factoresMortero = {
@@ -235,33 +236,37 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ladrillo
     final desperdicioLadrillo = (double.tryParse(ladrillo.factorDesperdicio) ?? 5.0) / 100;
     final desperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
 
-    // Obtener dimensiones del tipo de ladrillo
-    final tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
+    // Obtener dimensiones del tipo de ladrillo usando ENUM
+    final tipoEnum = _obtenerTipoLadrilloEnum(ladrillo.tipoLadrillo);
 
-    // ✅ NUEVO: Si es Custom Y tiene dimensiones guardadas, usarlas directamente
-    Map<String, double> specs;
-    if (tipoLadrilloKey == 'Custom' && ladrillo.brickLength != null && ladrillo.brickWidth != null && ladrillo.brickHeight != null) {
-      specs = {
-        "largo": ladrillo.brickLength!,
-        "ancho": ladrillo.brickWidth!,
-        "alto": ladrillo.brickHeight!,
-      };
-      print('📦 Usando dimensiones guardadas del ladrillo: ${specs}');
+    // ✅ Si es Custom Y tiene dimensiones guardadas, usarlas directamente
+    final double largo;
+    final double ancho;
+    final double alto;
+
+    if (tipoEnum == enums.TipoLadrillo.custom &&
+        ladrillo.brickLength != null &&
+        ladrillo.brickWidth != null &&
+        ladrillo.brickHeight != null) {
+      largo = ladrillo.brickLength!;
+      ancho = ladrillo.brickWidth!;
+      alto = ladrillo.brickHeight!;
+      print('✅ [ladrilloMaterials] Custom brick - usando dimensiones guardadas: ${largo}×${ancho}×${alto} cm');
     } else {
-      specs = especificacionesLadrillos[tipoLadrilloKey] ?? especificacionesLadrillos["Pandereta"]!;
+      largo = tipoEnum.largo;
+      ancho = tipoEnum.ancho;
+      alto = tipoEnum.alto;
+      if (tipoEnum == enums.TipoLadrillo.custom) {
+        print('⚠️ [ladrilloMaterials] Custom brick PERO dimensiones son NULL!');
+        print('   - tipoLadrillo: "${ladrillo.tipoLadrillo}"');
+        print('   - brickLength: ${ladrillo.brickLength}');
+        print('   - brickWidth: ${ladrillo.brickWidth}');
+        print('   - brickHeight: ${ladrillo.brickHeight}');
+        print('   - Fallback a enum: ${largo}×${ancho}×${alto} cm (esto causará resultados = 0)');
+      }
     }
-
-    // Debug: Agregar información para depuración
-    print('🔍 DEBUG LADRILLO:');
-    print('  Tipo original: "${ladrillo.tipoLadrillo}"');
-    print('  Tipo normalizado: "$tipoLadrilloKey"');
-    print('  Dimensiones encontradas: ${specs}');
     print('  Forma asentado: "${ladrillo.tipoAsentado}"');
     print('---');
-
-    final largo = specs["largo"]!;
-    final ancho = specs["ancho"]!;
-    final alto = specs["alto"]!;
 
     // ALGORITMO VALIDADO: Determinar grosor del muro y dimensiones según forma
     double grosorMuro, dim1, dim2;
@@ -313,22 +318,18 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ladrillo
   );
 }
 
-/// Función auxiliar mejorada para normalizar tipos de ladrillo
-String _normalizarTipoLadrillo(String tipo) {
-  final tipoLower = tipo.toLowerCase();
+/// Obtiene el ENUM TipoLadrillo desde el nombre del tipo
+enums.TipoLadrillo _obtenerTipoLadrilloEnum(String tipo) {
+  // Intentar obtener desde el provider key primero
+  final tipoFromKey = enums.TipoLadrillo.fromProviderKey(tipo);
+  if (tipoFromKey != null) return tipoFromKey;
 
-  // ✅ NUEVO: Detectar custom
-  if (tipoLower.contains('custom') || tipoLower.contains('personalizado')) {
-    return 'Custom';
-  } else if (tipoLower.contains('king') || tipoLower.contains('kong')) {
-    return 'King Kong';
-  } else if (tipoLower.contains('pandereta')) {
-    return 'Pandereta';
-  } else if (tipoLower.contains('artesanal') || tipoLower.contains('común') || tipoLower.contains('comun')) {
-    return 'Artesanal';
-  } else {
-    return 'Custom'; // Default
-  }
+  // Intentar normalizar desde el nombre
+  final tipoFromNombre = enums.TipoLadrillo.fromNombre(tipo);
+  if (tipoFromNombre != null) return tipoFromNombre;
+
+  // Default: Pandereta1
+  return enums.TipoLadrillo.pandereta1;
 }
 
 /// Función auxiliar para obtener el área de un ladrillo
@@ -424,25 +425,6 @@ $datosMetrado
   }
 }
 
-/// Obtiene dimensiones custom dinámicamente del provider
-Map<String, double> _obtenerDimensionesCustom(LadrilloMaterialsRef ref) {
-  try {
-    final customConfig = ref.read(customBrickDimensionsProvider);
-    final dimensiones = {
-      "largo": customConfig.length,
-      "ancho": customConfig.width,
-      "alto": customConfig.height,
-    };
-    print('📏 LEYENDO dimensiones custom para cálculo:');
-    print('   Nombre: ${customConfig.customName}');
-    print('   Largo: ${customConfig.length} cm');
-    print('   Ancho: ${customConfig.width} cm');
-    print('   Alto: ${customConfig.height} cm');
-    return dimensiones;
-  } catch (e) {
-    // Si falla, usar valores por defecto
-    print('⚠️ Error leyendo dimensiones custom: $e');
-    print('   Usando valores por defecto de King Kong');
-    return {"largo": 24.0, "ancho": 13.0, "alto": 9.0};
-  }
-}
+// NOTA: _obtenerDimensionesCustom() eliminada
+// Ahora las dimensiones custom se obtienen directamente desde el ladrillo guardado
+// (ladrillo.brickLength/Width/Height) o desde el ENUM TipoLadrillo

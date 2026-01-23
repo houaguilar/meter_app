@@ -1,8 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/screens/articles/article_detail_screen.dart';
+import 'package:meter_app/presentation/screens/auth/email_verification/email_verification_screen.dart';
 import 'package:meter_app/presentation/screens/auth/login/login_screen.dart';
+import 'package:meter_app/presentation/screens/auth/new_password/new_password_screen.dart';
 import 'package:meter_app/presentation/screens/auth/register/register_screen.dart';
+import 'package:meter_app/presentation/screens/auth/reset_password_otp/reset_password_otp_screen.dart';
 import 'package:meter_app/presentation/screens/auth/welcome/welcome_screen.dart';
 import 'package:meter_app/presentation/screens/home/acero/columna/datos/datos_steel_column_screen.dart';
 import 'package:meter_app/presentation/screens/home/acero/columna/result/result_steel_column_screen.dart';
@@ -22,6 +25,7 @@ import 'package:meter_app/presentation/screens/mapa/products/brand_configurator_
 import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
 import 'package:meter_app/presentation/screens/mapa/profile/provider_profile_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/notificaciones/notifications_settings_screen.dart';
+import 'package:meter_app/presentation/screens/perfil/privacy_legal/privacy_legal_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
 import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
@@ -78,7 +82,10 @@ class AppRouter {
       final currentLocation = state.matchedLocation;
       final isLoggingIn = currentLocation == '/metrashop' ||
           currentLocation == '/login' ||
-          currentLocation == '/register';
+          currentLocation == '/register' ||
+          currentLocation == '/email-verification' ||
+          currentLocation == '/reset-password-otp' ||
+          currentLocation == '/new-password';
       final isLoading = authState is AuthLoading;
 
       final sharedPrefs = serviceLocator<SharedPreferencesHelper>();
@@ -92,13 +99,18 @@ class AppRouter {
         return '/metrashop';
       }
 
+      // IMPORTANTE: NO redirigir si está en /register o /email-verification
+      // para permitir el flujo de registro completo
       if (isAuthenticated && isLoggingIn) {
+        if (currentLocation == '/register' || currentLocation == '/email-verification') {
+          return null; // Permitir acceso, el RegisterScreen manejará la navegación
+        }
         return '/welcome';
       }
 
-      /*if (currentLocation == '/welcome' && !isFirstTime) {
+      if (currentLocation == '/welcome' && !isFirstTime) {
         return '/home';
-      }*/
+      }
 
       return null;
     },
@@ -117,6 +129,31 @@ class AppRouter {
         path: '/register',
         name: 'register',
         builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/email-verification',
+        name: 'email-verification',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          return EmailVerificationScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/reset-password-otp',
+        name: 'reset-password-otp',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          return ResetPasswordOTPScreen(email: email);
+        },
+      ),
+      GoRoute(
+        path: '/new-password',
+        name: 'new-password',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          final token = state.uri.queryParameters['token'] ?? '';
+          return NewPasswordScreen(email: email, token: token);
+        },
       ),
 
       GoRoute(
@@ -674,6 +711,12 @@ class AppRouter {
                 path: 'notifications-settings',
                 name: 'notifications-settings',
                 builder: (context, state) => const NotificationsSettingsScreen(),
+              ),
+              GoRoute(
+                parentNavigatorKey: _rootNavigator,
+                path: 'privacy-legal',
+                name: 'privacy-legal',
+                builder: (context, state) => const PrivacyLegalScreen(),
               ),
               // Rutas de marketplace/mapa
               GoRoute(

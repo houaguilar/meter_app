@@ -49,14 +49,16 @@ class ColumnFormData {
     coverController = TextEditingController(text: '4');
     stirrupCoverController = TextEditingController(text: '4');
 
-    heightController = TextEditingController(text: '0');
-    lengthController = TextEditingController(text: '0');
-    widthController = TextEditingController(text: '0');
+    // Dimensiones de columna - inicialmente vacías para que el usuario las ingrese
+    heightController = TextEditingController();
+    lengthController = TextEditingController();
+    widthController = TextEditingController();
 
-    // Datos de zapata (inicialmente vacíos)
+    // Datos de zapata - valores sugeridos
     footingHeightController = TextEditingController(text: '0.60');
     footingBendController = TextEditingController(text: '0.40');
 
+    // Configuración de estribos - valores sugeridos
     stirrupBendLengthController = TextEditingController(text: '0.08');
     restSeparationController = TextEditingController(text: '0.20');
   }

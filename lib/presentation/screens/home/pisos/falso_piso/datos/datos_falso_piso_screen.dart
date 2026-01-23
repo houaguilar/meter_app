@@ -57,8 +57,8 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial();
-    _checkAndShowTutorial();
+  //  initializeTutorial();
+  //  _checkAndShowTutorial();
   }
 
   void _checkAndShowTutorial() {
@@ -138,7 +138,7 @@ class _DatosFalsoPisoScreenState extends ConsumerState<DatosFalsoPisoScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
       titleAppBar: 'Cálculo de Falso Piso',
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }

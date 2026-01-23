@@ -40,6 +40,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
 
   // Lista de columnas con sus datos (cambio de _beams a _columns)
   List<ColumnFormData> _columns = [];
+  List<GlobalKey<FormState>> _formKeys = [];
   int _currentColumnIndex = 0;
   bool _isLoading = false;
 
@@ -82,6 +83,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
   void _initializeColumns() { // cambio de _initializeBeams
     // Inicializar con una columna por defecto
     _columns = [ColumnFormData.initial()];
+    _formKeys = [GlobalKey<FormState>()];
     _tabController = TabController(
       length: _columns.length,
       vsync: this,
@@ -108,6 +110,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
     setState(() {
       final newColumn = ColumnFormData.initial(index: _columns.length + 1);
       _columns.add(newColumn);
+      _formKeys.add(GlobalKey<FormState>());
 
       // Recrear TabController con nueva cantidad
       _tabController.removeListener(_onTabChanged);
@@ -133,6 +136,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
     setState(() {
       _columns[index].dispose();
       _columns.removeAt(index);
+      _formKeys.removeAt(index);
 
       // Recrear TabController
       _tabController.removeListener(_onTabChanged);
@@ -151,11 +155,12 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
     setState(() => _isLoading = true);
 
     try {
-      // Validar todas las columnas
+      // Validar todas las columnas usando los formularios
       for (int i = 0; i < _columns.length; i++) {
-        if (!_columns[i].isValid()) {
+        final formState = _formKeys[i].currentState;
+        if (formState == null || !formState.validate()) {
           setState(() => _isLoading = false);
-          _showErrorMessage('Complete todos los datos de la Columna ${i + 1}');
+          _showErrorMessage('Complete correctamente todos los campos de la Columna ${i + 1}');
           _tabController.animateTo(i);
           return;
         }
@@ -325,6 +330,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
                 onDataChanged: () => setState(() {}),
                 onRemoveColumn: () => _removeColumn(index),
                 canRemove: _columns.length > 1,
+                formKey: _formKeys[index],
               );
             }).toList(),
           ),
@@ -377,6 +383,7 @@ class _ColumnFormView extends StatefulWidget {
   final VoidCallback onDataChanged;
   final VoidCallback onRemoveColumn;
   final bool canRemove;
+  final GlobalKey<FormState> formKey;
 
   const _ColumnFormView({
     required this.columnData,
@@ -384,6 +391,7 @@ class _ColumnFormView extends StatefulWidget {
     required this.onDataChanged,
     required this.onRemoveColumn,
     required this.canRemove,
+    required this.formKey,
   });
 
   @override
@@ -391,14 +399,13 @@ class _ColumnFormView extends StatefulWidget {
 }
 
 class _ColumnFormViewState extends State<_ColumnFormView> {
-  final _formKey = GlobalKey<FormState>();
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
-        key: _formKey,
+        key: widget.formKey,
         child: Column(
           children: [
             const SizedBox(height: 5),
@@ -461,9 +468,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese el % de desperdicio';
+                    }
                     final waste = double.tryParse(value);
-                    if (waste == null || waste < 0 || waste > 50) return 'Entre 0 y 50';
+                    if (waste == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (waste < 0) {
+                      return 'No puede ser negativo';
+                    }
+                    if (waste > 50) {
+                      return 'Máximo 50%';
+                    }
                     return null;
                   },
                   onChanged: (value) => widget.onDataChanged(),
@@ -480,9 +497,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.digitsOnly,
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese cantidad de elementos';
+                    }
                     final elements = int.tryParse(value);
-                    if (elements == null || elements <= 0) return 'Debe ser mayor a 0';
+                    if (elements == null) {
+                      return 'Ingrese un número entero';
+                    }
+                    if (elements <= 0) {
+                      return 'Debe ser al menos 1';
+                    }
+                    if (elements > 1000) {
+                      return 'Máximo 1000 elementos';
+                    }
                     return null;
                   },
                   onChanged: (value) => widget.onDataChanged(),
@@ -503,9 +530,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese recubrimiento';
+                    }
                     final cover = double.tryParse(value);
-                    if (cover == null || cover <= 0) return 'Debe ser mayor a 0';
+                    if (cover == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (cover <= 0) {
+                      return 'Debe ser mayor a 0';
+                    }
+                    if (cover > 20) {
+                      return 'Valor muy alto (máx: 20 cm)';
+                    }
                     return null;
                   },
                   onChanged: (value) => widget.onDataChanged(),
@@ -522,9 +559,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese recubrimiento estribos';
+                    }
                     final stirrupCover = double.tryParse(value);
-                    if (stirrupCover == null || stirrupCover <= 0) return 'Debe ser mayor a 0';
+                    if (stirrupCover == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (stirrupCover <= 0) {
+                      return 'Debe ser mayor a 0';
+                    }
+                    if (stirrupCover > 20) {
+                      return 'Valor muy alto (máx: 20 cm)';
+                    }
                     return null;
                   },
                   onChanged: (value) => widget.onDataChanged(),
@@ -562,9 +609,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese el alto de la columna';
+                    }
                     final height = double.tryParse(value);
-                    if (height == null || height <= 0) return 'Debe ser mayor a 0';
+                    if (height == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (height <= 0) {
+                      return 'El alto debe ser mayor a 0';
+                    }
+                    if (height > 50) {
+                      return 'Valor muy alto (máx: 50 m)';
+                    }
                     return null;
                   },
                 ),
@@ -580,9 +637,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese el largo de la columna';
+                    }
                     final length = double.tryParse(value);
-                    if (length == null || length <= 0) return 'Debe ser mayor a 0';
+                    if (length == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (length <= 0) {
+                      return 'El largo debe ser mayor a 0';
+                    }
+                    if (length > 5) {
+                      return 'Valor muy alto (máx: 5 m)';
+                    }
                     return null;
                   },
                 ),
@@ -598,9 +665,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese el ancho de la columna';
+                    }
                     final width = double.tryParse(value);
-                    if (width == null || width <= 0) return 'Debe ser mayor a 0';
+                    if (width == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (width <= 0) {
+                      return 'El ancho debe ser mayor a 0';
+                    }
+                    if (width > 5) {
+                      return 'Valor muy alto (máx: 5 m)';
+                    }
                     return null;
                   },
                 ),
@@ -679,9 +756,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     ],
                     validator: (value) {
                       if (!widget.columnData.hasFooting) return null;
-                      if (value == null || value.isEmpty) return 'Requerido';
+                      if (value == null || value.isEmpty) {
+                        return 'Ingrese altura de zapata';
+                      }
                       final height = double.tryParse(value);
-                      if (height == null || height <= 0) return 'Debe ser mayor a 0';
+                      if (height == null) {
+                        return 'Ingrese un número válido';
+                      }
+                      if (height <= 0) {
+                        return 'Debe ser mayor a 0';
+                      }
+                      if (height > 3) {
+                        return 'Valor muy alto (máx: 3 m)';
+                      }
                       return null;
                     },
                   ),
@@ -698,9 +785,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     ],
                     validator: (value) {
                       if (!widget.columnData.hasFooting) return null;
-                      if (value == null || value.isEmpty) return 'Requerido';
+                      if (value == null || value.isEmpty) {
+                        return 'Ingrese doblez de zapata';
+                      }
                       final bend = double.tryParse(value);
-                      if (bend == null || bend < 0) return 'Debe ser mayor o igual a 0';
+                      if (bend == null) {
+                        return 'Ingrese un número válido';
+                      }
+                      if (bend < 0) {
+                        return 'No puede ser negativo';
+                      }
+                      if (bend > 2) {
+                        return 'Valor muy alto (máx: 2 m)';
+                      }
                       return null;
                     },
                   ),
@@ -834,9 +931,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
                     FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
                   ],
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Requerido';
+                    if (value == null || value.isEmpty) {
+                      return 'Ingrese longitud de doblado';
+                    }
                     final bend = double.tryParse(value);
-                    if (bend == null || bend < 0) return 'Debe ser mayor o igual a 0';
+                    if (bend == null) {
+                      return 'Ingrese un número válido';
+                    }
+                    if (bend < 0) {
+                      return 'No puede ser negativo';
+                    }
+                    if (bend > 0.5) {
+                      return 'Valor muy alto (máx: 0.5 m)';
+                    }
                     return null;
                   },
                 ),
@@ -853,9 +960,19 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
               FilteringTextInputFormatter.allow(RegExp(r'^\d{0,2}(\.\d{0,2})?')),
             ],
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Requerido';
+              if (value == null || value.isEmpty) {
+                return 'Ingrese separación del resto';
+              }
               final separation = double.tryParse(value);
-              if (separation == null || separation <= 0) return 'Debe ser mayor a 0';
+              if (separation == null) {
+                return 'Ingrese un número válido';
+              }
+              if (separation <= 0) {
+                return 'Debe ser mayor a 0';
+              }
+              if (separation > 1) {
+                return 'Valor muy alto (máx: 1 m)';
+              }
               return null;
             },
           ),

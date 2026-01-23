@@ -9,6 +9,7 @@ import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/error_handler.dart';
 import '../../../../config/utils/validators.dart';
+import '../../../../config/utils/url_launcher_helper.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
@@ -435,12 +436,24 @@ class _RegisterScreenState extends State<RegisterScreen>
   }
 
   void _handleRegisterError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+
+    // Si el usuario canceló el inicio de sesión con Google, no mostrar error
+    final isCancellation = errorString.contains('sign_in_canceled') ||
+        errorString.contains('cancelled') ||
+        errorString.contains('canceled');
+
+    if (isCancellation) {
+      // Solo retornar sin mostrar ningún error
+      return;
+    }
+
     // Limpiar contraseñas por seguridad
     _passwordController.clear();
     _confirmPasswordController.clear();
 
     // Usar el nuevo manejador de errores de autenticación
-    AuthErrorHandler.handleRegistrationError(context, error.toString());
+    AuthErrorHandler.handleRegistrationError(context, errorString);
 
     // Animar error
     _scaleAnimationController.forward().then((_) {
@@ -598,17 +611,20 @@ class _RegisterScreenState extends State<RegisterScreen>
     switch (state.runtimeType) {
       case AuthSuccess:
         final successState = state as AuthSuccess;
-        // Mostrar mensaje de éxito y diálogo de bienvenida
+        final email = _emailController.text.trim();
+
+        // Mostrar mensaje de éxito
         AuthSuccessUtils.showRegistrationSuccess(context, successState.user.name);
 
-        // Mostrar diálogo de bienvenida para nuevos usuarios
+        // Navegar a verificación de email después de un delay
         Future.delayed(const Duration(milliseconds: 500), () {
           if (mounted) {
-            AuthSuccessUtils.showWelcomeDialog(context, successState.user.name);
+            context.pushNamed(
+              'email-verification',
+              queryParameters: {'email': email},
+            );
           }
         });
-
-        _navigateToWelcome();
         break;
       case AuthFailure:
         final failureState = state as AuthFailure;
@@ -760,7 +776,13 @@ class _RegisterScreenState extends State<RegisterScreen>
                   const SizedBox(height: 16),
                   _buildPasswordField(),
                   const SizedBox(height: 12),
-                  _buildPasswordStrengthIndicator(),
+                  // Escuchar cambios en el campo de contraseña para actualizar indicadores en tiempo real
+                  ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _passwordController,
+                    builder: (context, value, child) {
+                      return _buildPasswordStrengthIndicator();
+                    },
+                  ),
                   const SizedBox(height: 16),
                   _buildConfirmPasswordField(),
                   const SizedBox(height: 24),
@@ -1006,47 +1028,105 @@ class _RegisterScreenState extends State<RegisterScreen>
       return const SizedBox.shrink();
     }
 
-    return AnimatedBuilder(
-      animation: _passwordStrengthAnimation,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AnimatedBuilder(
+          animation: _passwordStrengthAnimation,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Seguridad: ',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'Seguridad: ',
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    _passwordStrength.displayName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _passwordStrength.color,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                _passwordStrength.displayName,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: _passwordStrength.color,
-                ),
+              const SizedBox(height: 4),
+              LinearProgressIndicator(
+                value: _passwordStrength.value,
+                backgroundColor: AppColors.neutral200,
+                color: _passwordStrength.color,
+                minHeight: 4,
+                borderRadius: BorderRadius.circular(2),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: _passwordStrength.value,
-            backgroundColor: AppColors.neutral200,
-            color: _passwordStrength.color,
-            minHeight: 4,
-            borderRadius: BorderRadius.circular(2),
+          builder: (context, child) {
+            return FadeTransition(
+              opacity: _passwordStrengthAnimation,
+              child: child,
+            );
+          },
+        ),
+        const SizedBox(height: 8),
+        // Los requisitos se actualizan con cada cambio en el campo de contraseña
+        _buildPasswordRequirements(),
+      ],
+    );
+  }
+
+  Widget _buildPasswordRequirements() {
+    final password = _passwordController.text;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildRequirementItem(
+          'Al menos 8 caracteres',
+          password.length >= 8,
+        ),
+        const SizedBox(height: 4),
+        _buildRequirementItem(
+          'Una letra mayúscula',
+          password.contains(RegExp(r'[A-Z]')),
+        ),
+        const SizedBox(height: 4),
+        _buildRequirementItem(
+          'Una letra minúscula',
+          password.contains(RegExp(r'[a-z]')),
+        ),
+        const SizedBox(height: 4),
+        _buildRequirementItem(
+          'Un número',
+          password.contains(RegExp(r'[0-9]')),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRequirementItem(String text, bool isMet) {
+    return Row(
+      children: [
+        Icon(
+          isMet ? Icons.check_circle : Icons.cancel,
+          size: 16,
+          color: isMet ? AppColors.success : AppColors.textTertiary,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: isMet ? AppColors.success : AppColors.textTertiary,
           ),
-        ],
-      ),
-      builder: (context, child) {
-        return FadeTransition(
-          opacity: _passwordStrengthAnimation,
-          child: child,
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -1149,7 +1229,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                 const TextSpan(text: 'Acepto los '),
                 WidgetSpan(
                   child: GestureDetector(
-                    onTap: _showTermsDialog,
+                    onTap: () async {
+                      await UrlLauncherHelper.openTermsOfService();
+                    },
                     child: Text(
                       'términos y condiciones',
                       style: GoogleFonts.poppins(
@@ -1161,7 +1243,23 @@ class _RegisterScreenState extends State<RegisterScreen>
                     ),
                   ),
                 ),
-                const TextSpan(text: ' y la política de privacidad'),
+                const TextSpan(text: ' y la '),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () async {
+                      await UrlLauncherHelper.openPrivacyPolicy();
+                    },
+                    child: Text(
+                      'política de privacidad',
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: AppColors.secondary,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

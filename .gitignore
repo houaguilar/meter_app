@@ -46,3 +46,47 @@ app.*.map.json
 
 # Generated files
 *.g.dart
+
+# Environment variables - SEGURIDAD CRÍTICA
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Secrets - NO SUBIR NUNCA
+**/lib/config/constants/secrets/app_secrets.dart
+
+# Android keystore - SEGURIDAD CRÍTICA
+android/key.properties
+**/*.keystore
+**/*.jks
+
+# iOS provisioning
+*.mobileprovision
+*.p12
+*.cer
+
+# Documentación local (no necesaria en repo)
+CONFIGURAR_*.md
+MIGRACION_*.md
+RESUMEN_*.md
+PASOS_INMEDIATOS.md
+PLAN_ACCION_PRODUCCION.md
+GOOGLE_SIGNIN_SETUP.md
+DELETE_ACCOUNT_IMPLEMENTATION.md
+INSTRUCCIONES_POLITICA_PRIVACIDAD.md
+REGENERAR_FIREBASE_OPTIONS.md
+
+# Backups y archivos temporales
+.backup_firebase_old/
+.claude/
+
+# Scripts locales
+scripts/
+
+# Supabase local (migraciones y config)
+supabase/
+
+# READMEs internos innecesarios
+lib/config/di/README.md
+assets/README.md

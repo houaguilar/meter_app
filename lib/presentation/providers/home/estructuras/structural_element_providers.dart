@@ -17,22 +17,22 @@ final List<StructuralElement> _structuralElements = [
   StructuralElement(
     id: '1',
     name: 'Columna',
-    image: AppImages.concretoImg,
+    image: AppImages.columnaConcretoImg,
     details: 'Las columnas son elementos estructurales verticales que transmiten cargas de compresión a la cimentación.',
   ),
   StructuralElement(
     id: '2',
     name: 'Viga',
-    image: AppImages.concretoImg,
+    image: AppImages.vigaConcretoImg,
     details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
   ),
   StructuralElement(
     id: '3',
     name: 'Zapata',
-    image: AppImages.concretoImg,
+    image: AppImages.zapataConcretoImg,
     details: 'Las vigas son elementos estructurales horizontales que soportan cargas transversales.',
   ),
-  StructuralElement(
+  /*StructuralElement(
     id: '4',
     name: 'Cimiento corrido',
     image: AppImages.concretoImg,
@@ -49,7 +49,7 @@ final List<StructuralElement> _structuralElements = [
     name: 'Solado',
     image: AppImages.concretoImg,
     details: 'Capa de concreto simple que se coloca sobre el terreno como base.',
-  ),
+  ),*/
 ];
 
 @riverpod
@@ -101,11 +101,17 @@ const Map<String, Map<String, double>> factoresConcreto = {
     "piedraConcreto": 0.53, // m³ por m³
     "agua": 0.186, // m³ por m³
   },
-  "280 kg/cm²": {
+  "245 kg/cm²": {
     "cemento": 11.5, // bolsas por m³
     "arenaGruesa": 0.5, // m³ por m³
     "piedraConcreto": 0.51, // m³ por m³
     "agua": 0.187, // m³ por m³
+  },
+  "280 kg/cm²": {
+    "cemento": 13.34, // bolsas por m³
+    "arenaGruesa": 0.45, // m³ por m³
+    "piedraConcreto": 0.51, // m³ por m³
+    "agua": 0.189, // m³ por m³
   },
 };
 

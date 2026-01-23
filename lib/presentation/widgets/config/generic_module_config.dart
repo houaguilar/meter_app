@@ -1,5 +1,3 @@
-// lib/presentation/widgets/config/generic_module_config.dart
-
 /// Configuración unificada para todos los módulos de la aplicación
 ///
 /// Centraliza breakpoints, animaciones, espaciado y configuraciones

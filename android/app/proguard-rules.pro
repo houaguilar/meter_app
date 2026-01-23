@@ -56,3 +56,31 @@
 -dontwarn kotlin.**
 -dontwarn kotlinx.**
 
+# Firebase
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+
+# Supabase / GoTrue (Auth)
+-keep class io.supabase.** { *; }
+-dontwarn io.supabase.**
+
+# Google Sign-In
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+
+# Flutter dotenv
+-keep class io.github.cdimascio.** { *; }
+
+# Isar Database
+-keep class dev.isar.** { *; }
+-dontwarn dev.isar.**
+
+# Image Picker
+-keep class io.flutter.plugins.imagepicker.** { *; }
+
+# URL Launcher
+-keep class io.flutter.plugins.urllauncher.** { *; }
+
+# Shared Preferences
+-keep class io.flutter.plugins.sharedpreferences.** { *; }
+

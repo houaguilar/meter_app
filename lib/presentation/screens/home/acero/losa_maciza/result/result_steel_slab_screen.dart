@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
@@ -6,7 +7,9 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../config/utils/pdf/pdf_factory.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/home/acero/losa_maciza/steel_slab_providers.dart';
+import '../../../../../widgets/widgets.dart';
 
 class ResultSteelSlabScreen extends ConsumerStatefulWidget {
   const ResultSteelSlabScreen({super.key});
@@ -285,7 +288,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
 
     if (slabs.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      context.pushNamed('map-screen-steel-slab');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+      //   context.pushNamed('map-screen-steel-slab');
     } else {
       _showErrorMessage('No hay datos de losas de acero');
     }
@@ -494,8 +498,17 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         description: 'Creando documento con los resultados',
       );
 
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
       // Generar PDF usando PDFFactory
-      final pdfFile = await PDFFactory.generateSteelSlabPDF(ref);
+      final pdfFile = await PDFFactory.generateSteelSlabPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       // Ocultar loader solo si el widget está montado
       if (mounted) {

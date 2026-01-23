@@ -30,7 +30,7 @@ class SteelColumnCalculationResult extends BaseSteelCalculationResult {
   /// ```dart
   /// totalStirrups = estribosDistribuciones + estribosResto
   /// ```
-  final int totalStirrups;
+  final double totalStirrups;
 
   /// Perímetro de un estribo individual en metros
   ///

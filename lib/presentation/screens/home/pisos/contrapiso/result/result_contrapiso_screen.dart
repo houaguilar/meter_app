@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/entities.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../widgets/widgets.dart';
 
 class ResultContrapisoScreen extends ConsumerStatefulWidget {
@@ -521,7 +523,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   void _handleProviderAction() {
     final pisos = ref.watch(contrapisoResultProvider);
     if (pisos.isNotEmpty) {
-      context.pushNamed('contrapiso-map-screen');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+    //  context.pushNamed('contrapiso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de contrapiso');
     }
@@ -657,7 +660,16 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateContrapisoPDF(ref);
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
+      final pdfFile = await PDFFactory.generateContrapisoPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
       final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
       if (result.status == ShareResultStatus.success) {

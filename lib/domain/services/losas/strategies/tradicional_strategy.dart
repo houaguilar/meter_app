@@ -21,8 +21,8 @@ class TradicionalStrategy extends LosaCalculationStrategy {
 
   /// Cantidad de ladrillos por m² según tipo
   static const Map<String, double> LADRILLOS_POR_M2 = {
-    'Ladrillo hueco': 11.11,
-    'Ladrillo casetón': 2.78,
+    'Ladrillo hueco': 8.33,
+    'Ladrillo casetón': 2.08,
   };
 
   /// Tipos de ladrillo válidos
@@ -37,7 +37,7 @@ class TradicionalStrategy extends LosaCalculationStrategy {
     final ratio = RATIOS_VOLUMEN_M2[losa.altura] ?? RATIOS_VOLUMEN_M2['17 cm']!;
 
     // Aplicar desperdicio de concreto
-    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto) ?? 5.0;
+    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto.trim()) ?? 5.0;
     final factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
     return area * ratio * factorDesperdicio;
@@ -72,8 +72,14 @@ class TradicionalStrategy extends LosaCalculationStrategy {
 
     final tipoLadrillo = losa.materialAligerante ?? 'Ladrillo hueco';
 
-    // Formato: "Ladrillo hueco 30×30×15 cm"
-    return '$tipoLadrillo 30×30×$altoLadrillo cm';
+    // Dimensiones según tipo de ladrillo
+    // Hueco: 30×30×(altura-5) cm
+    // Casetón: 120×30×(altura-5) cm
+    if (tipoLadrillo == 'Ladrillo casetón') {
+      return '$tipoLadrillo 120×30×$altoLadrillo cm';
+    } else {
+      return '$tipoLadrillo 30×30×$altoLadrillo cm';
+    }
   }
 
   @override

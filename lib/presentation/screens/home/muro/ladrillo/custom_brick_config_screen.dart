@@ -228,6 +228,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           SizedBox(
             height: 500,
             child: Stack(
+              clipBehavior: Clip.none,
               alignment: Alignment.center,
               children: [
                 // Ladrillo 3D central
@@ -249,7 +250,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 ),
                 Positioned(
                   bottom: 40,
-                  left: 20,
+                  right: 115,
                   child: _buildDimensionControl(
                     'Ancho',
                     _widthController,
@@ -263,7 +264,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
                 ),
                 Positioned(
                   bottom: 40,
-                  right: 20,
+                  left: 115,
                   child: _buildDimensionControl(
                     'Alto',
                     _heightController,
@@ -550,7 +551,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     );
 
     // Establecer el tipo como Custom
-    ref.read(tipoLadrilloProvider.notifier).selectLadrillo('Custom');
+    ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo('Custom');
 
     // Mostrar diálogo de guardado
     _showSaveDialog();

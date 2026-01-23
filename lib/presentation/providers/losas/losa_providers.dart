@@ -8,10 +8,6 @@ import '../../../domain/services/losas/losa_service.dart';
 
 part 'losa_providers.g.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// PROVIDERS DE SELECCIÓN Y CONFIGURACIÓN
-// ═══════════════════════════════════════════════════════════════════════════
-
 /// Provider para el tipo de losa seleccionado
 @riverpod
 class TipoLosaSelected extends _$TipoLosaSelected {
@@ -193,8 +189,14 @@ double cantidadCementoLosa(CantidadCementoLosaRef ref) {
   double total = 0.0;
   for (var losa in losas) {
     final service = LosaService(losa.tipoLosa);
-    total += service.calcularCemento(losa);
+    final cemento = service.calcularCemento(losa);
+    debugPrint('📊 Cemento para losa "${losa.description}": $cemento bolsas');
+    debugPrint('   - Área: ${service.calcularArea(losa)} m²');
+    debugPrint('   - Volumen concreto: ${service.calcularVolumenConcreto(losa)} m³');
+    debugPrint('   - Resistencia: ${losa.resistenciaConcreto}');
+    total += cemento;
   }
+  debugPrint('📊 Total cemento: $total bolsas → redondeado: ${total.ceil()} bolsas');
   return total;
 }
 
@@ -290,7 +292,10 @@ double volumenConcretoLosa(VolumenConcretoLosaRef ref) {
   double total = 0.0;
   for (var losa in losas) {
     final service = LosaService(losa.tipoLosa);
-    total += service.calcularVolumenConcreto(losa);
+    final volumen = service.calcularVolumenConcreto(losa);
+    debugPrint('📊 Volumen concreto para losa "${losa.description}": $volumen m³');
+    total += volumen;
   }
+  debugPrint('📊 Total volumen concreto: $total m³');
   return total;
 }

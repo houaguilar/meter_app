@@ -59,8 +59,8 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial(); // Inicializar el tutorial manager
-    _checkAndShowTutorial();
+  //  initializeTutorial(); // Inicializar el tutorial manager
+  //  _checkAndShowTutorial();
     //_checkTutorial();
   }
 
@@ -128,7 +128,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final tipoLadrillo = ref.watch(tipoLadrilloProvider);
+    final tipoLadrillo = ref.watch(tipoLadrilloNotifierProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -143,7 +143,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
       titleAppBar: 'Cálculo de Ladrillo',
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }
@@ -646,7 +646,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     try {
       await _createLadrilloData(tipoLadrillo);
       ref.watch(ladrilloResultProvider);
-      ref.watch(tipoLadrilloProvider);
+      ref.watch(tipoLadrilloNotifierProvider);
       context.pushNamed('ladrillo_results');
       context.showCalculationLoader(
         message: 'Calculando materiales',
@@ -689,7 +689,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   }
 
   Future<void> _createLadrilloData(String tipoLadrillo) async {
-    final tipoLadrilloActual = ref.read(tipoLadrilloProvider);
+    final tipoLadrilloActual = ref.read(tipoLadrilloNotifierProvider);
     print('🔍 Tipo ladrillo del provider: "$tipoLadrilloActual"');
 
     // ✅ Si el provider está vacío, usar el parámetro como fallback

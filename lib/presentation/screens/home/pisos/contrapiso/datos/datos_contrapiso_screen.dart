@@ -57,8 +57,8 @@ class _DatosContrapisoScreenState extends ConsumerState<DatosContrapisoScreen>
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial();
-    _checkAndShowTutorial();
+  //  initializeTutorial();
+  //  _checkAndShowTutorial();
   }
 
   void _checkAndShowTutorial() {
@@ -138,7 +138,7 @@ class _DatosContrapisoScreenState extends ConsumerState<DatosContrapisoScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
       titleAppBar: 'Cálculo de Contrapiso',
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }

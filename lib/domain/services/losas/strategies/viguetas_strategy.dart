@@ -7,7 +7,7 @@ import '../losa_calculation_strategy.dart';
 /// - Material aligerante: Bovedillas (fijo, pre-seleccionado)
 /// - Alturas: 17, 20, 25 cm
 /// - Resistencias: 210, 280 kg/cm²
-/// - 6.33 bovedillas por m²
+/// - Cantidad de bovedillas calculada dinámicamente según dimensiones
 class ViguetasStrategy extends LosaCalculationStrategy {
   /// Ratios de volumen de concreto por m² según altura
   ///
@@ -18,8 +18,28 @@ class ViguetasStrategy extends LosaCalculationStrategy {
     '25 cm': 0.085,
   };
 
-  /// Cantidad de bovedillas por m²
-  static const double BOVEDILLAS_POR_M2 = 6.33;
+  /// Dimensiones de bovedillas según altura (ancho en cm)
+  ///
+  /// Según Excel: Ancho = 39.5 cm para todas las alturas
+  static const Map<String, double> ANCHO_BOVEDILLA_CM = {
+    '17 cm': 39.5,
+    '20 cm': 39.5,
+    '25 cm': 39.5,
+  };
+
+  /// Dimensiones de bovedillas según altura (largo en cm)
+  ///
+  /// Según Excel: Largo = 20 cm para todas las alturas
+  static const Map<String, double> LARGO_BOVEDILLA_CM = {
+    '17 cm': 20.0,
+    '20 cm': 20.0,
+    '25 cm': 20.0,
+  };
+
+  /// Ancho de vigueta en metros
+  ///
+  /// Valor constante usado en el cálculo de bovedillas por m²
+  static const double ANCHO_VIGUETA_M = 0.10;
 
   /// Material fijo para este tipo de losa
   static const String MATERIAL_FIJO = 'Bovedillas';
@@ -30,7 +50,7 @@ class ViguetasStrategy extends LosaCalculationStrategy {
     final ratio = RATIOS_VOLUMEN_M2[losa.altura] ?? RATIOS_VOLUMEN_M2['17 cm']!;
 
     // Aplicar desperdicio de concreto
-    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto) ?? 5.0;
+    final desperdicioConcreto = double.tryParse(losa.desperdicioConcreto.trim()) ?? 5.0;
     final factorDesperdicio = 1 + (desperdicioConcreto / 100);
 
     return area * ratio * factorDesperdicio;
@@ -40,12 +60,24 @@ class ViguetasStrategy extends LosaCalculationStrategy {
   double calcularMaterialAligerante(Losa losa) {
     final area = calcularArea(losa);
 
+    // Calcular bovedillas por m² según dimensiones
+    // Fórmula Excel: CL = 1 / ((Ancho_bovedilla + Ancho_vigueta) × Largo_bovedilla)
+    final anchoCm = ANCHO_BOVEDILLA_CM[losa.altura] ?? ANCHO_BOVEDILLA_CM['17 cm']!;
+    final largoCm = LARGO_BOVEDILLA_CM[losa.altura] ?? LARGO_BOVEDILLA_CM['17 cm']!;
+
+    // Convertir a metros
+    final anchoM = anchoCm / 100.0;
+    final largoM = largoCm / 100.0;
+
+    // Calcular cantidad por m²
+    final bovedillasPorM2 = 1.0 / ((anchoM + ANCHO_VIGUETA_M) * largoM);
+
     // Aplicar desperdicio de bovedillas
     final desperdicioMaterial =
         double.tryParse(losa.desperdicioMaterialAligerante ?? '7') ?? 7.0;
     final factorDesperdicio = 1 + (desperdicioMaterial / 100);
 
-    return area * BOVEDILLAS_POR_M2 * factorDesperdicio;
+    return area * bovedillasPorM2 * factorDesperdicio;
   }
 
   @override

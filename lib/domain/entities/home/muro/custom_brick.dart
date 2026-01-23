@@ -1,4 +1,3 @@
-// lib/domain/entities/home/muro/custom_brick.dart
 import 'package:isar/isar.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 
@@ -9,7 +8,7 @@ class CustomBrick {
   Id id = Isar.autoIncrement;
 
   @Index()
-  late String customId; // UUID para identificación única
+  late String customId;
 
   @Index()
   late String name;

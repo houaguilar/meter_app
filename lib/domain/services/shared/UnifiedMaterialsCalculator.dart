@@ -12,10 +12,20 @@ import '../../entities/home/acero/viga/steel_beam.dart';
 import '../../entities/home/acero/losa_maciza/steel_slab.dart';
 import '../../entities/home/acero/zapata/steel_footing.dart';
 import '../../entities/home/acero/steel_constants.dart';
+import '../../entities/home/muro/tipo_ladrillo.dart' as enums;
 import '../losas/losa_service.dart';
 
 /// Calculadora unificada de materiales actualizada con los nuevos cálculos de los providers
 class UnifiedMaterialsCalculator {
+
+  /// Redondea un número hacia arriba con la cantidad de decimales especificada
+  /// Similar a la función ROUNDUP de Excel
+  static String _roundUp(double value, int decimals) {
+    final multiplier = (10.0 * decimals).toInt();
+    if (multiplier == 0) return value.ceil().toString();
+    final result = (value * multiplier).ceil() / multiplier;
+    return result.toStringAsFixed(decimals);
+  }
 
   /// Calcula materiales basado en el tipo de resultado
   static CalculationResult calculateMaterials(List<dynamic> results) {
@@ -69,19 +79,20 @@ class UnifiedMaterialsCalculator {
   // ═══════════════════════════════════════════════════════════════════════════
 
   static CalculationResult _calculateLadrilloMaterials(List<Ladrillo> ladrillos) {
-    // Especificaciones EXACTAS validadas contra Excel
-    const Map<String, Map<String, double>> especificacionesLadrillos = {
-      "King Kong": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-      "Pandereta": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-      "Artesanal": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
-      // Alias para compatibilidad
-      "Kingkong": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-      "Kingkong1": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-      "Kingkong2": {"largo": 24.0, "ancho": 13.0, "alto": 9.0},
-      "Pandereta1": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-      "Pandereta2": {"largo": 23.0, "ancho": 12.0, "alto": 9.0},
-      "Común": {"largo": 22.0, "ancho": 12.5, "alto": 7.5},
-    };
+    // 🔍 DEBUG: Log cuántos ladrillos se están procesando
+    print('🔍 [_calculateLadrilloMaterials] Procesando ${ladrillos.length} ladrillo(s)');
+    for (int i = 0; i < ladrillos.length; i++) {
+      final l = ladrillos[i];
+      print('   Ladrillo ${i + 1}:');
+      print('     - Tipo: "${l.tipoLadrillo}"');
+      print('     - Descripción: "${l.description}"');
+      print('     - brickLength: ${l.brickLength}');
+      print('     - brickWidth: ${l.brickWidth}');
+      print('     - brickHeight: ${l.brickHeight}');
+    }
+
+    // NOTA: Las dimensiones ahora vienen del ENUM TipoLadrillo
+    // Ya no se usa Map hardcodeado - ENUM es la única fuente de verdad
 
     // Factores EXACTOS validados contra Excel
     const Map<String, Map<String, double>> factoresMortero = {
@@ -125,13 +136,35 @@ class UnifiedMaterialsCalculator {
       final desperdicioLadrillo = (double.tryParse(ladrillo.factorDesperdicio) ?? 5.0) / 100;
       final desperdicioMortero = (double.tryParse(ladrillo.factorDesperdicioMortero) ?? 10.0) / 100;
 
-      // Obtener dimensiones del tipo de ladrillo
-      final tipoLadrilloKey = _normalizarTipoLadrillo(ladrillo.tipoLadrillo);
-      final specs = especificacionesLadrillos[tipoLadrilloKey] ?? especificacionesLadrillos["Pandereta"]!;
+      // Obtener dimensiones del tipo de ladrillo usando ENUM
+      final tipoEnum = _obtenerTipoLadrilloEnum(ladrillo.tipoLadrillo);
 
-      final largo = specs["largo"]!;
-      final ancho = specs["ancho"]!;
-      final alto = specs["alto"]!;
+      // Si es Custom Y tiene dimensiones guardadas, usarlas directamente
+      final double largo;
+      final double ancho;
+      final double alto;
+
+      if (tipoEnum == enums.TipoLadrillo.custom &&
+          ladrillo.brickLength != null &&
+          ladrillo.brickWidth != null &&
+          ladrillo.brickHeight != null) {
+        largo = ladrillo.brickLength!;
+        ancho = ladrillo.brickWidth!;
+        alto = ladrillo.brickHeight!;
+        print('✅ [UnifiedMaterialsCalculator] Custom brick - usando dimensiones guardadas: ${largo}×${ancho}×${alto} cm');
+      } else {
+        largo = tipoEnum.largo;
+        ancho = tipoEnum.ancho;
+        alto = tipoEnum.alto;
+        if (tipoEnum == enums.TipoLadrillo.custom) {
+          print('⚠️ [UnifiedMaterialsCalculator] Custom brick PERO dimensiones son NULL!');
+          print('   - tipoLadrillo: "${ladrillo.tipoLadrillo}"');
+          print('   - brickLength: ${ladrillo.brickLength}');
+          print('   - brickWidth: ${ladrillo.brickWidth}');
+          print('   - brickHeight: ${ladrillo.brickHeight}');
+          print('   - Fallback a enum: ${largo}×${ancho}×${alto} cm (esto causará resultados = 0)');
+        }
+      }
 
       // Determinar grosor del muro y dimensiones según forma
       double grosorMuro, dim1, dim2;
@@ -183,12 +216,12 @@ class UnifiedMaterialsCalculator {
       Material(
         description: 'Arena gruesa',
         unit: 'm³',
-        quantity: arenaTotal.toStringAsFixed(3),
+        quantity: _roundUp(arenaTotal, 1),
       ),
       Material(
         description: 'Agua',
         unit: 'm³',
-        quantity: aguaTotal.toStringAsFixed(3),
+        quantity: aguaTotal.toStringAsFixed(2),
       ),
       Material(
         description: 'Ladrillo',
@@ -296,9 +329,9 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: _roundUp(piedraTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = pisos.map((piso) => MeasurementData(
@@ -372,8 +405,8 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena fina', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena fina', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = pisos.map((piso) => MeasurementData(
@@ -439,9 +472,9 @@ class UnifiedMaterialsCalculator {
     // Construir lista de materiales
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: _roundUp(piedraTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
       Material(description: 'Aditivo plastificante', unit: 'L', quantity: aditivoTotal.toStringAsFixed(2)),
     ];
 
@@ -531,8 +564,8 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena fina', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena fina', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = tarrajeos.map((tarrajeo) => MeasurementData(
@@ -581,6 +614,12 @@ class UnifiedMaterialsCalculator {
         "piedraConcreto": 0.51,
         "agua": 0.187,
       },
+      "280 kg/cm²": {
+        "cemento": 13.34,
+        "arenaGruesa": 0.45,
+        "piedraConcreto": 0.51,
+        "agua": 0.189,
+      },
     };
 
     double totalVolumen = 0.0;
@@ -607,9 +646,9 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: _roundUp(piedraTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = columnas.map((columna) => MeasurementData(
@@ -656,6 +695,12 @@ class UnifiedMaterialsCalculator {
         "piedraConcreto": 0.51,
         "agua": 0.187,
       },
+      "280 kg/cm²": {
+        "cemento": 13.34,
+        "arenaGruesa": 0.45,
+        "piedraConcreto": 0.51,
+        "agua": 0.189,
+      },
     };
 
     double totalVolumen = 0.0;
@@ -682,9 +727,9 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: _roundUp(piedraTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = vigas.map((viga) => MeasurementData(
@@ -725,11 +770,17 @@ class UnifiedMaterialsCalculator {
         "piedraConcreto": 0.53,
         "agua": 0.186,
       },
-      "280 kg/cm²": {
+      "245 kg/cm²": {
         "cemento": 11.5,
         "arenaGruesa": 0.5,
         "piedraConcreto": 0.51,
         "agua": 0.187,
+      },
+      "280 kg/cm²": {
+        "cemento": 13.34,
+        "arenaGruesa": 0.45,
+        "piedraConcreto": 0.51,
+        "agua": 0.189,
       },
     };
 
@@ -757,9 +808,9 @@ class UnifiedMaterialsCalculator {
 
     final materials = <Material>[
       Material(description: 'Cemento', unit: 'bls', quantity: cementoTotal.ceil().toString()),
-      Material(description: 'Arena gruesa', unit: 'm³', quantity: arenaTotal.toStringAsFixed(3)),
-      Material(description: 'Piedra chancada', unit: 'm³', quantity: piedraTotal.toStringAsFixed(3)),
-      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(3)),
+      Material(description: 'Arena gruesa', unit: 'm³', quantity: _roundUp(arenaTotal, 1)),
+      Material(description: 'Piedra chancada', unit: 'm³', quantity: _roundUp(piedraTotal, 1)),
+      Material(description: 'Agua', unit: 'm³', quantity: aguaTotal.toStringAsFixed(2)),
     ];
 
     final measurements = zapatas.map((zapata) => MeasurementData(
@@ -1079,19 +1130,18 @@ class UnifiedMaterialsCalculator {
   // MÉTODOS AUXILIARES
   // ═══════════════════════════════════════════════════════════════════════════
 
-  /// Normaliza el tipo de ladrillo para la búsqueda en especificaciones
-  static String _normalizarTipoLadrillo(String tipo) {
-    final tipoLower = tipo.toLowerCase();
+  /// Obtiene el ENUM TipoLadrillo desde el nombre del tipo
+  static enums.TipoLadrillo _obtenerTipoLadrilloEnum(String tipo) {
+    // Intentar obtener desde el provider key primero
+    final tipoFromKey = enums.TipoLadrillo.fromProviderKey(tipo);
+    if (tipoFromKey != null) return tipoFromKey;
 
-    if (tipoLower.contains('king') || tipoLower.contains('kong')) {
-      return 'King Kong';
-    } else if (tipoLower.contains('pandereta')) {
-      return 'Pandereta';
-    } else if (tipoLower.contains('artesanal') || tipoLower.contains('común') || tipoLower.contains('comun')) {
-      return 'Artesanal';
-    } else {
-      return 'Pandereta'; // Default
-    }
+    // Intentar normalizar desde el nombre
+    final tipoFromNombre = enums.TipoLadrillo.fromNombre(tipo);
+    if (tipoFromNombre != null) return tipoFromNombre;
+
+    // Default: Pandereta1
+    return enums.TipoLadrillo.pandereta1;
   }
 
   /// Obtiene el área de un ladrillo

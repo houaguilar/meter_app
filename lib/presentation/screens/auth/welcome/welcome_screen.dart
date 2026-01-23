@@ -408,12 +408,12 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       children: [
         // Header flexible
         Flexible(
-          flex: 2,
+          flex: 1,
           child: _buildHeader(),
         ),
-        // PageView expandido
+        // PageView expandido - MÁS ESPACIO
         Expanded(
-          flex: 6,
+          flex: 8,
           child: _buildPageView(),
         ),
         // Indicadores con altura fija pero segura
@@ -421,9 +421,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
           height: 60,
           child: _buildPageIndicators(),
         ),
-        // Acciones flexibles
+        // Acciones flexibles - MENOS ESPACIO
         Flexible(
-          flex: 3,
+          flex: 2,
           child: _buildActionSection(),
         ),
       ],
@@ -513,17 +513,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 
   Widget _buildOnboardingPage(OnboardingPageData pageData, int index) {
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
             // Imagen con efecto hero
             Hero(
               tag: 'onboarding_image_$index',
               child: Container(
-                height: 160,
+                height: 400,
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: AppColors.white.withOpacity(0.1),
@@ -536,13 +535,17 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     ),
                   ],
                 ),
-                child: Center(
-                  child: _buildImage(pageData.imagePath),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(0),
+                    child: _buildImage(pageData.imagePath),
+                  ),
                 ),
               ),
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 50),
 
             // Título
             Text(
@@ -556,7 +559,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               textAlign: TextAlign.center,
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
 
             // Descripción
             Text(
@@ -571,63 +574,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
             ),
-
-            const SizedBox(height: 24),
-
-            // Características - Limitadas para evitar overflow
-       //     _buildFeaturesList(pageData.features.take(2).toList()),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildFeaturesList(List<String> features) {
-    return Column(
-      children: features.asMap().entries.map((entry) {
-        final index = entry.key;
-        final feature = entry.value;
-
-        return TweenAnimationBuilder<double>(
-          duration: Duration(milliseconds: 300 + (index * 100)),
-          tween: Tween(begin: 0.0, end: 1.0),
-          builder: (context, value, child) {
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - value)),
-              child: Opacity(
-                opacity: value,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: AppColors.white,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          feature,
-                          style: GoogleFonts.poppins(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.white.withOpacity(0.8),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        );
-      }).toList(),
-    );
+      );
   }
 
   Widget _buildImage(String imagePath) {
@@ -635,16 +584,18 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     if (imagePath.toLowerCase().endsWith('.svg')) {
       return SvgPicture.asset(
         imagePath,
-        height: 100,
-        color: AppColors.white,
+        fit: BoxFit.contain,
+        width: double.infinity,
+        height: double.infinity,
+        alignment: Alignment.center,
+        allowDrawingOutsideViewBox: false,
       );
     } else {
       return Image.asset(
         imagePath,
-        height: 200,
         fit: BoxFit.contain,
-        color: AppColors.white,
-        colorBlendMode: BlendMode.srcIn,
+        width: double.infinity,
+        height: double.infinity,
       );
     }
   }

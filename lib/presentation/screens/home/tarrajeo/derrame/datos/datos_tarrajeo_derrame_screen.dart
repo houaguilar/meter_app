@@ -58,8 +58,8 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
     super.initState();
     _initializeControllers();
     _initializeAnimations();
-    initializeTutorial();
-    _checkAndShowTutorial();
+  //  initializeTutorial();
+  //  _checkAndShowTutorial();
   }
 
   void _checkAndShowTutorial() {
@@ -140,7 +140,7 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
   PreferredSizeWidget _buildAppBar() {
     return AppBarWidget(
       titleAppBar: 'Cálculo de Tarrajeo Derrame',
-      isVisibleTutorial: true,
+      isVisibleTutorial: false,
       showTutorial: _showTutorialManually,
     );
   }

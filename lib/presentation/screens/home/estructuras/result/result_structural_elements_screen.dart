@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -8,8 +11,16 @@ import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../config/theme/theme.dart';
+import '../../../../blocs/profile/profile_bloc.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
 import '../../../../widgets/widgets.dart';
+
+/// Redondea un número hacia arriba con la cantidad de decimales especificada
+/// Similar a la función ROUNDUP de Excel
+double roundUp(double value, int decimals) {
+  final multiplier = pow(10, decimals).toInt();
+  return (value * multiplier).ceil() / multiplier;
+}
 
 class ResultStructuralElementsScreen extends ConsumerStatefulWidget {
   const ResultStructuralElementsScreen({super.key});
@@ -384,11 +395,11 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         },
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-          _buildTableRow(['Cemento', 'bls.', cemento.toStringAsFixed(1)]),
-          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra chancada 3/4"', 'm³', piedraChancada.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra de zanja (máx. 10")', 'm³', piedraZanja.toStringAsFixed(1)]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(1)]),
+          _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 1).toString()]),
+          _buildTableRow(['Piedra de zanja (máx. 10")', 'm³', roundUp(piedraZanja, 1).toString()]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
         ],
       );
     } else if (tipoElemento == 'solado') {
@@ -405,10 +416,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         },
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-          _buildTableRow(['Cemento', 'bls.', cemento.toStringAsFixed(1)]),
-          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra chancada', 'm³', piedraChancada.toStringAsFixed(1)]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(1)]),
+          _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
+          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedraChancada, 1).toString()]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
         ],
       );
     } else if (tipoElemento == 'sobrecimiento') {
@@ -427,11 +438,11 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         },
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-          _buildTableRow(['Cemento', 'bls.', cemento.toStringAsFixed(1)]),
-          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra chancada 3/4"', 'm³', piedraChancada.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra grande (máx. 10")', 'm³', piedraGrande.toStringAsFixed(1)]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(1)]),
+          _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 1).toString()]),
+          _buildTableRow(['Piedra grande (máx. 10")', 'm³', roundUp(piedraGrande, 1).toString()]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
         ],
       );
     } else {
@@ -449,10 +460,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         },
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
-          _buildTableRow(['Cemento', 'bls.', cemento.toStringAsFixed(1)]),
-          _buildTableRow(['Arena gruesa', 'm³', arena.toStringAsFixed(1)]),
-          _buildTableRow(['Piedra chancada', 'm³', piedra.toStringAsFixed(1)]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(1)]),
+          _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
+          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 1).toString()]),
+          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
         ],
       );
     }
@@ -859,7 +870,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   void _handleProviderAction() {
     final tipoElemento = ref.watch(tipoStructuralElementProvider);
     if (tipoElemento.isNotEmpty) {
-      context.pushNamed('map-screen-structural');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+      //   context.pushNamed('map-screen-structural');
     } else {
       _showErrorMessage('No hay datos de elementos estructurales');
     }
@@ -874,7 +886,16 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateStructuralElementPDF(ref);
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
+      final pdfFile = await PDFFactory.generateStructuralElementPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
 
       final xFile = XFile(pdfFile.path);
 

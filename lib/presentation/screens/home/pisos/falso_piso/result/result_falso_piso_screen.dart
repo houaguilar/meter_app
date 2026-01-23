@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -9,8 +12,16 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../domain/entities/home/piso/piso.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/pisos/falso_piso_providers.dart';
 import '../../../../../widgets/widgets.dart';
+
+/// Redondea un número hacia arriba con la cantidad de decimales especificada
+/// Similar a la función ROUNDUP de Excel
+double roundUp(double value, int decimals) {
+  final multiplier = pow(10, decimals).toInt();
+  return (value * multiplier).ceil() / multiplier;
+}
 
 class ResultFalsoPisoScreen extends ConsumerStatefulWidget {
   const ResultFalsoPisoScreen({super.key});
@@ -569,7 +580,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   void _handleProviderAction() {
     final falsosPisos = ref.watch(falsoPisoResultProvider);
     if (falsosPisos.isNotEmpty) {
-      context.pushNamed('falso-piso-map-screen');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+   //   context.pushNamed('falso-piso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de falso piso');
     }
@@ -706,7 +718,16 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateFalsoPisoPDF(ref);
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
+      final pdfFile = await PDFFactory.generateFalsoPisoPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
       final xFile = XFile(pdfFile.path);
 
       context.hideLoader();

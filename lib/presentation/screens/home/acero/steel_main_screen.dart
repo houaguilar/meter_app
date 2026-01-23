@@ -105,20 +105,33 @@ class _SteelMainScreenState extends ConsumerState<SteelMainScreen>
 
   void _navigateToSteelElement(BuildContext context, dynamic element) {
     switch (element.id) {
-      case '1': // Acero en Viga
-        context.pushNamed('steel-beam');
+      case '1': // Acero en Viga - Temporalmente deshabilitado
+        FeatureStatusDialog.showTemporarilyDisabled(
+          context,
+          title: 'Acero en Viga',
+          message: 'Esta funcionalidad está temporalmente deshabilitada mientras realizamos mejoras en el módulo.',
+        );
         break;
-      case '2': // Acero en Columna
+      case '2': // Acero en Columna - Disponible
         context.pushNamed('steel-column');
         break;
-      case '3': // Acero en Zapata
-        context.pushNamed('steel-footing');
+      case '3': // Acero en Zapata - Temporalmente deshabilitado
+        FeatureStatusDialog.showTemporarilyDisabled(
+          context,
+          title: 'Acero en Zapata',
+          message: 'Esta funcionalidad está temporalmente deshabilitada mientras realizamos mejoras en el módulo.',
+        );
         break;
-      case '4': // Acero en Zapata
-        context.pushNamed('steel-slab');
+      case '4': // Acero en Losa Maciza - Temporalmente deshabilitado
+        FeatureStatusDialog.showTemporarilyDisabled(
+          context,
+          title: 'Acero en Losa Maciza',
+          message: 'Esta funcionalidad está temporalmente deshabilitada mientras realizamos mejoras en el módulo.',
+        );
         break;
         default:
-          context.pushNamed('steel-beam');
+          // Por defecto, mostrar diálogo de no disponible
+          FeatureStatusDialog.showTemporarilyDisabled(context);
           break;
     }
   }

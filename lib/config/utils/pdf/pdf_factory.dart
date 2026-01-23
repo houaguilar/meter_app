@@ -17,7 +17,7 @@ import 'pdf_generator.dart';
 class PDFFactory {
 
   /// Genera PDF para resultados de ladrillos
-  static Future<File> generateLadrilloPDF(WidgetRef ref) async {
+  static Future<File> generateLadrilloPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final ladrillos = ref.read(ladrilloResultProvider);
     final materials = ref.read(ladrilloMaterialsProvider);
 
@@ -32,6 +32,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Muro',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -75,7 +76,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de losas (sistema unificado: 3 tipos)
-  static Future<File> generateLosaAligeradaPDF(WidgetRef ref) async {
+  static Future<File> generateLosaAligeradaPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final losas = ref.read(losaResultProvider);
 
     if (losas.isEmpty) {
@@ -95,6 +96,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Losa Aligerada',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -141,7 +143,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de falso piso
-  static Future<File> generateFalsoPisoPDF(WidgetRef ref) async {
+  static Future<File> generateFalsoPisoPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final falsosPisos = ref.read(falsoPisoResultProvider);
     final materials = ref.read(falsoPisoMaterialsProvider);  // ✅ Usar provider correcto
     final areas = ref.read(areaFalsoPisoProvider);  // ✅ Nuevo provider para áreas
@@ -157,6 +159,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Falso Piso',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -204,7 +207,7 @@ class PDFFactory {
     );
   }
   /// Genera PDF para resultados de contrapiso
-  static Future<File> generateContrapisoPDF(WidgetRef ref) async {
+  static Future<File> generateContrapisoPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final contrapisos = ref.read(contrapisoResultProvider);
     final materials = ref.read(contrapisoMaterialsProvider);  // ✅ Usar el provider correcto
     final areas = ref.read(areaContrapisoProvider);  // ✅ Nuevo provider para áreas
@@ -220,6 +223,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Contrapiso',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -263,7 +267,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de tarrajeo
-  static Future<File> generateTarrajeoPDF(WidgetRef ref) async {
+  static Future<File> generateTarrajeoPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final tarrajeos = ref.read(tarrajeoResultProvider);
     final materiales = ref.read(tarrajeoMaterialesProvider);
     final metrados = ref.read(tarrajeoMetradosProvider);
@@ -279,6 +283,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Tarrajeo',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -318,7 +323,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de elementos estructurales
-  static Future<File> generateStructuralElementPDF(WidgetRef ref) async {
+  static Future<File> generateStructuralElementPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final tipoElemento = ref.read(tipoStructuralElementProvider);
 
     if (tipoElemento.isEmpty) {
@@ -345,6 +350,7 @@ class PDFFactory {
         proyecto: 'Proyecto de Construcción',
         obra: 'Casa de campo',
         partida: 'Columna',
+        nombreUsuario: nombreUsuario,
         materiales: [
           MaterialItem(
             descripcion: 'Cemento',
@@ -396,6 +402,7 @@ class PDFFactory {
         proyecto: 'Proyecto de Construcción',
         obra: 'Casa de campo',
         partida: 'Viga',
+        nombreUsuario: nombreUsuario,
         materiales: [
           MaterialItem(
             descripcion: 'Cemento ',
@@ -448,6 +455,7 @@ class PDFFactory {
         proyecto: 'Proyecto de Construcción',
         obra: 'Casa de campo',
         partida: 'Sobrecimiento',
+        nombreUsuario: nombreUsuario,
         materiales: [
           MaterialItem(
             descripcion: 'Cemento',
@@ -505,6 +513,7 @@ class PDFFactory {
         proyecto: 'Proyecto de Construcción',
         obra: 'Casa de campo',
         partida: 'Cimiento Corrido',
+        nombreUsuario: nombreUsuario,
         materiales: [
           MaterialItem(
             descripcion: 'Cemento',
@@ -561,6 +570,7 @@ class PDFFactory {
         proyecto: 'Proyecto de Construcción',
         obra: 'Casa de campo',
         partida: 'Solado',
+        nombreUsuario: nombreUsuario,
         materiales: [
           MaterialItem(
             descripcion: 'Cemento',
@@ -675,7 +685,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de tarrajeo derrame
-  static Future<File> generateTarrajeoDerrameoPDF(WidgetRef ref) async {
+  static Future<File> generateTarrajeoDerrameoPDF(WidgetRef ref, {String? nombreUsuario}) async {
     final tarrajeos = ref.read(tarrajeoDerrameResultProvider);
     final materiales = ref.read(tarrajeoDerrrameMaterialesProvider);
     final metrados = ref.read(tarrajeoDerrameMetradosProvider);
@@ -691,6 +701,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Tarrajeo Derrame',
+      nombreUsuario: nombreUsuario,
       materiales: [
         MaterialItem(
           descripcion: 'Cemento',
@@ -729,7 +740,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de columna de acero
-  static Future<File> generateSteelColumnPDF(WidgetRef ref) async {
+  static Future<File> generateSteelColumnPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final columns = ref.read(steelColumnResultProvider);
     print('🔍 generateSteelColumnPDF - Columnas en provider: ${columns.length}');
@@ -775,6 +786,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Columnas de Acero',
+      nombreUsuario: nombreUsuario,
       materiales: materiales,
       metrado: metrado,
       observaciones: [
@@ -792,7 +804,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de viga de acero
-  static Future<File> generateSteelBeamPDF(WidgetRef ref) async {
+  static Future<File> generateSteelBeamPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final beams = ref.read(steelBeamResultProvider);
     print('🔍 generateSteelBeamPDF - Vigas en provider: ${beams.length}');
@@ -838,6 +850,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Vigas de Acero',
+      nombreUsuario: nombreUsuario,
       materiales: materiales,
       metrado: metrado,
       observaciones: [
@@ -855,7 +868,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de losa maciza de acero
-  static Future<File> generateSteelSlabPDF(WidgetRef ref) async {
+  static Future<File> generateSteelSlabPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final slabs = ref.read(steelSlabResultProvider);
     print('🔍 generateSteelSlabPDF - Losas en provider: ${slabs.length}');
@@ -901,6 +914,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Losas Macizas de Acero',
+      nombreUsuario: nombreUsuario,
       materiales: materiales,
       metrado: metrado,
       observaciones: [
@@ -917,7 +931,7 @@ class PDFFactory {
   }
 
   /// Genera PDF para resultados de zapata de acero
-  static Future<File> generateSteelFootingPDF(WidgetRef ref) async {
+  static Future<File> generateSteelFootingPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final footings = ref.read(steelFootingResultProvider);
     print('🔍 generateSteelFootingPDF - Zapatas en provider: ${footings.length}');
@@ -963,6 +977,7 @@ class PDFFactory {
       proyecto: 'Proyecto de Construcción',
       obra: 'Casa de campo',
       partida: 'Zapatas de Acero',
+      nombreUsuario: nombreUsuario,
       materiales: materiales,
       metrado: metrado,
       observaciones: [

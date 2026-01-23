@@ -29,8 +29,8 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.194976078807-6oevpfa8e61mtprl13akdf332rf48edd</string>
-				<string>com.jrd.metrashop</string>
+				<string>com.googleusercontent.apps.265588480754-c6lg60ap7njpjnbjtujemugr28b9ujp2</string>
+				<string>com.mts.metrashop</string>
 			</array>
 		</dict>
 	</array>
@@ -49,11 +49,6 @@
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>La aplicación necesita acceso a tu cámara para tomar fotos del negocio y registrarte como proveedor.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
@@ -63,11 +58,11 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>La aplicación necesita acceso a tu ubicación para mostrar el mapa correctamente.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>We need access to your microphone to record audio.</string>
+	<string>La aplicación necesita acceso a tu micrófono para grabar audio.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>We need access to your photo library to save photos.</string>
+	<string>La aplicación necesita acceso a tu galería de fotos para guardar imágenes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need access to your photo library to select photos.</string>
+	<string>La aplicación necesita acceso a tu galería de fotos para seleccionar imágenes.</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

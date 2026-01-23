@@ -1,4 +1,3 @@
-// lib/presentation/screens/auth/login/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +8,8 @@ import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/validators.dart';
+import '../../../../domain/usecases/use_cases.dart';
+import '../../../../init_dependencies.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../widgets/enhanced_auth_text_field.dart';
@@ -349,11 +350,20 @@ class _LoginScreenState extends State<LoginScreen>
       ]);
     } catch (e) {
       if (mounted) {
-        AuthErrorHandler.handleGoogleSignInError(context, e.toString());
+        final errorString = e.toString().toLowerCase();
 
-        _scaleAnimationController.forward().then((_) {
-          _scaleAnimationController.reverse();
-        });
+        // Si el usuario canceló, no mostrar error ni incrementar intentos
+        final isCancellation = errorString.contains('sign_in_canceled') ||
+            errorString.contains('cancelled') ||
+            errorString.contains('canceled');
+
+        if (!isCancellation) {
+          AuthErrorHandler.handleGoogleSignInError(context, e.toString());
+
+          _scaleAnimationController.forward().then((_) {
+            _scaleAnimationController.reverse();
+          });
+        }
       }
     } finally {
       if (mounted) {
@@ -513,6 +523,9 @@ class _LoginScreenState extends State<LoginScreen>
   void _showForgotPasswordDialog() {
     HapticFeedback.lightImpact();
 
+    // Guardar referencia al contexto del Scaffold principal
+    final scaffoldContext = context;
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -564,11 +577,116 @@ class _LoginScreenState extends State<LoginScreen>
               child: Text('Cancelar'),
             ),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _showSuccessSnackBar(
-                  'Si existe una cuenta con ese email, recibirás un enlace de recuperación.',
+              onPressed: () async {
+                final email = emailController.text.trim();
+                final dialogContext = context;
+
+                if (email.isEmpty || !email.contains('@')) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(
+                      content: Text('Por favor, introduce un email válido'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                  return;
+                }
+
+                // Cerrar el diálogo ANTES de hacer la operación async
+                Navigator.of(dialogContext).pop();
+
+                // Mostrar indicador de carga en el Scaffold principal
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                    content: Row(
+                      children: [
+                        SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text('Enviando correo de recuperación...'),
+                      ],
+                    ),
+                    backgroundColor: AppColors.blueMetraShop,
+                    duration: const Duration(seconds: 3),
+                  ),
                 );
+
+                try {
+                  // Enviar email de recuperación usando Supabase
+                  final resetPasswordUseCase = serviceLocator<ResetPasswordForEmail>();
+                  final result = await resetPasswordUseCase(
+                    ResetPasswordParams(email: email),
+                  );
+
+                  if (mounted) {
+                    result.fold(
+                      // Error
+                      (failure) {
+                        ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                          SnackBar(
+                            content: Text(failure.message ?? 'Error al enviar código'),
+                            backgroundColor: AppColors.error,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                      // Éxito
+                      (_) {
+                        ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
+                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              children: [
+                                const Icon(Icons.check_circle, color: AppColors.white, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text('Código de verificación enviado a tu email.'),
+                                ),
+                              ],
+                            ),
+                            backgroundColor: AppColors.success,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+
+                        // Navegar a la pantalla de OTP
+                        Future.delayed(const Duration(milliseconds: 800), () {
+                          if (mounted) {
+                            scaffoldContext.pushNamed(
+                              'reset-password-otp',
+                              queryParameters: {'email': email},
+                            );
+                          }
+                        });
+                      },
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
+                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: AppColors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text('Si existe una cuenta con ese email, recibirás un correo de recuperación.'),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: AppColors.success,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,

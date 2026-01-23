@@ -16,6 +16,7 @@ import '../../blocs/premium/premium_bloc.dart';
 import '../../widgets/premium/premium_feature_widget.dart';
 import '../../widgets/premium/premium_paywall_screen.dart';
 import '../../widgets/premium/premium_status_indicator.dart';
+import '../../widgets/widgets.dart';
 import '../mapa/profile/provider_profile_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -140,97 +141,7 @@ class _PerfilScreenState extends State<PerfilScreen>
       showSnackBar(context, 'Perfil actualizado correctamente');
     }
   }
-
-  Widget _buildPremiumDebugInfo() {
-    if (!AppConfig.isDevelopment) return const SizedBox.shrink();
-
-    return BlocBuilder<PremiumBloc, PremiumState>(
-      builder: (context, premiumState) {
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.red.shade50,
-            border: Border.all(color: Colors.red.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '🔍 DEBUG PREMIUM STATE:',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red.shade700,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'State Type: ${premiumState.runtimeType}',
-                style: TextStyle(fontSize: 10, color: Colors.red.shade600),
-              ),
-              if (premiumState is PremiumLoaded) ...[
-                Text(
-                  'Is Premium: ${premiumState.status.isPremium}',
-                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
-                ),
-                Text(
-                  'Source: ${premiumState.status.source}',
-                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
-                ),
-                Text(
-                  'Until: ${premiumState.status.premiumUntil}',
-                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
-                ),
-                Text(
-                  'Is Active: ${premiumState.status.isActive}',
-                  style: TextStyle(fontSize: 10, color: Colors.red.shade600),
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.read<PremiumBloc>().add(LoadPremiumStatus());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                      ),
-                      child: const Text('Refresh', style: TextStyle(fontSize: 10)),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PremiumPaywallScreen(),
-                            fullscreenDialog: true,
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                      ),
-                      child: const Text('Paywall', style: TextStyle(fontSize: 10)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+  
   Widget _buildProfileContent(BuildContext context, ProfileState state) {
     return RefreshIndicator(
       onRefresh: _onRefresh,
@@ -240,9 +151,6 @@ class _PerfilScreenState extends State<PerfilScreen>
           _buildSliverAppBar(state),
           SliverToBoxAdapter(
             child: _buildMainContent(state),
-          ),
-          SliverToBoxAdapter(
-            child: _buildPremiumDebugInfo(),
           ),
         ],
       ),
@@ -484,13 +392,14 @@ class _PerfilScreenState extends State<PerfilScreen>
                 // CTA Premium
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
+                    FeatureStatusDialog.showInDevelopment(context);
+                    /*Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const PremiumPaywallScreen(),
                         fullscreenDialog: true,
                       ),
-                    );
+                    );*/
                   },
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1022,39 +931,6 @@ class _PerfilScreenState extends State<PerfilScreen>
               ),
               child: Column(
                 children: [
-                  PremiumFeatureWidget(
-                    featureName: 'Análisis Avanzados desde Perfil',
-                    fallback: _ActionItem(
-                      icon: Icons.analytics_outlined,
-                      title: 'Análisis básicos',
-                      subtitle: 'Estadísticas limitadas • Actualiza a Premium',
-                      color: Colors.grey,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const PremiumPaywallScreen(),
-                            fullscreenDialog: true,
-                          ),
-                        );
-                      },
-                    ),
-                    child: _ActionItem(
-                      icon: Icons.analytics_rounded,
-                      title: 'Análisis avanzados',
-                      subtitle: 'Estadísticas detalladas y reportes premium',
-                      color: Colors.purple,
-                      onTap: () {
-                        // Navegar a análisis premium
-                        showSnackBar(context, 'Abriendo análisis premium...');
-                      },
-                    ),
-                  ),
-
-                  // Divisor
-                  const Divider(height: 1, color: AppColors.border),
-
-                  // Sección de Proveedor
                   _buildProviderSection(locationsState),
                 ],
               ),
@@ -1103,14 +979,15 @@ class _PerfilScreenState extends State<PerfilScreen>
             title: 'Tiendas oficiales',
             subtitle: 'Explora nuestras tiendas asociadas',
             color: AppColors.secondary,
-            onTap: () => _showComingSoon('Tiendas oficiales'),
+            onTap: () => FeatureStatusDialog.showComingSoon(context),
           ),
           _ActionItem(
             icon: Icons.add_business_outlined,
             title: 'Registrarme como proveedor',
             subtitle: 'Únete a nuestra red de proveedores',
             color: AppColors.accent,
-            onTap: () => context.pushNamed('register-location'),
+            onTap: () => FeatureStatusDialog.showInDevelopment(context),
+          //  onTap: () => context.pushNamed('register-location'),
           ),
         ]);
       } else {
@@ -1517,13 +1394,14 @@ class _PerfilScreenState extends State<PerfilScreen>
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                Navigator.push(
+                FeatureStatusDialog.showInDevelopment(context);
+                /*Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const PremiumPaywallScreen(),
                     fullscreenDialog: true,
                   ),
-                );
+                );*/
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.purple.shade600,
@@ -1605,9 +1483,6 @@ class _PerfilScreenState extends State<PerfilScreen>
           ),
         ],
       ),
-      /*child: Column(
-        children: actions.map((action) => _buildActionRow(action, actions.last == action)).toList(),
-      ),*/
       child: Column(
         children: actions.asMap().entries.map((entry) {
           final index = entry.key;
@@ -1652,7 +1527,7 @@ class _PerfilScreenState extends State<PerfilScreen>
             title: 'Privacidad y seguridad',
             subtitle: 'Administra la seguridad de tu cuenta',
             color: AppColors.primary,
-            onTap: () => _showComingSoon('Configuración de privacidad'),
+            onTap: () => context.pushNamed('privacy-legal'),
           ),
         ]),
 

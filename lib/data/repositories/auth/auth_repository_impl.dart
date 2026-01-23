@@ -186,4 +186,77 @@ class AuthRepositoryImpl implements AuthRepository {
       return left(Failure(message: e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount({required String password}) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.deleteAccount(password: password);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPasswordForEmail(String email) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.resetPasswordForEmail(email);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyOTP({required String email, required String token}) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.verifyOTP(email: email, token: token);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resendOTP(String email) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.resendOTP(email);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyOTPAndUpdatePassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.verifyOTPAndUpdatePassword(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+      );
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
 }

@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -9,9 +12,18 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../../../config/theme/theme.dart';
 import '../../../../../../config/utils/pdf/pdf_factory.dart';
 import '../../../../../../data/models/models.dart';
+import '../../../../../../domain/entities/home/muro/tipo_ladrillo.dart';
+import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../providers/home/muro/custom_brick_providers.dart';
 import '../../../../../widgets/widgets.dart';
+
+/// Redondea un número hacia arriba con la cantidad de decimales especificada
+/// Similar a la función ROUNDUP de Excel
+double roundUp(double value, int decimals) {
+  final multiplier = pow(10, decimals).toInt();
+  return (value * multiplier).ceil() / multiplier;
+}
 
 class ResultLadrilloScreen extends ConsumerStatefulWidget {
   const ResultLadrilloScreen({super.key});
@@ -373,8 +385,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
         _buildTableRow([_getTipoLadrilloDisplay(), 'und', materials.ladrillos.toStringAsFixed(0)]),
         _buildTableRow(['Cemento', 'bls', materials.cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', materials.arena.toStringAsFixed(1)]),
-        _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(1)]),
+        _buildTableRow(['Arena gruesa', 'm³', roundUp(materials.arena, 1).toString()]),
+        _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
       ],
     );
   }
@@ -540,22 +552,21 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   }
 
   String _getTipoLadrilloDisplay() {
-    final tipoLadrilloId = ref.watch(tipoLadrilloProvider);
+    final tipoLadrilloId = ref.watch(tipoLadrilloNotifierProvider);
 
-    switch (tipoLadrilloId) {
-      case 'Pandereta1':
-      case 'Pandereta2':
-        return 'Ladrillos Pandereta';
-      case 'Kingkong1':
-      case 'Kingkong2':
-        return 'Ladrillos King Kong';
-      case 'Custom':
-        // Para ladrillos custom, mostrar el nombre personalizado
-        final customConfig = ref.watch(customBrickDimensionsProvider);
-        return '${customConfig.customName} (${customConfig.length.toStringAsFixed(1)}×${customConfig.width.toStringAsFixed(1)}×${customConfig.height.toStringAsFixed(1)} cm)';
-      default:
-        return 'Ladrillos';
+    // Obtener el tipo desde el ENUM
+    final tipo = TipoLadrillo.fromProviderKey(tipoLadrilloId);
+
+    if (tipo == null) return 'Ladrillos';
+
+    // Para ladrillos custom, mostrar el nombre personalizado con dimensiones
+    if (tipo == TipoLadrillo.custom) {
+      final customConfig = ref.watch(customBrickDimensionsProvider);
+      return '${customConfig.customName} (${customConfig.length.toStringAsFixed(1)}×${customConfig.width.toStringAsFixed(1)}×${customConfig.height.toStringAsFixed(1)} cm)';
     }
+
+    // Para otros tipos, usar el nombre del ENUM
+    return tipo.resultName;
   }
 
   String _getTipoAsentado() {
@@ -585,7 +596,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   void _handleProviderAction() {
     final ladrillos = ref.watch(ladrilloResultProvider);
     if (ladrillos.isNotEmpty) {
-      context.pushNamed('map-screen-2');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+   //   context.pushNamed('map-screen-2');
     } else {
       _showErrorSnackBar('No hay datos de ladrillos');
     }
@@ -721,7 +733,16 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         description: 'Creando documento con los resultados',
       );
 
-      final pdfFile = await PDFFactory.generateLadrilloPDF(ref);
+      // Obtener nombre del usuario del ProfileBloc
+      final profileState = context.read<ProfileBloc>().state;
+      final nombreUsuario = profileState is ProfileLoaded
+          ? profileState.userProfile.name
+          : null;
+
+      final pdfFile = await PDFFactory.generateLadrilloPDF(
+        ref,
+        nombreUsuario: nombreUsuario,
+      );
       final result = await Share.shareXFiles([XFile(pdfFile.path)]);
 
       if (result.status == ShareResultStatus.success) {

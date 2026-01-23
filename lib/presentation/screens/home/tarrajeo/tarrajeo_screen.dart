@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/tarrajeo/tarrajeo_screen_unified.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -167,7 +166,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
 
   /// Determina si un revestimiento está disponible
   bool _isCoatingAvailable(String coatingId) {
-    const availableIds = ['1', '2']; // Tarrajeo normal y Yeso
+    const availableIds = ['1', '2', '3', '4', '5', '6']; // Tarrajeo normal y Yeso
     return availableIds.contains(coatingId);
   }
 

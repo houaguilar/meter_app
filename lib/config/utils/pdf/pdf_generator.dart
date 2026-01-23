@@ -25,6 +25,11 @@ class MetraShopPDFGenerator {
       final Uint8List? logoBytes = await _loadLogo();
       print('🔧 Logo cargado: ${logoBytes != null}');
 
+      // Cargar footer con logos de tiendas
+      print('🔧 Cargando footer...');
+      final pw.Widget footer = await _buildFooter();
+      print('🔧 Footer cargado');
+
       print('🔧 Construyendo página PDF...');
       pdf.addPage(
         pw.Page(
@@ -57,9 +62,9 @@ class MetraShopPDFGenerator {
                 pw.SizedBox(height: 25),
               ],
 
-              // Marcas aliadas
+              // Footer con descarga de app y sitio web
               pw.Spacer(),
-              _buildFooter(),
+              footer,
             ],
           ),
         ),
@@ -86,10 +91,33 @@ class MetraShopPDFGenerator {
   }
 
   /// Carga el logo de MetraShop
+  /// Solo soporta formatos rasterizados (PNG, JPEG). SVG no está soportado por la librería pdf.
   static Future<Uint8List?> _loadLogo() async {
     try {
+      // La librería pdf NO soporta SVG
+      if (_logoPath.toLowerCase().endsWith('.svg')) {
+        print('⚠️ Logo SVG no soportado para PDF: $_logoPath - usando placeholder');
+        return null;
+      }
+
       final ByteData data = await rootBundle.load(_logoPath);
-      return data.buffer.asUint8List();
+      final bytes = data.buffer.asUint8List();
+
+      // Validación: verificar que los bytes correspondan a PNG o JPEG
+      if (bytes.length < 4) {
+        print('⚠️ Archivo de logo muy pequeño: $_logoPath');
+        return null;
+      }
+
+      final isPng = bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47;
+      final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
+
+      if (!isPng && !isJpeg) {
+        print('⚠️ Formato de logo no reconocido (no es PNG ni JPEG): $_logoPath');
+        return null;
+      }
+
+      return bytes;
     } catch (e) {
       print('⚠️ No se pudo cargar el logo: $e');
       return null;
@@ -158,25 +186,6 @@ class MetraShopPDFGenerator {
                 ),
               ),
             ],
-          ),
-        ),
-
-        // QR Code placeholder
-        pw.Container(
-          width: 60,
-          height: 60,
-          decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: PdfColors.grey400),
-            borderRadius: pw.BorderRadius.circular(4),
-          ),
-          child: pw.Center(
-            child: pw.Text(
-              'QR',
-              style: pw.TextStyle(
-                fontSize: 12,
-                color: PdfColors.grey600,
-              ),
-            ),
           ),
         ),
       ],
@@ -382,49 +391,141 @@ class MetraShopPDFGenerator {
     );
   }
 
-  /// Construye el footer con marcas aliadas
-  static pw.Widget _buildFooter() {
+  /// Construye el footer con información de descarga y sitio web
+  static Future<pw.Widget> _buildFooter() async {
+    // Intentar cargar los logos de las tiendas
+    final Uint8List? appStoreLogo = await _loadStoreLogo(AppImages.logoAppStore);
+    final Uint8List? playStoreLogo = await _loadStoreLogo(AppImages.logoPlayStore);
+
     return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.center,
       children: [
+        // Separador visual
+        pw.Container(
+          height: 1,
+          color: PdfColors.grey300,
+          margin: const pw.EdgeInsets.only(bottom: 16),
+        ),
+
+        // Título principal
         pw.Text(
-          'Marcas aliadas',
+          'Descarga nuestra app',
           style: pw.TextStyle(
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: pw.FontWeight.bold,
-            color: PdfColors.grey600,
+            color: PdfColors.blue900,
           ),
         ),
-        pw.SizedBox(height: 8),
+        pw.SizedBox(height: 12),
 
+        // Logos de las tiendas
         pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: pw.MainAxisAlignment.center,
           children: [
-            _buildBrandPlaceholder('ADITIVOS'),
-            _buildBrandPlaceholder('SODIMAC'),
-            _buildBrandPlaceholder('LARK'),
-            _buildBrandPlaceholder('SIDERPERU'),
+            if (appStoreLogo != null)
+              pw.Container(
+                width: 80,
+                height: 28,
+                margin: const pw.EdgeInsets.symmetric(horizontal: 8),
+                child: pw.Image(pw.MemoryImage(appStoreLogo), fit: pw.BoxFit.contain),
+              )
+            else
+              _buildStorePlaceholder('App Store'),
+
+            if (playStoreLogo != null)
+              pw.Container(
+                width: 80,
+                height: 28,
+                margin: const pw.EdgeInsets.symmetric(horizontal: 8),
+                child: pw.Image(pw.MemoryImage(playStoreLogo), fit: pw.BoxFit.contain),
+              )
+            else
+              _buildStorePlaceholder('Google Play'),
+          ],
+        ),
+        pw.SizedBox(height: 12),
+
+        // Sitio web
+        pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.center,
+          children: [
+            pw.Text(
+              'Visita nuestro sitio web: ',
+              style: pw.TextStyle(
+                fontSize: 9,
+                color: PdfColors.grey700,
+              ),
+            ),
+            pw.Text(
+              'https://metrashopapp.com/',
+              style: pw.TextStyle(
+                fontSize: 9,
+                color: PdfColors.blue,
+                fontWeight: pw.FontWeight.bold,
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  /// Construye un placeholder para las marcas
-  static pw.Widget _buildBrandPlaceholder(String brand) {
+  /// Carga un logo de tienda desde assets
+  /// Solo soporta formatos rasterizados (PNG, JPEG). SVG no está soportado por la librería pdf.
+  static Future<Uint8List?> _loadStoreLogo(String path) async {
+    try {
+      // La librería pdf NO soporta SVG, solo formatos rasterizados (PNG, JPEG, etc.)
+      // Si el archivo es SVG, retornamos null para usar el placeholder
+      if (path.toLowerCase().endsWith('.svg')) {
+        print('⚠️ Archivo SVG no soportado para PDF: $path - usando placeholder');
+        return null;
+      }
+
+      final ByteData data = await rootBundle.load(path);
+      final bytes = data.buffer.asUint8List();
+
+      // Validación adicional: verificar que los bytes correspondan a un formato de imagen válido
+      // PNG empieza con: 137 80 78 71 (0x89 0x50 0x4E 0x47)
+      // JPEG empieza con: 255 216 255 (0xFF 0xD8 0xFF)
+      if (bytes.length < 4) {
+        print('⚠️ Archivo de imagen muy pequeño: $path');
+        return null;
+      }
+
+      final isPng = bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47;
+      final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
+
+      if (!isPng && !isJpeg) {
+        print('⚠️ Formato de imagen no reconocido (no es PNG ni JPEG): $path');
+        return null;
+      }
+
+      return bytes;
+    } catch (e) {
+      print('⚠️ No se pudo cargar logo de tienda: $path - $e');
+      return null;
+    }
+  }
+
+  /// Construye un placeholder para logos de tiendas cuando no se pueden cargar
+  static pw.Widget _buildStorePlaceholder(String storeName) {
     return pw.Container(
-      width: 60,
-      height: 25,
+      width: 80,
+      height: 28,
+      margin: const pw.EdgeInsets.symmetric(horizontal: 8),
       decoration: pw.BoxDecoration(
         border: pw.Border.all(color: PdfColors.grey400),
         borderRadius: pw.BorderRadius.circular(4),
+        color: PdfColors.grey100,
       ),
       child: pw.Center(
         child: pw.Text(
-          brand,
+          storeName,
           style: pw.TextStyle(
             fontSize: 8,
             color: PdfColors.grey600,
           ),
+          textAlign: pw.TextAlign.center,
         ),
       ),
     );

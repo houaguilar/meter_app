@@ -279,17 +279,6 @@ class _HomeViewState extends ConsumerState<HomeView>
                 ),
               ),
               const SizedBox(width: 20),
-            /*  Expanded(
-                child: GestureDetector(
-                  onTap:() {
-
-                  },
-                  child: const ShortcutCard(
-                    title: 'Materiales',
-                    imageAssetPath: AppImages.materialesHomeCardImg,
-                  ),
-                ),
-              ),*/
             ],
           ),
         ),

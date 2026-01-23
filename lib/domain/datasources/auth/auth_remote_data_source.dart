@@ -22,4 +22,13 @@ abstract interface class AuthRemoteDataSource {
   Future<void> updateUserProfileData(UserProfile userProfile);
   Future<void> changePassword(String currentPassword, String newPassword);
   Future<void> logout();
+  Future<void> deleteAccount({required String password});
+  Future<void> resetPasswordForEmail(String email);
+  Future<void> verifyOTP({required String email, required String token});
+  Future<void> resendOTP(String email);
+  Future<void> verifyOTPAndUpdatePassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  });
 }

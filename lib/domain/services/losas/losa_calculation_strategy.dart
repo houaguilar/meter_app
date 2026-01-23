@@ -48,14 +48,27 @@ abstract class LosaCalculationStrategy {
   /// [losa] Datos de la losa
   /// Returns: Área en m²
   double calcularArea(Losa losa) {
-    if (losa.area != null && losa.area!.isNotEmpty) {
-      return double.tryParse(losa.area!) ?? 0.0;
+    // Prioridad 1: Área directa
+    if (losa.area != null && losa.area!.trim().isNotEmpty) {
+      final area = double.tryParse(losa.area!.trim()) ?? 0.0;
+      if (area > 0) {
+        return area;
+      }
     }
 
+    // Prioridad 2: Largo × Ancho
     if (losa.largo != null && losa.ancho != null) {
-      final largo = double.tryParse(losa.largo!) ?? 0.0;
-      final ancho = double.tryParse(losa.ancho!) ?? 0.0;
-      return largo * ancho;
+      final largoStr = losa.largo!.trim();
+      final anchoStr = losa.ancho!.trim();
+
+      if (largoStr.isNotEmpty && anchoStr.isNotEmpty) {
+        final largo = double.tryParse(largoStr) ?? 0.0;
+        final ancho = double.tryParse(anchoStr) ?? 0.0;
+
+        if (largo > 0 && ancho > 0) {
+          return largo * ancho;
+        }
+      }
     }
 
     return 0.0;

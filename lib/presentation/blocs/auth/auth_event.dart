@@ -38,3 +38,10 @@ final class AuthLogout extends AuthEvent {}
 
 final class AuthLoginWithGoogle extends AuthEvent {}
 
+final class AuthDeleteAccount extends AuthEvent {
+  final String password;
+
+  AuthDeleteAccount({
+    required this.password,
+  });
+}
