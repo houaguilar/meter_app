@@ -95,6 +95,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Generate code (Riverpod, Isar, etc.)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build APK (Debug)
         run: flutter build apk --debug
 
@@ -135,6 +138,9 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Generate code (Riverpod, Isar, etc.)
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Install CocoaPods
         run: cd ios && pod install

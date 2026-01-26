@@ -72,6 +72,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Generate code (Riverpod, Isar, etc.)
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Extract version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
