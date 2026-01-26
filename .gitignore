@@ -44,7 +44,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Generated files
+# Generated files - Se generan con build_runner en CI
 *.g.dart
 
 # Environment variables - SEGURIDAD CRÍTICA
@@ -53,8 +53,8 @@ app.*.map.json
 .env.production
 .env.*.local
 
-# Secrets - NO SUBIR NUNCA
-**/lib/config/constants/secrets/app_secrets.dart
+# Nota: app_secrets.dart es seguro subir porque solo lee del .env
+# Los secretos reales están en .env (que sí está ignorado)
 
 # Android keystore - SEGURIDAD CRÍTICA
 android/key.properties
