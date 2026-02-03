@@ -4,6 +4,7 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
+import 'package:meter_app/domain/entities/home/estructuras/zapata/zapata.dart';
 
 import '../../../../../config/constants/error/exceptions.dart';
 import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
@@ -76,6 +77,11 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .metradoIdEqualTo(metradoIdInt)
           .findAll();
 
+      final zapatas = await isarService.zapatas
+          .filter()
+          .metradoIdEqualTo(metradoIdInt)
+          .findAll();
+
       final steelColumns = await isarService.steelColumns
           .filter()
           .metradoIdEqualTo(metradoIdInt)
@@ -106,6 +112,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
       allResults.addAll(sobrecimientos);
       allResults.addAll(cimientosCorridos);
       allResults.addAll(solados);
+      allResults.addAll(zapatas);
 
       allResults.addAll(steelColumns);
       allResults.addAll(steelBeams);
@@ -165,6 +172,11 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .deleteAll();
 
       await isarService.solados
+          .filter()
+          .metradoIdEqualTo(metradoId)
+          .deleteAll();
+
+      await isarService.zapatas
           .filter()
           .metradoIdEqualTo(metradoId)
           .deleteAll();
@@ -370,6 +382,24 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         newResult.metrado.value = metrado;
 
         await isarService.solados.put(newResult);
+        await newResult.metrado.save();
+
+      } else if (result is Zapata) {
+        final newResult = Zapata(
+          idZapata: result.idZapata,
+          description: result.description,
+          resistencia: result.resistencia,
+          factorDesperdicio: result.factorDesperdicio,
+          largo: result.largo,
+          ancho: result.ancho,
+          altura: result.altura,
+          volumen: result.volumen,
+        );
+
+        newResult.metradoId = metradoId;
+        newResult.metrado.value = metrado;
+
+        await isarService.zapatas.put(newResult);
         await newResult.metrado.save();
 
       } else if (result is SteelColumn) {
@@ -644,6 +674,11 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .count();
 
       stats['solados'] = await isarService.solados
+          .filter()
+          .metradoIdEqualTo(metradoIdInt)
+          .count();
+
+      stats['zapatas'] = await isarService.zapatas
           .filter()
           .metradoIdEqualTo(metradoIdInt)
           .count();

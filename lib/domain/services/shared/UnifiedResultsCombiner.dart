@@ -203,7 +203,8 @@ class UnifiedResultsCombiner {
     if (name.contains('cemento')) return 'bls';
     if (name.contains('arena') || name.contains('piedra') || name.contains('agua')) return 'm³';
     if (name.contains('ladrillo')) return 'und';
-    if (name.contains('acero')) return 'kg';
+    if (name.contains('acero') || name.contains('alambre') || name.contains('fierro')) return 'kg';
+    if (name.contains('aditivo')) return 'L';
 
     return 'und'; // Por defecto
   }

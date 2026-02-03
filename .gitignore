@@ -70,12 +70,15 @@ android/key.properties
 CONFIGURAR_*.md
 MIGRACION_*.md
 RESUMEN_*.md
+INSTRUCCIONES_*.md
 PASOS_INMEDIATOS.md
 PLAN_ACCION_PRODUCCION.md
 GOOGLE_SIGNIN_SETUP.md
 DELETE_ACCOUNT_IMPLEMENTATION.md
-INSTRUCCIONES_POLITICA_PRIVACIDAD.md
 REGENERAR_FIREBASE_OPTIONS.md
+
+# SQL migrations (local only)
+*.sql
 
 # Backups y archivos temporales
 .backup_firebase_old/

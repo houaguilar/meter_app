@@ -28,6 +28,8 @@ class UnifiedMaterialsCalculator {
   }
 
   /// Calcula materiales basado en el tipo de resultado
+  /// NOTA: Filtra los resultados por tipo para evitar errores de cast cuando
+  /// hay tipos mezclados en la lista
   static CalculationResult calculateMaterials(List<dynamic> results) {
     if (results.isEmpty) {
       return CalculationResult.empty();
@@ -36,36 +38,49 @@ class UnifiedMaterialsCalculator {
     try {
       final firstResult = results.first;
 
+      // Filtrar solo los resultados del tipo correspondiente para evitar cast errors
       if (firstResult is Ladrillo) {
-        return _calculateLadrilloMaterials(results.cast<Ladrillo>());
+        final filtered = results.whereType<Ladrillo>().toList();
+        return _calculateLadrilloMaterials(filtered);
       } else if (firstResult is Piso) {
-        // Distinguir entre falso piso y contrapiso
-        return _calculatePisoMaterials(results.cast<Piso>());
+        final filtered = results.whereType<Piso>().toList();
+        return _calculatePisoMaterials(filtered);
       } else if (firstResult is Losa) {
-        // Arquitectura unificada de losas (3 tipos)
-        return _calculateLosaMaterials(results.cast<Losa>());
+        final filtered = results.whereType<Losa>().toList();
+        return _calculateLosaMaterials(filtered);
       } else if (firstResult is Tarrajeo) {
-        return _calculateTarrajeoMaterials(results.cast<Tarrajeo>());
+        final filtered = results.whereType<Tarrajeo>().toList();
+        return _calculateTarrajeoMaterials(filtered);
       } else if (firstResult is Columna) {
-        return _calculateColumnaMaterials(results.cast<Columna>());
+        final filtered = results.whereType<Columna>().toList();
+        return _calculateColumnaMaterials(filtered);
       } else if (firstResult is Viga) {
-        return _calculateVigaMaterials(results.cast<Viga>());
+        final filtered = results.whereType<Viga>().toList();
+        return _calculateVigaMaterials(filtered);
       } else if (firstResult is Zapata) {
-        return _calculateZapataMaterials(results.cast<Zapata>());
+        final filtered = results.whereType<Zapata>().toList();
+        return _calculateZapataMaterials(filtered);
       } else if (firstResult is Sobrecimiento) {
-        return _calculateSobrecimientoMaterials(results.cast<Sobrecimiento>());
+        final filtered = results.whereType<Sobrecimiento>().toList();
+        return _calculateSobrecimientoMaterials(filtered);
       } else if (firstResult is CimientoCorrido) {
-        return _calculateCimientoCorridoMaterials(results.cast<CimientoCorrido>());
+        final filtered = results.whereType<CimientoCorrido>().toList();
+        return _calculateCimientoCorridoMaterials(filtered);
       } else if (firstResult is Solado) {
-        return _calculateSoladoMaterials(results.cast<Solado>());
+        final filtered = results.whereType<Solado>().toList();
+        return _calculateSoladoMaterials(filtered);
       } else if (firstResult is SteelColumn) {
-        return _calculateSteelColumnMaterials(results.cast<SteelColumn>());
+        final filtered = results.whereType<SteelColumn>().toList();
+        return _calculateSteelColumnMaterials(filtered);
       } else if (firstResult is SteelBeam) {
-        return _calculateSteelBeamMaterials(results.cast<SteelBeam>());
+        final filtered = results.whereType<SteelBeam>().toList();
+        return _calculateSteelBeamMaterials(filtered);
       } else if (firstResult is SteelSlab) {
-        return _calculateSteelSlabMaterials(results.cast<SteelSlab>());
+        final filtered = results.whereType<SteelSlab>().toList();
+        return _calculateSteelSlabMaterials(filtered);
       } else if (firstResult is SteelFooting) {
-        return _calculateSteelFootingMaterials(results.cast<SteelFooting>());
+        final filtered = results.whereType<SteelFooting>().toList();
+        return _calculateSteelFootingMaterials(filtered);
       }
 
       return CalculationResult.error('Tipo de cálculo no soportado');

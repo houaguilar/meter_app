@@ -436,6 +436,58 @@ class PDFFactory {
           'Factor de desperdicio: ${vigas.first.factorDesperdicio}%',
         ],
       );
+    } else if (tipoElemento == 'zapata') {
+      final zapatas = ref.read(zapataResultProvider);
+      if (zapatas.isEmpty) {
+        throw Exception("No hay datos de zapatas para generar el PDF");
+      }
+
+      final cantidadCemento = ref.read(cantidadCementoZapataProvider);
+      final cantidadArena = ref.read(cantidadArenaZapataProvider);
+      final cantidadPiedra = ref.read(cantidadPiedraZapataProvider);
+      final cantidadAgua = ref.read(cantidadAguaZapataProvider);
+
+      pdfData = PDFData(
+        titulo: 'Lista de Materiales',
+        fecha: _getCurrentDate(),
+        numeroCotizacion: _generateCotizationNumber(),
+        proyecto: 'Proyecto de Construcción',
+        obra: 'Casa de campo',
+        partida: 'Zapata',
+        nombreUsuario: nombreUsuario,
+        materiales: [
+          MaterialItem(
+            descripcion: 'Cemento',
+            unidad: 'bls',
+            cantidad: cantidadCemento.ceil().toString(),
+          ),
+          MaterialItem(
+            descripcion: 'Arena gruesa',
+            unidad: 'm³',
+            cantidad: cantidadArena.toStringAsFixed(2),
+          ),
+          MaterialItem(
+            descripcion: 'Piedra para concreto',
+            unidad: 'm³',
+            cantidad: cantidadPiedra.toStringAsFixed(2),
+          ),
+          MaterialItem(
+            descripcion: 'Agua',
+            unidad: 'm³',
+            cantidad: cantidadAgua.toStringAsFixed(2),
+          ),
+        ],
+        metrado: zapatas.map<MetradoItem>((zapata) => MetradoItem(
+          elemento: zapata.description,
+          unidad: 'm³',
+          medida: _calcularVolumenElemento(zapata).toStringAsFixed(2),
+        )).toList(),
+        observaciones: [
+          'Cálculos basados en factores de concreto según resistencia',
+          'Resistencia del concreto: ${zapatas.first.resistencia}',
+          'Factor de desperdicio: ${zapatas.first.factorDesperdicio}%',
+        ],
+      );
     } else if (tipoElemento == 'sobrecimiento') {
       final sobrecimientos = ref.read(sobrecimientoResultProvider);
       if (sobrecimientos.isEmpty) {

@@ -16,6 +16,7 @@ import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart'
 import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
+import 'package:meter_app/domain/entities/home/estructuras/zapata/zapata.dart';
 import 'package:meter_app/domain/entities/home/muro/custom_brick.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -70,6 +71,7 @@ Future<void> registerCoreModule(GetIt sl) async {
       SobrecimientoSchema,
       CimientoCorridoSchema,
       SoladoSchema,
+      ZapataSchema,
 
       PremiumStatusModelSchema,
       // 🆕 Nuevos schemas para marketplace

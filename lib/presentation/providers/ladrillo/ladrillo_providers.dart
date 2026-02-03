@@ -414,12 +414,6 @@ $datosMetrado
 • Desperdicio ladrillo: ${desperdicioLadrillo.toStringAsFixed(1)}%
 • Desperdicio mortero: ${desperdicioMortero.toStringAsFixed(1)}%
 
-📊 PROPORCIONES DISPONIBLES:
-• 1:3 - Máxima resistencia (más cemento)
-• 1:4 - Estándar (validado vs Excel)
-• 1:5 - Económico 
-• 1:6 - Muy económico (menos cemento)
-
 📱 Generado con MetraShop
 ''';
   }

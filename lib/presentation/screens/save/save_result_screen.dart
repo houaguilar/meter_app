@@ -15,6 +15,7 @@ import '../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
 import '../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../domain/entities/home/estructuras/viga/viga.dart';
+import '../../../domain/entities/home/estructuras/zapata/zapata.dart';
 import '../../../domain/entities/home/losas/losa.dart';
 import '../../blocs/projects/metrados/metrados_bloc.dart';
 import '../../blocs/projects/metrados/result/result_bloc.dart';
@@ -573,6 +574,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
             () => ref.read(sobrecimientoResultProvider),
             () => ref.read(cimientoCorridoResultProvider),
             () => ref.read(soladoResultProvider),
+            () => ref.read(zapataResultProvider),
 
             () => ref.read(steelColumnResultProvider),
             () => ref.read(steelBeamResultProvider),
@@ -611,6 +613,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
     if (result is Sobrecimiento) return 'Sobrecimientos';
     if (result is CimientoCorrido) return 'Cimientos Corridos';
     if (result is Solado) return 'Solados';
+    if (result is Zapata) return 'Zapatas';
 
     if (result is SteelColumn) return 'Columnas de Acero';
     if (result is SteelBeam) return 'Vigas de Acero';
@@ -631,6 +634,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       case 'Sobrecimientos': return Icons.foundation;
       case 'Cimientos Corridos': return Icons.landscape;
       case 'Solados': return Icons.layers_outlined;
+      case 'Zapatas': return Icons.grid_4x4;
       default: return Icons.construction;
     }
   }
@@ -901,6 +905,18 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         ancho: result.ancho,
         area: result.area,
         espesorFijo: result.espesorFijo,
+      );
+    }
+    else if (result is Zapata) {
+      return Zapata(
+        idZapata: result.idZapata,
+        description: result.description,
+        resistencia: result.resistencia,
+        factorDesperdicio: result.factorDesperdicio,
+        largo: result.largo,
+        ancho: result.ancho,
+        altura: result.altura,
+        volumen: result.volumen,
       );
     }
     // ✅ NUEVO: Copia de Losa (sistema unificado)

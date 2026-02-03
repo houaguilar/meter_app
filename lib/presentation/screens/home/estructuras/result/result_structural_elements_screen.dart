@@ -90,6 +90,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       final tipoElemento = ref.read(tipoStructuralElementProvider);
       final columnas = ref.read(columnaResultProvider);
       final vigas = ref.read(vigaResultProvider);
+      final zapatas = ref.read(zapataResultProvider);
       final sobrecimientos = ref.read(sobrecimientoResultProvider);
       final cimientosCorridos = ref.read(cimientoCorridoResultProvider);
       final solados = ref.read(soladoResultProvider);
@@ -98,6 +99,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       print('- Tipo: $tipoElemento');
       print('- Columnas: ${columnas.length}');
       print('- Vigas: ${vigas.length}');
+      print('- Zapatas: ${zapatas.length}');
       print('- Sobrecimientos: ${sobrecimientos.length}');
       print('- Cimientos corridos: ${cimientosCorridos.length}');
       print('- Solados: ${solados.length}');
@@ -105,8 +107,9 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       if (tipoElemento.isEmpty ||
           (tipoElemento == 'columna' && columnas.isEmpty) ||
           (tipoElemento == 'viga' && vigas.isEmpty) ||
+          (tipoElemento == 'zapata' && zapatas.isEmpty) ||
           (tipoElemento == 'sobrecimiento' && sobrecimientos.isEmpty) ||
-          (tipoElemento == 'cimiento_corrido' && cimientosCorridos.isEmpty) || // ← AGREGAR
+          (tipoElemento == 'cimiento_corrido' && cimientosCorridos.isEmpty) ||
           (tipoElemento == 'solado' && solados.isEmpty)) {
         print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
@@ -742,6 +745,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(columnaResultProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(vigaResultProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(zapataResultProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(sobrecimientoResultProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
@@ -757,6 +762,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       return ref.watch(volumenColumnaProvider);
     } else if (tipoElemento == 'viga') {
       return ref.watch(volumenVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      return ref.watch(volumenZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       return ref.watch(volumenSobrecimientoProvider);
     } else if (tipoElemento == 'cimiento_corrido') {
@@ -932,11 +939,13 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       datos = ref.read(datosShareColumnaProvider);
     } else if (tipoElemento == 'viga') {
       datos = ref.read(datosShareVigaProvider);
+    } else if (tipoElemento == 'zapata') {
+      datos = ref.read(datosShareZapataProvider);
     } else if (tipoElemento == 'sobrecimiento') {
       datos = ref.read(datosShareSobrecimientoProvider);
-    } else if (tipoElemento == 'cimiento_corrido') { // ← AGREGAR
+    } else if (tipoElemento == 'cimiento_corrido') {
       datos = ref.read(datosShareCimientoCorridoProvider);
-    } else if (tipoElemento == 'solado') { // ← AGREGAR
+    } else if (tipoElemento == 'solado') {
       datos = ref.read(datosShareSoladoProvider);
     }
 
@@ -993,6 +1002,14 @@ $materialesText
       ref.read(columnaResultProvider.notifier).clearList();
     } else if (tipoElemento == 'viga') {
       ref.read(vigaResultProvider.notifier).clearList();
+    } else if (tipoElemento == 'zapata') {
+      ref.read(zapataResultProvider.notifier).clearList();
+    } else if (tipoElemento == 'sobrecimiento') {
+      ref.read(sobrecimientoResultProvider.notifier).clearList();
+    } else if (tipoElemento == 'cimiento_corrido') {
+      ref.read(cimientoCorridoResultProvider.notifier).clearList();
+    } else if (tipoElemento == 'solado') {
+      ref.read(soladoResultProvider.notifier).clearList();
     }
     print('🧹 Datos limpiados al salir');
   }

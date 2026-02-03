@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "265588480754-lkell43ih8ieq79mnubbr4cvqa2t9ine.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mts.metrashop",
+            "certificate_hash": "4b2e8818fc049af02f9f20f45717b9383e2a2ffe"
+          }
+        },
+        {
           "client_id": "265588480754-79c1us6cpbeh5bhgqphacpsk8ug14hh7.apps.googleusercontent.com",
           "client_type": 3
         }

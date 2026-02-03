@@ -405,6 +405,23 @@ List<String> descriptionZapata(DescriptionZapataRef ref) {
 }
 
 @riverpod
+String datosShareZapata(DatosShareZapataRef ref) {
+  final description = ref.watch(descriptionZapataProvider);
+  final volumen = ref.watch(volumenZapataProvider);
+
+  String datos = "";
+  if (description.length == volumen.length) {
+    for (int i = 0; i < description.length; i++) {
+      datos += "* ${description[i]}: ${volumen[i].toStringAsFixed(1)} m3\n";
+    }
+    if (datos.length > 2) {
+      datos = datos.substring(0, datos.length - 2);
+    }
+  }
+  return datos;
+}
+
+@riverpod
 List<double> volumenViga(VolumenVigaRef ref) {
   final vigas = ref.watch(vigaResultProvider);
   final volumenes = vigas.map((viga) => calcularVolumenElemento(viga)).toList();
