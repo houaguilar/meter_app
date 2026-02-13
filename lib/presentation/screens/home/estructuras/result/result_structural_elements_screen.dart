@@ -877,8 +877,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   void _handleProviderAction() {
     final tipoElemento = ref.watch(tipoStructuralElementProvider);
     if (tipoElemento.isNotEmpty) {
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-      //   context.pushNamed('map-screen-structural');
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+         context.pushNamed('map-screen-structural');
     } else {
       _showErrorMessage('No hay datos de elementos estructurales');
     }

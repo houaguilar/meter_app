@@ -281,8 +281,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
 
     if (columns.isNotEmpty && consolidatedResult != null) { // cambio de beams a columns
       // Navegar a mapa de proveedores
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-    //    context.pushNamed('map-screen-steel-column');
+    //  FeatureStatusDialog.showTemporarilyDisabled(context);
+        context.pushNamed('map-screen-steel-column');
     } else {
       _showErrorMessage('No hay datos de columnas de acero'); // cambio de texto
     }

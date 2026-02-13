@@ -67,15 +67,7 @@ android/key.properties
 *.cer
 
 # Documentación local (no necesaria en repo)
-CONFIGURAR_*.md
-MIGRACION_*.md
-RESUMEN_*.md
-INSTRUCCIONES_*.md
-PASOS_INMEDIATOS.md
-PLAN_ACCION_PRODUCCION.md
-GOOGLE_SIGNIN_SETUP.md
-DELETE_ACCOUNT_IMPLEMENTATION.md
-REGENERAR_FIREBASE_OPTIONS.md
+*.md
 
 # SQL migrations (local only)
 *.sql
@@ -90,6 +82,3 @@ scripts/
 # Supabase local (migraciones y config)
 supabase/
 
-# READMEs internos innecesarios
-lib/config/di/README.md
-assets/README.md

@@ -285,8 +285,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
 
     if (beams.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-      //    context.pushNamed('map-screen-steel-beam');
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+          context.pushNamed('map-screen-steel-beam');
     } else {
       _showErrorMessage('No hay datos de vigas de acero');
     }

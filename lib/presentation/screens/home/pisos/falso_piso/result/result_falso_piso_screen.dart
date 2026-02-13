@@ -580,8 +580,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   void _handleProviderAction() {
     final falsosPisos = ref.watch(falsoPisoResultProvider);
     if (falsosPisos.isNotEmpty) {
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-   //   context.pushNamed('falso-piso-map-screen');
+   //   FeatureStatusDialog.showTemporarilyDisabled(context);
+      context.pushNamed('falso-piso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de falso piso');
     }

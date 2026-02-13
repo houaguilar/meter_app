@@ -986,8 +986,8 @@ class _PerfilScreenState extends State<PerfilScreen>
             title: 'Registrarme como proveedor',
             subtitle: 'Únete a nuestra red de proveedores',
             color: AppColors.accent,
-            onTap: () => FeatureStatusDialog.showInDevelopment(context),
-          //  onTap: () => context.pushNamed('register-location'),
+          //  onTap: () => FeatureStatusDialog.showInDevelopment(context),
+            onTap: () => context.pushNamed('register-location'),
           ),
         ]);
       } else {

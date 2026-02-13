@@ -830,8 +830,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton.icon(
-                  onPressed: () => FeatureStatusDialog.showTemporarilyDisabled(context),
-         //         onPressed: () => context.pushNamed('map-screen-tarrajeo-derrame'),
+         //         onPressed: () => FeatureStatusDialog.showTemporarilyDisabled(context),
+                  onPressed: () => context.pushNamed('map-screen-tarrajeo-derrame'),
                   icon: const Icon(Icons.map_outlined),
                   label: const Text('Buscar Proveedores'),
                   style: OutlinedButton.styleFrom(

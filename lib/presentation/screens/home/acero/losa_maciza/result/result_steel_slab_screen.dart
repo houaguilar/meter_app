@@ -288,8 +288,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
 
     if (slabs.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-      //   context.pushNamed('map-screen-steel-slab');
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+         context.pushNamed('map-screen-steel-slab');
     } else {
       _showErrorMessage('No hay datos de losas de acero');
     }

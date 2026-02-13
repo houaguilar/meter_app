@@ -270,8 +270,8 @@ class _HomeViewState extends ConsumerState<HomeView>
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () => FeatureStatusDialog.showTemporarilyDisabled(context),
-            //      onTap: () => context.pushNamed('home-to-provider'),
+             //     onTap: () => FeatureStatusDialog.showTemporarilyDisabled(context),
+                  onTap: () => context.pushNamed('home-to-provider'),
                   child: const ShortcutCard(
                     title: 'Proveedores',
                     imageAssetPath: AppImages.proveedoresHomeCardImg,

@@ -523,8 +523,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   void _handleProviderAction() {
     final pisos = ref.watch(contrapisoResultProvider);
     if (pisos.isNotEmpty) {
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-    //  context.pushNamed('contrapiso-map-screen');
+    //  FeatureStatusDialog.showTemporarilyDisabled(context);
+      context.pushNamed('contrapiso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de contrapiso');
     }

@@ -285,8 +285,8 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
 
     if (footings.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-      //   context.pushNamed('map-screen-steel-footing');
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+         context.pushNamed('map-screen-steel-footing');
     } else {
       _showErrorMessage('No hay datos de zapatas de acero');
     }

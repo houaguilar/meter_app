@@ -596,8 +596,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   void _handleProviderAction() {
     final ladrillos = ref.watch(ladrilloResultProvider);
     if (ladrillos.isNotEmpty) {
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-   //   context.pushNamed('map-screen-2');
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+      context.pushNamed('map-screen-2');
     } else {
       _showErrorSnackBar('No hay datos de ladrillos');
     }

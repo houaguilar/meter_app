@@ -635,11 +635,11 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
     final losas = ref.watch(losaResultProvider);
     if (losas.isNotEmpty) {
       final tipo = losas.first.tipoLosa.routePath;
-      FeatureStatusDialog.showTemporarilyDisabled(context);
-      /* context.pushNamed(
+      // FeatureStatusDialog.showTemporarilyDisabled(context);
+       context.pushNamed(
         'map-screen-losas',
         pathParameters: {'tipo': tipo},
-      );*/
+      );
     } else {
       _showErrorSnackBar('No hay datos de losas');
     }
