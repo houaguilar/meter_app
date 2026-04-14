@@ -38,6 +38,8 @@ final class AuthLogout extends AuthEvent {}
 
 final class AuthLoginWithGoogle extends AuthEvent {}
 
+final class AuthLoginWithApple extends AuthEvent {}
+
 final class AuthDeleteAccount extends AuthEvent {
   final String password;
 

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:meter_app/config/common/cubits/app_user/app_user_cubit.dart';
 import 'package:meter_app/config/common/cubits/shimmer/loader_cubit.dart';
 import 'package:meter_app/config/constants/secrets/app_secrets.dart';
@@ -89,6 +89,9 @@ Future<void> registerCoreModule(GetIt sl) async {
   final supabase = await Supabase.initialize(
     url: AppSecrets.supabaseUrl,
     anonKey: AppSecrets.supabaseAnonKey,
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.pkce,
+    ),
   );
   sl.registerLazySingleton(() => supabase.client);
 

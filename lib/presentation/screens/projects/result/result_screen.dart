@@ -109,8 +109,7 @@ class _ResultScreenState extends State<ResultScreen>
           builder: _buildContent,
         ),
       ),
-      floatingActionButton: _buildFloatingActionButtons(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: _buildBottomActions(),
     );
   }
 
@@ -276,7 +275,7 @@ class _ResultScreenState extends State<ResultScreen>
         right: 24,
         left: 24,
         top: 10,
-        bottom: 120, // Espacio para los botones flotantes
+        bottom: 20,
       ),
       child: Column(
         children: [
@@ -645,27 +644,64 @@ class _ResultScreenState extends State<ResultScreen>
     );
   }
 
-  Widget _buildFloatingActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        FloatingActionButton.extended(
-          onPressed: _shareResults,
-          backgroundColor: AppColors.blueMetraShop,
-          foregroundColor: AppColors.white,
-          icon: const Icon(Icons.share),
-          label: const Text('Compartir'),
-          heroTag: 'share',
-        ),
-        FloatingActionButton.extended(
-          onPressed: _generatePDF,
-          backgroundColor: AppColors.secondary,
-          foregroundColor: AppColors.white,
-          icon: const Icon(Icons.picture_as_pdf),
-          label: const Text('PDF'),
-          heroTag: 'pdf',
-        ),
-      ],
+  Widget _buildBottomActions() {
+    return BlocBuilder<ResultBloc, ResultState>(
+      builder: (context, state) {
+        if (state is! ResultSuccess) return const SizedBox.shrink();
+
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _shareResults,
+                      icon: const Icon(Icons.picture_as_pdf),
+                      label: const Text('PDF'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.secondary,
+                        side: BorderSide(color: AppColors.secondary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _generatePDF,
+                      icon: const Icon(Icons.text_fields),
+                      label: const Text('Texto'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -868,6 +904,8 @@ class _ResultScreenState extends State<ResultScreen>
 
       if (mounted) {
         Navigator.of(context).pop(); // Cerrar indicador de carga
+        await Future.delayed(const Duration(milliseconds: 350));
+        if (!mounted) return;
         await Share.shareXFiles([XFile(file.path)], text: 'Resultados de MetraShop');
       }
     } catch (e) {

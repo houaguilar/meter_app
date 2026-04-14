@@ -2,6 +2,7 @@ import 'package:meter_app/domain/services/piso_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
+import '../../../config/utils/number_formatter.dart';
 import '../../../data/models/models.dart';
 
 part 'falso_piso_providers.g.dart';
@@ -47,7 +48,7 @@ class FalsoPisoResult extends _$FalsoPisoResult {
 }
 
 @riverpod
-List<double> areaFalsoPiso(AreaFalsoPisoRef ref) {  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
+List<double> areaFalsoPiso(Ref ref) {  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
   final pisoService = PisoService();
   final falsosPisos = ref.watch(falsoPisoResultProvider);
 
@@ -55,20 +56,20 @@ List<double> areaFalsoPiso(AreaFalsoPisoRef ref) {  // ✅ Cambio: volumenFalsoP
 }
 
 @riverpod
-List<String> descriptionFalsoPiso(DescriptionFalsoPisoRef ref) {
+List<String> descriptionFalsoPiso(Ref ref) {
   final falsosPisos = ref.watch(falsoPisoResultProvider);
   return falsosPisos.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareFalsoPiso(DatosShareFalsoPisoRef ref) {
+String datosShareFalsoPiso(Ref ref) {
   final description = ref.watch(descriptionFalsoPisoProvider);
   final areas = ref.watch(areaFalsoPisoProvider);  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
 
   String datos = "";
   if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(1)} m²\n";  // ✅ Cambio: m³ → m²
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m²\n";
     }
     datos = datos.substring(0, datos.length - 2);
   }
@@ -77,7 +78,7 @@ String datosShareFalsoPiso(DatosShareFalsoPisoRef ref) {
 
 // 🆕 AGREGAR nuevo provider para área total
 @riverpod
-double areaTotalFalsoPiso(AreaTotalFalsoPisoRef ref) {
+double areaTotalFalsoPiso(Ref ref) {
   final areas = ref.watch(areaFalsoPisoProvider);
   return areas.fold(0.0, (sum, area) => sum + area);
 }
@@ -128,7 +129,7 @@ class FalsoPisoConfiguration {
 
 /// Provider para cálculos de materiales usando la lógica del Excel (líneas 15-226)
 @riverpod
-FalsoPisoMaterials falsoPisoMaterials(FalsoPisoMaterialsRef ref) {
+FalsoPisoMaterials falsoPisoMaterials(Ref ref) {
   final falsosPisos = ref.watch(falsoPisoResultProvider);
 
   if (falsosPisos.isEmpty) {
@@ -286,12 +287,12 @@ class FalsoPisoMaterials {
   /// Formatear cemento como entero (bolsas)
   int get cementoBolsas => cemento.ceil();
 
-  /// Formatear materiales con 1 decimal
-  String get arenaFormateada => arena.toStringAsFixed(1);
-  String get piedraFormateada => piedra.toStringAsFixed(1);
-  String get aguaFormateada => agua.toStringAsFixed(1);
-  String get volumenFormateado => volumenTotal.toStringAsFixed(1);
-  String get areaTotalFormateada => areaTotal.toStringAsFixed(1);  // 🆕 NUEVO método
+  /// Formatear materiales con 2 decimales
+  String get arenaFormateada => formatResultValue(arena);
+  String get piedraFormateada => formatResultValue(piedra);
+  String get aguaFormateada => formatResultValue(agua);
+  String get volumenFormateado => formatResultValue(volumenTotal);
+  String get areaTotalFormateada => areaTotal.toStringAsFixed(2);
 
   @override
   String toString() {

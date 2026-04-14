@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
@@ -432,13 +433,13 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
           return _buildTableRow([
             losa.description,
             'm²',
-            area.toStringAsFixed(1),
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
           'Total:',
           'm²',
-          areaTotal.toStringAsFixed(1),
+          areaTotal.toStringAsFixed(2),
         ], isTotal: true),
       ],
     );
@@ -460,10 +461,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       children: [
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
         _buildTableRow(['Cemento', 'bls', cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
-        _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 1).toString()]),
-        _buildTableRow(['Aditivo plastificante', 'L', roundUp(aditivo, 1).toString()]),
-        _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+        _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 2).toString()]),
+        _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 2).toString()]),
+        _buildTableRow(['Aditivo plastificante', 'L', roundUp(aditivo, 2).toString()]),
+        _buildTableRow(['Agua', 'm³', formatResultValue(agua)]),
       ],
     );
   }
@@ -635,11 +636,11 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
     final losas = ref.watch(losaResultProvider);
     if (losas.isNotEmpty) {
       final tipo = losas.first.tipoLosa.routePath;
-      // FeatureStatusDialog.showTemporarilyDisabled(context);
-       context.pushNamed(
+       FeatureStatusDialog.showTemporarilyDisabled(context);
+       /*context.pushNamed(
         'map-screen-losas',
         pathParameters: {'tipo': tipo},
-      );
+      );*/
     } else {
       _showErrorSnackBar('No hay datos de losas');
     }
@@ -770,6 +771,8 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   Future<void> _sharePDF() async {
     try {
       Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
@@ -807,6 +810,8 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final shareText = _generateShareText();
       await Share.share(shareText);
     } catch (e) {
@@ -853,10 +858,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
     // Materiales de concreto
     buffer.writeln('MATERIALES DE CONCRETO:');
     buffer.writeln('• Cemento: ${cantidadCemento.ceil()} bls');
-    buffer.writeln('• Arena gruesa: ${roundUp(cantidadArena, 1)} m³');
-    buffer.writeln('• Piedra chancada: ${roundUp(cantidadPiedra, 1)} m³');
-    buffer.writeln('• Aditivo plastificante: ${roundUp(cantidadAditivo, 1)} L');
-    buffer.writeln('• Agua: ${cantidadAgua.toStringAsFixed(2)} m³');
+    buffer.writeln('• Arena gruesa: ${roundUp(cantidadArena, 2)} m³');
+    buffer.writeln('• Piedra chancada: ${roundUp(cantidadPiedra, 2)} m³');
+    buffer.writeln('• Aditivo plastificante: ${roundUp(cantidadAditivo, 2)} L');
+    buffer.writeln('• Agua: ${formatResultValue(cantidadAgua)} m³');
     buffer.writeln();
 
     // Materiales aligerantes

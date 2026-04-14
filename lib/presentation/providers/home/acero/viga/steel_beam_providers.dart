@@ -11,7 +11,7 @@ const uuid = Uuid();
 // PROVIDERS PRINCIPALES
 // ============================================================================
 
-final steelBeamResultProvider = StateNotifierProvider<SteelBeamResultNotifier, List<SteelBeam>>((ref) {
+final steelBeamResultProvider = NotifierProvider<SteelBeamResultNotifier, List<SteelBeam>>(() {
   return SteelBeamResultNotifier();
 });
 
@@ -180,8 +180,9 @@ SteelBeamCalculationResult _calculateSteelForBeam(SteelBeam beam) {
 // STATE NOTIFIERS
 // ============================================================================
 
-class SteelBeamResultNotifier extends StateNotifier<List<SteelBeam>> {
-  SteelBeamResultNotifier() : super([]);
+class SteelBeamResultNotifier extends Notifier<List<SteelBeam>> {
+  @override
+  List<SteelBeam> build() => [];
 
   void createSteelBeam({
     required String description,

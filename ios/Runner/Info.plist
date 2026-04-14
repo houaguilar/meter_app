@@ -4,6 +4,8 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>GoogleMapsAPIKey</key>
+	<string>$(GOOGLE_MAPS_IOS_API_KEY)</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -63,6 +65,10 @@
 	<string>La aplicación necesita acceso a tu galería de fotos para guardar imágenes.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>La aplicación necesita acceso a tu galería de fotos para seleccionar imágenes.</string>
+	<!-- Encriptación: la app solo usa HTTPS estándar (TLS) a través de Supabase,
+	     Firebase y Google APIs. No implementa algoritmos de cifrado propios. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIBackgroundModes</key>

@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/screens/articles/article_detail_screen.dart';
 import 'package:meter_app/presentation/screens/auth/email_verification/email_verification_screen.dart';
@@ -72,13 +75,21 @@ class AppRouter {
   GoRouter get router => GoRouter(
     initialLocation: '/metrashop',
     navigatorKey: _rootNavigator,
+    refreshListenable: GoRouterRefreshStream(authBloc.stream),
     observers: [
       AnalyticsRouteObserver(analyticsRepository),
     ],
     debugLogDiagnostics: false,
+    onException: (context, state, router) {
+      // El deep link de Supabase (com.mts.metrashop:/callback?code=...)
+      // llega aquí porque GoRouter no tiene esa ruta.
+      // supabase_flutter ya procesó el código internamente — solo redirigimos.
+      router.go('/metrashop');
+    },
     redirect: (context, state) {
       final authState = authBloc.state;
       final isAuthenticated = authState is AuthSuccess;
+      final isPendingVerification = authState is AuthPendingEmailVerification;
       final currentLocation = state.matchedLocation;
       final isLoggingIn = currentLocation == '/metrashop' ||
           currentLocation == '/login' ||
@@ -95,16 +106,18 @@ class AppRouter {
         return null;
       }
 
+      // Verificación de email pendiente: bloquear toda navegación fuera de /email-verification
+      if (isPendingVerification) {
+        if (currentLocation == '/email-verification') return null;
+        final email = (authState as AuthPendingEmailVerification).email;
+        return '/email-verification?email=${Uri.encodeComponent(email)}';
+      }
+
       if (!isAuthenticated && !isLoggingIn) {
         return '/metrashop';
       }
 
-      // IMPORTANTE: NO redirigir si está en /register o /email-verification
-      // para permitir el flujo de registro completo
       if (isAuthenticated && isLoggingIn) {
-        if (currentLocation == '/register' || currentLocation == '/email-verification') {
-          return null; // Permitir acceso, el RegisterScreen manejará la navegación
-        }
         return '/welcome';
       }
 
@@ -149,11 +162,7 @@ class AppRouter {
       GoRoute(
         path: '/new-password',
         name: 'new-password',
-        builder: (context, state) {
-          final email = state.uri.queryParameters['email'] ?? '';
-          final token = state.uri.queryParameters['token'] ?? '';
-          return NewPasswordScreen(email: email, token: token);
-        },
+        builder: (context, state) => const NewPasswordScreen(),
       ),
 
       GoRoute(
@@ -760,4 +769,22 @@ class AppRouter {
       ),
     ],
   );
+}
+
+
+/// Notifica a GoRouter cada vez que el AuthBloc emite un nuevo estado,
+/// forzando la re-evaluación del redirect sin necesidad de navegar manualmente.
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
 }

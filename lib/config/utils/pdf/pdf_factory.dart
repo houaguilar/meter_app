@@ -307,7 +307,7 @@ class PDFFactory {
         medida: metrado.areaFormateada,
       )).toList(),
       observaciones: [
-        'Área total: ${metrados.fold(0.0, (sum, m) => sum + m.area).toStringAsFixed(1)} m²',
+        'Área total: ${metrados.fold(0.0, (sum, m) => sum + m.area).toStringAsFixed(2)} m²',
         'Volumen total de mortero: ${materiales.volumenFormateado} m³',
         'Tipo de tarrajeo: ${tarrajeos.first.tipo}',
         'Espesor: ${tarrajeos.first.espesor} cm',

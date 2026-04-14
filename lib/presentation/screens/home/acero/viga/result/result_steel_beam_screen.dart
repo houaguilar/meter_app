@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -464,7 +465,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
     for (int i = 0; i < consolidatedResult.beamResults.length; i++) {
       final beam = consolidatedResult.beamResults[i];
       content.writeln('Viga ${i + 1}: ${beam.description}');
-      content.writeln('  • Peso total: ${beam.totalWeight.toStringAsFixed(1)} kg');
+      content.writeln('  • Peso total: ${formatResultValue(beam.totalWeight as double)} kg');
     }
 
     await Share.share(
@@ -635,8 +636,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Vigas', '${quickStats['totalBeams']}'),
-            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Peso Total de Acero', '${formatResultValue((quickStats['totalWeight'] as double?) ?? 0.0)} kg'),
+            _buildStatRow('Alambre #16', '${formatResultValue((quickStats['totalWire'] as double?) ?? 0.0)} kg'),
           ],
         ],
       ),
@@ -873,7 +874,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${beam.totalWeight.toStringAsFixed(1)} kg',
+                  'Peso total: ${formatResultValue(beam.totalWeight as double)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,

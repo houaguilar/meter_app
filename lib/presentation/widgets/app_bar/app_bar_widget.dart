@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/config/services/review_service.dart';
+import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 
 import '../../../config/theme/theme.dart';
@@ -39,7 +41,10 @@ class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
                   content: 'Si sales del resumen se perderá todo el progreso.',
                   confirmText: 'Salir',
                   cancelText: 'Cancelar',
-                  onConfirm: () {context.goNamed('home');},
+                  onConfirm: () {
+                    serviceLocator<ReviewService>().markReturnedFromResult();
+                    context.goNamed('home');
+                  },
                   onCancel: () {context.pop();},
                   isVisible: true);
             },

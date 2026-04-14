@@ -1,5 +1,5 @@
 // lib/domain/entities/home/acero/losa/mesh_enums.dart
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 @Name("MeshType")
 enum MeshType {

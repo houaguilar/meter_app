@@ -2,6 +2,7 @@ import 'package:meter_app/domain/services/piso_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
+import '../../../config/utils/number_formatter.dart';
 import '../../../data/models/models.dart';
 
 part 'contrapiso_providers.g.dart';
@@ -48,7 +49,7 @@ class ContrapisoResult extends _$ContrapisoResult {
 
 // 🔄 CAMBIAR: De volumenContrapiso a areaContrapiso
 @riverpod
-List<double> areaContrapiso(AreaContrapisoRef ref) {
+List<double> areaContrapiso(Ref ref) {
   final pisoService = PisoService();
   final contrapisos = ref.watch(contrapisoResultProvider);
 
@@ -56,21 +57,21 @@ List<double> areaContrapiso(AreaContrapisoRef ref) {
 }
 
 @riverpod
-List<String> descriptionContrapiso(DescriptionContrapisoRef ref) {
+List<String> descriptionContrapiso(Ref ref) {
   final contrapisos = ref.watch(contrapisoResultProvider);
   return contrapisos.map((e) => e.description).toList();
 }
 
 // 🔄 ACTUALIZAR: datosShareContrapiso para usar áreas
 @riverpod
-String datosShareContrapiso(DatosShareContrapisoRef ref) {
+String datosShareContrapiso(Ref ref) {
   final description = ref.watch(descriptionContrapisoProvider);
   final areas = ref.watch(areaContrapisoProvider);  // ✅ Cambio aquí
 
   String datos = "";
   if (description.length == areas.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(1)} m²\n";  // ✅ m² en lugar de m³
+      datos += "* ${description[i]}: ${areas[i].toStringAsFixed(2)} m²\n";
     }
     datos = datos.substring(0, datos.length - 2);
   }
@@ -79,7 +80,7 @@ String datosShareContrapiso(DatosShareContrapisoRef ref) {
 
 // 🆕 NUEVO: Provider para área total
 @riverpod
-double areaTotalContrapiso(AreaTotalContrapisoRef ref) {
+double areaTotalContrapiso(Ref ref) {
   final areas = ref.watch(areaContrapisoProvider);
   return areas.fold(0.0, (sum, area) => sum + area);
 }
@@ -130,7 +131,7 @@ class ContrapisoConfiguration {
 
 // 🔄 ACTUALIZAR: Provider para materiales con área total
 @riverpod
-ContrapisoMaterials contrapisoMaterials(ContrapisoMaterialsRef ref) {
+ContrapisoMaterials contrapisoMaterials(Ref ref) {
   final contrapisos = ref.watch(contrapisoResultProvider);
 
   if (contrapisos.isEmpty) {
@@ -251,10 +252,10 @@ class ContrapisoMaterials {
 
   // 🆕 MÉTODOS DE FORMATO (como en FalsoPisoMaterials)
   int get cementoBolsas => cemento.ceil();
-  String get arenaFormateada => arena.toStringAsFixed(1);
-  String get aguaFormateada => agua.toStringAsFixed(1);
-  String get volumenFormateado => volumenTotal.toStringAsFixed(1);
-  String get areaTotalFormateada => areaTotal.toStringAsFixed(1);  // 🆕 ESTE ERA EL MÉTODO FALTANTE
+  String get arenaFormateada => formatResultValue(arena);
+  String get aguaFormateada => formatResultValue(agua);
+  String get volumenFormateado => formatResultValue(volumenTotal);
+  String get areaTotalFormateada => areaTotal.toStringAsFixed(2);
 
   // Métodos existentes mantenidos para compatibilidad
   Map<String, dynamic> toMap() {

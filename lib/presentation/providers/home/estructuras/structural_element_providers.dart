@@ -53,7 +53,7 @@ final List<StructuralElement> _structuralElements = [
 ];
 
 @riverpod
-List<StructuralElement> structuralElements(StructuralElementsRef ref) {
+List<StructuralElement> structuralElements(Ref ref) {
   return _structuralElements;
 }
 
@@ -73,15 +73,24 @@ class SelectedStructuralElement extends _$SelectedStructuralElement {
   }
 }
 
-// FIX: Cambiamos a StateProvider para mejor manejo del estado
-final tipoStructuralElementProvider = StateProvider<String>((ref) {
-  print('🔄 Inicializando TipoStructuralElement con valor vacío');
-  return '';
+// FIX: Cambiamos a NotifierProvider para mejor manejo del estado
+final tipoStructuralElementProvider = NotifierProvider<TipoStructuralElementNotifier, String>(() {
+  return TipoStructuralElementNotifier();
 });
+
+class TipoStructuralElementNotifier extends Notifier<String> {
+  @override
+  String build() {
+    print('🔄 Inicializando TipoStructuralElement con valor vacío');
+    return '';
+  }
+
+  void update(String value) => state = value;
+}
 
 // FIX: Agregamos un provider helper para debug
 @riverpod
-String currentStructuralElementType(CurrentStructuralElementTypeRef ref) {
+String currentStructuralElementType(Ref ref) {
   final tipo = ref.watch(tipoStructuralElementProvider);
   print('📋 Tipo actual observado: $tipo');
   return tipo;
@@ -188,7 +197,7 @@ class ColumnaResult extends _$ColumnaResult {
 }
 
 @riverpod
-List<double> volumenColumna(VolumenColumnaRef ref) {
+List<double> volumenColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   final volumenes = columnas.map((columna) => calcularVolumenElemento(columna)).toList();
   print('📊 Volúmenes de columnas calculados: $volumenes');
@@ -196,13 +205,13 @@ List<double> volumenColumna(VolumenColumnaRef ref) {
 }
 
 @riverpod
-List<String> descriptionColumna(DescriptionColumnaRef ref) {
+List<String> descriptionColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   return columnas.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareColumna(DatosShareColumnaRef ref) {
+String datosShareColumna(Ref ref) {
   final description = ref.watch(descriptionColumnaProvider);
   final volumen = ref.watch(volumenColumnaProvider);
 
@@ -220,7 +229,7 @@ String datosShareColumna(DatosShareColumnaRef ref) {
 
 // Providers para cálculos de materiales de Columna
 @riverpod
-double cantidadCementoColumna(CantidadCementoColumnaRef ref) {
+double cantidadCementoColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   if (columnas.isEmpty) return 0.0;
 
@@ -242,7 +251,7 @@ double cantidadCementoColumna(CantidadCementoColumnaRef ref) {
 }
 
 @riverpod
-double cantidadArenaColumna(CantidadArenaColumnaRef ref) {
+double cantidadArenaColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   if (columnas.isEmpty) return 0.0;
 
@@ -263,7 +272,7 @@ double cantidadArenaColumna(CantidadArenaColumnaRef ref) {
 }
 
 @riverpod
-double cantidadPiedraColumna(CantidadPiedraColumnaRef ref) {
+double cantidadPiedraColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   if (columnas.isEmpty) return 0.0;
 
@@ -284,7 +293,7 @@ double cantidadPiedraColumna(CantidadPiedraColumnaRef ref) {
 }
 
 @riverpod
-double cantidadAguaColumna(CantidadAguaColumnaRef ref) {
+double cantidadAguaColumna(Ref ref) {
   final columnas = ref.watch(columnaResultProvider);
   if (columnas.isEmpty) return 0.0;
 
@@ -389,7 +398,7 @@ class ZapataResult extends _$ZapataResult {
 }
 
 @riverpod
-List<double> volumenZapata(VolumenZapataRef ref) {
+List<double> volumenZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   final volumenes = zapatas.map((zapata) => calcularVolumenElemento(zapata)).toList();
   print('📊 Volúmenes de zapatas calculados: $volumenes');
@@ -397,7 +406,7 @@ List<double> volumenZapata(VolumenZapataRef ref) {
 }
 
 @riverpod
-List<String> descriptionZapata(DescriptionZapataRef ref) {
+List<String> descriptionZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   final descripciones = zapatas.map((zapata) => zapata.description).toList();
   print('📝 Descripciones de zapatas: $descripciones');
@@ -405,7 +414,7 @@ List<String> descriptionZapata(DescriptionZapataRef ref) {
 }
 
 @riverpod
-String datosShareZapata(DatosShareZapataRef ref) {
+String datosShareZapata(Ref ref) {
   final description = ref.watch(descriptionZapataProvider);
   final volumen = ref.watch(volumenZapataProvider);
 
@@ -422,7 +431,7 @@ String datosShareZapata(DatosShareZapataRef ref) {
 }
 
 @riverpod
-List<double> volumenViga(VolumenVigaRef ref) {
+List<double> volumenViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   final volumenes = vigas.map((viga) => calcularVolumenElemento(viga)).toList();
   print('📊 Volúmenes de vigas calculados: $volumenes');
@@ -430,13 +439,13 @@ List<double> volumenViga(VolumenVigaRef ref) {
 }
 
 @riverpod
-List<String> descriptionViga(DescriptionVigaRef ref) {
+List<String> descriptionViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   return vigas.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareViga(DatosShareVigaRef ref) {
+String datosShareViga(Ref ref) {
   final description = ref.watch(descriptionVigaProvider);
   final volumen = ref.watch(volumenVigaProvider);
 
@@ -454,7 +463,7 @@ String datosShareViga(DatosShareVigaRef ref) {
 
 // Providers para cálculos de materiales de Viga
 @riverpod
-double cantidadCementoViga(CantidadCementoVigaRef ref) {
+double cantidadCementoViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   if (vigas.isEmpty) return 0.0;
 
@@ -476,7 +485,7 @@ double cantidadCementoViga(CantidadCementoVigaRef ref) {
 }
 
 @riverpod
-double cantidadArenaViga(CantidadArenaVigaRef ref) {
+double cantidadArenaViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   if (vigas.isEmpty) return 0.0;
 
@@ -497,7 +506,7 @@ double cantidadArenaViga(CantidadArenaVigaRef ref) {
 }
 
 @riverpod
-double cantidadPiedraViga(CantidadPiedraVigaRef ref) {
+double cantidadPiedraViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   if (vigas.isEmpty) return 0.0;
 
@@ -518,7 +527,7 @@ double cantidadPiedraViga(CantidadPiedraVigaRef ref) {
 }
 
 @riverpod
-double cantidadAguaViga(CantidadAguaVigaRef ref) {
+double cantidadAguaViga(Ref ref) {
   final vigas = ref.watch(vigaResultProvider);
   if (vigas.isEmpty) return 0.0;
 
@@ -541,7 +550,7 @@ double cantidadAguaViga(CantidadAguaVigaRef ref) {
 // === Cálculo de materiales: Zapata ===
 
 @riverpod
-double cantidadCementoZapata(CantidadCementoZapataRef ref) {
+double cantidadCementoZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   if (zapatas.isEmpty) return 0.0;
 
@@ -562,7 +571,7 @@ double cantidadCementoZapata(CantidadCementoZapataRef ref) {
 }
 
 @riverpod
-double cantidadArenaZapata(CantidadArenaZapataRef ref) {
+double cantidadArenaZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   if (zapatas.isEmpty) return 0.0;
 
@@ -583,7 +592,7 @@ double cantidadArenaZapata(CantidadArenaZapataRef ref) {
 }
 
 @riverpod
-double cantidadPiedraZapata(CantidadPiedraZapataRef ref) {
+double cantidadPiedraZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   if (zapatas.isEmpty) return 0.0;
 
@@ -604,7 +613,7 @@ double cantidadPiedraZapata(CantidadPiedraZapataRef ref) {
 }
 
 @riverpod
-double cantidadAguaZapata(CantidadAguaZapataRef ref) {
+double cantidadAguaZapata(Ref ref) {
   final zapatas = ref.watch(zapataResultProvider);
   if (zapatas.isEmpty) return 0.0;
 
@@ -702,7 +711,7 @@ class SobrecimientoResult extends _$SobrecimientoResult {
 }
 
 @riverpod
-List<double> volumenSobrecimiento(VolumenSobrecimientoRef ref) {
+List<double> volumenSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   final volumenes = sobrecimientos.map((sobrecimiento) => calcularVolumenElemento(sobrecimiento)).toList();
   print('📊 Volúmenes de sobrecimientos calculados: $volumenes');
@@ -710,13 +719,13 @@ List<double> volumenSobrecimiento(VolumenSobrecimientoRef ref) {
 }
 
 @riverpod
-List<String> descriptionSobrecimiento(DescriptionSobrecimientoRef ref) {
+List<String> descriptionSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   return sobrecimientos.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareSobrecimiento(DatosShareSobrecimientoRef ref) {
+String datosShareSobrecimiento(Ref ref) {
   final description = ref.watch(descriptionSobrecimientoProvider);
   final volumen = ref.watch(volumenSobrecimientoProvider);
 
@@ -734,7 +743,7 @@ String datosShareSobrecimiento(DatosShareSobrecimientoRef ref) {
 
 // Providers para cálculos de materiales específicos del Sobrecimiento
 @riverpod
-double cantidadCementoSobrecimiento(CantidadCementoSobrecimientoRef ref) {
+double cantidadCementoSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   if (sobrecimientos.isEmpty) return 0.0;
 
@@ -756,7 +765,7 @@ double cantidadCementoSobrecimiento(CantidadCementoSobrecimientoRef ref) {
 }
 
 @riverpod
-double cantidadArenaSobrecimiento(CantidadArenaSobrecimientoRef ref) {
+double cantidadArenaSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   if (sobrecimientos.isEmpty) return 0.0;
 
@@ -777,7 +786,7 @@ double cantidadArenaSobrecimiento(CantidadArenaSobrecimientoRef ref) {
 }
 
 @riverpod
-double cantidadPiedraChancadaSobrecimiento(CantidadPiedraChancadaSobrecimientoRef ref) {
+double cantidadPiedraChancadaSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   if (sobrecimientos.isEmpty) return 0.0;
 
@@ -798,7 +807,7 @@ double cantidadPiedraChancadaSobrecimiento(CantidadPiedraChancadaSobrecimientoRe
 }
 
 @riverpod
-double cantidadPiedraGrandeSobrecimiento(CantidadPiedraGrandeSobrecimientoRef ref) {
+double cantidadPiedraGrandeSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   if (sobrecimientos.isEmpty) return 0.0;
 
@@ -819,7 +828,7 @@ double cantidadPiedraGrandeSobrecimiento(CantidadPiedraGrandeSobrecimientoRef re
 }
 
 @riverpod
-double cantidadAguaSobrecimiento(CantidadAguaSobrecimientoRef ref) {
+double cantidadAguaSobrecimiento(Ref ref) {
   final sobrecimientos = ref.watch(sobrecimientoResultProvider);
   if (sobrecimientos.isEmpty) return 0.0;
 
@@ -916,7 +925,7 @@ class CimientoCorridoResult extends _$CimientoCorridoResult {
 }
 
 @riverpod
-List<double> volumenCimientoCorrido(VolumenCimientoCorridoRef ref) {
+List<double> volumenCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   final volumenes = cimientos.map((cimiento) => calcularVolumenElemento(cimiento)).toList();
   print('📊 Volúmenes de cimientos corridos calculados: $volumenes');
@@ -924,13 +933,13 @@ List<double> volumenCimientoCorrido(VolumenCimientoCorridoRef ref) {
 }
 
 @riverpod
-List<String> descriptionCimientoCorrido(DescriptionCimientoCorridoRef ref) {
+List<String> descriptionCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   return cimientos.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareCimientoCorrido(DatosShareCimientoCorridoRef ref) {
+String datosShareCimientoCorrido(Ref ref) {
   final description = ref.watch(descriptionCimientoCorridoProvider);
   final volumen = ref.watch(volumenCimientoCorridoProvider);
 
@@ -948,7 +957,7 @@ String datosShareCimientoCorrido(DatosShareCimientoCorridoRef ref) {
 
 // Providers para cálculos de materiales específicos del Cimiento Corrido
 @riverpod
-double cantidadCementoCimientoCorrido(CantidadCementoCimientoCorridoRef ref) {
+double cantidadCementoCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   if (cimientos.isEmpty) return 0.0;
 
@@ -970,7 +979,7 @@ double cantidadCementoCimientoCorrido(CantidadCementoCimientoCorridoRef ref) {
 }
 
 @riverpod
-double cantidadArenaCimientoCorrido(CantidadArenaCimientoCorridoRef ref) {
+double cantidadArenaCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   if (cimientos.isEmpty) return 0.0;
 
@@ -991,7 +1000,7 @@ double cantidadArenaCimientoCorrido(CantidadArenaCimientoCorridoRef ref) {
 }
 
 @riverpod
-double cantidadPiedraChancadaCimientoCorrido(CantidadPiedraChancadaCimientoCorridoRef ref) {
+double cantidadPiedraChancadaCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   if (cimientos.isEmpty) return 0.0;
 
@@ -1012,7 +1021,7 @@ double cantidadPiedraChancadaCimientoCorrido(CantidadPiedraChancadaCimientoCorri
 }
 
 @riverpod
-double cantidadPiedraZanjaCimientoCorrido(CantidadPiedraZanjaCimientoCorridoRef ref) {
+double cantidadPiedraZanjaCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   if (cimientos.isEmpty) return 0.0;
 
@@ -1033,7 +1042,7 @@ double cantidadPiedraZanjaCimientoCorrido(CantidadPiedraZanjaCimientoCorridoRef 
 }
 
 @riverpod
-double cantidadAguaCimientoCorrido(CantidadAguaCimientoCorridoRef ref) {
+double cantidadAguaCimientoCorrido(Ref ref) {
   final cimientos = ref.watch(cimientoCorridoResultProvider);
   if (cimientos.isEmpty) return 0.0;
 
@@ -1143,7 +1152,7 @@ class SoladoResult extends _$SoladoResult {
 }
 
 @riverpod
-List<double> volumenSolado(VolumenSoladoRef ref) {
+List<double> volumenSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   final volumenes = solados.map((solado) => calcularVolumenSolado(solado)).toList();
   print('📊 Volúmenes de solados calculados: $volumenes');
@@ -1151,7 +1160,7 @@ List<double> volumenSolado(VolumenSoladoRef ref) {
 }
 
 @riverpod
-List<double> areaSolado(AreaSoladoRef ref) {
+List<double> areaSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   final areas = solados.map((solado) {
     if (solado.area != null && solado.area!.isNotEmpty) {
@@ -1169,13 +1178,13 @@ List<double> areaSolado(AreaSoladoRef ref) {
 }
 
 @riverpod
-List<String> descriptionSolado(DescriptionSoladoRef ref) {
+List<String> descriptionSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   return solados.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareSolado(DatosShareSoladoRef ref) {
+String datosShareSolado(Ref ref) {
   final description = ref.watch(descriptionSoladoProvider);
   final areas = ref.watch(areaSoladoProvider);
 
@@ -1193,7 +1202,7 @@ String datosShareSolado(DatosShareSoladoRef ref) {
 
 // Providers para cálculos de materiales específicos del Solado
 @riverpod
-double cantidadCementoSolado(CantidadCementoSoladoRef ref) {
+double cantidadCementoSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   if (solados.isEmpty) return 0.0;
 
@@ -1215,7 +1224,7 @@ double cantidadCementoSolado(CantidadCementoSoladoRef ref) {
 }
 
 @riverpod
-double cantidadArenaSolado(CantidadArenaSoladoRef ref) {
+double cantidadArenaSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   if (solados.isEmpty) return 0.0;
 
@@ -1236,7 +1245,7 @@ double cantidadArenaSolado(CantidadArenaSoladoRef ref) {
 }
 
 @riverpod
-double cantidadPiedraChancadaSolado(CantidadPiedraChancadaSoladoRef ref) {
+double cantidadPiedraChancadaSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   if (solados.isEmpty) return 0.0;
 
@@ -1257,7 +1266,7 @@ double cantidadPiedraChancadaSolado(CantidadPiedraChancadaSoladoRef ref) {
 }
 
 @riverpod
-double cantidadAguaSolado(CantidadAguaSoladoRef ref) {
+double cantidadAguaSolado(Ref ref) {
   final solados = ref.watch(soladoResultProvider);
   if (solados.isEmpty) return 0.0;
 

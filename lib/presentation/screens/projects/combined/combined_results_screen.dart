@@ -380,56 +380,61 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
         }
 
         return Container(
-          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            border: Border(
-              top: BorderSide(
-                color: AppColors.border,
-                width: 1,
-              ),
-            ),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: state.isProcessing ? null : () => _showShareOptions(),
-                  icon: state.isSharing
-                      ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                      : const Icon(Icons.share_outlined),
-                  label: Text(state.isSharing ? 'Compartiendo...' : 'Compartir'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.secondary,
-                    side: BorderSide(color: AppColors.secondary),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: state.isProcessing ? null : () => _showDetailedMaterialsDialog(state.combinedResult),
-                  icon: const Icon(Icons.visibility),
-                  label: const Text('Ver Detalle'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.secondary,
-                    foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -2),
               ),
             ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: state.isProcessing ? null : () => _showShareOptions(),
+                      icon: state.isSharing
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.share_outlined),
+                      label: Text(state.isSharing ? 'Compartiendo...' : 'Compartir'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.secondary,
+                        side: BorderSide(color: AppColors.secondary),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: state.isProcessing ? null : () => _showDetailedMaterialsDialog(state.combinedResult),
+                      icon: const Icon(Icons.visibility),
+                      label: const Text('Ver Detalle'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: AppColors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
@@ -454,6 +459,10 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
         ? profileState.userProfile.name
         : null;
 
+    // Capturar el BLoC antes de abrir el modal para evitar usar
+    // el context del modal (que estará deactivado cuando Future.delayed dispare)
+    final bloc = context.read<CombinedResultsBloc>();
+
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -461,7 +470,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
       ),
       builder: (context) => ShareOptionsModal(
         onFormatSelected: (format) {
-          context.read<CombinedResultsBloc>().add(
+          bloc.add(
             ShareCombinedResultsEvent(
               format: format,
               nombreUsuario: nombreUsuario,

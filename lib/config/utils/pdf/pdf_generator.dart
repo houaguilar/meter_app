@@ -25,10 +25,10 @@ class MetraShopPDFGenerator {
       final Uint8List? logoBytes = await _loadLogo();
       print('🔧 Logo cargado: ${logoBytes != null}');
 
-      // Cargar footer con logos de tiendas
-      print('🔧 Cargando footer...');
-      final pw.Widget footer = await _buildFooter();
-      print('🔧 Footer cargado');
+      // Construir footer
+      print('🔧 Construyendo footer...');
+      final pw.Widget footer = _buildFooter();
+      print('🔧 Footer listo');
 
       print('🔧 Construyendo página PDF...');
       pdf.addPage(
@@ -179,7 +179,7 @@ class MetraShopPDFGenerator {
               ),
               pw.SizedBox(height: 8),
               pw.Text(
-                'SOLICITA Y COMPRA TU PARA DE CONSTRUCCIÓN',
+                'RESUMEN DE MATERIALES CALCULADOS PARA TU OBRA',
                 style: pw.TextStyle(
                   fontSize: 10,
                   color: PdfColors.grey700,
@@ -391,141 +391,99 @@ class MetraShopPDFGenerator {
     );
   }
 
-  /// Construye el footer con información de descarga y sitio web
-  static Future<pw.Widget> _buildFooter() async {
-    // Intentar cargar los logos de las tiendas
-    final Uint8List? appStoreLogo = await _loadStoreLogo(AppImages.logoAppStore);
-    final Uint8List? playStoreLogo = await _loadStoreLogo(AppImages.logoPlayStore);
+  /// Construye el footer con banner de descarga
+  static pw.Widget _buildFooter() {
+    const String appUrl = 'https://metrashopapp.com';
 
     return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.center,
+      crossAxisAlignment: pw.CrossAxisAlignment.stretch,
       children: [
-        // Separador visual
+        // Separador con acento de marca
+        pw.Row(
+          children: [
+            pw.Expanded(
+              child: pw.Container(height: 1, color: PdfColors.grey300),
+            ),
+            pw.Container(width: 48, height: 3, color: PdfColors.orange),
+            pw.Expanded(
+              child: pw.Container(height: 1, color: PdfColors.grey300),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 14),
+
+        // Banner de descarga
         pw.Container(
-          height: 1,
-          color: PdfColors.grey300,
-          margin: const pw.EdgeInsets.only(bottom: 16),
-        ),
-
-        // Título principal
-        pw.Text(
-          'Descarga nuestra app',
-          style: pw.TextStyle(
-            fontSize: 12,
-            fontWeight: pw.FontWeight.bold,
+          padding: const pw.EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          decoration: pw.BoxDecoration(
             color: PdfColors.blue900,
+            borderRadius: pw.BorderRadius.circular(10),
           ),
-        ),
-        pw.SizedBox(height: 12),
-
-        // Logos de las tiendas
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.center,
-          children: [
-            if (appStoreLogo != null)
-              pw.Container(
-                width: 80,
-                height: 28,
-                margin: const pw.EdgeInsets.symmetric(horizontal: 8),
-                child: pw.Image(pw.MemoryImage(appStoreLogo), fit: pw.BoxFit.contain),
-              )
-            else
-              _buildStorePlaceholder('App Store'),
-
-            if (playStoreLogo != null)
-              pw.Container(
-                width: 80,
-                height: 28,
-                margin: const pw.EdgeInsets.symmetric(horizontal: 8),
-                child: pw.Image(pw.MemoryImage(playStoreLogo), fit: pw.BoxFit.contain),
-              )
-            else
-              _buildStorePlaceholder('Google Play'),
-          ],
-        ),
-        pw.SizedBox(height: 12),
-
-        // Sitio web
-        pw.Row(
-          mainAxisAlignment: pw.MainAxisAlignment.center,
-          children: [
-            pw.Text(
-              'Visita nuestro sitio web: ',
-              style: pw.TextStyle(
-                fontSize: 9,
-                color: PdfColors.grey700,
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text(
+                'METRASHOP',
+                style: pw.TextStyle(
+                  fontSize: 15,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                  letterSpacing: 1.5,
+                ),
               ),
-            ),
-            pw.Text(
-              'https://metrashopapp.com/',
-              style: pw.TextStyle(
-                fontSize: 9,
-                color: PdfColors.blue,
-                fontWeight: pw.FontWeight.bold,
+              pw.SizedBox(height: 5),
+              pw.Container(width: 36, height: 2, color: PdfColors.orange),
+              pw.SizedBox(height: 8),
+              pw.Text(
+                'Calcula tus materiales de construcción de forma fácil y precisa.',
+                style: pw.TextStyle(
+                  fontSize: 9,
+                  color: PdfColors.white,
+                  lineSpacing: 2,
+                ),
+                textAlign: pw.TextAlign.center,
               ),
-            ),
-          ],
+              pw.SizedBox(height: 12),
+              // Disponible en (etiquetas)
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.center,
+                children: [
+                  _buildStoreBadge('App Store'),
+                  pw.SizedBox(width: 8),
+                  _buildStoreBadge('Google Play'),
+                ],
+              ),
+              pw.SizedBox(height: 12),
+              // URL destacada
+              pw.Text(
+                appUrl,
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.orange,
+                ),
+                textAlign: pw.TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ],
     );
   }
 
-  /// Carga un logo de tienda desde assets
-  /// Solo soporta formatos rasterizados (PNG, JPEG). SVG no está soportado por la librería pdf.
-  static Future<Uint8List?> _loadStoreLogo(String path) async {
-    try {
-      // La librería pdf NO soporta SVG, solo formatos rasterizados (PNG, JPEG, etc.)
-      // Si el archivo es SVG, retornamos null para usar el placeholder
-      if (path.toLowerCase().endsWith('.svg')) {
-        print('⚠️ Archivo SVG no soportado para PDF: $path - usando placeholder');
-        return null;
-      }
-
-      final ByteData data = await rootBundle.load(path);
-      final bytes = data.buffer.asUint8List();
-
-      // Validación adicional: verificar que los bytes correspondan a un formato de imagen válido
-      // PNG empieza con: 137 80 78 71 (0x89 0x50 0x4E 0x47)
-      // JPEG empieza con: 255 216 255 (0xFF 0xD8 0xFF)
-      if (bytes.length < 4) {
-        print('⚠️ Archivo de imagen muy pequeño: $path');
-        return null;
-      }
-
-      final isPng = bytes[0] == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47;
-      final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
-
-      if (!isPng && !isJpeg) {
-        print('⚠️ Formato de imagen no reconocido (no es PNG ni JPEG): $path');
-        return null;
-      }
-
-      return bytes;
-    } catch (e) {
-      print('⚠️ No se pudo cargar logo de tienda: $path - $e');
-      return null;
-    }
-  }
-
-  /// Construye un placeholder para logos de tiendas cuando no se pueden cargar
-  static pw.Widget _buildStorePlaceholder(String storeName) {
+  /// Etiqueta de tienda para el footer
+  static pw.Widget _buildStoreBadge(String label) {
     return pw.Container(
-      width: 80,
-      height: 28,
-      margin: const pw.EdgeInsets.symmetric(horizontal: 8),
+      padding: const pw.EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.grey400),
-        borderRadius: pw.BorderRadius.circular(4),
-        color: PdfColors.grey100,
+        border: pw.Border.all(color: PdfColors.white, width: 0.8),
+        borderRadius: pw.BorderRadius.circular(20),
       ),
-      child: pw.Center(
-        child: pw.Text(
-          storeName,
-          style: pw.TextStyle(
-            fontSize: 8,
-            color: PdfColors.grey600,
-          ),
-          textAlign: pw.TextAlign.center,
+      child: pw.Text(
+        label,
+        style: pw.TextStyle(
+          fontSize: 7.5,
+          color: PdfColors.white,
         ),
       ),
     );

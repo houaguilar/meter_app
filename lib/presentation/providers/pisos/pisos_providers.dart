@@ -90,7 +90,7 @@ class PisosResult extends _$PisosResult {
 }
 
 @riverpod
-List<double> volumenPiso(VolumenPisoRef ref) {
+List<double> volumenPiso(Ref ref) {
   final pisoSrevice = PisoService();
   final pisos = ref.watch( pisosResultProvider );
 
@@ -99,14 +99,14 @@ List<double> volumenPiso(VolumenPisoRef ref) {
 }
 
 @riverpod
-List<String> descriptionPiso(DescriptionPisoRef ref) {
+List<String> descriptionPiso(Ref ref) {
   final pisos = ref.watch( pisosResultProvider );
 
   return pisos.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosSharePisos(DatosSharePisosRef ref) {
+String datosSharePisos(Ref ref) {
   final description = ref.watch(descriptionPisoProvider);
   final volumen = ref.watch(volumenPisoProvider);
 

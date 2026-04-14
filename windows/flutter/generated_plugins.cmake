@@ -9,7 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
   flutter_inappwebview_windows
   geolocator_windows
-  isar_flutter_libs
+  isar_community_flutter_libs
   permission_handler_windows
   printing
   share_plus

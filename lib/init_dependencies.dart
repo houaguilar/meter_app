@@ -3,6 +3,7 @@ import 'package:meter_app/config/di/modules/analytics_module.dart';
 import 'package:meter_app/config/di/modules/auth_module.dart';
 import 'package:meter_app/config/di/modules/core_module.dart';
 import 'package:meter_app/config/di/modules/custom_brick_module.dart';
+import 'package:meter_app/config/di/modules/feedback_module.dart';
 import 'package:meter_app/config/di/modules/home_module.dart';
 import 'package:meter_app/config/di/modules/map_module.dart';
 import 'package:meter_app/config/di/modules/notifications_module.dart';
@@ -51,4 +52,7 @@ Future<void> initDependencies() async {
 
   // 9. Custom Brick - Ladrillos personalizados
   registerCustomBrickModule(serviceLocator);
+
+  // 10. Feedback - Opiniones de usuarios y ReviewService
+  registerFeedbackModule(serviceLocator);
 }

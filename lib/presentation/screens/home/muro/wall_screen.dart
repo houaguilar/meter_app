@@ -216,7 +216,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
       }
 
       // Actualizar selección
-      ref.read(selectedMaterialProvider.notifier).state = material;
+      ref.read(selectedMaterialProvider.notifier).select(material);
 
       // Navegar según el tipo de material
       _navigateToMaterial(material);
@@ -239,7 +239,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
         );
 
         // Establecer tipo Custom y continuar flujo
-        ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo('Custom');
+        ref.read(tipoLadrilloProvider.notifier).selectLadrillo('Custom');
         context.pushNamed('ladrillo1');
         return;
       }
@@ -256,9 +256,9 @@ class _WallScreenState extends ConsumerState<WallScreen>
       final materialType = _getMaterialType(material.id);
       print('🔧 Estableciendo tipo: "$materialType"');
 
-      ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo(materialType);
+      ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
 
-      final verificacion = ref.read(tipoLadrilloNotifierProvider);
+      final verificacion = ref.read(tipoLadrilloProvider);
       print('🔍 Verificación: "$verificacion"');
       context.pushNamed('ladrillo1');
 

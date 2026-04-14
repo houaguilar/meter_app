@@ -3,18 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
+import '../../../../config/usecase/usecase.dart';
 import '../../../../domain/usecases/use_cases.dart';
 import '../../../../init_dependencies.dart';
 
 class NewPasswordScreen extends StatefulWidget {
-  final String email;
-  final String token;
-
-  const NewPasswordScreen({
-    super.key,
-    required this.email,
-    required this.token,
-  });
+  const NewPasswordScreen({super.key});
 
   @override
   State<NewPasswordScreen> createState() => _NewPasswordScreenState();
@@ -37,57 +31,45 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   }
 
   Future<void> _handleUpdatePassword() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      _showError('Las contraseñas no coinciden');
-      return;
-    }
-
-    setState(() {
-      _isUpdating = true;
-    });
+    setState(() => _isUpdating = true);
 
     try {
-      final updatePasswordUseCase = serviceLocator<VerifyOTPAndUpdatePassword>();
-      final result = await updatePasswordUseCase(
-        VerifyOTPAndUpdatePasswordParams(
-          email: widget.email,
-          token: widget.token,
+      // Actualizar contraseña (la sesión de recovery ya está activa vía magic link)
+      final changePassword = serviceLocator<ChangePassword>();
+      final result = await changePassword(
+        ChangePasswordParams(
+          currentPassword: '',
           newPassword: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
         ),
       );
 
-      if (mounted) {
-        result.fold(
-          (failure) {
-            setState(() {
-              _isUpdating = false;
-            });
-            _showError(failure.message ?? 'Error desconocido');
-          },
-          (_) {
-            setState(() {
-              _isUpdating = false;
-            });
-            _showSuccess('Contraseña actualizada exitosamente');
+      if (!mounted) return;
 
-            // Navegar al login después de 1.5 segundos
+      result.fold(
+        (failure) {
+          setState(() => _isUpdating = false);
+          _showError(failure.message);
+        },
+        (_) async {
+          // Cerrar sesión para que el usuario inicie con la nueva contraseña
+          final logout = serviceLocator<UserLogout>();
+          await logout(NoParams());
+
+          if (mounted) {
+            setState(() => _isUpdating = false);
+            _showSuccess('Contraseña actualizada exitosamente');
             Future.delayed(const Duration(milliseconds: 1500), () {
-              if (mounted) {
-                context.go('/login');
-              }
+              if (mounted) context.go('/login');
             });
-          },
-        );
-      }
+          }
+        },
+      );
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isUpdating = false;
-        });
+        setState(() => _isUpdating = false);
         _showError('Error al actualizar contraseña: $e');
       }
     }
@@ -95,7 +77,6 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
   void _showError(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -114,7 +95,6 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
   void _showSuccess(String message) {
     if (!mounted) return;
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -152,23 +132,12 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 20),
-
-                // Header
                 _buildHeader(),
-
                 const SizedBox(height: 40),
-
-                // Password Field
                 _buildPasswordField(),
-
                 const SizedBox(height: 20),
-
-                // Confirm Password Field
                 _buildConfirmPasswordField(),
-
                 const SizedBox(height: 32),
-
-                // Update Button
                 _buildUpdateButton(),
               ],
             ),
@@ -192,11 +161,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
             ),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.lock_open,
-            size: 64,
-            color: AppColors.secondary,
-          ),
+          child: const Icon(Icons.lock_open, size: 64, color: AppColors.secondary),
         ),
         const SizedBox(height: 24),
         Text(
@@ -211,10 +176,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         Text(
           'Ingresa tu nueva contraseña',
           textAlign: TextAlign.center,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -224,27 +186,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     return TextFormField(
       controller: _passwordController,
       obscureText: !_isPasswordVisible,
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        color: AppColors.textPrimary,
-      ),
+      style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: 'Nueva contraseña',
-        labelStyle: GoogleFonts.poppins(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
+        labelStyle: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
         prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
         suffixIcon: IconButton(
           icon: Icon(
             _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
             color: AppColors.textSecondary,
           ),
-          onPressed: () {
-            setState(() {
-              _isPasswordVisible = !_isPasswordVisible;
-            });
-          },
+          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
         ),
         filled: true,
         fillColor: AppColors.white,
@@ -266,12 +218,11 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Ingresa una contraseña';
-        }
-        if (value.length < 6) {
-          return 'La contraseña debe tener al menos 6 caracteres';
-        }
+        if (value == null || value.isEmpty) return 'Ingresa una contraseña';
+        if (value.length < 8) return 'Mínimo 8 caracteres';
+        if (!value.contains(RegExp(r'[A-Z]'))) return 'Debe incluir una letra mayúscula';
+        if (!value.contains(RegExp(r'[a-z]'))) return 'Debe incluir una letra minúscula';
+        if (!value.contains(RegExp(r'[0-9]'))) return 'Debe incluir un número';
         return null;
       },
     );
@@ -281,27 +232,17 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     return TextFormField(
       controller: _confirmPasswordController,
       obscureText: !_isConfirmPasswordVisible,
-      style: GoogleFonts.poppins(
-        fontSize: 16,
-        color: AppColors.textPrimary,
-      ),
+      style: GoogleFonts.poppins(fontSize: 16, color: AppColors.textPrimary),
       decoration: InputDecoration(
         labelText: 'Confirmar contraseña',
-        labelStyle: GoogleFonts.poppins(
-          fontSize: 14,
-          color: AppColors.textSecondary,
-        ),
+        labelStyle: GoogleFonts.poppins(fontSize: 14, color: AppColors.textSecondary),
         prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
         suffixIcon: IconButton(
           icon: Icon(
             _isConfirmPasswordVisible ? Icons.visibility_off : Icons.visibility,
             color: AppColors.textSecondary,
           ),
-          onPressed: () {
-            setState(() {
-              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-            });
-          },
+          onPressed: () => setState(() => _isConfirmPasswordVisible = !_isConfirmPasswordVisible),
         ),
         filled: true,
         fillColor: AppColors.white,
@@ -323,12 +264,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         ),
       ),
       validator: (value) {
-        if (value == null || value.isEmpty) {
-          return 'Confirma tu contraseña';
-        }
-        if (value != _passwordController.text) {
-          return 'Las contraseñas no coinciden';
-        }
+        if (value == null || value.isEmpty) return 'Confirma tu contraseña';
+        if (value != _passwordController.text) return 'Las contraseñas no coinciden';
         return null;
       },
     );
@@ -342,9 +279,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
           foregroundColor: AppColors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           elevation: 0,
         ),
         child: _isUpdating
@@ -358,10 +293,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
               )
             : Text(
                 'Actualizar contraseña',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.w600),
               ),
       ),
     );

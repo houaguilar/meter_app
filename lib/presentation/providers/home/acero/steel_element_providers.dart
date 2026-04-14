@@ -33,7 +33,7 @@ final List<SteelElement> _steelElements = [
 ];
 
 @riverpod
-Future<List<SteelElement>> steelElements(SteelElementsRef ref) async {
+Future<List<SteelElement>> steelElements(Ref ref) async {
   await Future.delayed(const Duration(milliseconds: 100));
   return _steelElements;
 }

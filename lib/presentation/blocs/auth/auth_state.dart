@@ -14,6 +14,11 @@ final class AuthSuccess extends AuthState {
   const AuthSuccess(this.user);
 }
 
+final class AuthPendingEmailVerification extends AuthState {
+  final String email;
+  const AuthPendingEmailVerification(this.email);
+}
+
 final class AuthEmailNotVerified extends AuthState {}
 
 final class AuthEmailVerificationSent extends AuthState {}

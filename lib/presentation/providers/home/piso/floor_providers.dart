@@ -19,4 +19,11 @@ final floorsProvider = FutureProvider<List<Floor>>((ref) async {
   return await useCase();
 });
 
-final selectedFloorProvider = StateProvider<Floor?>((ref) => null);
+final selectedFloorProvider = NotifierProvider<SelectedFloorNotifier, Floor?>(() => SelectedFloorNotifier());
+
+class SelectedFloorNotifier extends Notifier<Floor?> {
+  @override
+  Floor? build() => null;
+
+  void select(Floor? floor) => state = floor;
+}

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -377,6 +378,17 @@ class _LoginScreenState extends State<LoginScreen>
   Future<void> _performGoogleLogin() async {
     final authBloc = context.read<AuthBloc>();
     authBloc.add(AuthLoginWithGoogle());
+  }
+
+  Future<void> _handleAppleLogin() async {
+    if (_isLoading) return;
+    HapticFeedback.lightImpact();
+    setState(() => _isLoading = true);
+    try {
+      context.read<AuthBloc>().add(AuthLoginWithApple());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -955,6 +967,12 @@ class _LoginScreenState extends State<LoginScreen>
               // Botón de Google
               _buildGoogleLoginButton(),
 
+              // Botón de Apple — solo en iOS (Apple requiere su botón si hay otro social login)
+              if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+                const SizedBox(height: 12),
+                _buildAppleLoginButton(),
+              ],
+
               const SizedBox(height: 24),
 
               // Link para registro
@@ -1139,6 +1157,39 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         label: Text(
           'Continuar con Google',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: _isLoading ? AppColors.textSecondary : AppColors.textPrimary,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(
+            color: _isLoading
+                ? AppColors.textSecondary.withOpacity(0.3)
+                : AppColors.textSecondary.withOpacity(0.5),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAppleLoginButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: OutlinedButton.icon(
+        onPressed: _isLoading ? null : _handleAppleLogin,
+        icon: Icon(
+          Icons.apple,
+          color: _isLoading ? AppColors.textSecondary : AppColors.textPrimary,
+          size: 22,
+        ),
+        label: Text(
+          'Continuar con Apple',
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,

@@ -6,32 +6,36 @@ import 'UnifiedResultsCombiner.dart';
 
 /// Servicio para compartir resultados combinados en diferentes formatos
 class CombinedResultsShareService {
-  /// Genera y comparte un PDF con los resultados combinados
-  static Future<void> sharePdf(
+  /// Genera y comparte un PDF con los resultados combinados.
+  /// Retorna true si el usuario completó la acción de compartir.
+  static Future<bool> sharePdf(
     CombinedCalculationResult result, {
     String? nombreUsuario,
   }) async {
     try {
       final file = await _generatePdf(result, nombreUsuario: nombreUsuario);
 
-      await Share.shareXFiles(
+      final shareResult = await Share.shareXFiles(
         [XFile(file.path)],
         subject: 'Resultados Combinados - ${result.projectName}',
         text: 'Resultados combinados de ${result.metradoCount} metrados',
       );
+      return shareResult.status == ShareResultStatus.success;
     } catch (e) {
       throw Exception('Error al compartir PDF: $e');
     }
   }
 
-  /// Genera y comparte un texto con los resultados combinados
-  static Future<void> shareText(CombinedCalculationResult result) async {
+  /// Genera y comparte un texto con los resultados combinados.
+  /// Retorna true si el usuario completó la acción de compartir.
+  static Future<bool> shareText(CombinedCalculationResult result) async {
     try {
       final text = _generateText(result);
-      await Share.share(
+      final shareResult = await Share.share(
         text,
         subject: 'Resultados Combinados - ${result.projectName}',
       );
+      return shareResult.status == ShareResultStatus.success;
     } catch (e) {
       throw Exception('Error al compartir texto: $e');
     }

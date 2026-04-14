@@ -7,7 +7,7 @@ import '../../../../../domain/entities/home/acero/steel_constants.dart';
 // PROVIDERS PRINCIPALES
 // ============================================================================
 
-final steelColumnResultProvider = StateNotifierProvider<SteelColumnResultNotifier, List<SteelColumn>>((ref) {
+final steelColumnResultProvider = NotifierProvider<SteelColumnResultNotifier, List<SteelColumn>>(() {
   return SteelColumnResultNotifier();
 });
 
@@ -181,8 +181,9 @@ SteelColumnCalculationResult _calculateSteelForColumn(SteelColumn column) {
 // STATE NOTIFIERS PARA COLUMNAS
 // ============================================================================
 
-class SteelColumnResultNotifier extends StateNotifier<List<SteelColumn>> {
-  SteelColumnResultNotifier() : super([]);
+class SteelColumnResultNotifier extends Notifier<List<SteelColumn>> {
+  @override
+  List<SteelColumn> build() => [];
 
   void addColumn(SteelColumn column) {
     state = [...state, column];

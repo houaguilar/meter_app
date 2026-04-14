@@ -29,7 +29,7 @@ class _NotificationsSettingsScreenState
 
     // Cargar configuración inicial
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(notificationSettingsNotifierProvider.notifier).reload();
+      ref.read(notificationSettingsProvider.notifier).reload();
     });
   }
 
@@ -46,7 +46,7 @@ class _NotificationsSettingsScreenState
     // Verificar permisos cuando la app vuelve del foreground
     if (state == AppLifecycleState.resumed) {
       ref
-          .read(notificationSettingsNotifierProvider.notifier)
+          .read(notificationSettingsProvider.notifier)
           .checkPermissionStatus();
     }
   }
@@ -92,7 +92,7 @@ class _NotificationsSettingsScreenState
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () async {
               await ref
-                  .read(notificationSettingsNotifierProvider.notifier)
+                  .read(notificationSettingsProvider.notifier)
                   .reset();
               if (mounted) {
                 _showSuccessMessage('Configuración reseteada');
@@ -106,7 +106,7 @@ class _NotificationsSettingsScreenState
 
   Widget _buildBody() {
     final isLoading = ref.watch(isNotificationLoadingProvider);
-    final settings = ref.watch(notificationSettingsNotifierProvider);
+    final settings = ref.watch(notificationSettingsProvider);
 
     if (isLoading) {
       return _buildLoadingState();
@@ -156,7 +156,7 @@ class _NotificationsSettingsScreenState
             enabled: settings.generalEnabled,
             onChanged: settings.systemPermissionGranted
                 ? (value) => ref
-                    .read(notificationSettingsNotifierProvider.notifier)
+                    .read(notificationSettingsProvider.notifier)
                     .toggleGeneral(value)
                 : null,
           ),
@@ -168,7 +168,7 @@ class _NotificationsSettingsScreenState
             enabled: settings.updatesEnabled,
             onChanged: settings.systemPermissionGranted
                 ? (value) => ref
-                    .read(notificationSettingsNotifierProvider.notifier)
+                    .read(notificationSettingsProvider.notifier)
                     .toggleUpdates(value)
                 : null,
           ),
@@ -180,7 +180,7 @@ class _NotificationsSettingsScreenState
             enabled: settings.projectsEnabled,
             onChanged: settings.systemPermissionGranted
                 ? (value) => ref
-                    .read(notificationSettingsNotifierProvider.notifier)
+                    .read(notificationSettingsProvider.notifier)
                     .toggleProjects(value)
                 : null,
           ),
@@ -504,7 +504,7 @@ class _NotificationsSettingsScreenState
             onPressed: () async {
               HapticFeedback.lightImpact();
               await ref
-                  .read(notificationSettingsNotifierProvider.notifier)
+                  .read(notificationSettingsProvider.notifier)
                   .enableAll();
               if (mounted) {
                 _showSuccessMessage('Todas las notificaciones activadas');
@@ -528,7 +528,7 @@ class _NotificationsSettingsScreenState
             onPressed: () async {
               HapticFeedback.lightImpact();
               await ref
-                  .read(notificationSettingsNotifierProvider.notifier)
+                  .read(notificationSettingsProvider.notifier)
                   .disableAll();
               if (mounted) {
                 _showSuccessMessage('Todas las notificaciones desactivadas');
@@ -558,7 +558,7 @@ class _NotificationsSettingsScreenState
     HapticFeedback.lightImpact();
 
     final granted = await ref
-        .read(notificationSettingsNotifierProvider.notifier)
+        .read(notificationSettingsProvider.notifier)
         .requestPermission();
 
     if (mounted) {

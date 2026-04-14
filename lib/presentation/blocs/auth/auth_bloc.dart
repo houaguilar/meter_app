@@ -4,6 +4,7 @@ import 'package:meter_app/domain/entities/auth/user.dart';
 
 import '../../../config/common/cubits/app_user/app_user_cubit.dart';
 import '../../../config/usecase/usecase.dart';
+import '../../../data/local/shared_preferences_helper.dart';
 import '../../../domain/usecases/use_cases.dart';
 
 part 'auth_event.dart';
@@ -15,23 +16,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final CurrentUser _currentUser;
   final UserLogout _userLogout;
   final UserSignInWithGoogle _userSignInWithGoogle;
+  final UserSignInWithApple _userSignInWithApple;
   final DeleteAccount _deleteAccount;
   final AppUserCubit _appUserCubit;
+  final SharedPreferencesHelper _sharedPrefs;
+
   AuthBloc({
     required UserSignUp userSignUp,
     required UserLogin userLogin,
     required CurrentUser currentUser,
     required UserLogout userLogout,
     required UserSignInWithGoogle userSignInWithGoogle,
+    required UserSignInWithApple userSignInWithApple,
     required DeleteAccount deleteAccount,
-    required AppUserCubit appUserCubit
-  })  :_userSignUp = userSignUp,
+    required AppUserCubit appUserCubit,
+    required SharedPreferencesHelper sharedPrefs,
+  })  : _userSignUp = userSignUp,
         _userLogin = userLogin,
         _currentUser = currentUser,
         _userLogout = userLogout,
         _userSignInWithGoogle = userSignInWithGoogle,
+        _userSignInWithApple = userSignInWithApple,
         _deleteAccount = deleteAccount,
-      _appUserCubit = appUserCubit,
+        _appUserCubit = appUserCubit,
+        _sharedPrefs = sharedPrefs,
         super(AuthInitial()) {
     on<AuthEvent>((_, emit) => emit(AuthLoading()));
     on<AuthSignUp>(_onAuthSignUp);
@@ -39,6 +47,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
     on<AuthLogout>(_onAuthLogout);
     on<AuthLoginWithGoogle>(_onAuthLoginWithGoogle);
+    on<AuthLoginWithApple>(_onAuthLoginWithApple);
     on<AuthDeleteAccount>(_onAuthDeleteAccount);
   }
 
@@ -49,17 +58,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final res = await _currentUser(NoParams());
 
     res.fold(
-          (l) {
-        // Si el error es "User not logged in", simplemente emitimos AuthInitial
-        // en lugar de AuthFailure para no mostrar un error al usuario
-            if (l.message.contains('User not logged in')) {
-              _appUserCubit.clearUser();
-              emit(AuthInitial());
-            } else {
-              emit(AuthFailure(l.message));
-            }
-            },
-          (r) => _emitAuthSuccess(r, emit),
+      (l) {
+        if (l.message.contains('User not logged in')) {
+          // Sin sesión activa: verificar si hay un registro pendiente de confirmar
+          final pendingEmail = _sharedPrefs.getPendingVerificationEmail();
+          if (pendingEmail != null) {
+            emit(AuthPendingEmailVerification(pendingEmail));
+          } else {
+            _appUserCubit.clearUser();
+            emit(AuthInitial());
+          }
+        } else {
+          emit(AuthFailure(l.message));
+        }
+      },
+      (r) {
+        // Sesión activa y verificada: limpiar cualquier pendiente previo
+        _sharedPrefs.clearPendingVerificationEmail();
+        _emitAuthSuccess(r, emit);
+      },
     );
   }
 
@@ -77,9 +94,43 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     res.fold(
-          (failure) => emit(AuthFailure(failure.message)),
-          (user) => _emitAuthSuccess(user, emit),
+      (failure) => emit(AuthFailure(failure.message)),
+      (_) {},
+    );
 
+    if (res.isLeft()) return;
+
+    // Supabase no crea sesión activa hasta que el email sea confirmado (PKCE).
+    // Guardar el email y mostrar la pantalla de verificación.
+    // IMPORTANTE: NO llamar a _userLogout aquí porque eliminaría el code_verifier
+    // de PKCE que Supabase guardó localmente, rompiendo el intercambio al hacer
+    // clic en el enlace de verificación.
+    await _sharedPrefs.savePendingVerificationEmail(event.email);
+    emit(AuthPendingEmailVerification(event.email));
+  }
+
+  void _onAuthLoginWithApple(
+      AuthLoginWithApple event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+
+    final res = await _userSignInWithApple(NoParams());
+
+    res.fold(
+      (failure) {
+        final errorMessage = failure.message.toLowerCase();
+        final isCancellation = errorMessage.contains('canceló') ||
+            errorMessage.contains('canceled') ||
+            errorMessage.contains('cancelled');
+
+        if (isCancellation) {
+          emit(AuthInitial());
+        } else {
+          emit(AuthFailure(failure.message));
+        }
+      },
+      (user) => _emitAuthSuccess(user, emit),
     );
   }
 

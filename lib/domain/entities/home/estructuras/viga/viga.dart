@@ -1,5 +1,5 @@
 // lib/domain/entities/home/structural/viga.dart
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 
 import '../../../entities.dart';
 

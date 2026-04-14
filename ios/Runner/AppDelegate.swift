@@ -10,8 +10,10 @@ import FirebaseMessaging
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Configurar Google Maps
-    GMSServices.provideAPIKey("AIzaSyCQhVaoFnEm3PMeaUQw6pj5xH8XUDZ5XdQ")
+    // Configurar Google Maps (clave leída desde Info.plist → Secret.xcconfig)
+    if let mapsKey = Bundle.main.object(forInfoDictionaryKey: "GoogleMapsAPIKey") as? String {
+      GMSServices.provideAPIKey(mapsKey)
+    }
 
     // Configurar Firebase (ya se inicializa en Flutter, pero se necesita para FCM)
     FirebaseApp.configure()

@@ -21,18 +21,29 @@ import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dar
 import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
+import 'dart:async';
+
+import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
+
 import 'config/analytics/analytics_repository.dart';
 import 'config/common/cubits/app_user/app_user_cubit.dart';
 import 'config/config.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
+import 'presentation/blocs/feedback/feedback_bloc.dart';
 import 'presentation/blocs/map/products_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Cargar variables de entorno
-  await dotenv.load(fileName: ".env");
+  // Determinar ambiente: --dart-define=ENV=prod o ENV=dev (default: dev)
+  const environment = String.fromEnvironment('ENV', defaultValue: 'dev');
+  final envFile = environment == 'prod' ? '.env.prod' : '.env.dev';
+
+  // Cargar variables de entorno segun el ambiente
+  await dotenv.load(fileName: envFile);
+
+  debugPrint('🚀 Running in $environment mode with $envFile');
 
   // Inicializar Firebase
   await Firebase.initializeApp(
@@ -72,13 +83,23 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final CombinedResultsBloc combinedResultsBloc;
   late final ProductsBloc productsBloc;
   late final CartBloc cartBloc;
+  late final FeedbackBloc feedbackBloc;
   late final NotificationRepository notificationService;
-  late GoRouter _appRouter;
+  late final GoRouter _appRouter;
+  StreamSubscription<supabase.AuthState>? _authStateSubscription;
 
   @override
   void initState() {
     super.initState();
     authBloc = serviceLocator<AuthBloc>();
+
+    // Router creado una sola vez: evita perder el estado de navegación en rebuilds
+    _appRouter = AppRouter(
+      authBloc,
+      serviceLocator<AnalyticsRepository>(),
+      rootNavigatorKey: _rootNavigatorKey,
+    ).router;
+
     articleBloc = serviceLocator<ArticleBloc>();
     measurementBloc = serviceLocator<MeasurementBloc>();
     projectsBloc = serviceLocator<ProjectsBloc>();
@@ -90,10 +111,34 @@ class _MyAppState extends ConsumerState<MyApp> {
     combinedResultsBloc = serviceLocator<CombinedResultsBloc>();
     productsBloc = serviceLocator<ProductsBloc>();
     cartBloc = serviceLocator<CartBloc>();
+    feedbackBloc = serviceLocator<FeedbackBloc>();
     notificationService = serviceLocator<NotificationRepository>();
 
     // Configurar handlers de notificaciones
     _setupNotificationHandlers();
+
+    // Escuchar el evento de recuperación de contraseña vía magic link
+    _authStateSubscription = supabase.Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (data.event == supabase.AuthChangeEvent.passwordRecovery) {
+        final context = _getRootContext();
+        if (context != null) {
+          GoRouter.of(context).go('/new-password');
+        }
+      } else if (data.event == supabase.AuthChangeEvent.signedIn) {
+        // Solo actúa si el AuthBloc no tiene sesión activa (ej: app abierta desde cero
+        // por magic link y EmailVerificationScreen no está montada).
+        // Evita llamadas redundantes cuando el login normal ya actualizó el estado.
+        if (authBloc.state is! AuthSuccess) {
+          authBloc.add(AuthIsUserLoggedIn());
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authStateSubscription?.cancel();
+    super.dispose();
   }
 
   void _setupNotificationHandlers() {
@@ -159,13 +204,6 @@ class _MyAppState extends ConsumerState<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-
-    _appRouter = AppRouter(
-      authBloc,
-      serviceLocator<AnalyticsRepository>(),
-      rootNavigatorKey: _rootNavigatorKey,
-    ).router;
-
     return MultiBlocProvider(
       providers: [
         BlocProvider(
@@ -213,6 +251,9 @@ class _MyAppState extends ConsumerState<MyApp> {
         ),
         BlocProvider(
           create: (_) => cartBloc,
+        ),
+        BlocProvider(
+          create: (_) => feedbackBloc,
         ),
       ],
       child: MultiBlocListener(

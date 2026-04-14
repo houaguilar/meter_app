@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 
 part 'custom_brick.g.dart';

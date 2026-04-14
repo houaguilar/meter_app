@@ -329,7 +329,7 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
           return _buildTableRow([
             piso.description,
             'm²',
-            area.toStringAsFixed(1),
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
@@ -523,8 +523,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   void _handleProviderAction() {
     final pisos = ref.watch(contrapisoResultProvider);
     if (pisos.isNotEmpty) {
-    //  FeatureStatusDialog.showTemporarilyDisabled(context);
-      context.pushNamed('contrapiso-map-screen');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+    //  context.pushNamed('contrapiso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de contrapiso');
     }
@@ -655,6 +655,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   Future<void> _sharePDF() async {
     try {
       Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
@@ -685,6 +687,8 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final pisos = ref.watch(contrapisoResultProvider);
       final materials = ref.watch(contrapisoMaterialsProvider);  // ✅ Cambio aquí
       final datosMetrado = ref.watch(datosShareContrapisoProvider);

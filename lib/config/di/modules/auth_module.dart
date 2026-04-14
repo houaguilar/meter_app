@@ -32,6 +32,7 @@ void registerAuthModule(GetIt sl) {
   sl.registerFactory(() => UserLogout(sl()));
   sl.registerFactory(() => CurrentUser(sl()));
   sl.registerFactory(() => UserSignInWithGoogle(sl()));
+  sl.registerFactory(() => UserSignInWithApple(sl()));
   sl.registerFactory(() => DeleteAccount(sl()));
   sl.registerFactory(() => ResetPasswordForEmail(sl()));
   sl.registerFactory(() => VerifyOTP(sl()));
@@ -51,8 +52,10 @@ void registerAuthModule(GetIt sl) {
       currentUser: sl(),
       userLogout: sl(),
       userSignInWithGoogle: sl(),
+      userSignInWithApple: sl(),
       deleteAccount: sl(),
       appUserCubit: sl(),
+      sharedPrefs: sl(),
     ),
   );
 

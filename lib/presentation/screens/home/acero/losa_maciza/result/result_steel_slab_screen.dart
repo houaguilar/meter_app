@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -391,7 +392,9 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
     return InkWell(
       onTap: () {
         Navigator.of(context).pop();
-        onTap();
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) onTap();
+        });
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -467,8 +470,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
     for (int i = 0; i < consolidatedResult.slabResults.length; i++) {
       final slab = consolidatedResult.slabResults[i];
       content.writeln('Losa ${i + 1}: ${slab.description}');
-      content.writeln('  • Peso total: ${slab.totalWeight.toStringAsFixed(1)} kg');
-      content.writeln('  • Alambre #16: ${slab.wireWeight.toStringAsFixed(1)} kg');
+      content.writeln('  • Peso total: ${formatResultValue(slab.totalWeight as double)} kg');
+      content.writeln('  • Alambre #16: ${formatResultValue(slab.wireWeight as double)} kg');
       if (slab.hasSuperiorMesh) {
         content.writeln('  • Incluye malla superior');
       }
@@ -644,8 +647,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Losas', '${quickStats['totalSlabs']}'),
-            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Peso Total de Acero', '${formatResultValue((quickStats['totalWeight'] as double?) ?? 0.0)} kg'),
+            _buildStatRow('Alambre #16', '${formatResultValue((quickStats['totalWire'] as double?) ?? 0.0)} kg'),
           ],
         ],
       ),
@@ -893,7 +896,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${slab.totalWeight.toStringAsFixed(1)} kg',
+                  'Peso total: ${formatResultValue(slab.totalWeight as double)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,

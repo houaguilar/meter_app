@@ -15,75 +15,109 @@ class ShareOptionsModal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
+      decoration: const BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          // Drag indicator
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.neutral300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
             'Compartir Resultados',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          Text(
+            'Elige el formato para compartir tus resultados',
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _ShareOptionTile(
-                icon: Icons.picture_as_pdf,
-                label: 'PDF',
-                color: Colors.red,
-                onTap: () {
-                  Navigator.pop(context);
-                  onFormatSelected(ShareFormat.pdf);
-                },
+              Expanded(
+                child: _buildShareOption(
+                  context: context,
+                  icon: Icons.picture_as_pdf,
+                  label: 'Compartir PDF',
+                  color: Colors.red,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Future.delayed(const Duration(milliseconds: 350), () {
+                      onFormatSelected(ShareFormat.pdf);
+                    });
+                  },
+                ),
               ),
-              _ShareOptionTile(
-                icon: Icons.text_fields,
-                label: 'Texto',
-                color: Colors.blue,
-                onTap: () {
-                  Navigator.pop(context);
-                  onFormatSelected(ShareFormat.text);
-                },
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildShareOption(
+                  context: context,
+                  icon: Icons.text_fields,
+                  label: 'Compartir Texto',
+                  color: AppColors.blueMetraShop,
+                  onTap: () {
+                    Navigator.pop(context);
+                    Future.delayed(const Duration(milliseconds: 350), () {
+                      onFormatSelected(ShareFormat.text);
+                    });
+                  },
+                ),
               ),
             ],
           ),
           const SizedBox(height: 24),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.close),
+            label: const Text('Cancelar'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.textSecondary,
+              side: BorderSide(color: AppColors.neutral400),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-}
 
-/// Widget individual para cada opción de compartir
-class _ShareOptionTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ShareOptionTile({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
+  Widget _buildShareOption({
+    required BuildContext context,
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.3)),
+          borderRadius: BorderRadius.circular(12),
           color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
         ),
         child: Column(
           children: [
@@ -92,10 +126,11 @@ class _ShareOptionTile extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: color,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

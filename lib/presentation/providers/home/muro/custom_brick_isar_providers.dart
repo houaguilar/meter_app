@@ -27,15 +27,14 @@ final customBricksProvider = FutureProvider<List<CustomBrick>>((ref) async {
 });
 
 /// Provider para el estado de guardado de ladrillos
-final customBrickSaveStateProvider = StateNotifierProvider<CustomBrickSaveNotifier, AsyncValue<CustomBrick?>>((ref) {
-  return CustomBrickSaveNotifier(ref);
+final customBrickSaveStateProvider = NotifierProvider<CustomBrickSaveNotifier, AsyncValue<CustomBrick?>>(() {
+  return CustomBrickSaveNotifier();
 });
 
 /// Notifier para manejar el guardado de ladrillos personalizados
-class CustomBrickSaveNotifier extends StateNotifier<AsyncValue<CustomBrick?>> {
-  final Ref _ref;
-
-  CustomBrickSaveNotifier(this._ref) : super(const AsyncValue.data(null));
+class CustomBrickSaveNotifier extends Notifier<AsyncValue<CustomBrick?>> {
+  @override
+  AsyncValue<CustomBrick?> build() => const AsyncValue.data(null);
 
   /// Guardar un nuevo ladrillo personalizado
   Future<void> saveCustomBrick(CustomBrick brick) async {
@@ -131,8 +130,8 @@ class CustomBrickSaveNotifier extends StateNotifier<AsyncValue<CustomBrick?>> {
 
   /// Invalidar providers relacionados para refrescar
   void _invalidateProviders() {
-    _ref.invalidate(customBricksProvider);
-    _ref.invalidate(wallMaterialsWithCustomProvider);
+    ref.invalidate(customBricksProvider);
+    ref.invalidate(wallMaterialsWithCustomProvider);
   }
 }
 
@@ -170,7 +169,16 @@ final wallMaterialsWithCustomProvider = FutureProvider<List<WallMaterial>>((ref)
 });
 
 /// Provider para manejar la selección de ladrillo personalizado actual
-final selectedCustomBrickProvider = StateProvider<CustomBrick?>((ref) => null);
+final selectedCustomBrickProvider = NotifierProvider<SelectedCustomBrickNotifier, CustomBrick?>(() {
+  return SelectedCustomBrickNotifier();
+});
+
+class SelectedCustomBrickNotifier extends Notifier<CustomBrick?> {
+  @override
+  CustomBrick? build() => null;
+
+  void update(CustomBrick? value) => state = value;
+}
 
 /// Provider de utilidad para refrescar manualmente los datos
 final refreshCustomBricksProvider = Provider<VoidCallback>((ref) {

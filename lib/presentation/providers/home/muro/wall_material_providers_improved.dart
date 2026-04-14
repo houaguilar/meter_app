@@ -24,4 +24,11 @@ final wallMaterialsProvider = FutureProvider<List<WallMaterial>>((ref) async {
 });
 
 /// Provider para el material seleccionado actualmente
-final selectedMaterialProvider = StateProvider<WallMaterial?>((ref) => null);
+final selectedMaterialProvider = NotifierProvider<SelectedMaterialNotifier, WallMaterial?>(() => SelectedMaterialNotifier());
+
+class SelectedMaterialNotifier extends Notifier<WallMaterial?> {
+  @override
+  WallMaterial? build() => null;
+
+  void select(WallMaterial? material) => state = material;
+}

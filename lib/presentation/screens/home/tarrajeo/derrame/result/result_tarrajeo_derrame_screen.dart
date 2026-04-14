@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../../config/theme/theme.dart';
@@ -272,8 +273,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               ])).toList(),
               _buildTableRow([
                 'TOTAL',
-                '${totalArea.toStringAsFixed(1)} m²',
-                '${totalVolumen.toStringAsFixed(1)} m³',
+                '${totalArea.toStringAsFixed(2)} m²',
+                '${formatResultValue(totalVolumen)} m³',
               ], isTotal: true),
             ],
           ),
@@ -605,8 +606,8 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         // Fila de totales
         _buildTableRow([
           'TOTAL',
-          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.area).toStringAsFixed(1)}',
-          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.volumen).toStringAsFixed(1)}',
+          '${metrados.fold(0.0, (sum, metrado) => sum + metrado.area).toStringAsFixed(2)}',
+          '${formatResultValue(metrados.fold(0.0, (sum, metrado) => sum + metrado.volumen))}',
         ], isTotal: true),
       ],
     );

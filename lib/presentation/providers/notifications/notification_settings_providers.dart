@@ -390,14 +390,14 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
 /// Provider que indica si alguna notificación está habilitada
 @riverpod
-bool hasAnyNotificationEnabled(HasAnyNotificationEnabledRef ref) {
-  final settings = ref.watch(notificationSettingsNotifierProvider);
+bool hasAnyNotificationEnabled(Ref ref) {
+  final settings = ref.watch(notificationSettingsProvider);
   return settings.hasAnyEnabled;
 }
 
 /// Provider que indica si el loading está activo
 @riverpod
-bool isNotificationLoading(IsNotificationLoadingRef ref) {
+bool isNotificationLoading(Ref ref) {
   final status = ref.watch(notificationLoadingStatusProvider);
   return status == NotificationLoadingState.loading;
 }

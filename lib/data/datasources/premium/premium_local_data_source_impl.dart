@@ -1,5 +1,5 @@
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../../domain/datasources/premium/premium_local_data_source.dart';
 import '../../models/premium/premium_status_model.dart';
 import '../../../config/constants/error/exceptions.dart';

@@ -38,7 +38,7 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
 
     // FIX: Limpiar estado al inicializar
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(tipoStructuralElementProvider.notifier).state = '';
+      ref.read(tipoStructuralElementProvider.notifier).update('');
       ref.read(columnaResultProvider.notifier).clearList();
       ref.read(vigaResultProvider.notifier).clearList();
       print('🧹 Estado inicial limpiado');
@@ -143,8 +143,8 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       // Debug: imprimir el tipo de elemento que se va a establecer
       print('🏗️ Tipo de elemento a establecer: $elementType');
 
-      // FIX: Establecer el tipo de elemento usando StateProvider
-      ref.read(tipoStructuralElementProvider.notifier).state = elementType;
+      // FIX: Establecer el tipo de elemento usando NotifierProvider
+      ref.read(tipoStructuralElementProvider.notifier).update(elementType);
 
       // Verificar que se estableció correctamente
       final tipoEstablecido = ref.read(tipoStructuralElementProvider);

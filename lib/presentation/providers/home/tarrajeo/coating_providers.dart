@@ -19,4 +19,11 @@ final coatingsProvider = FutureProvider<List<Coating>>((ref) async {
   return await useCase();
 });
 
-final selectedCoatingProvider = StateProvider<Coating?>((ref) => null);
+final selectedCoatingProvider = NotifierProvider<SelectedCoatingNotifier, Coating?>(() => SelectedCoatingNotifier());
+
+class SelectedCoatingNotifier extends Notifier<Coating?> {
+  @override
+  Coating? build() => null;
+
+  void select(Coating? coating) => state = coating;
+}

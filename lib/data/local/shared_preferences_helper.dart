@@ -106,4 +106,16 @@ class SharedPreferencesHelper {
   bool containsKey(String key) => sharedPreferences.containsKey(key);
 
   Set<String> getKeys() => sharedPreferences.getKeys();
+
+  // Email pendiente de verificación (para mostrar EmailVerificationScreen al reabrir la app)
+  static const _keyPendingVerificationEmail = 'pending_verification_email';
+
+  Future<void> savePendingVerificationEmail(String email) =>
+      sharedPreferences.setString(_keyPendingVerificationEmail, email);
+
+  String? getPendingVerificationEmail() =>
+      sharedPreferences.getString(_keyPendingVerificationEmail);
+
+  Future<void> clearPendingVerificationEmail() =>
+      sharedPreferences.remove(_keyPendingVerificationEmail);
 }

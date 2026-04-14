@@ -1,5 +1,9 @@
+import 'dart:convert';
+
+import 'package:crypto/crypto.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../config/constants/error/exceptions.dart';
@@ -58,6 +62,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         data: {
           'name': name,
         },
+        emailRedirectTo: 'com.mts.metrashop:/callback',
       );
 
       if (response.user == null) {
@@ -66,16 +71,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       print('✅ Usuario registrado: ${response.user!.id}');
       print('📧 Email confirmado: ${response.user!.emailConfirmedAt != null}');
-
-      // Crear un perfil para el usuario recién registrado
-      await _createInitialUserProfile(
-        userId: response.user!.id,
-        name: name,
-        email: email,
-      );
-
-      // NOTA: NO cerramos la sesión aquí para permitir navegación a EmailVerificationScreen
-      // El RegisterScreen manejará la navegación automática a verificación de email
+      // El perfil se crea automáticamente via trigger en Supabase (handle_new_user)
 
       return UserModel(
         id: response.user!.id,
@@ -143,6 +139,82 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<UserModel?> signInWithApple() async {
+    try {
+      print('🍎 Iniciando Sign in with Apple...');
+
+      // 1. Generar nonce: el raw va a Supabase, el hash va a Apple
+      final rawNonce = supabaseClient.auth.generateRawNonce();
+      final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+      // 2. Solicitar credencial a Apple — se pasa el nonce HASHEADO
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final identityToken = credential.identityToken;
+      if (identityToken == null) {
+        throw const ServerException('No se pudo obtener el token de Apple');
+      }
+
+      print('✅ Credencial de Apple obtenida');
+
+      // 3. Autenticar con Supabase — se pasa el nonce RAW
+      final response = await supabaseClient.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: identityToken,
+        nonce: rawNonce,
+      );
+
+      if (response.user == null) {
+        throw const ServerException('Error al autenticar con Supabase');
+      }
+
+      // 4. Apple solo devuelve el nombre en el PRIMER login — guardarlo si está disponible
+      final fullName = [
+        credential.givenName,
+        credential.familyName,
+      ].whereType<String>().where((s) => s.isNotEmpty).join(' ');
+
+      final name = fullName.isNotEmpty
+          ? fullName
+          : response.user!.userMetadata?['name'] ??
+            response.user!.email?.split('@')[0] ??
+            'Usuario';
+
+      if (fullName.isNotEmpty) {
+        await supabaseClient.auth.updateUser(
+          UserAttributes(data: {'name': name}),
+        );
+      }
+
+      print('✅ Sign in with Apple completado: ${response.user!.email}');
+
+      return UserModel(
+        id: response.user!.id,
+        name: name,
+        email: response.user!.email ?? '',
+      );
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw const ServerException('El usuario canceló el inicio de sesión');
+      }
+      print('❌ Error Apple Sign In: ${e.message}');
+      throw ServerException(e.message);
+    } on AuthException catch (e) {
+      print('❌ Error Supabase Auth: ${e.message}');
+      throw ServerException(e.message);
+    } catch (e) {
+      print('❌ Error inesperado en signInWithApple: $e');
+      throw ServerException(e.toString());
+    }
+  }
+
+  @override
   Future<UserModel?> signInWithGoogle() async {
     // Client IDs de Google Cloud Console (Cuenta Empresa)
     // IMPORTANTE: Estos deben coincidir con los configurados en:
@@ -198,19 +270,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       print('✅ Usuario autenticado con Supabase: ${response.user!.email}');
-
-      // Paso 4: Crear o actualizar perfil del usuario
-      // NOTA: En Supabase, no hay diferencia entre "login" y "register" con Google.
-      // Si el usuario no existe, se crea automáticamente. Si existe, se autentica.
-      print('Paso 4: Creando/actualizando perfil...');
-      await _createInitialUserProfile(
-        userId: response.user!.id,
-        name: response.user!.userMetadata?['name'] ??
-              response.user!.email?.split('@')[0] ??
-              'Usuario',
-        email: response.user!.email ?? '',
-      );
-
+      // El perfil se crea/verifica automáticamente via trigger en Supabase (handle_new_user)
       print('✅ Google Sign-In completado exitosamente');
 
       return UserModel(
@@ -557,7 +617,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       await supabaseClient.auth.resetPasswordForEmail(
         email,
-        redirectTo: null, // No usar deep links por ahora
+        redirectTo: 'com.mts.metrashop:/callback',
       );
 
       print('✅ Email de recuperación enviado exitosamente');
@@ -611,6 +671,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       await supabaseClient.auth.resend(
         type: OtpType.email,
         email: email,
+        emailRedirectTo: 'com.mts.metrashop:/callback',
       );
 
       print('✅ OTP reenviado exitosamente');

@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:meter_app/domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';

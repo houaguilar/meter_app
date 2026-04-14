@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -285,8 +286,8 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
 
     if (footings.isNotEmpty && consolidatedResult != null) {
       // Navegar a mapa de proveedores
-      // FeatureStatusDialog.showTemporarilyDisabled(context);
-         context.pushNamed('map-screen-steel-footing');
+       FeatureStatusDialog.showTemporarilyDisabled(context);
+      //   context.pushNamed('map-screen-steel-footing');
     } else {
       _showErrorMessage('No hay datos de zapatas de acero');
     }
@@ -388,7 +389,9 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
     return InkWell(
       onTap: () {
         Navigator.of(context).pop();
-        onTap();
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) onTap();
+        });
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -457,8 +460,8 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
 
     content.writeln('📊 RESUMEN GENERAL:');
     content.writeln('• Número de zapatas: ${consolidatedResult.numberOfElements}');
-    content.writeln('• Peso total de acero: ${consolidatedResult.totalWeight.toStringAsFixed(2)} kg');
-    content.writeln('• Alambre #16: ${consolidatedResult.totalWire.toStringAsFixed(2)} kg');
+    content.writeln('• Peso total de acero: ${formatResultValue(consolidatedResult.totalWeight as double)} kg');
+    content.writeln('• Alambre #16: ${formatResultValue(consolidatedResult.totalWire as double)} kg');
 
     content.writeln('\n📋 MATERIALES CONSOLIDADOS:');
     consolidatedResult.consolidatedMaterials.forEach((material, data) {
@@ -469,18 +472,18 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
     for (int i = 0; i < consolidatedResult.footingResults.length; i++) {
       final footing = consolidatedResult.footingResults[i];
       content.writeln('\n${i + 1}. ${footing.description}:');
-      content.writeln('   • Peso: ${footing.totalWeight.toStringAsFixed(1)} kg');
-      content.writeln('   • Alambre: ${footing.wireWeight.toStringAsFixed(1)} kg');
+      content.writeln('   • Peso: ${formatResultValue(footing.totalWeight as double)} kg');
+      content.writeln('   • Alambre: ${formatResultValue(footing.wireWeight as double)} kg');
 
       // Detalles de mallas
       content.writeln('   • Malla inferior:');
-      content.writeln('     - Horizontal: ${footing.inferiorMesh.horizontalQuantity} barras x ${footing.inferiorMesh.horizontalLength.toStringAsFixed(1)}m');
-      content.writeln('     - Vertical: ${footing.inferiorMesh.verticalQuantity} barras x ${footing.inferiorMesh.verticalLength.toStringAsFixed(1)}m');
+      content.writeln('     - Horizontal: ${footing.inferiorMesh.horizontalQuantity} barras x ${formatResultValue(footing.inferiorMesh.horizontalLength as double)}m');
+      content.writeln('     - Vertical: ${footing.inferiorMesh.verticalQuantity} barras x ${formatResultValue(footing.inferiorMesh.verticalLength as double)}m');
 
       if (footing.superiorMesh != null) {
         content.writeln('   • Malla superior:');
-        content.writeln('     - Horizontal: ${footing.superiorMesh!.horizontalQuantity} barras x ${footing.superiorMesh!.horizontalLength.toStringAsFixed(1)}m');
-        content.writeln('     - Vertical: ${footing.superiorMesh!.verticalQuantity} barras x ${footing.superiorMesh!.verticalLength.toStringAsFixed(1)}m');
+        content.writeln('     - Horizontal: ${footing.superiorMesh!.horizontalQuantity} barras x ${formatResultValue(footing.superiorMesh!.horizontalLength as double)}m');
+        content.writeln('     - Vertical: ${footing.superiorMesh!.verticalQuantity} barras x ${formatResultValue(footing.superiorMesh!.verticalLength as double)}m');
       }
     }
 
@@ -654,8 +657,8 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Zapatas', '${quickStats['totalFootings']}'),
-            _buildStatRow('Peso Total', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'),
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'),
+            _buildStatRow('Peso Total', '${formatResultValue((quickStats['totalWeight'] as double?) ?? 0.0)} kg'),
+            _buildStatRow('Alambre #16', '${formatResultValue((quickStats['totalWire'] as double?) ?? 0.0)} kg'),
           ],
         ],
       ),
@@ -755,7 +758,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
           // Fila de alambre
           _buildMaterialRow(
             'Alambre #16',
-            consolidatedResult.totalWire.toStringAsFixed(1),
+            formatResultValue(consolidatedResult.totalWire as double),
             'kg',
             isHighlighted: true,
           ),
@@ -763,7 +766,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
           // Fila de peso total
           _buildMaterialRow(
             'Peso total de acero',
-            consolidatedResult.totalWeight.toStringAsFixed(1),
+            formatResultValue(consolidatedResult.totalWeight as double),
             'kg',
             isHighlighted: true,
           ),
@@ -908,7 +911,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${footing.totalWeight.toStringAsFixed(1)} kg',
+                  'Peso total: ${formatResultValue(footing.totalWeight as double)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,
@@ -917,7 +920,7 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
               ),
               Expanded(
                 child: Text(
-                  'Alambre: ${footing.wireWeight.toStringAsFixed(1)} kg',
+                  'Alambre: ${formatResultValue(footing.wireWeight as double)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.secondary,
@@ -963,14 +966,14 @@ class _ResultSteelFootingScreenState extends ConsumerState<ResultSteelFootingScr
             children: [
               Expanded(
                 child: Text(
-                  'H: ${mesh.horizontalQuantity} × ${mesh.horizontalLength.toStringAsFixed(1)}m',
+                  'H: ${mesh.horizontalQuantity} × ${formatResultValue(mesh.horizontalLength as double)}m',
                   style: AppTypography.bodySmall.copyWith(fontSize: 11),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'V: ${mesh.verticalQuantity} × ${mesh.verticalLength.toStringAsFixed(1)}m',
+                  'V: ${mesh.verticalQuantity} × ${formatResultValue(mesh.verticalLength as double)}m',
                   style: AppTypography.bodySmall.copyWith(fontSize: 11),
                 ),
               ),

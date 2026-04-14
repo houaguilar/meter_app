@@ -113,7 +113,7 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
       }
 
       // Actualizar selección
-      ref.read(selectedSlabProvider.notifier).state = slab;
+      ref.read(selectedSlabProvider.notifier).select(slab);
 
       // Determinar navegación basada en disponibilidad y tipo
       if (_isSlabAvailable(slab.id)) {

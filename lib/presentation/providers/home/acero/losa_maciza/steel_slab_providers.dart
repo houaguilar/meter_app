@@ -11,7 +11,7 @@ const uuid = Uuid();
 // PROVIDERS PRINCIPALES
 // ============================================================================
 
-final steelSlabResultProvider = StateNotifierProvider<SteelSlabResultNotifier, List<SteelSlab>>((ref) {
+final steelSlabResultProvider = NotifierProvider<SteelSlabResultNotifier, List<SteelSlab>>(() {
   return SteelSlabResultNotifier();
 });
 
@@ -142,8 +142,9 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
 // STATE NOTIFIER
 // ============================================================================
 
-class SteelSlabResultNotifier extends StateNotifier<List<SteelSlab>> {
-  SteelSlabResultNotifier() : super([]);
+class SteelSlabResultNotifier extends Notifier<List<SteelSlab>> {
+  @override
+  List<SteelSlab> build() => [];
 
   void createSteelSlab({
     required String description,

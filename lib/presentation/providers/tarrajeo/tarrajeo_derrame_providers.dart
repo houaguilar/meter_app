@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constants.dart';
+import '../../../config/utils/number_formatter.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/services/tarrajeo_service.dart';
 
@@ -222,10 +223,10 @@ class TarrajeoDerrrameMaterialesData {
   }
 
   // Getters formateados para UI
-  String get cementoFormateado => cemento.toStringAsFixed(1);
-  String get arenaFormateada => arena.toStringAsFixed(1);
-  String get aguaFormateada => agua.toStringAsFixed(1);
-  String get volumenFormateado => volumen.toStringAsFixed(1);
+  String get cementoFormateado => formatResultValue(cemento);
+  String get arenaFormateada => formatResultValue(arena);
+  String get aguaFormateada => formatResultValue(agua);
+  String get volumenFormateado => formatResultValue(volumen);
   String get areaTotalFormateada => "Calculada en metrados";
 }
 
@@ -244,7 +245,7 @@ class TarrajeoDerrameMetradoData {
   });
 
   // Getters formateados para UI
-  String get areaFormateada => area.toStringAsFixed(1);
-  String get volumenFormateado => volumen.toStringAsFixed(1);
+  String get areaFormateada => area.toStringAsFixed(2);
+  String get volumenFormateado => formatResultValue(volumen);
   String get espesorFormateado => espesor.toStringAsFixed(1);
 }

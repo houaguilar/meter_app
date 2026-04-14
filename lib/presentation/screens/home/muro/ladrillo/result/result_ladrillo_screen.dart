@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -362,13 +363,13 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
           return _buildTableRow([
             ladrillo.description,
             'm²',
-            area.toStringAsFixed(1),
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
           'Total:',
           'm²',
-          ref.watch(ladrilloMaterialsProvider).areaTotal.toStringAsFixed(1),
+          ref.watch(ladrilloMaterialsProvider).areaTotal.toStringAsFixed(2),
         ], isTotal: true),
       ],
     );
@@ -385,8 +386,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
         _buildTableRow([_getTipoLadrilloDisplay(), 'und', materials.ladrillos.toStringAsFixed(0)]),
         _buildTableRow(['Cemento', 'bls', materials.cemento.ceil().toString()]),
-        _buildTableRow(['Arena gruesa', 'm³', roundUp(materials.arena, 1).toString()]),
-        _buildTableRow(['Agua', 'm³', materials.agua.toStringAsFixed(2)]),
+        _buildTableRow(['Arena gruesa', 'm³', roundUp(materials.arena, 2).toString()]),
+        _buildTableRow(['Agua', 'm³', formatResultValue(materials.agua)]),
       ],
     );
   }
@@ -552,7 +553,7 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   }
 
   String _getTipoLadrilloDisplay() {
-    final tipoLadrilloId = ref.watch(tipoLadrilloNotifierProvider);
+    final tipoLadrilloId = ref.watch(tipoLadrilloProvider);
 
     // Obtener el tipo desde el ENUM
     final tipo = TipoLadrillo.fromProviderKey(tipoLadrilloId);
@@ -596,8 +597,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   void _handleProviderAction() {
     final ladrillos = ref.watch(ladrilloResultProvider);
     if (ladrillos.isNotEmpty) {
-      // FeatureStatusDialog.showTemporarilyDisabled(context);
-      context.pushNamed('map-screen-2');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+      // context.pushNamed('map-screen-2');
     } else {
       _showErrorSnackBar('No hay datos de ladrillos');
     }
@@ -728,6 +729,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   Future<void> _sharePDF() async {
     try {
       Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
@@ -758,6 +761,8 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final materials = ref.watch(ladrilloMaterialsProvider);
       final ladrillos = ref.watch(ladrilloResultProvider);
       final datosMetrado = ref.watch(datosShareLadrilloProvider);

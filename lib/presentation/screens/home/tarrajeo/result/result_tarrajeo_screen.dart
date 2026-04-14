@@ -556,8 +556,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   }
 
   void _searchProviders() {
-    // FeatureStatusDialog.showTemporarilyDisabled(context);
-      context.pushNamed('map-screen-tarrajeo');
+     FeatureStatusDialog.showTemporarilyDisabled(context);
+    //  context.pushNamed('map-screen-tarrajeo');
   }
 
   void _showShareOptions() {
@@ -685,6 +685,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   Future<void> _sharePDF() async {
     try {
       Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       context.showCalculationLoader(
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
@@ -715,6 +717,8 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
   Future<void> _shareText() async {
     try {
       Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final resumen = ref.read(resumenCompletoProvider);
       await Share.share(resumen, subject: 'Resultados de Tarrajeo');
     } catch (e) {
@@ -795,7 +799,7 @@ class _TarrajeoMetradoTable extends ConsumerWidget {
         _buildTableRow([
           'Total:',
           'm²',
-          areaTotal.toStringAsFixed(1),
+          areaTotal.toStringAsFixed(2),
         ], isTotal: true),
       ],
     );

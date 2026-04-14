@@ -56,11 +56,6 @@ class PremiumStatusIndicator extends StatelessWidget {
                 _buildStatusBadge(status)
               else
                 _buildUnknownBadge(),
-
-              if (AppConfig.isDevelopment && showMockBadge) ...[
-                const SizedBox(width: 8),
-                _buildMockBadge(),
-              ],
             ],
           ),
         );
@@ -137,25 +132,6 @@ class PremiumStatusIndicator extends StatelessWidget {
         style: TextStyle(
           color: Colors.white,
           fontSize: 12,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMockBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.orange.shade200,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.orange.shade400),
-      ),
-      child: Text(
-        'MOCK',
-        style: TextStyle(
-          color: Colors.orange.shade700,
-          fontSize: 10,
           fontWeight: FontWeight.bold,
         ),
       ),

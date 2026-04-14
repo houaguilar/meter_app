@@ -133,7 +133,7 @@ class LosaResult extends _$LosaResult {
 
 /// Provider que proporciona el servicio de losa apropiado según tipo
 @riverpod
-LosaService losaService(LosaServiceRef ref, TipoLosa tipo) {
+LosaService losaService(Ref ref, TipoLosa tipo) {
   return LosaService(tipo);
 }
 
@@ -143,7 +143,7 @@ LosaService losaService(LosaServiceRef ref, TipoLosa tipo) {
 
 /// Provider que calcula las áreas de todas las losas
 @riverpod
-List<double> areaLosas(AreaLosasRef ref) {
+List<double> areaLosas(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   return losas.map((losa) {
@@ -154,14 +154,14 @@ List<double> areaLosas(AreaLosasRef ref) {
 
 /// Provider que obtiene las descripciones de todas las losas
 @riverpod
-List<String> descriptionLosas(DescriptionLosasRef ref) {
+List<String> descriptionLosas(Ref ref) {
   final losas = ref.watch(losaResultProvider);
   return losas.map((e) => e.description).toList();
 }
 
 /// Provider que genera texto para compartir con datos de metrado
 @riverpod
-String datosShareLosa(DatosShareLosaRef ref) {
+String datosShareLosa(Ref ref) {
   final descriptions = ref.watch(descriptionLosasProvider);
   final areas = ref.watch(areaLosasProvider);
 
@@ -183,7 +183,7 @@ String datosShareLosa(DatosShareLosaRef ref) {
 
 /// Calcula la cantidad total de cemento en bolsas
 @riverpod
-double cantidadCementoLosa(CantidadCementoLosaRef ref) {
+double cantidadCementoLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -202,7 +202,7 @@ double cantidadCementoLosa(CantidadCementoLosaRef ref) {
 
 /// Calcula la cantidad total de arena gruesa en m³
 @riverpod
-double cantidadArenaGruesaLosa(CantidadArenaGruesaLosaRef ref) {
+double cantidadArenaGruesaLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -215,7 +215,7 @@ double cantidadArenaGruesaLosa(CantidadArenaGruesaLosaRef ref) {
 
 /// Calcula la cantidad total de piedra chancada en m³
 @riverpod
-double cantidadPiedraChancadaLosa(CantidadPiedraChancadaLosaRef ref) {
+double cantidadPiedraChancadaLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -228,7 +228,7 @@ double cantidadPiedraChancadaLosa(CantidadPiedraChancadaLosaRef ref) {
 
 /// Calcula la cantidad total de agua en m³
 @riverpod
-double cantidadAguaLosa(CantidadAguaLosaRef ref) {
+double cantidadAguaLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -241,7 +241,7 @@ double cantidadAguaLosa(CantidadAguaLosaRef ref) {
 
 /// Calcula la cantidad total de aditivo plastificante en litros
 @riverpod
-double cantidadAditivoPlastificanteLosa(CantidadAditivoPlastificanteLosaRef ref) {
+double cantidadAditivoPlastificanteLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -264,7 +264,7 @@ double cantidadAditivoPlastificanteLosa(CantidadAditivoPlastificanteLosaRef ref)
 ///
 /// Las losas macizas no aportan materiales aligerantes
 @riverpod
-Map<String, double> materialesAligerantes(MaterialesAligerantesRef ref) {
+Map<String, double> materialesAligerantes(Ref ref) {
   final losas = ref.watch(losaResultProvider);
   final Map<String, double> totales = {};
 
@@ -286,7 +286,7 @@ Map<String, double> materialesAligerantes(MaterialesAligerantesRef ref) {
 
 /// Provider para volumen total de concreto (información adicional)
 @riverpod
-double volumenConcretoLosa(VolumenConcretoLosaRef ref) {
+double volumenConcretoLosa(Ref ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
@@ -370,13 +371,13 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           return _buildTableRow([
             elements[index].description ?? 'Sin descripción',
             'm³',
-            volumenes[index].toStringAsFixed(1),
+            formatResultValue(volumenes[index]),
           ]);
         }),
         _buildTableRow([
           'Total:',
           'm³',
-          totalVolumen.toStringAsFixed(1),
+          formatResultValue(totalVolumen),
         ], isTotal: true),
       ],
     );
@@ -399,10 +400,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
           _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
-          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
-          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 1).toString()]),
-          _buildTableRow(['Piedra de zanja (máx. 10")', 'm³', roundUp(piedraZanja, 1).toString()]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 2).toString()]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 2).toString()]),
+          _buildTableRow(['Piedra de zanja (máx. 10")', 'm³', roundUp(piedraZanja, 2).toString()]),
+          _buildTableRow(['Agua', 'm³', formatResultValue(agua)]),
         ],
       );
     } else if (tipoElemento == 'solado') {
@@ -420,9 +421,9 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
           _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
-          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
-          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedraChancada, 1).toString()]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 2).toString()]),
+          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedraChancada, 2).toString()]),
+          _buildTableRow(['Agua', 'm³', formatResultValue(agua)]),
         ],
       );
     } else if (tipoElemento == 'sobrecimiento') {
@@ -442,10 +443,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
           _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
-          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
-          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 1).toString()]),
-          _buildTableRow(['Piedra grande (máx. 10")', 'm³', roundUp(piedraGrande, 1).toString()]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 2).toString()]),
+          _buildTableRow(['Piedra chancada 3/4"', 'm³', roundUp(piedraChancada, 2).toString()]),
+          _buildTableRow(['Piedra grande (máx. 10")', 'm³', roundUp(piedraGrande, 2).toString()]),
+          _buildTableRow(['Agua', 'm³', formatResultValue(agua)]),
         ],
       );
     } else {
@@ -464,9 +465,9 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         children: [
           _buildTableRow(['Material', 'Und.', 'Cantidad'], isHeader: true),
           _buildTableRow(['Cemento', 'bls.', cemento.ceil().toString()]),
-          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 1).toString()]),
-          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 1).toString()]),
-          _buildTableRow(['Agua', 'm³', agua.toStringAsFixed(2)]),
+          _buildTableRow(['Arena gruesa', 'm³', roundUp(arena, 2).toString()]),
+          _buildTableRow(['Piedra chancada', 'm³', roundUp(piedra, 2).toString()]),
+          _buildTableRow(['Agua', 'm³', formatResultValue(agua)]),
         ],
       );
     }
@@ -877,8 +878,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   void _handleProviderAction() {
     final tipoElemento = ref.watch(tipoStructuralElementProvider);
     if (tipoElemento.isNotEmpty) {
-      // FeatureStatusDialog.showTemporarilyDisabled(context);
-         context.pushNamed('map-screen-structural');
+       FeatureStatusDialog.showTemporarilyDisabled(context);
+      //   context.pushNamed('map-screen-structural');
     } else {
       _showErrorMessage('No hay datos de elementos estructurales');
     }
@@ -887,6 +888,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   Future<void> _sharePDF() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
 
       context.showCalculationLoader(
         message: 'Generando PDF...',
@@ -921,6 +924,8 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final shareText = _generateShareText();
       await Share.share(shareText);
     } catch (e) {
@@ -959,28 +964,28 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
     String materialesText = '';
     if (tipoElemento == 'sobrecimiento') {
       final piedraGrande = ref.watch(cantidadPiedraGrandeSobrecimientoProvider);
-      materialesText = '''• Cemento: ${cemento.toStringAsFixed(1)} bolsas
-- Arena gruesa: ${arena.toStringAsFixed(1)} m³
-- Piedra chancada 3/4": ${piedra.toStringAsFixed(1)} m³
-- Piedra grande (máx. 10"): ${piedraGrande.toStringAsFixed(1)} m³
-- Agua: ${agua.toStringAsFixed(1)} m³''';
+      materialesText = '''• Cemento: ${cemento.ceil()} bolsas
+- Arena gruesa: ${formatResultValue(arena)} m³
+- Piedra chancada 3/4": ${roundUp(piedra, 2)} m³
+- Piedra grande (máx. 10"): ${roundUp(piedraGrande, 2)} m³
+- Agua: ${formatResultValue(agua)} m³''';
     } else if (tipoElemento == 'cimiento_corrido') {
       final piedraZanja = ref.watch(cantidadPiedraZanjaCimientoCorridoProvider);
-      materialesText = '''• Cemento: ${cemento.toStringAsFixed(1)} bolsas
-- Arena gruesa: ${arena.toStringAsFixed(1)} m³
-- Piedra chancada 3/4": ${piedra.toStringAsFixed(1)} m³
-- Piedra de zanja (máx. 10"): ${piedraZanja.toStringAsFixed(1)} m³
-- Agua: ${agua.toStringAsFixed(1)} m³''';
+      materialesText = '''• Cemento: ${cemento.ceil()} bolsas
+- Arena gruesa: ${formatResultValue(arena)} m³
+- Piedra chancada 3/4": ${roundUp(piedra, 2)} m³
+- Piedra de zanja (máx. 10"): ${roundUp(piedraZanja, 2)} m³
+- Agua: ${formatResultValue(agua)} m³''';
     } else if (tipoElemento == 'solado') {
-      materialesText = '''• Cemento: ${cemento.toStringAsFixed(1)} bolsas
-- Arena gruesa: ${arena.toStringAsFixed(1)} m³
-- Piedra chancada: ${piedra.toStringAsFixed(1)} m³
-- Agua: ${agua.toStringAsFixed(1)} m³''';
+      materialesText = '''• Cemento: ${cemento.ceil()} bolsas
+- Arena gruesa: ${formatResultValue(arena)} m³
+- Piedra chancada: ${roundUp(piedra, 2)} m³
+- Agua: ${formatResultValue(agua)} m³''';
     } else {
-      materialesText = '''• Cemento: ${cemento.toStringAsFixed(1)} bolsas
-- Arena gruesa: ${arena.toStringAsFixed(1)} m³
-- Piedra chancada: ${piedra.toStringAsFixed(1)} m³
-- Agua: ${agua.toStringAsFixed(1)} m³''';
+      materialesText = '''• Cemento: ${cemento.ceil()} bolsas
+- Arena gruesa: ${formatResultValue(arena)} m³
+- Piedra chancada: ${roundUp(piedra, 2)} m³
+- Agua: ${formatResultValue(agua)} m³''';
     }
 
     return '''

@@ -1,5 +1,5 @@
 // lib/data/datasources/home/muro/custom_brick_isar_data_source.dart
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../domain/datasources/home/muro/custom_brick_local_data_source.dart';
 import '../../../../domain/entities/home/muro/custom_brick.dart';

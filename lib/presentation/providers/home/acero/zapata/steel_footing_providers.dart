@@ -21,7 +21,7 @@ double aplicarDesperdicio(double cantidad, double factorDesperdicio) {
 // PROVIDERS PRINCIPALES
 // ============================================================================
 
-final steelFootingResultProvider = StateNotifierProvider<SteelFootingResultNotifier, List<SteelFooting>>((ref) {
+final steelFootingResultProvider = NotifierProvider<SteelFootingResultNotifier, List<SteelFooting>>(() {
   return SteelFootingResultNotifier();
 });
 
@@ -300,8 +300,9 @@ MeshCalculationDetails _calculateMesh(
 // NOTIFIERS
 // ============================================================================
 
-class SteelFootingResultNotifier extends StateNotifier<List<SteelFooting>> {
-  SteelFootingResultNotifier() : super([]);
+class SteelFootingResultNotifier extends Notifier<List<SteelFooting>> {
+  @override
+  List<SteelFooting> build() => [];
 
   void createSteelFooting({
     required String description,

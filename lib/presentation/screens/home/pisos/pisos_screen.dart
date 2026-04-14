@@ -117,7 +117,7 @@ class _PisosScreenState extends ConsumerState<PisosScreen>
       }
 
       // Actualizar selección
-      ref.read(selectedFloorProvider.notifier).state = floor;
+      ref.read(selectedFloorProvider.notifier).select(floor);
 
       // Determinar navegación basada en el tipo de piso
       if (_isFloorAvailable(floor.id)) {

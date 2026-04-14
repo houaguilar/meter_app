@@ -38,7 +38,7 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.mts.metrashop"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -58,7 +58,7 @@ android {
         applicationId = "com.mts.metrashop"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdk = 21
+        minSdkVersion = flutter.minSdkVersion
         targetSdk = 35
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
@@ -80,6 +80,13 @@ android {
                 storeFile storeFileObj.exists() ? storeFileObj : null
             }
             storePassword keystoreProperties['storePassword']
+        }
+    }
+
+    // Soporte para tamaños de página de memoria de 16 kB (requerido por Android 15+)
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
         }
     }
 

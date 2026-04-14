@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
+import '../../../config/utils/number_formatter.dart';
 import '../../../data/models/models.dart';
 import '../../../domain/entities/home/muro/tipo_ladrillo.dart' as enums;
 import '../../../domain/services/ladrillo_service.dart';
@@ -95,7 +96,7 @@ class LadrilloResult extends _$LadrilloResult {
 }
 
 @riverpod
-List<double> areaLadrillo(AreaLadrilloRef ref) {
+List<double> areaLadrillo(Ref ref) {
   final ladrilloService = LadrilloService();
   final ladrillos = ref.watch(ladrilloResultProvider);
 
@@ -105,20 +106,20 @@ List<double> areaLadrillo(AreaLadrilloRef ref) {
 }
 
 @riverpod
-List<String> descriptionLadrillo(DescriptionLadrilloRef ref) {
+List<String> descriptionLadrillo(Ref ref) {
   final ladrillos = ref.watch(ladrilloResultProvider);
   return ladrillos.map((e) => e.description).toList();
 }
 
 @riverpod
-String datosShareLadrillo(DatosShareLadrilloRef ref) {
+String datosShareLadrillo(Ref ref) {
   final description = ref.watch(descriptionLadrilloProvider);
   final area = ref.watch(areaLadrilloProvider);
 
   String datos = "";
   if (description.length == area.length) {
     for (int i = 0; i < description.length; i++) {
-      datos += "* ${description[i]}: ${area[i].toStringAsFixed(1)} m²\n";
+      datos += "* ${description[i]}: ${area[i].toStringAsFixed(2)} m²\n";
     }
     datos = datos.substring(0, datos.length - 2);
   }
@@ -179,7 +180,7 @@ class LadrilloConfiguration {
 
 /// Provider principal para cálculos de materiales de ladrillo - CORREGIDO 100% VALIDADO
 @riverpod
-LadrilloMaterials ladrilloMaterials(LadrilloMaterialsRef ref) {
+LadrilloMaterials ladrilloMaterials(Ref ref) {
   final ladrillos = ref.watch(ladrilloResultProvider);
 
   if (ladrillos.isEmpty) {
@@ -190,7 +191,7 @@ LadrilloMaterials ladrilloMaterials(LadrilloMaterialsRef ref) {
 }
 
 /// Función auxiliar para calcular materiales basada en el análisis 100% validado vs Excel
-LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, LadrilloMaterialsRef ref) {
+LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ref ref) {
   // NOTA: Las especificaciones ahora vienen del ENUM TipoLadrillo
   // No se usa más el Map hardcodeado
 
@@ -390,11 +391,11 @@ $datosMetrado
 
 📊 MATERIALES NECESARIOS:
 • Ladrillos: ${ladrillos.toStringAsFixed(0)} und
-• Cemento: ${cemento.toStringAsFixed(1)} bolsas
-• Arena: ${arena.toStringAsFixed(1)} m³
-• Agua: ${agua.toStringAsFixed(1)} m³
+• Cemento: ${cemento.toStringAsFixed(2)} bolsas
+• Arena: ${formatResultValue(arena)} m³
+• Agua: ${formatResultValue(agua)} m³
 
-📐 ÁREA TOTAL: ${areaTotal.toStringAsFixed(1)} m²
+📐 ÁREA TOTAL: ${areaTotal.toStringAsFixed(2)} m²
 
 ''';
   }

@@ -1,5 +1,5 @@
 
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../../entities.dart';
 
 part 'steel_column.g.dart';

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/config/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../../../config/theme/theme.dart';
@@ -384,7 +385,9 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
     return InkWell(
       onTap: () {
         Navigator.of(context).pop();
-        onTap();
+        Future.delayed(const Duration(milliseconds: 350), () {
+          if (mounted) onTap();
+        });
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -460,7 +463,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
     for (int i = 0; i < consolidatedResult.columnResults.length; i++) { // cambio de beamResults a columnResults
       final column = consolidatedResult.columnResults[i]; // cambio de beam a column
       content.writeln('Columna ${i + 1}: ${column.description}'); // cambio de Viga a Columna
-      content.writeln('  • Peso total: ${column.totalWeight.toStringAsFixed(1)} kg');
+      content.writeln('  • Peso total: ${formatResultValue(column.totalWeight as double)} kg');
       // Agregar info específica de columna
       if (column.hasFooting) {
         content.writeln('  • Con zapata: Sí');
@@ -655,8 +658,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           const SizedBox(height: 16),
           if (quickStats != null) ...[
             _buildStatRow('Total de Columnas', '${quickStats['totalColumns']}'), // cambio de Vigas a Columnas
-            _buildStatRow('Peso Total de Acero', '${quickStats['totalWeight']?.toStringAsFixed(1)} kg'), // cambio de estadística
-            _buildStatRow('Alambre #16', '${quickStats['totalWire']?.toStringAsFixed(1)} kg'), // cambio de estadística
+            _buildStatRow('Peso Total de Acero', '${formatResultValue((quickStats['totalWeight'] as double?) ?? 0.0)} kg'), // cambio de estadística
+            _buildStatRow('Alambre #16', '${formatResultValue((quickStats['totalWire'] as double?) ?? 0.0)} kg'), // cambio de estadística
           ],
         ],
       ),
@@ -895,7 +898,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
             children: [
               Expanded(
                 child: Text(
-                  'Peso total: ${column.totalWeight.toStringAsFixed(1)} kg',
+                  'Peso total: ${formatResultValue(column.totalWeight as double)} kg',
                   style: AppTypography.bodySmall.copyWith(
                     fontWeight: FontWeight.w500,
                     color: AppColors.primary,

@@ -128,7 +128,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final tipoLadrillo = ref.watch(tipoLadrilloNotifierProvider);
+    final tipoLadrillo = ref.watch(tipoLadrilloProvider);
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -646,7 +646,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     try {
       await _createLadrilloData(tipoLadrillo);
       ref.watch(ladrilloResultProvider);
-      ref.watch(tipoLadrilloNotifierProvider);
+      ref.watch(tipoLadrilloProvider);
       context.pushNamed('ladrillo_results');
       context.showCalculationLoader(
         message: 'Calculando materiales',
@@ -689,7 +689,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
   }
 
   Future<void> _createLadrilloData(String tipoLadrillo) async {
-    final tipoLadrilloActual = ref.read(tipoLadrilloNotifierProvider);
+    final tipoLadrilloActual = ref.read(tipoLadrilloProvider);
     print('🔍 Tipo ladrillo del provider: "$tipoLadrilloActual"');
 
     // ✅ Si el provider está vacío, usar el parámetro como fallback

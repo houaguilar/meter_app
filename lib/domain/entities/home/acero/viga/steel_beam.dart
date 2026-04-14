@@ -1,5 +1,5 @@
 // lib/domain/entities/home/acero/viga/steel_beam.dart
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../../entities.dart';
 
 part 'steel_beam.g.dart';

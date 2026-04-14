@@ -118,7 +118,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
       }
 
       // Actualizar selección
-      ref.read(selectedCoatingProvider.notifier).state = coating;
+      ref.read(selectedCoatingProvider.notifier).select(coating);
 
       // Determinar navegación basada en disponibilidad
       if (_isCoatingAvailable(coating.id)) {

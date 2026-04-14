@@ -1,4 +1,4 @@
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 
 part 'tarrajeo.g.dart';

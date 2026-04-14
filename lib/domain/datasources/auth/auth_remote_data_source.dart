@@ -13,6 +13,7 @@ abstract interface class AuthRemoteDataSource {
     required String password,
   });
   Future<UserModel?> signInWithGoogle();
+  Future<UserModel?> signInWithApple();
   Future<UserModel> loginWithEmailPassword({
     required String email,
     required String password,

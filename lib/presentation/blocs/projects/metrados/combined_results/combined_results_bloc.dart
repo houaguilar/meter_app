@@ -131,7 +131,6 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
             combinedResult: combinedResult,
             selectedMetradoIds: event.selectedMetradoIds,
             projectId: event.projectId,
-            message: 'Resultados combinados exitosamente',
           ));
         },
       );
@@ -171,7 +170,7 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
       logInfo('Generando PDF de materiales combinados');
 
       // Generar PDF usando el servicio
-      await CombinedResultsShareService.sharePdf(
+      final shared = await CombinedResultsShareService.sharePdf(
         currentState.combinedResult,
         nombreUsuario: event.nombreUsuario,
       );
@@ -180,7 +179,7 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
 
       emit(currentState.copyWith(
         isGeneratingPdf: false,
-        message: 'PDF generado y compartido exitosamente',
+        message: shared ? 'PDF compartido exitosamente' : null,
       ));
     } catch (e, stackTrace) {
       final message = handleException(e, stackTrace: stackTrace);
@@ -205,23 +204,24 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
     try {
       logInfo('Compartiendo resultados en formato ${event.format}');
 
+      bool shared;
       switch (event.format) {
         case ShareFormat.pdf:
-          await CombinedResultsShareService.sharePdf(
+          shared = await CombinedResultsShareService.sharePdf(
             currentState.combinedResult,
             nombreUsuario: event.nombreUsuario,
           );
           logInfo('PDF compartido exitosamente');
           break;
         case ShareFormat.text:
-          await CombinedResultsShareService.shareText(currentState.combinedResult);
+          shared = await CombinedResultsShareService.shareText(currentState.combinedResult);
           logInfo('Texto compartido exitosamente');
           break;
       }
 
       emit(currentState.copyWith(
         isSharing: false,
-        message: 'Resultados compartidos exitosamente',
+        message: shared ? 'Resultados compartidos exitosamente' : null,
       ));
     } catch (e, stackTrace) {
       final message = handleException(e, stackTrace: stackTrace);

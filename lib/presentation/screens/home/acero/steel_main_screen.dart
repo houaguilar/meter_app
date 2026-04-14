@@ -78,7 +78,7 @@ class _SteelMainScreenState extends ConsumerState<SteelMainScreen>
 
   Widget _buildBody() {
     return SteelGridBuilder<SteelElement>(
-      asyncValue: ref.watch(steelElementsProvider as ProviderListenable<AsyncValue<List<SteelElement>>>),
+      asyncValue: ref.watch(steelElementsProvider),
       itemBuilder: _buildSteelCard,
       onRetry: () => ref.invalidate(steelElementsProvider),
       header: _buildHeader(),

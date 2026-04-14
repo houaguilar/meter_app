@@ -19,4 +19,11 @@ final slabProvider = FutureProvider<List<Slab>>((ref) async {
   return await useCase();
 });
 
-final selectedSlabProvider = StateProvider<Slab?>((ref) => null);
+final selectedSlabProvider = NotifierProvider<SelectedSlabNotifier, Slab?>(() => SelectedSlabNotifier());
+
+class SelectedSlabNotifier extends Notifier<Slab?> {
+  @override
+  Slab? build() => null;
+
+  void select(Slab? slab) => state = slab;
+}

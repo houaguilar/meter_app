@@ -551,7 +551,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     );
 
     // Establecer el tipo como Custom
-    ref.read(tipoLadrilloNotifierProvider.notifier).selectLadrillo('Custom');
+    ref.read(tipoLadrilloProvider.notifier).selectLadrillo('Custom');
 
     // Mostrar diálogo de guardado
     _showSaveDialog();

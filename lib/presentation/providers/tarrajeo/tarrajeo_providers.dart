@@ -1,6 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constants.dart';
+import '../../../config/utils/number_formatter.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/services/tarrajeo_service.dart';
 
@@ -170,9 +171,9 @@ class TarrajeoMateriales {
 
   // Getters para valores formateados
   String get cementoFormateado => cemento.ceil().toString();
-  String get arenaFormateada => arena.toStringAsFixed(1);
-  String get aguaFormateada => agua.toStringAsFixed(1);
-  String get volumenFormateado => volumenTotal.toStringAsFixed(1);
+  String get arenaFormateada => formatResultValue(arena);
+  String get aguaFormateada => formatResultValue(agua);
+  String get volumenFormateado => formatResultValue(volumenTotal);
 
   // Para compartir/PDF
   String get resumenTexto => '''
@@ -204,15 +205,15 @@ class TarrajeoMetrado {
     required this.area,
   });
 
-  String get volumenFormateado => volumen.toStringAsFixed(1);
-  String get areaFormateada => area.toStringAsFixed(1);
+  String get volumenFormateado => formatResultValue(volumen);
+  String get areaFormateada => area.toStringAsFixed(2);
 }
 
 // ===== PROVIDERS REACTIVOS =====
 
 /// Provider que calcula los materiales totales automáticamente
 @riverpod
-TarrajeoMateriales tarrajeoMateriales(TarrajeoMaterialesRef ref) {
+TarrajeoMateriales tarrajeoMateriales(Ref ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
 
   if (tarrajeos.isEmpty) {
@@ -236,7 +237,7 @@ TarrajeoMateriales tarrajeoMateriales(TarrajeoMaterialesRef ref) {
 
 /// Provider que calcula los datos de metrado individuales
 @riverpod
-List<TarrajeoMetrado> tarrajeoMetrados(TarrajeoMetradosRef ref) {
+List<TarrajeoMetrado> tarrajeoMetrados(Ref ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
 
   return tarrajeos.map((tarrajeo) {
@@ -250,7 +251,7 @@ List<TarrajeoMetrado> tarrajeoMetrados(TarrajeoMetradosRef ref) {
 
 /// Provider para el volumen total (backward compatibility)
 @riverpod
-List<double> volumenTarrajeo(VolumenTarrajeoRef ref) {
+List<double> volumenTarrajeo(Ref ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   return tarrajeos.map((tarrajeo) =>
       TarrajeoCalculator.calcularVolumenMortero(tarrajeo)
@@ -259,14 +260,14 @@ List<double> volumenTarrajeo(VolumenTarrajeoRef ref) {
 
 /// Provider para las descripciones (backward compatibility)
 @riverpod
-List<String> descriptionTarrajeo(DescriptionTarrajeoRef ref) {
+List<String> descriptionTarrajeo(Ref ref) {
   final tarrajeo = ref.watch(tarrajeoResultProvider);
   return tarrajeo.map((e) => e.description).toList();
 }
 
 /// Provider para datos compartidos/PDF
 @riverpod
-String datosShareTarrajeo(DatosShareTarrajeoRef ref) {
+String datosShareTarrajeo(Ref ref) {
   final metrados = ref.watch(tarrajeoMetradosProvider);
 
   if (metrados.isEmpty) return 'No hay datos disponibles.';
@@ -281,7 +282,7 @@ String datosShareTarrajeo(DatosShareTarrajeoRef ref) {
 
 /// Provider para resumen completo (materiales + metrados)
 @riverpod
-String resumenCompleto(ResumenCompletoRef ref) {
+String resumenCompleto(Ref ref) {
   final materiales = ref.watch(tarrajeoMaterialesProvider);
   final datosShare = ref.watch(datosShareTarrajeoProvider);
 
@@ -298,7 +299,7 @@ ${materiales.resumenTexto}''';
 
 /// Provider que verifica si hay datos válidos
 @riverpod
-bool hayDatosValidos(HayDatosValidosRef ref) {
+bool hayDatosValidos(Ref ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   return tarrajeos.isNotEmpty && tarrajeos.every((t) =>
   t.description.isNotEmpty &&
@@ -309,7 +310,7 @@ bool hayDatosValidos(HayDatosValidosRef ref) {
 
 /// Provider que calcula estadísticas adicionales
 @riverpod
-Map<String, dynamic> estadisticasTarrajeo(EstadisticasTarrajeoRef ref) {
+Map<String, dynamic> estadisticasTarrajeo(Ref ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   final materiales = ref.watch(tarrajeoMaterialesProvider);
 

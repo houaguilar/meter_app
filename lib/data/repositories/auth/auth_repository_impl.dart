@@ -147,6 +147,25 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, User>> signInWithApple() async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failure(message: "No internet connection"));
+      }
+
+      final userModel = await remoteDataSource.signInWithApple();
+
+      if (userModel == null) {
+        return left(Failure(message: "Apple sign-in failed"));
+      }
+
+      return right(userModel);
+    } catch (e) {
+      return left(Failure(message: e.toString()));
+    }
+  }
+
   Future<Either<Failure, User>> _getUser(
       Future<User> Function() fn,
       ) async {

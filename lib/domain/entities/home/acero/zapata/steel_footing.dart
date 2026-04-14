@@ -1,5 +1,5 @@
 // lib/domain/entities/home/acero/zapata/steel_foundation.dart
-import 'package:isar/isar.dart';
+import 'package:isar_community/isar.dart';
 import '../../../entities.dart';
 
 part 'steel_footing.g.dart';

@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:meter_app/config/assets/app_images.dart';
+import 'package:meter_app/config/services/review_service.dart';
+import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/measurements_bottom_sheet.dart';
 import 'package:meter_app/presentation/widgets/cards/shortcut_card.dart';
 import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles.dart';
@@ -33,6 +36,8 @@ class _HomeViewState extends ConsumerState<HomeView>
   @override
   void initState() {
     super.initState();
+    serviceLocator<ReviewService>().addListener(_onReviewPending);
+
     // Inicializar después del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -43,6 +48,28 @@ class _HomeViewState extends ConsumerState<HomeView>
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    serviceLocator<ReviewService>().removeListener(_onReviewPending);
+    super.dispose();
+  }
+
+  Future<void> _onReviewPending() async {
+    final reviewService = serviceLocator<ReviewService>();
+    if (!reviewService.pendingReview || !mounted) return;
+
+    reviewService.consumePendingReview();
+
+    // Pequeño delay para que la navegación se complete antes de mostrar el diálogo
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+
+    final inAppReview = InAppReview.instance;
+    if (await inAppReview.isAvailable()) {
+      await inAppReview.requestReview();
+    }
   }
 
   void _clearAllProviders() {
@@ -270,8 +297,8 @@ class _HomeViewState extends ConsumerState<HomeView>
             children: [
               Expanded(
                 child: GestureDetector(
-             //     onTap: () => FeatureStatusDialog.showTemporarilyDisabled(context),
-                  onTap: () => context.pushNamed('home-to-provider'),
+                  onTap: () => FeatureStatusDialog.showTemporarilyDisabled(context),
+             //     onTap: () => context.pushNamed('home-to-provider'),
                   child: const ShortcutCard(
                     title: 'Proveedores',
                     imageAssetPath: AppImages.proveedoresHomeCardImg,

@@ -386,7 +386,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
           return _buildTableRow([
             piso.description,
             'm²',
-            area.toStringAsFixed(1),
+            area.toStringAsFixed(2),
           ]);
         }).toList(),
         _buildTableRow([
@@ -580,8 +580,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   void _handleProviderAction() {
     final falsosPisos = ref.watch(falsoPisoResultProvider);
     if (falsosPisos.isNotEmpty) {
-   //   FeatureStatusDialog.showTemporarilyDisabled(context);
-      context.pushNamed('falso-piso-map-screen');
+      FeatureStatusDialog.showTemporarilyDisabled(context);
+    //  context.pushNamed('falso-piso-map-screen');
     } else {
       _showErrorSnackBar('No hay datos de falso piso');
     }
@@ -712,6 +712,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   Future<void> _sharePDF() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
 
       context.showCalculationLoader(
         message: 'Generando PDF...',
@@ -745,6 +747,8 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
   Future<void> _shareText() async {
     try {
       Navigator.of(context).pop();
+      await Future.delayed(const Duration(milliseconds: 350));
+      if (!mounted) return;
       final materials = ref.watch(falsoPisoMaterialsProvider);
       final falsosPisos = ref.watch(falsoPisoResultProvider);
       final datosMetrado = ref.watch(datosShareFalsoPisoProvider);

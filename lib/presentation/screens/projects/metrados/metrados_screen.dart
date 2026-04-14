@@ -229,88 +229,6 @@ class _MetradosScreenState extends State<MetradosScreen>
     );
   }
 
-  void _showProjectInfo() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(Icons.info_outline, color: AppColors.secondary),
-            const SizedBox(width: 8),
-            const Text('Información del Proyecto'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Proyecto: ${widget.projectName}',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            Text('ID: ${widget.projectId}'),
-            const SizedBox(height: 16),
-            const Text(
-              'Funcionalidad:\n'
-                  'Seleccione para ver detalles o use el modo selección.',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 8),
-            BlocBuilder<MetradosBloc, MetradosState>(
-              builder: (context, state) {
-                if (state is MetradoSuccess) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Total: ${state.metrados.length} metrados',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      if (_selectionMode)
-                        Text(
-                          'Seleccionados: ${_selectedMetrados.length}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                    ],
-                  );
-                }
-                return const Text(
-                  'Cargando metrados...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   // ═══════════════════════════════════════════════════════════════════════════
   // MÉTODOS AUXILIARES
   // ═══════════════════════════════════════════════════════════════════════════
@@ -438,11 +356,6 @@ class _MetradosScreenState extends State<MetradosScreen>
             tooltip: 'Salir de selección',
           ),
         ] else ...[
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: _showProjectInfo,
-            tooltip: 'Información del proyecto',
-          ),
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () => context.pop(),

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:in_app_review/in_app_review.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
 import '../../../config/app_config.dart';
 import '../../../config/theme/theme.dart';
 import '../../../config/utils/show_snackbar.dart';
+import '../../widgets/feedback/feedback_bottom_sheet.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/verification_status.dart';
 import '../../blocs/auth/auth_bloc.dart';
@@ -159,7 +161,7 @@ class _PerfilScreenState extends State<PerfilScreen>
 
   Widget _buildSliverAppBar(ProfileState state) {
     return SliverAppBar(
-      expandedHeight: 350,
+      expandedHeight: 400,
       floating: false,
       pinned: true,
       backgroundColor: Colors.transparent,
@@ -183,8 +185,6 @@ class _PerfilScreenState extends State<PerfilScreen>
         ),
       ),
       actions: [
-        const PremiumStatusIndicator(padding: EdgeInsets.symmetric(horizontal: 8)),
-
         if (state is ProfileLoaded)
           IconButton(
             icon: const Icon(Icons.edit_rounded, color: AppColors.white, size: 24),
@@ -199,75 +199,51 @@ class _PerfilScreenState extends State<PerfilScreen>
     final completionPercentage = _calculateProfileCompletion(userProfile);
 
     return SafeArea(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: Container(
-              height: constraints.maxHeight,
-              padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Spacer(flex: 1),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 40, 24, 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            const Spacer(flex: 1),
 
-                  // Avatar con inicial del nombre
-               //   _buildProfileAvatar(userProfile),
-                  _buildPremiumProfileAvatar(userProfile),
-                  const SizedBox(height: 16),
+            // Avatar con inicial del nombre
+            _buildPremiumProfileAvatar(userProfile),
+            const SizedBox(height: 16),
 
-                  // Información del usuario
-                  Flexible(
-                    /*child: Text(
-                      userProfile.name.isNotEmpty ? userProfile.name : 'Usuario MetraShop',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.white,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),*/
-                    child: _buildUserNameWithPremium(userProfile),
+            // Información del usuario
+            _buildUserNameWithPremium(userProfile),
+            const SizedBox(height: 8),
+
+            if (userProfile.employment.isNotEmpty)
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.accent.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+                ),
+                child: Text(
+                  userProfile.employment,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 8),
-
-                  if (userProfile.employment.isNotEmpty)
-                    Flexible(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: AppColors.accent.withOpacity(0.3)),
-                        ),
-                        child: Text(
-                          userProfile.employment,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.accent,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(height: 16),
-
-                  // Barra de completitud
-             //     _buildCompletionProgress(completionPercentage),
-                  _buildPremiumProgressCard(completionPercentage),
-                  const Spacer(flex: 1),
-                ],
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-            ),
-          );
-        },
+
+            const SizedBox(height: 16),
+
+            // Barra de completitud
+            _buildPremiumProgressCard(completionPercentage),
+            const Spacer(flex: 1),
+          ],
+        ),
       ),
     );
   }
@@ -393,38 +369,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                 GestureDetector(
                   onTap: () {
                     FeatureStatusDialog.showInDevelopment(context);
-                    /*Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const PremiumPaywallScreen(),
-                        fullscreenDialog: true,
-                      ),
-                    );*/
                   },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.purple.shade400, Colors.blue.shade400],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.star, color: Colors.white, size: 16),
-                        SizedBox(width: 6),
-                        Text(
-                          'Activar Premium',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: const SizedBox.shrink(),
                 ),
               ],
             ),
@@ -818,10 +764,12 @@ class _PerfilScreenState extends State<PerfilScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildAccountSection(),
-          const SizedBox(height: 24),
-          _buildPremiumSection(),
+         /* const SizedBox(height: 24),
+          _buildPremiumSection(),*/
           const SizedBox(height: 24),
           _buildBusinessSection(),
+          const SizedBox(height: 24),
+          _buildFeedbackSection(),
           const SizedBox(height: 24),
           _buildSecuritySection(),
         ],
@@ -986,8 +934,8 @@ class _PerfilScreenState extends State<PerfilScreen>
             title: 'Registrarme como proveedor',
             subtitle: 'Únete a nuestra red de proveedores',
             color: AppColors.accent,
-          //  onTap: () => FeatureStatusDialog.showInDevelopment(context),
-            onTap: () => context.pushNamed('register-location'),
+            onTap: () => FeatureStatusDialog.showInDevelopment(context),
+          //  onTap: () => context.pushNamed('register-location'),
           ),
         ]);
       } else {
@@ -1498,6 +1446,52 @@ class _PerfilScreenState extends State<PerfilScreen>
         }).toList(),
       ),
     );
+  }
+
+  Widget _buildFeedbackSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Tu opinión',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildActionCard([
+          _ActionItem(
+            icon: Icons.star_outline_rounded,
+            title: 'Calificanos',
+            subtitle: 'Deja tu reseña en la tienda',
+            color: Colors.amber,
+            onTap: _openStoreListing,
+          ),
+          _ActionItem(
+            icon: Icons.chat_bubble_outline_rounded,
+            title: 'Enviar sugerencia',
+            subtitle: 'Cuéntanos cómo podemos mejorar',
+            color: AppColors.secondary,
+            onTap: _openFeedbackSheet,
+          ),
+        ]),
+      ],
+    );
+  }
+
+  Future<void> _openStoreListing() async {
+    final inAppReview = InAppReview.instance;
+    if (await inAppReview.isAvailable()) {
+      await inAppReview.openStoreListing(
+        appStoreId: '6757170601',
+      );
+    }
+  }
+
+  void _openFeedbackSheet() {
+    FeedbackBottomSheet.show(context, screenName: 'perfil');
   }
 
   Widget _buildSecuritySection() {

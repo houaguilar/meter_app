@@ -63,7 +63,7 @@ enum TipoLosa {
       case TipoLosa.tradicional:
         return ['17 cm', '20 cm', '25 cm'];
       case TipoLosa.maciza:
-        return ['15 cm', '20 cm', '25 cm'];
+        return ['20 cm', '25 cm'];
     }
   }
 

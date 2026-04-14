@@ -49,9 +49,18 @@ app.*.map.json
 
 # Environment variables - SEGURIDAD CRÍTICA
 .env
+.env.dev
+.env.prod
 .env.local
 .env.production
 .env.*.local
+
+# iOS secrets - SEGURIDAD CRÍTICA
+ios/Flutter/Secret.xcconfig
+ios/Runner/GoogleService-Info.plist
+
+# Android Firebase - SEGURIDAD CRÍTICA
+android/app/google-services.json
 
 # Nota: app_secrets.dart es seguro subir porque solo lee del .env
 # Los secretos reales están en .env (que sí está ignorado)
