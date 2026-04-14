@@ -16,7 +16,7 @@ on:
           - app-store
 
 env:
-  FLUTTER_VERSION: '3.32.0'
+  FLUTTER_VERSION: '3.41.6'
 
 jobs:
   deploy-ios:
