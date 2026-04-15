@@ -50,6 +50,8 @@ jobs:
           echo "GOOGLE_WEB_CLIENT_ID=${{ secrets.GOOGLE_WEB_CLIENT_ID }}" >> .env
           echo "GOOGLE_IOS_CLIENT_ID=${{ secrets.GOOGLE_IOS_CLIENT_ID }}" >> .env
           echo "GOOGLE_ANDROID_CLIENT_ID=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}" >> .env
+          cp .env .env.dev
+          cp .env .env.prod
 
       # ============================================
       # CONFIGURACIÓN DE CERTIFICADOS iOS
