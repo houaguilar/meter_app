@@ -52,6 +52,7 @@ jobs:
           echo "GOOGLE_ANDROID_CLIENT_ID=${{ secrets.GOOGLE_ANDROID_CLIENT_ID }}" >> .env
           cp .env .env.dev
           cp .env .env.prod
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
 
       # ============================================
       # CONFIGURACIÓN DE CERTIFICADOS iOS
