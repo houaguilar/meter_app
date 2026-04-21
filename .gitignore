@@ -58,6 +58,7 @@ app.*.map.json
 # iOS secrets - SEGURIDAD CRÍTICA
 ios/Flutter/Secret.xcconfig
 ios/Runner/GoogleService-Info.plist
+ios/GoogleService-Info.plist
 
 # Android Firebase - SEGURIDAD CRÍTICA
 android/app/google-services.json
