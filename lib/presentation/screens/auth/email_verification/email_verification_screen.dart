@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,6 +10,7 @@ import '../../../../config/theme/theme.dart';
 import '../../../../data/local/shared_preferences_helper.dart';
 import '../../../../domain/usecases/use_cases.dart';
 import '../../../../init_dependencies.dart';
+import '../../../blocs/auth/auth_bloc.dart' as bloc_auth;
 
 class EmailVerificationScreen extends StatefulWidget {
   final String email;
@@ -151,7 +153,16 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
+    return BlocListener<bloc_auth.AuthBloc, bloc_auth.AuthState>(
+      listener: (context, state) {
+        // Si el BLoC emite AuthFailure mientras el usuario está en esta pantalla
+        // (p. ej. por un enlace de verificación inválido o vencido), mostramos
+        // un mensaje útil en lugar del genérico "error inesperado".
+        if (state is bloc_auth.AuthFailure) {
+          _showError('El enlace de verificación no es válido o ha expirado. Solicita uno nuevo.');
+        }
+      },
+      child: PopScope(
       canPop: false,
       child: Scaffold(
       backgroundColor: AppColors.background,
@@ -191,6 +202,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
         ),
       ),
       ),
+    ),
     );
   }
 

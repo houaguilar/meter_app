@@ -67,7 +67,6 @@ class _RegisterScreenState extends State<RegisterScreen>
   PasswordStrength _passwordStrength = PasswordStrength.none;
 
   // Configuración de timeouts
-  static const Duration _registerTimeout = Duration(seconds: 30);
   static const Duration _navigationDelay = Duration(milliseconds: 500);
 
   @override
@@ -405,30 +404,12 @@ class _RegisterScreenState extends State<RegisterScreen>
       _isLoading = true;
     });
 
-    try {
-      // Timeout de seguridad
-      await Future.any([
-        _performRegister(name, email, password),
-        Future.delayed(_registerTimeout, () {
-          throw Exception('Tiempo de espera agotado');
-        }),
-      ]);
-    } catch (e) {
-      if (mounted) {
-        _handleRegisterError(e);
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  Future<void> _performRegister(String name, String email, String password) async {
-    final authBloc = context.read<AuthBloc>();
-    authBloc.add(AuthSignUp(
+    // Disparar el evento; _handleAuthStateChanges se encarga de resetear _isLoading
+    // cuando el BLoC responda (AuthPendingEmailVerification, AuthSuccess o AuthFailure).
+    // No reseteamos en finally porque _performRegister es síncrono y completaría
+    // antes de que el BLoC procese el evento, dejando _isLoading = false y
+    // permitiendo un segundo tap antes de recibir respuesta.
+    context.read<AuthBloc>().add(AuthSignUp(
       name: name,
       email: email,
       password: password,
@@ -610,6 +591,7 @@ class _RegisterScreenState extends State<RegisterScreen>
   void _handleAuthStateChanges(BuildContext context, AuthState state) {
     switch (state.runtimeType) {
       case AuthSuccess:
+        if (mounted) setState(() { _isLoading = false; });
         final successState = state as AuthSuccess;
         final email = _emailController.text.trim();
 
@@ -626,7 +608,13 @@ class _RegisterScreenState extends State<RegisterScreen>
           }
         });
         break;
+      case AuthPendingEmailVerification:
+        // El router redirige a /email-verification vía GoRouterRefreshStream.
+        // Solo reseteamos el estado de carga local.
+        if (mounted) setState(() { _isLoading = false; });
+        break;
       case AuthFailure:
+        if (mounted) setState(() { _isLoading = false; });
         final failureState = state as AuthFailure;
         _handleRegisterError(failureState.message);
         break;
@@ -1277,29 +1265,56 @@ class _RegisterScreenState extends State<RegisterScreen>
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
           foregroundColor: AppColors.white,
-          disabledBackgroundColor: AppColors.neutral300,
+          // Durante la carga mantenemos el color del botón; si el formulario
+          // está incompleto mostramos el gris habitual.
+          disabledBackgroundColor: _isLoading
+              ? AppColors.secondary.withValues(alpha: 0.85)
+              : AppColors.neutral300,
+          disabledForegroundColor: _isLoading
+              ? AppColors.white
+              : AppColors.textSecondary,
           elevation: 0,
           shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: _isLoading
-            ? const SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
-          ),
-        )
-            : Text(
-          'Crear Cuenta',
-          style: GoogleFonts.poppins(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
-          ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: _isLoading
+              ? Row(
+                  key: const ValueKey('loading'),
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.white),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'Creando cuenta...',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                )
+              : Text(
+                  key: const ValueKey('idle'),
+                  'Crear Cuenta',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.5,
+                  ),
+                ),
         ),
       ),
     );

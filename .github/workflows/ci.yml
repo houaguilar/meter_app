@@ -151,6 +151,14 @@ jobs:
       - name: Generate code (Riverpod, Isar, etc.)
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Create GoogleService-Info.plist
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }} | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - name: Create Secret.xcconfig
+        run: |
+          echo "GOOGLE_MAPS_IOS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY_IOS }}" > ios/Flutter/Secret.xcconfig
+
       - name: Install CocoaPods
         run: cd ios && pod install
 

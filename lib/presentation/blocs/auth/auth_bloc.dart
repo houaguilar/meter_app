@@ -59,15 +59,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     res.fold(
       (l) {
-        if (l.message.contains('User not logged in')) {
-          // Sin sesión activa: verificar si hay un registro pendiente de confirmar
-          final pendingEmail = _sharedPrefs.getPendingVerificationEmail();
-          if (pendingEmail != null) {
-            emit(AuthPendingEmailVerification(pendingEmail));
-          } else {
-            _appUserCubit.clearUser();
-            emit(AuthInitial());
-          }
+        // Si hay un email de verificación pendiente, mantener ese estado
+        // independientemente del tipo de error. Esto cubre el caso donde el
+        // intercambio PKCE falla (enlace de verificación inválido) y evita mostrar
+        // "error inesperado" cuando el usuario aún necesita confirmar su correo.
+        final pendingEmail = _sharedPrefs.getPendingVerificationEmail();
+        if (pendingEmail != null) {
+          emit(AuthPendingEmailVerification(pendingEmail));
+        } else if (l.message.contains('User not logged in')) {
+          _appUserCubit.clearUser();
+          emit(AuthInitial());
         } else {
           emit(AuthFailure(l.message));
         }

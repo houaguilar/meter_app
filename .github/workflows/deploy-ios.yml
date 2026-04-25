@@ -1,9 +1,8 @@
 name: Deploy iOS
 
 on:
-  push:
-    tags:
-      - 'v*.*.*'  # Triggers on version tags like v1.0.0
+  # Tag-based iOS releases are handled by Codemagic (codemagic.yaml).
+  # This workflow is kept for manual one-off deploys only.
   workflow_dispatch:
     inputs:
       destination:
@@ -100,6 +99,14 @@ jobs:
       - name: Generate code (Riverpod, Isar, etc.)
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Create GoogleService-Info.plist
+        run: |
+          echo ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }} | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - name: Create Secret.xcconfig
+        run: |
+          echo "GOOGLE_MAPS_IOS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY_IOS }}" > ios/Flutter/Secret.xcconfig
+
       - name: Install CocoaPods
         run: cd ios && pod install
 
@@ -115,9 +122,9 @@ jobs:
       - name: Build iOS Release
         run: |
           if [ -n "$VERSION" ]; then
-            flutter build ipa --release --build-name=$VERSION --build-number=$BUILD_NUMBER --export-options-plist=ios/ExportOptions.plist
+            flutter build ipa --release --dart-define=ENV=prod --build-name=$VERSION --build-number=$BUILD_NUMBER --export-options-plist=ios/ExportOptions.plist
           else
-            flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+            flutter build ipa --release --dart-define=ENV=prod --export-options-plist=ios/ExportOptions.plist
           fi
 
       - name: Upload IPA artifact
@@ -138,22 +145,29 @@ jobs:
             echo "DESTINATION=testflight" >> $GITHUB_ENV
           fi
 
-      - name: Upload to App Store Connect
-        env:
-          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_API_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}
+      - name: Find IPA path
         run: |
-          # Decodificar API Key
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo -n "$APP_STORE_CONNECT_API_KEY_BASE64" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$APP_STORE_CONNECT_API_KEY_ID.p8
+          IPA_PATH=$(find build/ios/ipa -name '*.ipa' | head -1)
+          echo "IPA_PATH=$IPA_PATH" >> $GITHUB_ENV
 
-          # Subir a App Store Connect usando xcrun
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$(find build/ios/ipa -name '*.ipa')" \
-            --apiKey "$APP_STORE_CONNECT_API_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+      - name: Decode App Store Connect API Key
+        id: asc-key
+        run: |
+          # Decode the .p8 key content (required by apple-actions)
+          KEY_CONTENT=$(echo -n "${{ secrets.APP_STORE_CONNECT_API_KEY_BASE64 }}" | base64 --decode)
+          echo "key_content<<EOF" >> $GITHUB_OUTPUT
+          echo "$KEY_CONTENT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # xcrun altool fue eliminado en Xcode 16.
+      # apple-actions/upload-testflight-build usa la App Store Connect API REST.
+      - name: Upload to TestFlight
+        uses: apple-actions/upload-testflight-build@v3
+        with:
+          app-path: ${{ env.IPA_PATH }}
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ steps.asc-key.outputs.key_content }}
 
       # ============================================
       # CLEANUP
