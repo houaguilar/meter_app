@@ -45,7 +45,7 @@ workflows:
 
       - name: Create GoogleService-Info.plist
         script: |
-          echo $GOOGLE_SERVICE_INFO_PLIST_BASE64 | base64 --decode > ios/Runner/GoogleService-Info.plist
+          echo $GOOGLE_SERVICE_INFO_PLIST_BASE64 | base64 --decode > ios/GoogleService-Info.plist
 
       - name: Create Secret.xcconfig
         script: |
@@ -117,7 +117,7 @@ workflows:
 
       - name: Create GoogleService-Info.plist
         script: |
-          echo $GOOGLE_SERVICE_INFO_PLIST_BASE64 | base64 --decode > ios/Runner/GoogleService-Info.plist
+          echo $GOOGLE_SERVICE_INFO_PLIST_BASE64 | base64 --decode > ios/GoogleService-Info.plist
 
       - name: Create Secret.xcconfig
         script: |
