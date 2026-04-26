@@ -11,8 +11,11 @@
     <key>uploadSymbols</key>
     <true/>
     <key>signingStyle</key>
-    <string>automatic</string>
-    <key>destination</key>
-    <string>upload</string>
+    <string>manual</string>
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>com.mts.metrashop</key>
+        <string>MetraShop App Store</string>
+    </dict>
 </dict>
 </plist>
