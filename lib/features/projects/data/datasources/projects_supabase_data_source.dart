@@ -4,7 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:meter_app/core/constants/error/exceptions.dart';
 import 'package:meter_app/features/projects/domain/datasources/projects_remote_data_source.dart';
-import 'package:meter_app/data/models/projects/project_model.dart';
+import 'package:meter_app/features/projects/data/models/project_model.dart';
 
 class ProjectsSupabaseDataSource implements ProjectsRemoteDataSource {
 

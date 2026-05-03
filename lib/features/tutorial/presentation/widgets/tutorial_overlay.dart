@@ -7,7 +7,7 @@ import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/local/shared_preferences_helper.dart';
 import 'package:meter_app/domain/entities/tutorial/tutorial_step.dart';
 import 'package:meter_app/init_dependencies.dart';
-import 'package:meter_app/presentation/blocs/tutorial/tutorial_bloc.dart';
+import 'package:meter_app/features/tutorial/presentation/blocs/tutorial_bloc.dart';
 
 /// Overlay de tutorial unificado y reutilizable para todos los flujos
 class TutorialOverlay extends StatelessWidget {

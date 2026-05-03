@@ -1,5 +1,5 @@
 
-import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/features/premium/data/models/premium_status_model.dart';
 
 abstract interface class PremiumRemoteDataSource {
   Future<PremiumStatusModel> getPremiumStatus(String userId);

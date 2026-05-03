@@ -13,7 +13,7 @@ import 'package:meter_app/features/mapa/domain/entities/place_entity.dart';
 import 'package:meter_app/features/mapa/presentation/blocs/locations_bloc.dart';
 import 'package:meter_app/features/mapa/presentation/blocs/place/place_bloc.dart';
 import 'package:meter_app/presentation/widgets/app_bar/app_bar_widget.dart';
-import 'package:meter_app/presentation/screens/home/shared/quote/quote_project_selection_screen.dart';
+import 'package:meter_app/features/shared/presentation/screens/home/quote/quote_project_selection_screen.dart';
 import 'package:meter_app/features/mapa/presentation/screens/detail/location_detail_screen.dart';
 import 'package:meter_app/features/mapa/presentation/screens/widgets/optimized_search_bar.dart';
 import 'package:meter_app/features/mapa/presentation/screens/widgets/location_permission_dialog.dart';

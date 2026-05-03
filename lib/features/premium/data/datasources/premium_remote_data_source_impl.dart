@@ -1,7 +1,7 @@
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meter_app/features/premium/domain/datasources/premium_remote_data_source.dart';
-import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/features/premium/data/models/premium_status_model.dart';
 import 'package:meter_app/core/constants/error/exceptions.dart';
 
 class PremiumRemoteDataSourceImpl implements PremiumRemoteDataSource {

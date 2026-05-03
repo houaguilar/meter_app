@@ -24,7 +24,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/features/premium/data/models/premium_status_model.dart';
 import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';

@@ -7,7 +7,7 @@ import 'package:meter_app/core/utils/app_logger.dart';
 import 'package:meter_app/features/premium/domain/datasources/premium_service_data_source.dart';
 import 'package:meter_app/domain/entities/premium/premium_status.dart';
 import 'package:meter_app/domain/entities/premium/purchase_result.dart';
-import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/features/premium/data/models/premium_status_model.dart';
 
 class MockPremiumServiceImpl implements PremiumServiceDataSource {
   final SupabaseClient supabaseClient;

@@ -2,7 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/screens/home/shared/quote/quote_metrados_selection_screen.dart';
+import 'package:meter_app/features/shared/presentation/screens/home/quote/quote_metrados_selection_screen.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';

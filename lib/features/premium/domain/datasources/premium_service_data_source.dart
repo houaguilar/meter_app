@@ -1,4 +1,4 @@
-import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/features/premium/data/models/premium_status_model.dart';
 import 'package:meter_app/domain/entities/premium/purchase_result.dart';
 
 abstract interface class PremiumServiceDataSource {

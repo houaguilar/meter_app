@@ -31,7 +31,7 @@ import 'package:meter_app/features/perfil/presentation/screens/notificaciones/no
 import 'package:meter_app/features/perfil/presentation/screens/privacy_legal/privacy_legal_screen.dart';
 import 'package:meter_app/features/perfil/presentation/screens/profile_settings/profile_settings_screen.dart';
 import 'package:meter_app/features/perfil/presentation/screens/register_location/register_location_screen.dart';
-import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
+import 'package:meter_app/features/shared/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
 

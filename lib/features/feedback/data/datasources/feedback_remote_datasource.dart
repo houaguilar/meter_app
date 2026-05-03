@@ -1,5 +1,5 @@
 import 'package:meter_app/core/constants/error/exceptions.dart';
-import 'package:meter_app/data/models/feedback/feedback_model.dart';
+import 'package:meter_app/features/feedback/data/models/feedback_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract interface class FeedbackRemoteDataSource {
