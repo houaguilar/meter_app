@@ -1,10 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:meter_app/core/services/review_service.dart';
-import 'package:meter_app/data/datasources/feedback/feedback_remote_datasource.dart';
-import 'package:meter_app/data/repositories/feedback/feedback_repository_impl.dart';
-import 'package:meter_app/domain/repositories/feedback/feedback_repository.dart';
-import 'package:meter_app/domain/usecases/feedback/send_feedback_usecase.dart';
-import 'package:meter_app/presentation/blocs/feedback/feedback_bloc.dart';
+import 'package:meter_app/features/feedback/data/datasources/feedback_remote_datasource.dart';
+import 'package:meter_app/features/feedback/data/repositories/feedback_repository_impl.dart';
+import 'package:meter_app/features/feedback/domain/repositories/feedback_repository.dart';
+import 'package:meter_app/features/feedback/domain/usecases/send_feedback_usecase.dart';
+import 'package:meter_app/features/feedback/presentation/blocs/feedback_bloc.dart';
 
 void registerFeedbackModule(GetIt sl) {
   // ==================== SERVICES ====================

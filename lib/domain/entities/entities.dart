@@ -14,11 +14,11 @@ export 'package:meter_app/domain/entities/home/losas/losa.dart';
 export 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
 
 // Map entities
-export 'package:meter_app/domain/entities/map/location.dart';
-export 'package:meter_app/domain/entities/map/location_with_distance.dart';
-export 'package:meter_app/domain/entities/map/location_category.dart';
-export 'package:meter_app/domain/entities/map/product.dart';
-export 'package:meter_app/domain/entities/map/review.dart';
-export 'package:meter_app/domain/entities/map/cart.dart';
-export 'package:meter_app/domain/entities/map/verification_status.dart';
-export 'package:meter_app/domain/entities/map/document_type.dart';
+export 'package:meter_app/features/mapa/domain/entities/location.dart';
+export 'package:meter_app/features/mapa/domain/entities/location_with_distance.dart';
+export 'package:meter_app/features/mapa/domain/entities/location_category.dart';
+export 'package:meter_app/features/mapa/domain/entities/product.dart';
+export 'package:meter_app/features/mapa/domain/entities/review.dart';
+export 'package:meter_app/features/mapa/domain/entities/cart.dart';
+export 'package:meter_app/features/mapa/domain/entities/verification_status.dart';
+export 'package:meter_app/features/mapa/domain/entities/document_type.dart';

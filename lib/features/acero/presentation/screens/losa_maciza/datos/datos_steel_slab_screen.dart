@@ -14,7 +14,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/home/acero/losa_maciza/steel_slab_providers.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/presentation/widgets/modern_widgets.dart';
-import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
+import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_floating_action_button.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_text_form_field.dart';
 import 'package:meter_app/features/acero/presentation/screens/losa_maciza/datos/models/slab_form_data.dart';

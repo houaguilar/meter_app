@@ -14,7 +14,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/losas/losa.dart';
 import 'package:meter_app/domain/services/losas/losa_service.dart';
-import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/presentation/providers/providers.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
 

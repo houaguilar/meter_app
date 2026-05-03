@@ -10,16 +10,16 @@ import 'package:meter_app/core/notifications/notification_handler.dart';
 import 'package:meter_app/core/notifications/notification_repository.dart';
 import 'package:meter_app/firebase_options.dart';
 import 'package:meter_app/init_dependencies.dart';
-import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
-import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
-import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
-import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
-import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
-import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
-import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
-import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
-import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
-import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
+import 'package:meter_app/features/inicio/presentation/blocs/article_bloc.dart';
+import 'package:meter_app/features/inicio/presentation/blocs/measurement_bloc.dart';
+import 'package:meter_app/features/mapa/presentation/blocs/locations_bloc.dart';
+import 'package:meter_app/features/mapa/presentation/blocs/place/place_bloc.dart';
+import 'package:meter_app/features/premium/presentation/blocs/premium_bloc.dart';
+import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/metrados/combined_results/combined_results_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/metrados/metrados_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/metrados/result/result_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/projects_bloc.dart';
 
 import 'dart:async';
 
@@ -29,9 +29,9 @@ import 'package:meter_app/core/analytics/analytics_repository.dart';
 import 'package:meter_app/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:meter_app/core/config.dart';
 import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
-import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
-import 'package:meter_app/presentation/blocs/feedback/feedback_bloc.dart';
-import 'package:meter_app/presentation/blocs/map/products_bloc.dart';
+import 'package:meter_app/features/cart/presentation/blocs/cart_bloc.dart';
+import 'package:meter_app/features/feedback/presentation/blocs/feedback_bloc.dart';
+import 'package:meter_app/features/mapa/presentation/blocs/products_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

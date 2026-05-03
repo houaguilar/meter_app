@@ -5,8 +5,8 @@ import 'package:meter_app/domain/entities/perfil/location/administrative_level_2
 import 'package:meter_app/domain/entities/perfil/location/administrative_level_3.dart';
 import 'package:meter_app/domain/entities/perfil/location/administrative_level_4.dart';
 import 'package:meter_app/domain/entities/perfil/location/country.dart';
-import 'package:meter_app/domain/repositories/perfil/location/location_repository.dart';
-import 'package:meter_app/data/repositories/perfil/location/location_repository_factory.dart';
+import 'package:meter_app/features/perfil/domain/repositories/location/location_repository.dart';
+import 'package:meter_app/features/perfil/data/repositories/location/location_repository_factory.dart';
 
 /// Widget genérico para seleccionar ubicaciones de múltiples países
 /// Soporta Perú 🇵🇪, Colombia 🇨🇴 y México 🇲🇽

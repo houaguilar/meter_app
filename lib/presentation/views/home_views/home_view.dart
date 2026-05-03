@@ -13,7 +13,7 @@ import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';
-import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
+import 'package:meter_app/features/inicio/presentation/blocs/measurement_bloc.dart';
 import 'package:meter_app/presentation/providers/providers.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
 

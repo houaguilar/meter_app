@@ -1,0 +1,31 @@
+import 'package:fpdart/fpdart.dart';
+
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/features/mapa/domain/repositories/location_repository.dart';
+
+/// Parámetros para cambiar disponibilidad de stock
+class ToggleProductStockParams {
+  final String productId;
+  final bool available;
+
+  ToggleProductStockParams({
+    required this.productId,
+    required this.available,
+  });
+}
+
+/// Use case para cambiar disponibilidad de stock de un producto
+class ToggleProductStock implements UseCase<void, ToggleProductStockParams> {
+  final LocationRepository repository;
+
+  ToggleProductStock(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(ToggleProductStockParams params) async {
+    return await repository.toggleProductStock(
+      productId: params.productId,
+      available: params.available,
+    );
+  }
+}

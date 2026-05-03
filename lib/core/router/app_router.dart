@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/screens/articles/article_detail_screen.dart';
+import 'package:meter_app/features/inicio/presentation/screens/articles/article_detail_screen.dart';
 import 'package:meter_app/features/auth/presentation/screens/email_verification/email_verification_screen.dart';
 import 'package:meter_app/features/auth/presentation/screens/login/login_screen.dart';
 import 'package:meter_app/features/auth/presentation/screens/new_password/new_password_screen.dart';
@@ -23,14 +23,14 @@ import 'package:meter_app/features/pisos/presentation/screens/falso_piso/result/
 import 'package:meter_app/features/tarrajeo/presentation/screens/datos/datos_tarrajeo_screen.dart';
 import 'package:meter_app/features/tarrajeo/presentation/screens/derrame/datos/datos_tarrajeo_derrame_screen.dart';
 import 'package:meter_app/features/tarrajeo/presentation/screens/derrame/result/result_tarrajeo_derrame_screen.dart';
-import 'package:meter_app/presentation/screens/mapa/products/category_selector_screen.dart';
-import 'package:meter_app/presentation/screens/mapa/products/brand_configurator_screen.dart';
-import 'package:meter_app/presentation/screens/mapa/optimized_map_screen.dart';
-import 'package:meter_app/presentation/screens/mapa/profile/provider_profile_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/notificaciones/notifications_settings_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/privacy_legal/privacy_legal_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/register_location/register_location_screen.dart';
+import 'package:meter_app/features/mapa/presentation/screens/products/category_selector_screen.dart';
+import 'package:meter_app/features/mapa/presentation/screens/products/brand_configurator_screen.dart';
+import 'package:meter_app/features/mapa/presentation/screens/optimized_map_screen.dart';
+import 'package:meter_app/features/mapa/presentation/screens/profile/provider_profile_screen.dart';
+import 'package:meter_app/features/perfil/presentation/screens/notificaciones/notifications_settings_screen.dart';
+import 'package:meter_app/features/perfil/presentation/screens/privacy_legal/privacy_legal_screen.dart';
+import 'package:meter_app/features/perfil/presentation/screens/profile_settings/profile_settings_screen.dart';
+import 'package:meter_app/features/perfil/presentation/screens/register_location/register_location_screen.dart';
 import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
@@ -52,11 +52,11 @@ import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
 import 'package:meter_app/features/muro/presentation/screens/ladrillo/datos_ladrillo/datos_ladrillo_screen.dart';
 import 'package:meter_app/features/pisos/presentation/screens/contrapiso/datos/datos_contrapiso_screen.dart';
 import 'package:meter_app/features/tarrajeo/presentation/screens/result/result_tarrajeo_screen.dart';
-import 'package:meter_app/presentation/screens/perfil/info/profile_info_screen.dart';
-import 'package:meter_app/presentation/screens/projects/combined/combined_results_screen.dart';
-import 'package:meter_app/presentation/screens/projects/metrados/metrados_screen.dart';
-import 'package:meter_app/presentation/screens/projects/new_project/new_project_screen.dart';
-import 'package:meter_app/presentation/screens/projects/result/result_screen.dart';
+import 'package:meter_app/features/perfil/presentation/screens/info/profile_info_screen.dart';
+import 'package:meter_app/features/projects/presentation/screens/combined/combined_results_screen.dart';
+import 'package:meter_app/features/projects/presentation/screens/metrados/metrados_screen.dart';
+import 'package:meter_app/features/projects/presentation/screens/new_project/new_project_screen.dart';
+import 'package:meter_app/features/projects/presentation/screens/result/result_screen.dart';
 
 
 class AppRouter {

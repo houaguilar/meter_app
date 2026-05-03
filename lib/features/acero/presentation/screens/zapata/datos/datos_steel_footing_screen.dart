@@ -11,7 +11,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/home/acero/zapata/steel_footing_providers.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/presentation/widgets/modern_widgets.dart';
-import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
+import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/mesh_distribution_widget.dart';
 import 'package:meter_app/features/acero/presentation/screens/zapata/datos/models/footing_form_data.dart';
 

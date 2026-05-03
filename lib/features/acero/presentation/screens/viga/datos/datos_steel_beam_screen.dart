@@ -15,7 +15,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/home/acero/viga/steel_beam_providers.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/presentation/widgets/modern_widgets.dart';
-import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
+import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_steel_bars_widget.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_stirrup_distributions_widget.dart';
 

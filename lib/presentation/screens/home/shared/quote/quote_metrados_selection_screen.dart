@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';
-import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/metrados/metrados_bloc.dart';
 
 class QuoteMetradosSelectionScreen extends StatefulWidget {
   final Project project;

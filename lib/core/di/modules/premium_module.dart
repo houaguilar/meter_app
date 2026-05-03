@@ -1,15 +1,15 @@
 import 'package:get_it/get_it.dart';
 import 'package:meter_app/core/app_config.dart';
-import 'package:meter_app/data/datasources/premium/mock_premium_service_impl.dart';
-import 'package:meter_app/data/datasources/premium/premium_local_data_source_impl.dart';
-import 'package:meter_app/data/datasources/premium/premium_remote_data_source_impl.dart';
-import 'package:meter_app/data/datasources/premium/revenuecat_service_impl.dart';
-import 'package:meter_app/data/repositories/premium/premium_repository_impl.dart';
-import 'package:meter_app/domain/datasources/premium/premium_local_data_source.dart';
-import 'package:meter_app/domain/datasources/premium/premium_remote_data_source.dart';
-import 'package:meter_app/domain/datasources/premium/premium_service_data_source.dart';
-import 'package:meter_app/domain/repositories/premium/premium_repository.dart';
-import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
+import 'package:meter_app/features/premium/data/datasources/mock_premium_service_impl.dart';
+import 'package:meter_app/features/premium/data/datasources/premium_local_data_source_impl.dart';
+import 'package:meter_app/features/premium/data/datasources/premium_remote_data_source_impl.dart';
+import 'package:meter_app/features/premium/data/datasources/revenuecat_service_impl.dart';
+import 'package:meter_app/features/premium/data/repositories/premium_repository_impl.dart';
+import 'package:meter_app/features/premium/domain/datasources/premium_local_data_source.dart';
+import 'package:meter_app/features/premium/domain/datasources/premium_remote_data_source.dart';
+import 'package:meter_app/features/premium/domain/datasources/premium_service_data_source.dart';
+import 'package:meter_app/features/premium/domain/repositories/premium_repository.dart';
+import 'package:meter_app/features/premium/presentation/blocs/premium_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Módulo de inyección de dependencias para funcionalidad premium

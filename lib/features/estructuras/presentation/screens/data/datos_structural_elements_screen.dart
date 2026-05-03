@@ -10,7 +10,7 @@ import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/local/shared_preferences_helper.dart';
 import 'package:meter_app/presentation/providers/home/estructuras/structural_element_providers.dart';
 import 'package:meter_app/presentation/widgets/modern_widgets.dart';
-import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
+import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
 
 class DatosStructuralElementsScreen extends ConsumerStatefulWidget {

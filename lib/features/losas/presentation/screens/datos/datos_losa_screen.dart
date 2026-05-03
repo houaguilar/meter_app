@@ -4,7 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/core/utils/validators.dart';
-import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
+import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/local/shared_preferences_helper.dart';

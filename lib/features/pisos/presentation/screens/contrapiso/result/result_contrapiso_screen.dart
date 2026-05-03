@@ -11,7 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
-import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/presentation/widgets/widgets.dart';
 
 class ResultContrapisoScreen extends ConsumerStatefulWidget {

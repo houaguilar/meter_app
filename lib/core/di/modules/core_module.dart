@@ -29,9 +29,9 @@ import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
 // 🆕 Nuevas collections para marketplace
-import 'package:meter_app/domain/entities/map/location_category.dart';
-import 'package:meter_app/domain/entities/map/product.dart';
-import 'package:meter_app/domain/entities/map/review.dart';
+import 'package:meter_app/features/mapa/domain/entities/location_category.dart';
+import 'package:meter_app/features/mapa/domain/entities/product.dart';
+import 'package:meter_app/features/mapa/domain/entities/review.dart';
 
 /// Módulo de inyección de dependencias core (base del sistema)
 /// Contiene: SharedPreferences, Dio, Isar, Supabase, y utilidades base

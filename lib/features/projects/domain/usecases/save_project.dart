@@ -1,0 +1,24 @@
+
+
+import 'package:fpdart/fpdart.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/features/projects/domain/repositories/projects_repository.dart';
+
+import 'package:meter_app/core/constants/error/failures.dart';
+
+class CreateProject implements UseCase<void, CreateProjectParams> {
+  final ProjectsRepository repository;
+
+  const CreateProject(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(CreateProjectParams params) async {
+    return await repository.saveProject(params.name);
+  }
+}
+
+class CreateProjectParams {
+  final String name;
+
+  CreateProjectParams({required this.name});
+}

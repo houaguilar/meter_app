@@ -8,7 +8,7 @@ import 'package:meter_app/features/auth/domain/usecases/get_user_profile.dart';
 import 'package:meter_app/features/auth/domain/usecases/update_user_profile.dart';
 import 'package:meter_app/domain/usecases/use_cases.dart';
 import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
-import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 
 /// Módulo de inyección de dependencias para autenticación y perfil
 void registerAuthModule(GetIt sl) {

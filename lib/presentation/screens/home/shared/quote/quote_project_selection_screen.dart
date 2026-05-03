@@ -6,7 +6,7 @@ import 'package:meter_app/presentation/screens/home/shared/quote/quote_metrados_
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';
-import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
+import 'package:meter_app/features/projects/presentation/blocs/projects_bloc.dart';
 
 class QuoteProjectSelectionScreen extends StatefulWidget {
   final String providerName;
