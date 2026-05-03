@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../config/constants/constants.dart';
-import '../../../config/utils/number_formatter.dart';
+import '../../../core/constants/constants.dart';
+import '../../../core/utils/number_formatter.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/services/tarrajeo_service.dart';
 

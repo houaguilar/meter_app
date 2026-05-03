@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 import '../../entities/premium/premium_status.dart';
 import '../../entities/premium/purchase_result.dart';
-import '../../../config/constants/error/failures.dart';
+import '../../../core/constants/error/failures.dart';
 
 abstract interface class PremiumRepository {
   // Estado premium

@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
-import 'package:meter_app/config/usecase/usecase.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
 import 'package:meter_app/domain/entities/feedback/feedback_entity.dart';
 import 'package:meter_app/domain/repositories/feedback/feedback_repository.dart';
 

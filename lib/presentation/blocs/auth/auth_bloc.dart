@@ -2,9 +2,9 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:meter_app/domain/entities/auth/user.dart';
 
-import '../../../config/common/cubits/app_user/app_user_cubit.dart';
-import '../../../config/usecase/usecase.dart';
-import '../../../config/local/shared_preferences_helper.dart';
+import '../../../core/common/cubits/app_user/app_user_cubit.dart';
+import '../../../core/usecase/usecase.dart';
+import '../../../core/local/shared_preferences_helper.dart';
 import '../../../domain/usecases/use_cases.dart';
 
 part 'auth_event.dart';

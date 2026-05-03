@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../../domain/entities/entities.dart';
 import '../cards/measurement_item_card.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';

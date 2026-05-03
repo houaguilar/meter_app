@@ -5,10 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:animations/animations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import 'new_project/new_project_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {

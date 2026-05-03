@@ -5,13 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/config/utils/number_formatter.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/utils/number_formatter.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../../config/theme/theme.dart';
-import '../../../../../../config/utils/pdf/pdf_factory.dart';
+import '../../../../../../core/theme/theme.dart';
+import '../../../../../../core/utils/pdf/pdf_factory.dart';
 import '../../../../../../domain/entities/home/ladrillo/ladrillo.dart';
 import '../../../../../../domain/entities/home/muro/tipo_ladrillo.dart';
 import '../../../../../blocs/profile/profile_bloc.dart';

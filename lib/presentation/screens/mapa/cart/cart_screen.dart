@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/show_snackbar.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../../domain/entities/map/product.dart';
 import '../../../blocs/cart/cart_bloc.dart';
 import '../checkout/checkout_screen.dart';

@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/screens/home/shared/quote/quote_metrados_selection_screen.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/entities/entities.dart';
 import '../../../../blocs/projects/projects_bloc.dart';
 

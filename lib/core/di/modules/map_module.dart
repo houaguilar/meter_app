@@ -1,5 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:meter_app/config/constants/secrets/app_secrets.dart';
+import 'package:meter_app/core/constants/secrets/app_secrets.dart';
 import 'package:meter_app/data/datasources/map/location_data_source_impl.dart';
 import 'package:meter_app/data/datasources/map/place_remote_data_source_impl.dart';
 import 'package:meter_app/data/repositories/map/location_repository_impl.dart';

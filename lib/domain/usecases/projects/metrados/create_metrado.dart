@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../config/constants/error/failures.dart';
-import '../../../../config/usecase/usecase.dart';
+import '../../../../core/constants/error/failures.dart';
+import '../../../../core/usecase/usecase.dart';
 import '../../../repositories/projects/metrados/metrados_local_repository.dart';
 
 class CreateMetrado implements UseCase<void, CreateMetradoParams> {

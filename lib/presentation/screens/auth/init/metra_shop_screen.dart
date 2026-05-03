@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/error_handler.dart';
-import 'package:meter_app/config/assets/app_images.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/error_handler.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
 class MetraShopScreen extends StatefulWidget {

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/error/failures.dart';
-import '../../../config/network/connection_checker.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/network/connection_checker.dart';
 import '../../../domain/datasources/map/location_data_source.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/location_with_distance.dart';

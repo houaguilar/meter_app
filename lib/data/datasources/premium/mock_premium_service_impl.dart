@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../config/app_config.dart';
-import '../../../config/constants/error/exceptions.dart';
-import '../../../config/utils/app_logger.dart';
+import '../../../core/app_config.dart';
+import '../../../core/constants/error/exceptions.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../domain/datasources/premium/premium_service_data_source.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../../domain/entities/premium/purchase_result.dart';

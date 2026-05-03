@@ -4,14 +4,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'package:meter_app/config/assets/app_images.dart';
-import 'package:meter_app/config/services/review_service.dart';
+import 'package:meter_app/core/assets/app_images.dart';
+import 'package:meter_app/core/services/review_service.dart';
 import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/widgets/bottom_sheet/measurements_bottom_sheet.dart';
 import 'package:meter_app/presentation/widgets/cards/shortcut_card.dart';
 import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../../domain/entities/entities.dart';
 import '../../blocs/home/inicio/measurement_bloc.dart';
 import '../../providers/providers.dart';

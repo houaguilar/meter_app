@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../../domain/usecases/projects/metrados/create_metrado.dart';
 import '../../../../domain/usecases/projects/metrados/delete_metrado.dart';

@@ -1,5 +1,5 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../config/constants/error/failures.dart';
+import '../../../core/constants/error/failures.dart';
 import '../../repositories/map/location_repository.dart';
 
 /// Activa o desactiva la visibilidad de una ubicación en el mapa

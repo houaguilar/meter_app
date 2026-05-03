@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/error/failures.dart';
-import '../../../config/usecase/usecase.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../entities/map/location_with_distance.dart';
 import '../../repositories/map/location_repository.dart';
 

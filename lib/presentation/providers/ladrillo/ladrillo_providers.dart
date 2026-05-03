@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../config/constants/constant.dart';
-import '../../../config/utils/number_formatter.dart';
+import '../../../core/constants/constant.dart';
+import '../../../core/utils/number_formatter.dart';
 import '../../../domain/entities/home/ladrillo/ladrillo.dart';
 import '../../../domain/entities/home/muro/tipo_ladrillo.dart' as enums;
 import '../../../domain/services/ladrillo_service.dart';

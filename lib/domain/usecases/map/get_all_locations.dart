@@ -1,9 +1,9 @@
 
 
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
 
-import '../../../config/usecase/usecase.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../entities/map/location.dart';
 import '../../repositories/map/location_repository.dart';
 

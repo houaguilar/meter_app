@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
 import 'material_helpers.dart';
 

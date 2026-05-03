@@ -2,8 +2,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/domain/repositories/home/inicio/article_repository.dart';
 
-import '../../../../config/constants/error/failures.dart';
-import '../../../../config/network/connection_checker.dart';
+import '../../../../core/constants/error/failures.dart';
+import '../../../../core/network/connection_checker.dart';
 import '../../../../domain/datasources/home/inicio/article_remote_data_source.dart';
 import '../../../../domain/entities/entities.dart';
 

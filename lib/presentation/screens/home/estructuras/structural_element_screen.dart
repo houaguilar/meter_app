@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../providers/home/estructuras/structural_element_providers.dart';
 import '../../../widgets/cards/generic_item_card.dart';
-import '../../../widgets/config/generic_module_config.dart';
+import '../../../widgets/core/generic_module_config.dart';
 import '../../../widgets/dialogs/unified_feature_disabled_dialog.dart';
 import '../../../widgets/shared/responsive_grid_builder.dart';
 import '../../../widgets/widgets.dart';

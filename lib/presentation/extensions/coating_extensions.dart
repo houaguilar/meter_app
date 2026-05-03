@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../config/theme/theme.dart';
+import '../../core/theme/theme.dart';
 import '../../domain/entities/home/tarrajeo/coating.dart';
 import '../widgets/dialogs/feature_disabled_dialog.dart';
 

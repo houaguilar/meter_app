@@ -1,6 +1,6 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../../config/constants/error/exceptions.dart';
-import '../../../../../config/constants/error/failures.dart';
+import '../../../../../core/constants/error/exceptions.dart';
+import '../../../../../core/constants/error/failures.dart';
 import '../../../../../domain/entities/home/muro/custom_brick.dart';
 import '../../../../../domain/repositories/home/muro/custom_brick_repository.dart';
 import '../../../../domain/datasources/home/muro/custom_brick_local_data_source.dart';

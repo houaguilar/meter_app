@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../config/app_config.dart';
+import '../../../core/app_config.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../blocs/premium/premium_bloc.dart';
 import 'mock_development_panel.dart';

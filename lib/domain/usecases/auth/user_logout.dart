@@ -1,8 +1,8 @@
 
 
 import 'package:fpdart/src/either.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
-import 'package:meter_app/config/usecase/usecase.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
 
 import '../../repositories/auth/auth_repository.dart';
 

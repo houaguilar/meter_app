@@ -2,7 +2,7 @@
 //
 // Uso:
 // ```dart
-// import 'package:meter_app/config/assets/assets.dart';
+// import 'package:meter_app/core/assets/assets.dart';
 //
 // Image.asset(AppImages.loginImg);
 // SvgPicture.asset(AppIcons.arrowRightIcon);

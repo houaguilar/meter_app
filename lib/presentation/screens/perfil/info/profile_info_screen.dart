@@ -5,8 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/show_snackbar.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/show_snackbar.dart';
 
 class ProfileInfoScreen extends StatefulWidget {
   const ProfileInfoScreen({super.key});

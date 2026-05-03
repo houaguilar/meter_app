@@ -1,7 +1,7 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/error/failures.dart';
+import '../../../core/constants/error/failures.dart';
 import '../../entities/auth/user.dart';
 import '../../entities/auth/user_profile.dart';
 

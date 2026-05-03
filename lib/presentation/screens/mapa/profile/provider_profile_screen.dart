@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/presentation/widgets/app_bar/app_bar_perfil_widget.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../domain/entities/map/location.dart';
 import '../../../../domain/entities/map/verification_status.dart';
 import '../../../blocs/map/locations_bloc.dart';

@@ -2,7 +2,7 @@
 import 'package:meter_app/domain/entities/home/losas/slab.dart';
 import 'package:meter_app/domain/repositories/home/losa/slab_repository.dart';
 
-import 'package:meter_app/config/assets/app_images.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 
 class SlabRepositoryImpl implements SlabRepository {
   @override

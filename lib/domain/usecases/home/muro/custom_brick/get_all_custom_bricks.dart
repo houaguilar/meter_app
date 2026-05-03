@@ -1,8 +1,8 @@
 // lib/domain/usecases/home/muro/get_all_custom_bricks.dart
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../../config/constants/error/failures.dart';
-import '../../../../../config/usecase/usecase.dart';
+import '../../../../../core/constants/error/failures.dart';
+import '../../../../../core/usecase/usecase.dart';
 import '../../../../entities/home/muro/custom_brick.dart';
 import '../../../../repositories/home/muro/custom_brick_repository.dart';
 

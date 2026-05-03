@@ -1,7 +1,7 @@
 // lib/presentation/blocs/common/error_handler_mixin.dart
 
-import '../../../config/constants/error/failures.dart';
-import '../../../config/utils/error_handler.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/utils/error_handler.dart';
 
 /// Mixin para proporcionar manejo consistente de errores en todos los BLoCs
 ///

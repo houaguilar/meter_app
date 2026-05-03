@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../config/constants/constant.dart';
+import '../../../../core/constants/constant.dart';
 import '../../../../domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
 import '../../../../domain/entities/home/estructuras/columna/columna.dart';
 import '../../../../domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
@@ -8,7 +8,7 @@ import '../../../../domain/entities/home/estructuras/solado/solado.dart';
 import '../../../../domain/entities/home/estructuras/structural_element.dart';
 import '../../../../domain/entities/home/estructuras/viga/viga.dart';
 import '../../../../domain/entities/home/estructuras/zapata/zapata.dart';
-import 'package:meter_app/config/assets/app_images.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 
 final List<StructuralElement> _structuralElements = [
   StructuralElement(

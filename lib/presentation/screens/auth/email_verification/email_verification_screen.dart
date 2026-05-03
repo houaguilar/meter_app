@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../blocs/auth/auth_bloc.dart' as bloc_auth;
 
 class EmailVerificationScreen extends StatefulWidget {

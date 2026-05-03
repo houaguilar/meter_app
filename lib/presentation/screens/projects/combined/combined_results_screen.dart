@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
 import '../../../blocs/profile/profile_bloc.dart';
 import '../../../blocs/projects/metrados/combined_results/combined_results_bloc.dart';

@@ -1,6 +1,6 @@
 // lib/presentation/screens/home/acero/losa/widgets/slab_floating_action_button.dart
 import 'package:flutter/material.dart';
-import '../../../../../../config/theme/theme.dart';
+import '../../../../../../core/theme/theme.dart';
 
 class SlabFloatingActionButton extends StatelessWidget {
   final VoidCallback? onPressed;

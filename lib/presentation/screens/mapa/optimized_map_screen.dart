@@ -6,7 +6,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:meter_app/presentation/screens/mapa/widgets/optimized_place_search_screen.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/location_with_distance.dart';
 import '../../../domain/entities/map/place_entity.dart';

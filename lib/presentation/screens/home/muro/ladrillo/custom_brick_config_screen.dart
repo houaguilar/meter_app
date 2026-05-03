@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/entities/home/muro/custom_brick.dart';
 import '../../../../providers/home/muro/custom_brick_providers.dart';
 import '../../../../providers/home/muro/custom_brick_isar_providers.dart';

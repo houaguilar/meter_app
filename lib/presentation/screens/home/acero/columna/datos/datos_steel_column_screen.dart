@@ -4,14 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/columna/datos/models/column_form_data.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
 
-import '../../../../../../config/theme/theme.dart';
+import '../../../../../../core/theme/theme.dart';
 import '../../../../../../domain/entities/home/acero/columna/steel_column.dart';
 import '../../../../../../domain/entities/home/acero/steel_constants.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 import '../../../../../providers/home/acero/columna/steel_column_providers.dart';
 import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';

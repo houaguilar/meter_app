@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/validators.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/validators.dart';
 
 class EnhancedAuthTextField extends StatefulWidget {
   final TextEditingController controller;

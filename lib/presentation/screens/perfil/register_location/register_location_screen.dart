@@ -11,9 +11,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:meter_app/domain/entities/map/location.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/show_snackbar.dart';
-import '../../../../config/utils/validators.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/show_snackbar.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../domain/entities/auth/user_profile.dart';
 import '../../../../domain/entities/map/document_type.dart';
 import '../../../../domain/entities/map/verification_status.dart';

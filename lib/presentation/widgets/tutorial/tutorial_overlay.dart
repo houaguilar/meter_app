@@ -3,8 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../../config/theme/theme.dart';
-import '../../../config/local/shared_preferences_helper.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/local/shared_preferences_helper.dart';
 import '../../../domain/entities/tutorial/tutorial_step.dart';
 import '../../../init_dependencies.dart';
 import '../../blocs/tutorial/tutorial_bloc.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../config/constants/constant.dart';
+import '../../../core/constants/constant.dart';
 import '../../../domain/entities/home/losas/losa.dart';
 import '../../../domain/entities/home/losas/tipo_losa.dart';
 import '../../../domain/services/losas/losa_service.dart';

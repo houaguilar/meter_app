@@ -4,9 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/local/shared_preferences_helper.dart';
-import 'package:meter_app/config/assets/app_images.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/local/shared_preferences_helper.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 
 /// Pantalla de bienvenida mejorada con onboarding interactivo,
 /// animaciones fluidas y una mejor experiencia de usuario.

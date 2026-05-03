@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../blocs/auth/auth_bloc.dart';
 
 /// Dialog multi-paso para eliminar cuenta con confirmaciones de seguridad

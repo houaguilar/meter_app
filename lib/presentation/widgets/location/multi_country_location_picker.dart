@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../../domain/entities/perfil/location/administrative_level_2.dart';
 import '../../../domain/entities/perfil/location/administrative_level_3.dart';
 import '../../../domain/entities/perfil/location/administrative_level_4.dart';

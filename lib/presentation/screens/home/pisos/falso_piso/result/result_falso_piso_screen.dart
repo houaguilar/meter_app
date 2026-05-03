@@ -5,13 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/config/utils/pdf/pdf_factory.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../../config/theme/theme.dart';
+import '../../../../../../core/theme/theme.dart';
 import '../../../../../../domain/entities/home/piso/piso.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/pisos/falso_piso_providers.dart';
 import '../../../../../widgets/widgets.dart';

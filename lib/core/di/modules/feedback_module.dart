@@ -1,5 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:meter_app/config/services/review_service.dart';
+import 'package:meter_app/core/services/review_service.dart';
 import 'package:meter_app/data/datasources/feedback/feedback_remote_datasource.dart';
 import 'package:meter_app/data/repositories/feedback/feedback_repository_impl.dart';
 import 'package:meter_app/domain/repositories/feedback/feedback_repository.dart';

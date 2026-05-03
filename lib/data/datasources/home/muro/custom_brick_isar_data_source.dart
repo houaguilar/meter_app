@@ -3,7 +3,7 @@ import 'package:isar_community/isar.dart';
 import 'package:uuid/uuid.dart';
 import '../../../../domain/datasources/home/muro/custom_brick_local_data_source.dart';
 import '../../../../domain/entities/home/muro/custom_brick.dart';
-import '../../../../config/constants/error/exceptions.dart';
+import '../../../../core/constants/error/exceptions.dart';
 
 /// Implementación del datasource usando Isar
 class CustomBrickIsarDataSource implements CustomBrickLocalDataSource {

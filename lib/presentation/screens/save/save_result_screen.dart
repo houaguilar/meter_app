@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 import 'package:meter_app/presentation/screens/projects/new_project/new_project_screen.dart';
 
-import '../../../config/utils/security_service.dart';
+import '../../../core/utils/security_service.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/acero/columna/steel_column.dart';
 import '../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';

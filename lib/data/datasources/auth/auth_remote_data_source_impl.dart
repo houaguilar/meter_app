@@ -6,8 +6,8 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../config/constants/error/exceptions.dart';
-import '../../../config/constants/secrets/app_secrets.dart';
+import '../../../core/constants/error/exceptions.dart';
+import '../../../core/constants/secrets/app_secrets.dart';
 import '../../../domain/datasources/auth/auth_remote_data_source.dart';
 import '../../../domain/entities/auth/user_profile.dart';
 import '../../models/auth/user_model.dart';

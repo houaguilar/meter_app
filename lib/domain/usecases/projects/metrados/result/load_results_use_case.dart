@@ -2,8 +2,8 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../../config/constants/error/failures.dart';
-import '../../../../../config/usecase/usecase.dart';
+import '../../../../../core/constants/error/failures.dart';
+import '../../../../../core/usecase/usecase.dart';
 import '../../../../repositories/projects/metrados/result/result_local_repository.dart';
 
 class LoadResultsUseCase implements UseCase<List<dynamic>, LoadResultsParams> {

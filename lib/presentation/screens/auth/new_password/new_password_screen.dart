@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
 class NewPasswordScreen extends StatefulWidget {

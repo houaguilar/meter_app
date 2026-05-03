@@ -7,7 +7,7 @@ export 'buttons/custom_outlined_button.dart';
 export 'buttons/custom_outlined_welcome_button.dart';
 export 'buttons/custom_text_blue_button.dart';
 
-export '../../config/utils/loader.dart';
+export '../../core/utils/loader.dart';
 
 export 'shared/measurement_section.dart';
 

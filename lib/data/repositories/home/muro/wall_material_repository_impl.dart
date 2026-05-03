@@ -2,7 +2,7 @@
 
 import '../../../../domain/entities/home/muro/wall_material.dart';
 import '../../../../domain/repositories/home/muro/wall_material_repository.dart';
-import 'package:meter_app/config/assets/app_images.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 
 class WallMaterialRepositoryImpl implements WallMaterialRepository {
   @override

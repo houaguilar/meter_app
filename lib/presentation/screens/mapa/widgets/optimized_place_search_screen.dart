@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../blocs/map/place/place_analytics.dart';
 import '../../../blocs/map/place/place_bloc.dart';
 

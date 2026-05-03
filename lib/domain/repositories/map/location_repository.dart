@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/error/failures.dart';
+import '../../../core/constants/error/failures.dart';
 import '../../entities/map/location.dart';
 import '../../entities/map/location_with_distance.dart';
 import '../../entities/map/location_category.dart';

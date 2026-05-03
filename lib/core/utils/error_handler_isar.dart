@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:meter_app/config/utils/security_service.dart';
+import 'package:meter_app/core/utils/security_service.dart';
 import '../constants/error/failures.dart';
 
 /// Utilidad centralizada para manejo de errores en la aplicación

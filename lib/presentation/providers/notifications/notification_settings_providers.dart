@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../config/notifications/notification_repository.dart';
+import '../../../core/notifications/notification_repository.dart';
 import '../../../domain/entities/notifications/notification_settings.dart';
 import '../../../init_dependencies.dart';
 

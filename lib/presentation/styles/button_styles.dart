@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../config/theme/theme.dart';
+import '../../core/theme/theme.dart';
 
 class CustomButtonStyles {
   static final ButtonStyle elevatedStyle = ElevatedButton.styleFrom(

@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../config/app_config.dart';
+import '../../../core/app_config.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../blocs/premium/premium_bloc.dart';
 

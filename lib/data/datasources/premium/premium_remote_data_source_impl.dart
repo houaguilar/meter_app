@@ -2,7 +2,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../domain/datasources/premium/premium_remote_data_source.dart';
 import '../../models/premium/premium_status_model.dart';
-import '../../../config/constants/error/exceptions.dart';
+import '../../../core/constants/error/exceptions.dart';
 
 class PremiumRemoteDataSourceImpl implements PremiumRemoteDataSource {
   final SupabaseClient supabaseClient;

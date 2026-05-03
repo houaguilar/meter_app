@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 
 class LocationPermissionDialog extends StatelessWidget {
   final VoidCallback onRetry;

@@ -3,8 +3,8 @@ import 'package:meta/meta.dart';
 
 import 'package:meter_app/domain/usecases/projects/get_all_projects.dart';
 import 'package:meter_app/domain/usecases/projects/save_project.dart';
-import '../../../config/constants/error/failures.dart';
-import '../../../config/usecase/usecase.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/usecases/projects/delete_project.dart';
 import '../../../domain/usecases/projects/edit_project.dart';

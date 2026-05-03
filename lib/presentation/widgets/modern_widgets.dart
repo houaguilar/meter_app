@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 
 class ModernCard extends StatelessWidget {
   final Widget child;

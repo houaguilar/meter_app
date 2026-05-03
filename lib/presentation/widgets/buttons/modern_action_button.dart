@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 
 /// Botón de acción moderno con gradiente y animaciones
 class ModernActionButton extends StatefulWidget {

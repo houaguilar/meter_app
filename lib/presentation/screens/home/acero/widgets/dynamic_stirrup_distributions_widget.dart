@@ -1,7 +1,7 @@
 // Widget para gestionar distribuciones de estribos dinámicamente
 import 'package:flutter/material.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../viga/datos/models/beam_form_data.dart';
 import '../viga/datos/models/stirrup_distribution_data.dart';
 

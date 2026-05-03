@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
-import '../../../config/theme/theme.dart';
+import '../../../core/theme/theme.dart';
 import '../../../domain/entities/entities.dart';
 import '../../blocs/home/inicio/article_bloc.dart';
 

@@ -1,8 +1,8 @@
 // domain/usecases/auth/reset_password_for_email.dart
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/error/failures.dart';
-import '../../../config/usecase/usecase.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../repositories/auth/auth_repository.dart';
 
 class ResetPasswordForEmail implements UseCase<void, ResetPasswordParams> {

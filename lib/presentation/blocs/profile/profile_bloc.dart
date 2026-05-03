@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../config/usecase/usecase.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../../domain/entities/auth/user_profile.dart';
 import '../../../domain/usecases/auth/change_password.dart';
 import '../../../domain/usecases/use_cases.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../config/utils/profile_security_utils.dart';
+import '../../core/utils/profile_security_utils.dart';
 
 extension ProfileCompletenessUI on ProfileCompleteness {
   Color get levelColor {

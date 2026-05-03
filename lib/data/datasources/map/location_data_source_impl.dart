@@ -8,7 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../config/constants/error/exceptions.dart';
+import '../../../core/constants/error/exceptions.dart';
 import '../../models/map/location_model.dart';
 import '../../models/map/location_model_with_distance.dart';
 import '../../models/map/location_category_model.dart';

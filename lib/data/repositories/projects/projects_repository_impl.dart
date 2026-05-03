@@ -1,10 +1,10 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
 import 'package:meter_app/domain/datasources/projects/projects_local_data_source.dart';
 import 'package:meter_app/domain/datasources/projects/projects_remote_data_source.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
 
-import '../../../config/network/connection_checker.dart';
+import '../../../core/network/connection_checker.dart';
 import '../../../domain/repositories/projects/projects_repository.dart';
 import '../../datasources/projects/projects_isar_data_source.dart';
 

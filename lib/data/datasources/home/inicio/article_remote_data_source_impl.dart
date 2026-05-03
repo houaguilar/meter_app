@@ -2,8 +2,8 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../config/constants/error/exceptions.dart';
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/exceptions.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../../domain/datasources/home/inicio/article_remote_data_source.dart';
 import '../../../models/models.dart';
 

@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
 
-import '../../../config/constants/constant.dart';
+import '../../../core/constants/constant.dart';
 import '../../../domain/entities/home/piso/piso.dart';
 
 class TipoPiso extends Notifier<String> {

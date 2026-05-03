@@ -2,7 +2,7 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../../data/models/models.dart';
 
 abstract interface class ArticleRemoteDataSource {

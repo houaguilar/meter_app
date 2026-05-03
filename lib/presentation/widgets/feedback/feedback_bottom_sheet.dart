@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:meter_app/config/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/presentation/blocs/feedback/feedback_bloc.dart';
 
 /// Bottom sheet de feedback interno — el feedback va a Supabase

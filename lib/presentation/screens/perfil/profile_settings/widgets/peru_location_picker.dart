@@ -1,7 +1,7 @@
 // lib/presentation/widgets/location/peru_location_picker.dart
 import 'package:flutter/material.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/entities/perfil/location/department.dart';
 import '../../../../../domain/entities/perfil/location/district.dart';
 import '../../../../../domain/entities/perfil/location/province.dart';

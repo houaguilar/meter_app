@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../config/theme/theme.dart';
+import '../../core/theme/theme.dart';
 import '../../domain/entities/home/muro/wall_material.dart';
-import '../widgets/config/wall_module_config.dart';
+import '../widgets/core/wall_module_config.dart';
 import '../widgets/dialogs/feature_disabled_dialog.dart';
 
 extension WallMaterialUI on WallMaterial {

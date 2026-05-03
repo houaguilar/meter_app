@@ -1,6 +1,6 @@
 
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
 import 'package:meter_app/domain/datasources/map/place_remote_data_source.dart';
 import 'package:meter_app/domain/entities/map/place_entity.dart';
 import 'package:meter_app/domain/repositories/map/place_repository.dart';

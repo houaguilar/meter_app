@@ -1,7 +1,7 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../entities/entities.dart';
 import '../../../repositories/home/inicio/article_repository.dart';
 

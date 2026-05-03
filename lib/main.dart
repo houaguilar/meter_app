@@ -5,9 +5,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/common/cubits/shimmer/loader_cubit.dart';
-import 'package:meter_app/config/notifications/notification_handler.dart';
-import 'package:meter_app/config/notifications/notification_repository.dart';
+import 'package:meter_app/core/common/cubits/shimmer/loader_cubit.dart';
+import 'package:meter_app/core/notifications/notification_handler.dart';
+import 'package:meter_app/core/notifications/notification_repository.dart';
 import 'package:meter_app/firebase_options.dart';
 import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
@@ -25,9 +25,9 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
-import 'config/analytics/analytics_repository.dart';
-import 'config/common/cubits/app_user/app_user_cubit.dart';
-import 'config/config.dart';
+import 'core/analytics/analytics_repository.dart';
+import 'core/common/cubits/app_user/app_user_cubit.dart';
+import 'core/config.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/cart/cart_bloc.dart';
 import 'presentation/blocs/feedback/feedback_bloc.dart';

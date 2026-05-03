@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:meter_app/config/constants/error/exceptions.dart';
-import 'package:meter_app/config/constants/error/failures.dart';
-import 'package:meter_app/config/network/connection_checker.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/network/connection_checker.dart';
 import 'package:meter_app/data/datasources/feedback/feedback_remote_datasource.dart';
 import 'package:meter_app/data/models/feedback/feedback_model.dart';
 import 'package:meter_app/domain/entities/feedback/feedback_entity.dart';

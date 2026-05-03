@@ -1,7 +1,7 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../config/constants/error/exceptions.dart';
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/exceptions.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../../domain/datasources/projects/metrados/metrados_local_data_source.dart';
 import '../../../../domain/entities/entities.dart';
 import '../../../../domain/repositories/projects/metrados/metrados_local_repository.dart';

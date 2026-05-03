@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/presentation/screens/home/acero/widgets/modern_steel_text_form_field.dart';
 
-import '../../../../../../config/theme/theme.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import '../../../../../../core/theme/theme.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 import '../../../../../providers/home/acero/zapata/steel_footing_providers.dart';
 import '../../../../../widgets/dialogs/confirm_dialog.dart';
 import '../../../../../widgets/modern_widgets.dart';

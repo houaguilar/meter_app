@@ -1,8 +1,8 @@
 // lib/domain/usecases/home/muro/check_custom_brick_name.dart
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../../config/constants/error/failures.dart';
-import '../../../../../config/usecase/usecase.dart';
+import '../../../../../core/constants/error/failures.dart';
+import '../../../../../core/usecase/usecase.dart';
 import '../../../../repositories/home/muro/custom_brick_repository.dart';
 
 class CheckCustomBrickName implements UseCase<bool, CheckCustomBrickNameParams> {

@@ -5,10 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_element.dart';
 import 'package:meter_app/presentation/widgets/shared/responsive_grid_builder.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../providers/home/acero/steel_element_providers.dart';
 import '../../../widgets/cards/generic_item_card.dart';
-import '../../../widgets/config/generic_module_config.dart';
+import '../../../widgets/core/generic_module_config.dart';
 import '../../../widgets/widgets.dart';
 
 class SteelMainScreen extends ConsumerStatefulWidget {

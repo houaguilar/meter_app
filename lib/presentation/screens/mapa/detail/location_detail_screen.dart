@@ -4,8 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/show_snackbar.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/show_snackbar.dart';
 import '../../../../domain/entities/map/location.dart';
 import '../../../../domain/entities/map/product.dart';
 import '../../../../domain/entities/map/verification_status.dart';

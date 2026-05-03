@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
-import 'package:meter_app/config/utils/validators.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
+import 'package:meter_app/core/utils/validators.dart';
 import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
 
-import '../../../../../../../config/theme/theme.dart';
-import '../../../../../../../config/local/shared_preferences_helper.dart';
+import '../../../../../../../core/theme/theme.dart';
+import '../../../../../../../core/local/shared_preferences_helper.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../../widgets/widgets.dart';

@@ -4,8 +4,8 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
-import '../../../config/app_config.dart';
-import '../../../config/utils/app_logger.dart';
+import '../../../core/app_config.dart';
+import '../../../core/utils/app_logger.dart';
 import '../../../domain/entities/premium/premium_status.dart';
 import '../../../domain/entities/premium/purchase_result.dart';
 import '../../../domain/repositories/premium/premium_repository.dart';

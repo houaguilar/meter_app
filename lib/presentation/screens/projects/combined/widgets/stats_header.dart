@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
 
 /// Header con estadísticas generales de los resultados combinados

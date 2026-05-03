@@ -4,7 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
-import '../../../config/usecase/usecase.dart';
+import '../../../core/usecase/usecase.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/location_with_distance.dart';
 import '../../../domain/usecases/map/check_postgis_availability.dart';

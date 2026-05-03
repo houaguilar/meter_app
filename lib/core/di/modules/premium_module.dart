@@ -1,5 +1,5 @@
 import 'package:get_it/get_it.dart';
-import 'package:meter_app/config/app_config.dart';
+import 'package:meter_app/core/app_config.dart';
 import 'package:meter_app/data/datasources/premium/mock_premium_service_impl.dart';
 import 'package:meter_app/data/datasources/premium/premium_local_data_source_impl.dart';
 import 'package:meter_app/data/datasources/premium/premium_remote_data_source_impl.dart';

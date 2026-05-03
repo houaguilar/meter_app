@@ -1,15 +1,15 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../config/constants/constant.dart';
-import '../../../config/constants/error/exceptions.dart';
-import '../../../config/constants/error/failures.dart';
-import '../../../config/network/connection_checker.dart';
+import '../../../core/constants/constant.dart';
+import '../../../core/constants/error/exceptions.dart';
+import '../../../core/constants/error/failures.dart';
+import '../../../core/network/connection_checker.dart';
 import '../../../domain/datasources/auth/auth_remote_data_source.dart';
 import '../../../domain/entities/auth/user.dart';
 import '../../../domain/entities/auth/user_profile.dart';
 import '../../../domain/repositories/auth/auth_repository.dart';
-import '../../../config/local/shared_preferences_helper.dart';
+import '../../../core/local/shared_preferences_helper.dart';
 import '../../models/auth/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {

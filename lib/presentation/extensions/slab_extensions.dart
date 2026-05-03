@@ -1,6 +1,6 @@
 // lib/presentation/extensions/slab_extensions.dart
 import 'package:flutter/material.dart';
-import '../../config/theme/theme.dart';
+import '../../core/theme/theme.dart';
 import '../../domain/entities/home/losas/slab.dart';
 import '../widgets/dialogs/feature_disabled_dialog.dart';
 

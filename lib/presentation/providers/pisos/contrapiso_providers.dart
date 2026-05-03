@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
 
-import '../../../config/constants/constant.dart';
-import '../../../config/utils/number_formatter.dart';
+import '../../../core/constants/constant.dart';
+import '../../../core/utils/number_formatter.dart';
 import '../../../domain/entities/home/piso/piso.dart';
 
 class ContrapisoResult extends Notifier<List<Piso>> {

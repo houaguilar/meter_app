@@ -1,7 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../../../config/constants/error/failures.dart';
+import '../../../../../core/constants/error/failures.dart';
 import '../../../../../domain/usecases/projects/metrados/result/load_results_use_case.dart';
 import '../../../../../domain/usecases/projects/metrados/result/save_results_use_case.dart';
 import '../../../common/error_handler_mixin.dart';

@@ -4,13 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/auth/auth_error_handler.dart';
-import '../../../../config/utils/auth/auth_success_utils.dart';
-import '../../../../config/utils/error_handler.dart';
-import '../../../../config/utils/validators.dart';
-import '../../../../config/utils/url_launcher_helper.dart';
-import 'package:meter_app/config/assets/app_images.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/auth/auth_error_handler.dart';
+import '../../../../core/utils/auth/auth_success_utils.dart';
+import '../../../../core/utils/error_handler.dart';
+import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/url_launcher_helper.dart';
+import 'package:meter_app/core/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 
 class RegisterScreen extends StatefulWidget {

@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../config/theme/theme.dart';
-import '../../../../config/utils/error_handler.dart';
-import '../../../../config/utils/validators.dart';
+import '../../../../core/theme/theme.dart';
+import '../../../../core/utils/error_handler.dart';
+import '../../../../core/utils/validators.dart';
 import '../../../../domain/entities/projects/project.dart';
 import '../../../blocs/projects/projects_bloc.dart';
 

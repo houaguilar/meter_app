@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 import '../../../../domain/entities/home/muro/wall_material.dart';
 import '../../../../domain/entities/home/muro/tipo_ladrillo.dart';
 import '../../../providers/home/muro/custom_brick_providers.dart';
@@ -10,7 +10,7 @@ import '../../../providers/home/muro/wall_material_providers_improved.dart';
 import '../../../providers/home/muro/custom_brick_isar_providers.dart';
 import '../../../providers/providers.dart';
 import '../../../widgets/cards/generic_item_card.dart';
-import '../../../widgets/config/generic_module_config.dart';
+import '../../../widgets/core/generic_module_config.dart';
 import '../../../widgets/shared/responsive_grid_builder.dart';
 import '../../../widgets/widgets.dart';
 

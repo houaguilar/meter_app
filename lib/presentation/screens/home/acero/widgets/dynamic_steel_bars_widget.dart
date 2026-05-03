@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../config/theme/theme.dart';
+import '../../../../../core/theme/theme.dart';
 import '../../../../../domain/entities/home/acero/steel_constants.dart';
 import '../viga/datos/models/beam_form_data.dart';
 import '../viga/datos/models/steel_bar_data.dart';

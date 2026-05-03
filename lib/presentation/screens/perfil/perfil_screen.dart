@@ -6,9 +6,9 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
-import '../../../config/app_config.dart';
-import '../../../config/theme/theme.dart';
-import '../../../config/utils/show_snackbar.dart';
+import '../../../core/app_config.dart';
+import '../../../core/theme/theme.dart';
+import '../../../core/utils/show_snackbar.dart';
 import '../../widgets/feedback/feedback_bottom_sheet.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/verification_status.dart';

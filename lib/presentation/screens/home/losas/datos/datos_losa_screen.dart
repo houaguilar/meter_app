@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
-import 'package:meter_app/config/utils/validators.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
+import 'package:meter_app/core/utils/validators.dart';
 import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
 
-import '../../../../../config/theme/theme.dart';
-import '../../../../../config/local/shared_preferences_helper.dart';
+import '../../../../../core/theme/theme.dart';
+import '../../../../../core/local/shared_preferences_helper.dart';
 import '../../../../../domain/entities/home/losas/tipo_losa.dart';
 import '../../../../../domain/services/losas/losa_service.dart';
 import '../../../../providers/providers.dart';

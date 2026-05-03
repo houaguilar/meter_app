@@ -6,7 +6,7 @@ import 'package:meter_app/presentation/widgets/buttons/custom_elevated_button.da
 import 'package:meter_app/presentation/widgets/buttons/custom_text_blue_button.dart';
 import 'package:meter_app/presentation/widgets/shared/info_box.dart';
 
-import '../../../../../../config/theme/theme.dart';
+import '../../../../../../core/theme/theme.dart';
 import '../../../../../../domain/entities/tutorial/tutorial_step.dart';
 import '../../../../../blocs/tutorial/tutorial_bloc.dart';
 

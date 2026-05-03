@@ -2,7 +2,7 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../config/constants/error/failures.dart';
+import '../../../../core/constants/error/failures.dart';
 import '../../../entities/home/muro/custom_brick.dart';
 
 abstract interface class CustomBrickRepository {

@@ -1,14 +1,14 @@
 import 'package:get_it/get_it.dart';
-import 'package:meter_app/config/di/modules/analytics_module.dart';
-import 'package:meter_app/config/di/modules/auth_module.dart';
-import 'package:meter_app/config/di/modules/core_module.dart';
-import 'package:meter_app/config/di/modules/custom_brick_module.dart';
-import 'package:meter_app/config/di/modules/feedback_module.dart';
-import 'package:meter_app/config/di/modules/home_module.dart';
-import 'package:meter_app/config/di/modules/map_module.dart';
-import 'package:meter_app/config/di/modules/notifications_module.dart';
-import 'package:meter_app/config/di/modules/premium_module.dart';
-import 'package:meter_app/config/di/modules/projects_module.dart';
+import 'package:meter_app/core/di/modules/analytics_module.dart';
+import 'package:meter_app/core/di/modules/auth_module.dart';
+import 'package:meter_app/core/di/modules/core_module.dart';
+import 'package:meter_app/core/di/modules/custom_brick_module.dart';
+import 'package:meter_app/core/di/modules/feedback_module.dart';
+import 'package:meter_app/core/di/modules/home_module.dart';
+import 'package:meter_app/core/di/modules/map_module.dart';
+import 'package:meter_app/core/di/modules/notifications_module.dart';
+import 'package:meter_app/core/di/modules/premium_module.dart';
+import 'package:meter_app/core/di/modules/projects_module.dart';
 
 /// Service Locator global
 final serviceLocator = GetIt.instance;

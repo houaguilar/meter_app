@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_information_tab.dart';
 import 'package:meter_app/presentation/screens/perfil/profile_settings/profile_settings_tab.dart';
-import '../../../../config/theme/theme.dart';
+import '../../../../core/theme/theme.dart';
 
 class ProfileSettingsScreen extends StatelessWidget {
   const ProfileSettingsScreen({super.key});

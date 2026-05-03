@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/config/utils/number_formatter.dart';
+import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
+import 'package:meter_app/core/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../../../config/theme/theme.dart';
-import '../../../../../../config/utils/pdf/pdf_factory.dart';
+import '../../../../../../core/theme/theme.dart';
+import '../../../../../../core/utils/pdf/pdf_factory.dart';
 import '../../../../../blocs/profile/profile_bloc.dart';
 import '../../../../../providers/home/acero/viga/steel_beam_providers.dart';
 import '../../../../../widgets/widgets.dart';

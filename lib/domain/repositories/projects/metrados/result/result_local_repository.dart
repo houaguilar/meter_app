@@ -1,7 +1,7 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../../config/constants/error/failures.dart';
+import '../../../../../core/constants/error/failures.dart';
 
 abstract class ResultLocalRepository {
 

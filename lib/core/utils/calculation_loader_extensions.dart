@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/core/assets/app_icons.dart';
 
 import '../theme/theme.dart';
 import 'calculator_loader.dart';

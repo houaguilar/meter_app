@@ -6,7 +6,7 @@ import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 import 'package:meter_app/domain/entities/home/estructuras/zapata/zapata.dart';
 
-import '../../../../../config/constants/error/exceptions.dart';
+import '../../../../../core/constants/error/exceptions.dart';
 import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
 import '../../../../../domain/entities/entities.dart';
 import '../../../../../domain/entities/home/acero/columna/steel_column.dart';

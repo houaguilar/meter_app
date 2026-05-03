@@ -1,4 +1,4 @@
-import 'package:meter_app/config/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
 import 'package:meter_app/data/models/feedback/feedback_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
