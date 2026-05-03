@@ -5,7 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
-import '../../assets/assets.dart';
+import 'package:meter_app/core/assets/assets.dart';
 
 /// Clase para generar PDFs estandarizados para MetraShop
 class MetraShopPDFGenerator {

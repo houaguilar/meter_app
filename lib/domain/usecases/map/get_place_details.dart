@@ -1,9 +1,9 @@
 
 import 'package:fpdart/fpdart.dart';
-import '../../../core/constants/error/failures.dart';
-import '../../../core/usecase/usecase.dart';
-import '../../entities/map/place_entity.dart';
-import '../../repositories/map/place_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/map/place_entity.dart';
+import 'package:meter_app/domain/repositories/map/place_repository.dart';
 
 class GetPlaceDetails implements UseCase<PlaceEntity, String> {
   final PlaceRepository repository;

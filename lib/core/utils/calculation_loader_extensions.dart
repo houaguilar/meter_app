@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 
-import '../theme/theme.dart';
-import 'calculator_loader.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/calculator_loader.dart';
 
 /// Extensiones para simplificar el uso del loader desde cualquier BuildContext
 extension CalculationLoaderExtensionss on BuildContext {

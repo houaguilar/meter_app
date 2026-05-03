@@ -4,10 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../domain/entities/notifications/notification_settings.dart';
-import '../../../providers/notifications/notification_settings_providers.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/domain/entities/notifications/notification_settings.dart';
+import 'package:meter_app/presentation/providers/notifications/notification_settings_providers.dart';
 
 /// Versión mejorada de NotificationsSettingsScreen usando Riverpod
 /// con notificaciones granulares y manejo robusto de errores

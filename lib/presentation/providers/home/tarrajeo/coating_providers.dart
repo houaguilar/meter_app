@@ -1,8 +1,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
-import 'package:meter_app/domain/repositories/home/tarrajeo/coating_repository.dart';
-import 'package:meter_app/domain/usecases/home/tarrajeo/get_coatings_usecase.dart';
+import 'package:meter_app/features/tarrajeo/domain/repositories/coating_repository.dart';
+import 'package:meter_app/features/tarrajeo/domain/usecases/get_coatings_usecase.dart';
 import 'package:meter_app/init_dependencies.dart';
 
 final coatingRepositoryProvider = Provider<CoatingRepository>((ref) {

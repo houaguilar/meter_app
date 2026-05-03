@@ -1,5 +1,5 @@
 import 'package:logger/logger.dart';
-import '../app_config.dart';
+import 'package:meter_app/core/app_config.dart';
 
 /// Logger centralizado para toda la aplicación
 ///

@@ -1,4 +1,4 @@
-import '../../entities/home/losas/losa.dart';
+import 'package:meter_app/domain/entities/home/losas/losa.dart';
 
 /// Strategy Pattern para cálculos específicos de cada tipo de losa
 ///

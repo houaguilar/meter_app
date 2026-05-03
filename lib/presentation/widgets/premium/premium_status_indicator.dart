@@ -1,9 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../../core/app_config.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../blocs/premium/premium_bloc.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
 
 class PremiumStatusIndicator extends StatelessWidget {
   final bool showMockBadge;

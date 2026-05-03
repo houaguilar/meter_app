@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../widgets/widgets.dart';
+import 'package:meter_app/presentation/widgets/widgets.dart';
 
 /// Pantalla principal que actúa como contenedor para las vistas secundarias
 class HomeScreen extends StatefulWidget {

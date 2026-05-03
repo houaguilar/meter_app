@@ -1,8 +1,8 @@
 // Modelo extendido que incluye distancia para PostGIS
-import '../../../domain/entities/map/document_type.dart';
-import '../../../domain/entities/map/location_with_distance.dart';
-import '../../../domain/entities/map/verification_status.dart';
-import 'location_model.dart';
+import 'package:meter_app/domain/entities/map/document_type.dart';
+import 'package:meter_app/domain/entities/map/location_with_distance.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
+import 'package:meter_app/data/models/map/location_model.dart';
 
 class LocationModelWithDistance extends LocationModel {
   final double? distanceKm;

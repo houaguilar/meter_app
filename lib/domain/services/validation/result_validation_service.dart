@@ -1,7 +1,7 @@
 
-import '../../../domain/entities/entities.dart';
-import '../../../domain/entities/home/estructuras/columna/columna.dart';
-import '../../../domain/entities/home/estructuras/viga/viga.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
+import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 
 /// Servicio de validación para resultados de cálculos
 class ResultValidationService {

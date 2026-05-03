@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 class MapLoadingOverlay extends StatelessWidget {
   const MapLoadingOverlay({super.key});

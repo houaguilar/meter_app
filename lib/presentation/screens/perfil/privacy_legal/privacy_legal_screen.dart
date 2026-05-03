@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/url_launcher_helper.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/url_launcher_helper.dart';
 
 /// Pantalla dedicada a Privacidad, Términos Legales y Contacto
 class PrivacyLegalScreen extends StatelessWidget {

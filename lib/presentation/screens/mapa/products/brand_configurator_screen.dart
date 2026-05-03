@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/product_categories.dart';
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../domain/entities/map/product.dart';
-import '../../../blocs/map/products_bloc.dart';
-import '../../../widgets/app_bar/app_bar_widget.dart';
+import 'package:meter_app/core/constants/product_categories.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/presentation/blocs/map/products_bloc.dart';
+import 'package:meter_app/presentation/widgets/app_bar/app_bar_widget.dart';
 
 /// Pantalla para configurar marcas y precios de una categoría específica
 class BrandConfiguratorScreen extends StatefulWidget {

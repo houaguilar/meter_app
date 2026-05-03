@@ -3,10 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../core/theme/theme.dart';
-import '../../../../domain/entities/projects/metrado/metrado.dart';
-import '../../../blocs/projects/metrados/metrados_bloc.dart';
-import '../combined/combined_results_screen.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/projects/metrado/metrado.dart';
+import 'package:meter_app/presentation/blocs/projects/metrados/metrados_bloc.dart';
+import 'package:meter_app/presentation/screens/projects/combined/combined_results_screen.dart';
 
 class MetradosScreen extends StatefulWidget {
   final int projectId;

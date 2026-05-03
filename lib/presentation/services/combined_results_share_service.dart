@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/utils/pdf/pdf_generator.dart';
-import '../../domain/services/shared/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
+import 'package:meter_app/domain/services/shared/UnifiedResultsCombiner.dart';
 
 /// Servicio para compartir resultados combinados en diferentes formatos
 class CombinedResultsShareService {

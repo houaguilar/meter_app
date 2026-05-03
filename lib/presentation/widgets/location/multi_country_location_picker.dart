@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/perfil/location/administrative_level_2.dart';
-import '../../../domain/entities/perfil/location/administrative_level_3.dart';
-import '../../../domain/entities/perfil/location/administrative_level_4.dart';
-import '../../../domain/entities/perfil/location/country.dart';
-import '../../../domain/repositories/perfil/location/location_repository.dart';
-import '../../../data/repositories/perfil/location/location_repository_factory.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_2.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_3.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_4.dart';
+import 'package:meter_app/domain/entities/perfil/location/country.dart';
+import 'package:meter_app/domain/repositories/perfil/location/location_repository.dart';
+import 'package:meter_app/data/repositories/perfil/location/location_repository_factory.dart';
 
 /// Widget genérico para seleccionar ubicaciones de múltiples países
 /// Soporta Perú 🇵🇪, Colombia 🇨🇴 y México 🇲🇽

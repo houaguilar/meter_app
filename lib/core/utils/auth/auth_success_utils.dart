@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 class AuthSuccessUtils {
   AuthSuccessUtils._();

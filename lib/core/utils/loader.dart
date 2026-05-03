@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 class Loader extends StatefulWidget {
   const Loader({super.key});

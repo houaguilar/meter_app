@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../domain/entities/map/product.dart';
-import '../../../blocs/cart/cart_bloc.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
 
 /// Pantalla de checkout para confirmar y completar el pedido
 class CheckoutScreen extends StatefulWidget {

@@ -1,10 +1,10 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../core/usecase/usecase.dart';
-import '../../../domain/entities/auth/user_profile.dart';
-import '../../../features/auth/domain/usecases/change_password.dart';
-import '../../../domain/usecases/use_cases.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/auth/user_profile.dart';
+import 'package:meter_app/features/auth/domain/usecases/change_password.dart';
+import 'package:meter_app/domain/usecases/use_cases.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';

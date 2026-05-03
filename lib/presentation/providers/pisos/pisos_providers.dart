@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
 
-import '../../../core/constants/constant.dart';
-import '../../../domain/entities/home/piso/piso.dart';
+import 'package:meter_app/core/constants/constant.dart';
+import 'package:meter_app/domain/entities/home/piso/piso.dart';
 
 class TipoPiso extends Notifier<String> {
   @override

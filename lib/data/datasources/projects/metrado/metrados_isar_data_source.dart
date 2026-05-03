@@ -6,9 +6,9 @@ import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobreci
 import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 
-import '../../../../core/constants/error/exceptions.dart';
-import '../../../../core/constants/error/failures.dart';
-import '../../../../domain/entities/entities.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 class MetradosIsarDataSource implements MetradosLocalDataSource {
   final Isar isarService;

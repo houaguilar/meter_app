@@ -1,7 +1,7 @@
 import 'package:meter_app/domain/entities/map/verification_status.dart';
 
-import 'document_type.dart';
-import 'location.dart';
+import 'package:meter_app/domain/entities/map/document_type.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
 
 class LocationWithDistance extends LocationMap {
   final double? distanceKm;

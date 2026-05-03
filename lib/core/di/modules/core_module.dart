@@ -24,14 +24,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../data/models/premium/premium_status_model.dart';
-import '../../../domain/entities/home/acero/columna/steel_column.dart';
-import '../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../../domain/entities/home/acero/zapata/steel_footing.dart';
+import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
+import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
 // 🆕 Nuevas collections para marketplace
-import '../../../domain/entities/map/location_category.dart';
-import '../../../domain/entities/map/product.dart';
-import '../../../domain/entities/map/review.dart';
+import 'package:meter_app/domain/entities/map/location_category.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/review.dart';
 
 /// Módulo de inyección de dependencias core (base del sistema)
 /// Contiene: SharedPreferences, Dio, Isar, Supabase, y utilidades base

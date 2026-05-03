@@ -1,7 +1,7 @@
-import 'colombia_location_repository.dart';
-import '../../../../domain/repositories/perfil/location/location_repository.dart';
-import 'mexico_location_repository.dart';
-import 'peru_location_repository_v2.dart';
+import 'package:meter_app/data/repositories/perfil/location/colombia_location_repository.dart';
+import 'package:meter_app/domain/repositories/perfil/location/location_repository.dart';
+import 'package:meter_app/data/repositories/perfil/location/mexico_location_repository.dart';
+import 'package:meter_app/data/repositories/perfil/location/peru_location_repository_v2.dart';
 
 /// Factory para crear instancias de LocationRepository según el código de país
 /// Uso: LocationRepositoryFactory.create('PE') → PeruLocationRepositoryV2

@@ -1,1 +1,1 @@
-export 'ladrillo_service.dart';
+export 'package:meter_app/domain/services/ladrillo_service.dart';

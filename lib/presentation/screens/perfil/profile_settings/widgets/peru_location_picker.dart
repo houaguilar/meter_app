@@ -1,11 +1,11 @@
 // lib/presentation/widgets/location/peru_location_picker.dart
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/theme.dart';
-import '../../../../../domain/entities/perfil/location/department.dart';
-import '../../../../../domain/entities/perfil/location/district.dart';
-import '../../../../../domain/entities/perfil/location/province.dart';
-import '../../../../../data/repositories/perfil/location/peru_location_repository.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/perfil/location/department.dart';
+import 'package:meter_app/domain/entities/perfil/location/district.dart';
+import 'package:meter_app/domain/entities/perfil/location/province.dart';
+import 'package:meter_app/data/repositories/perfil/location/peru_location_repository.dart';
 
 /// Widget personalizado para seleccionar ubicaciones de Perú
 /// Reemplaza a country_state_city_pro con una implementación nativa

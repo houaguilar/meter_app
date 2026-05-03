@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/entities.dart';
-import '../cards/measurement_item_card.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/presentation/widgets/cards/measurement_item_card.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 // Nuevo diálogo de mediciones con animación mejorada

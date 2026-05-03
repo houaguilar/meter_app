@@ -2,7 +2,7 @@
 import 'package:dio/dio.dart';
 import 'package:meter_app/domain/datasources/map/place_remote_data_source.dart';
 
-import '../../models/map/place_model.dart';
+import 'package:meter_app/data/models/map/place_model.dart';
 
 class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
   final Dio dio;

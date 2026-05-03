@@ -1,5 +1,5 @@
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'analytics_repository.dart';
+import 'package:meter_app/core/analytics/analytics_repository.dart';
 
 class FirebaseAnalyticsService implements AnalyticsRepository {
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;

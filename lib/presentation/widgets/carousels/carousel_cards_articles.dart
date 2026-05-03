@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../blocs/home/inicio/article_bloc.dart';
-import '../cards/article_card.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
+import 'package:meter_app/presentation/widgets/cards/article_card.dart';
 
 class CarouselCardsArticles extends StatefulWidget {
   const CarouselCardsArticles({super.key});

@@ -1,11 +1,11 @@
 // lib/data/repositories/location/peru_location_repository_v2.dart
 
-import '../../../../domain/entities/perfil/location/administrative_level_2.dart';
-import '../../../../domain/entities/perfil/location/administrative_level_3.dart';
-import '../../../../domain/entities/perfil/location/administrative_level_4.dart';
-import '../../../../domain/entities/perfil/location/country.dart';
-import '../../../../domain/entities/perfil/location/location_config.dart';
-import '../../../../domain/repositories/perfil/location/location_repository.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_2.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_3.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_4.dart';
+import 'package:meter_app/domain/entities/perfil/location/country.dart';
+import 'package:meter_app/domain/entities/perfil/location/location_config.dart';
+import 'package:meter_app/domain/repositories/perfil/location/location_repository.dart';
 
 /// Repositorio de ubicaciones de Perú con arquitectura genérica
 /// Implementa LocationRepository con los datos completos de Perú

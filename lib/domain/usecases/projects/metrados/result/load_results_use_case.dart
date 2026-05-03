@@ -2,9 +2,9 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../../core/constants/error/failures.dart';
-import '../../../../../core/usecase/usecase.dart';
-import '../../../../repositories/projects/metrados/result/result_local_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/repositories/projects/metrados/result/result_local_repository.dart';
 
 class LoadResultsUseCase implements UseCase<List<dynamic>, LoadResultsParams> {
   final ResultLocalRepository repository;

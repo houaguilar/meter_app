@@ -25,13 +25,13 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
-import 'core/analytics/analytics_repository.dart';
-import 'core/common/cubits/app_user/app_user_cubit.dart';
-import 'core/config.dart';
+import 'package:meter_app/core/analytics/analytics_repository.dart';
+import 'package:meter_app/core/common/cubits/app_user/app_user_cubit.dart';
+import 'package:meter_app/core/config.dart';
 import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
-import 'presentation/blocs/cart/cart_bloc.dart';
-import 'presentation/blocs/feedback/feedback_bloc.dart';
-import 'presentation/blocs/map/products_bloc.dart';
+import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
+import 'package:meter_app/presentation/blocs/feedback/feedback_bloc.dart';
+import 'package:meter_app/presentation/blocs/map/products_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

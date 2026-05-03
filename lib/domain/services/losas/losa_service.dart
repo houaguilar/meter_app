@@ -1,10 +1,10 @@
-import '../../entities/home/losas/losa.dart';
-import '../../entities/home/losas/tipo_losa.dart';
-import 'concreto_materials_calculator.dart';
-import 'losa_calculation_strategy.dart';
-import 'strategies/maciza_strategy.dart';
-import 'strategies/tradicional_strategy.dart';
-import 'strategies/viguetas_strategy.dart';
+import 'package:meter_app/domain/entities/home/losas/losa.dart';
+import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
+import 'package:meter_app/domain/services/losas/concreto_materials_calculator.dart';
+import 'package:meter_app/domain/services/losas/losa_calculation_strategy.dart';
+import 'package:meter_app/domain/services/losas/strategies/maciza_strategy.dart';
+import 'package:meter_app/domain/services/losas/strategies/tradicional_strategy.dart';
+import 'package:meter_app/domain/services/losas/strategies/viguetas_strategy.dart';
 
 /// Servicio unificado para cálculos de losas
 ///

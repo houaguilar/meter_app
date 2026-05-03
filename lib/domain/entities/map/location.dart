@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'verification_status.dart';
-import 'document_type.dart';
-import 'business_hours.dart';
-import 'payment_method.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
+import 'package:meter_app/domain/entities/map/document_type.dart';
+import 'package:meter_app/domain/entities/map/business_hours.dart';
+import 'package:meter_app/domain/entities/map/payment_method.dart';
 
 class LocationMap {
   // ========== CAMPOS BÁSICOS (existentes) ==========

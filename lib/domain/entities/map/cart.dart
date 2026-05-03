@@ -1,6 +1,6 @@
 import 'package:url_launcher/url_launcher.dart';
-import 'product.dart';
-import 'location.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
 
 /// Item individual en el carrito de compras
 class CartItem {

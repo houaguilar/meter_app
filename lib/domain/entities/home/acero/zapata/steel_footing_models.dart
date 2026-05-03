@@ -1,4 +1,4 @@
-import '../steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
 
 /// Detalles del cálculo de una malla de zapata
 ///

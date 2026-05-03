@@ -1,10 +1,10 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/constants/error/failures.dart';
-import '../../../core/usecase/usecase.dart';
-import '../../entities/map/location.dart';
-import '../../repositories/map/location_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/repositories/map/location_repository.dart';
 
 class SaveLocation implements UseCase<void, LocationMap> {
   final LocationRepository repository;

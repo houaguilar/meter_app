@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 /// Botón secundario moderno con borde
 class ModernOutlinedButton extends StatefulWidget {

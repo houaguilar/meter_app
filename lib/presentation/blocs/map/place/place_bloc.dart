@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../../domain/entities/map/place_entity.dart';
-import '../../../../domain/usecases/map/get_place_details.dart';
-import '../../../../domain/usecases/map/get_place_suggestions.dart';
+import 'package:meter_app/domain/entities/map/place_entity.dart';
+import 'package:meter_app/domain/usecases/map/get_place_details.dart';
+import 'package:meter_app/domain/usecases/map/get_place_suggestions.dart';
 
 part 'place_event.dart';
 part 'place_state.dart';

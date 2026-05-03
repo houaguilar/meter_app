@@ -1,13 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../../domain/entities/entities.dart';
-import '../../../../domain/usecases/projects/metrados/create_metrado.dart';
-import '../../../../domain/usecases/projects/metrados/delete_metrado.dart';
-import '../../../../domain/usecases/projects/metrados/edit_metrado.dart';
-import '../../../../domain/usecases/projects/metrados/get_all_metrados.dart';
-import '../../common/error_handler_mixin.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/usecases/projects/metrados/create_metrado.dart';
+import 'package:meter_app/domain/usecases/projects/metrados/delete_metrado.dart';
+import 'package:meter_app/domain/usecases/projects/metrados/edit_metrado.dart';
+import 'package:meter_app/domain/usecases/projects/metrados/get_all_metrados.dart';
+import 'package:meter_app/presentation/blocs/common/error_handler_mixin.dart';
 
 part 'metrados_event.dart';
 part 'metrados_state.dart';

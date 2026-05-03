@@ -1,6 +1,6 @@
 import 'package:isar_community/isar.dart';
 import 'package:json_annotation/json_annotation.dart';
-import '../../../domain/entities/premium/premium_status.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
 
 part 'premium_status_model.g.dart';
 

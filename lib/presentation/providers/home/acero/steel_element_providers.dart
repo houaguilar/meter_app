@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../domain/entities/home/acero/steel_element.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_element.dart';
 import 'package:meter_app/core/assets/app_images.dart';
 
 final List<SteelElement> _steelElements = [

@@ -7,5 +7,5 @@
 // Image.asset(AppImages.loginImg);
 // SvgPicture.asset(AppIcons.arrowRightIcon);
 // ```
-export 'app_images.dart';
-export 'app_icons.dart';
+export 'package:meter_app/core/assets/app_images.dart';
+export 'package:meter_app/core/assets/app_icons.dart';

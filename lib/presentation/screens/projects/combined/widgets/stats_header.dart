@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/theme.dart';
-import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/services/shared/UnifiedResultsCombiner.dart';
 
 /// Header con estadísticas generales de los resultados combinados
 class StatsHeader extends StatelessWidget {

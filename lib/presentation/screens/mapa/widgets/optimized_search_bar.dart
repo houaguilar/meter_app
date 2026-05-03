@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 class OptimizedSearchBar extends StatelessWidget {
   final VoidCallback onSearchTap;

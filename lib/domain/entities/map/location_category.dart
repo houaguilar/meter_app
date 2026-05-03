@@ -1,5 +1,5 @@
 import 'package:isar_community/isar.dart';
-import 'category_config.dart';
+import 'package:meter_app/domain/entities/map/category_config.dart';
 
 part 'location_category.g.dart';
 

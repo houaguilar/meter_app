@@ -2,13 +2,13 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/constants/error/failures.dart';
-import '../../entities/map/location.dart';
-import '../../entities/map/location_with_distance.dart';
-import '../../entities/map/location_category.dart';
-import '../../entities/map/product.dart';
-import '../../entities/map/review.dart';
-import '../../entities/map/review_stats.dart' as stats;
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/location_with_distance.dart';
+import 'package:meter_app/domain/entities/map/location_category.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/review.dart';
+import 'package:meter_app/domain/entities/map/review_stats.dart' as stats;
 
 abstract interface class LocationRepository {
   // ========== MÉTODOS EXISTENTES ==========

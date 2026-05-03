@@ -1,10 +1,10 @@
 import 'dart:io';
 
-import '../../../data/models/map/location_category_model.dart';
-import '../../../data/models/map/location_model.dart';
-import '../../../data/models/map/location_model_with_distance.dart';
-import '../../../data/models/map/product_model.dart';
-import '../../../data/models/map/review_model.dart';
+import 'package:meter_app/data/models/map/location_category_model.dart';
+import 'package:meter_app/data/models/map/location_model.dart';
+import 'package:meter_app/data/models/map/location_model_with_distance.dart';
+import 'package:meter_app/data/models/map/product_model.dart';
+import 'package:meter_app/data/models/map/review_model.dart';
 
 abstract interface class LocationDataSource {
 

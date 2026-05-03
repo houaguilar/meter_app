@@ -4,11 +4,11 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meta/meta.dart';
 
-import '../../../core/app_config.dart';
-import '../../../core/utils/app_logger.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../../domain/entities/premium/purchase_result.dart';
-import '../../../domain/repositories/premium/premium_repository.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/core/utils/app_logger.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/domain/entities/premium/purchase_result.dart';
+import 'package:meter_app/domain/repositories/premium/premium_repository.dart';
 
 part 'premium_event.dart';
 part 'premium_state.dart';

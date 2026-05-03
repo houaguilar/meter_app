@@ -1,10 +1,10 @@
 // lib/presentation/providers/home/muro/wall_material_providers_improved.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../domain/entities/home/muro/wall_material.dart';
-import '../../../../domain/repositories/home/muro/wall_material_repository.dart';
-import '../../../../domain/usecases/home/muro/get_wall_materials_usecase.dart';
-import '../../../../init_dependencies.dart';
+import 'package:meter_app/domain/entities/home/muro/wall_material.dart';
+import 'package:meter_app/features/muro/domain/repositories/wall_material_repository.dart';
+import 'package:meter_app/features/muro/domain/usecases/get_wall_materials_usecase.dart';
+import 'package:meter_app/init_dependencies.dart';
 
 /// Provider para el repositorio de materiales de muro
 final wallMaterialRepositoryProvider = Provider<WallMaterialRepository>((ref) {

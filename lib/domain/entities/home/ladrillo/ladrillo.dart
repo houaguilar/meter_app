@@ -1,7 +1,7 @@
 
 import 'package:isar_community/isar.dart';
 
-import '../../entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 part 'ladrillo.g.dart';
 

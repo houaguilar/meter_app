@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 
-import '../constants/error/failures.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
 
 /// Manejador centralizado de errores para la aplicación
 /// Proporciona métodos estáticos para manejo consistente de errores

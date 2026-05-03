@@ -1,9 +1,9 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../../core/usecase/usecase.dart';
-import '../../../entities/projects/metrado/metrado.dart';
-import '../../../repositories/projects/metrados/metrados_local_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/projects/metrado/metrado.dart';
+import 'package:meter_app/domain/repositories/projects/metrados/metrados_local_repository.dart';
 
 class EditMetrado implements UseCase<void, EditMetradoParams> {
   final MetradosLocalRepository repository;

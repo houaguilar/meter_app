@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
-import 'app_typography.dart';
-import 'app_spacing.dart';
+import 'package:meter_app/core/theme/app_colors.dart';
+import 'package:meter_app/core/theme/app_typography.dart';
+import 'package:meter_app/core/theme/app_spacing.dart';
 
 extension ThemeExtensions on BuildContext {
   // Acceso rápido al tema

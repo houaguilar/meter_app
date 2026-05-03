@@ -3,11 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/error_handler.dart';
-import '../../../../core/utils/validators.dart';
-import '../../../../domain/entities/projects/project.dart';
-import '../../../blocs/projects/projects_bloc.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/error_handler.dart';
+import 'package:meter_app/core/utils/validators.dart';
+import 'package:meter_app/domain/entities/projects/project.dart';
+import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
 /// Pantalla para crear un nuevo proyecto
 class NewProjectScreen extends StatefulWidget {

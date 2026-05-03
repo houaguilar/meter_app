@@ -1,8 +1,8 @@
 // lib/presentation/extensions/floor_extensions.dart
 import 'package:flutter/material.dart';
-import '../../core/theme/theme.dart';
-import '../../domain/entities/home/piso/floor.dart';
-import '../widgets/dialogs/feature_disabled_dialog.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/home/piso/floor.dart';
+import 'package:meter_app/presentation/widgets/dialogs/feature_disabled_dialog.dart';
 
 /// Extensiones para la entidad Floor que añaden funcionalidad
 /// específica para la UI sin modificar la entidad del dominio

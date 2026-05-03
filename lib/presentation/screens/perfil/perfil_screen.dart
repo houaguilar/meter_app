@@ -6,20 +6,20 @@ import 'package:in_app_review/in_app_review.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
-import '../../../core/app_config.dart';
-import '../../../core/theme/theme.dart';
-import '../../../core/utils/show_snackbar.dart';
-import '../../widgets/feedback/feedback_bottom_sheet.dart';
-import '../../../domain/entities/map/location.dart';
-import '../../../domain/entities/map/verification_status.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/presentation/widgets/feedback/feedback_bottom_sheet.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
 import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
-import '../../blocs/map/locations_bloc.dart';
-import '../../blocs/premium/premium_bloc.dart';
-import '../../widgets/premium/premium_feature_widget.dart';
-import '../../widgets/premium/premium_paywall_screen.dart';
-import '../../widgets/premium/premium_status_indicator.dart';
-import '../../widgets/widgets.dart';
-import '../mapa/profile/provider_profile_screen.dart';
+import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
+import 'package:meter_app/presentation/widgets/premium/premium_feature_widget.dart';
+import 'package:meter_app/presentation/widgets/premium/premium_paywall_screen.dart';
+import 'package:meter_app/presentation/widgets/premium/premium_status_indicator.dart';
+import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/presentation/screens/mapa/profile/provider_profile_screen.dart';
 
 class PerfilScreen extends StatefulWidget {
   const PerfilScreen({super.key});

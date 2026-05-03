@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 import 'package:meter_app/presentation/widgets/location/multi_country_location_picker.dart';
-import '../../../../core/theme/theme.dart';
-import '../../../widgets/dialogs/confirmation_dialog_perfil.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/presentation/widgets/dialogs/confirmation_dialog_perfil.dart';
 
 class ImprovedProfileInformationTab extends StatefulWidget {
   const ImprovedProfileInformationTab({super.key});

@@ -4,9 +4,9 @@ import 'package:meter_app/presentation/screens/articles/widgets/article_content_
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/entities.dart';
-import '../../blocs/home/inicio/article_bloc.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/presentation/blocs/home/inicio/article_bloc.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final String articleId;

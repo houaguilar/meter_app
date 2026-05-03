@@ -1,8 +1,8 @@
-import '../../../entities/perfil/location/administrative_level_2.dart';
-import '../../../entities/perfil/location/administrative_level_3.dart';
-import '../../../entities/perfil/location/administrative_level_4.dart';
-import '../../../entities/perfil/location/country.dart';
-import '../../../entities/perfil/location/location_config.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_2.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_3.dart';
+import 'package:meter_app/domain/entities/perfil/location/administrative_level_4.dart';
+import 'package:meter_app/domain/entities/perfil/location/country.dart';
+import 'package:meter_app/domain/entities/perfil/location/location_config.dart';
 
 /// Repositorio base abstracto para datos de ubicación
 /// Todas las implementaciones específicas de países deben extender esta clase

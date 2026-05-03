@@ -3,14 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/error_handler.dart';
-import '../../../../core/utils/pdf/pdf_generator.dart';
-import '../../../../domain/services/shared/UnifiedMaterialsCalculator.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/error_handler.dart';
+import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
+import 'package:meter_app/domain/services/shared/UnifiedMaterialsCalculator.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
-import '../../../blocs/profile/profile_bloc.dart';
-import '../../../blocs/projects/metrados/result/result_bloc.dart';
-import '../../../widgets/app_bar/app_bar_projects_widget.dart';
+import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/presentation/blocs/projects/metrados/result/result_bloc.dart';
+import 'package:meter_app/presentation/widgets/app_bar/app_bar_projects_widget.dart';
 
 class ResultScreen extends StatefulWidget {
   final String metradoId;

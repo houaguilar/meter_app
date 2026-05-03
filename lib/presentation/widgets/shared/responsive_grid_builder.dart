@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/theme/theme.dart';
-import '../core/generic_module_config.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/presentation/widgets/core/generic_module_config.dart';
 
 /// Constructor de grids responsivos unificado para toda la aplicación
 ///

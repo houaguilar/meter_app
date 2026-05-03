@@ -1,4 +1,4 @@
-import '../../../data/models/premium/premium_status_model.dart';
+import 'package:meter_app/data/models/premium/premium_status_model.dart';
 
 abstract interface class PremiumLocalDataSource {
   Future<PremiumStatusModel?> getCachedPremiumStatus(String userId);

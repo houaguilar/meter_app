@@ -1,10 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/steel_base_models.dart';
-import '../../../../../domain/entities/home/acero/steel_constants.dart';
-import '../../../../../domain/entities/home/acero/zapata/steel_footing.dart';
-import '../../../../../domain/entities/home/acero/zapata/steel_footing_models.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
+import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing_models.dart';
 
 const uuid = Uuid();
 

@@ -1,6 +1,6 @@
 // lib/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart
 import 'package:isar_community/isar.dart';
-import '../../../entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 part 'sobrecimiento.g.dart';
 

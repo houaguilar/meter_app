@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:meter_app/domain/usecases/home/inicio/get_articles_usecase.dart';
 
-import '../../../../domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 part 'article_event.dart';
 part 'article_state.dart';

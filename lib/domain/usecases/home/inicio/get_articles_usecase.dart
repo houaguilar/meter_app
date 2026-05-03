@@ -1,9 +1,9 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../entities/entities.dart';
-import '../../../repositories/home/inicio/article_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/repositories/home/inicio/article_repository.dart';
 
 class GetArticlesUseCase {
   final ArticleRepository repository;

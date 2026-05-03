@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 
-import '../../styles/button_styles.dart';
+import 'package:meter_app/presentation/styles/button_styles.dart';
 
 class CustomOutlinedButton extends StatelessWidget {
   final String label;

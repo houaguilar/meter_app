@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../domain/entities/home/acero/columna/steel_column.dart';
-import '../../../../../domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 
 // ============================================================================
 // PROVIDERS PRINCIPALES

@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/losa_maciza/mesh_enums.dart';
-import '../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../../../../domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 
 const uuid = Uuid();
 

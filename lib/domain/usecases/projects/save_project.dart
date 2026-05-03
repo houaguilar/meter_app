@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/core/usecase/usecase.dart';
 import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
 
-import '../../../core/constants/error/failures.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
 
 class CreateProject implements UseCase<void, CreateProjectParams> {
   final ProjectsRepository repository;

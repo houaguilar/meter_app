@@ -1,6 +1,6 @@
 
 import 'package:isar_community/isar.dart';
-import '../../../entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 part 'steel_column.g.dart';
 

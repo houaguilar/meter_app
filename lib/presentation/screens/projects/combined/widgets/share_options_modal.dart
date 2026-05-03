@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/theme.dart';
-import '../../../../blocs/projects/metrados/combined_results/combined_results_bloc.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart';
 
 /// Modal bottom sheet para seleccionar el formato de compartir
 class ShareOptionsModal extends StatelessWidget {

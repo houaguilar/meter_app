@@ -1,6 +1,6 @@
 // lib/presentation/widgets/dialogs/confirmation_dialog.dart
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
+import 'package:meter_app/core/theme/app_colors.dart';
 
 /// Widget de confirmación personalizado para usar en lugar de AlertDialog
 class ConfirmationDialog extends StatelessWidget {

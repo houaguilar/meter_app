@@ -1,6 +1,6 @@
 
 import 'package:equatable/equatable.dart';
-import 'premium_status.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
 
 enum PurchaseResultType {
   success,

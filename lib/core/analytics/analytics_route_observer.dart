@@ -1,6 +1,6 @@
 
 import 'package:flutter/material.dart';
-import 'analytics_repository.dart';
+import 'package:meter_app/core/analytics/analytics_repository.dart';
 
 class AnalyticsRouteObserver extends RouteObserver<PageRoute<dynamic>> {
   final AnalyticsRepository _analytics;

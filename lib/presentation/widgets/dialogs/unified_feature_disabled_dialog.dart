@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 
-import '../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 /// Dialog unificado para mostrar funciones no disponibles
 ///

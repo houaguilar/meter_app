@@ -3,9 +3,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/domain/repositories/projects/metrados/result/result_local_repository.dart';
 
-import '../../../../../core/constants/error/exceptions.dart';
-import '../../../../../core/constants/error/failures.dart';
-import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/datasources/projects/metrados/result/result_local_data_source.dart';
 
 class ResultLocalRepositoryImpl implements ResultLocalRepository {
   final ResultLocalDataSource dataSource;

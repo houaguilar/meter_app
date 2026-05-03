@@ -5,7 +5,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 import 'package:meter_app/core/assets/app_images.dart';
 
-import '../../../../domain/repositories/home/inicio/measurement_repository.dart';
+import 'package:meter_app/domain/repositories/home/inicio/measurement_repository.dart';
 
 class MeasurementRepositoryImpl implements MeasurementRepository {
 

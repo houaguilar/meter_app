@@ -1,4 +1,4 @@
-import '../entities/entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 /// Servicio simplificado para operaciones básicas de ladrillo
 class LadrilloService {

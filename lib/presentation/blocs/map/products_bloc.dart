@@ -1,12 +1,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import '../../../domain/entities/map/product.dart';
-import '../../../domain/usecases/map/delete_product.dart';
-import '../../../domain/usecases/map/get_location_products.dart';
-import '../../../domain/usecases/map/get_products_by_category.dart';
-import '../../../domain/usecases/map/save_product.dart';
-import '../../../domain/usecases/map/toggle_product_stock.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/usecases/map/delete_product.dart';
+import 'package:meter_app/domain/usecases/map/get_location_products.dart';
+import 'package:meter_app/domain/usecases/map/get_products_by_category.dart';
+import 'package:meter_app/domain/usecases/map/save_product.dart';
+import 'package:meter_app/domain/usecases/map/toggle_product_stock.dart';
 
 part 'products_event.dart';
 part 'products_state.dart';

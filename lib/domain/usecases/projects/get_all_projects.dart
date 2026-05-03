@@ -3,9 +3,9 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
 
-import '../../../core/constants/error/failures.dart';
-import '../../../core/usecase/usecase.dart';
-import '../../entities/projects/project.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/projects/project.dart';
 
 class GetAllProjects implements UseCase<List<Project>, NoParams> {
   final ProjectsRepository repository;

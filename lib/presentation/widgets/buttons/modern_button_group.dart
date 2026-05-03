@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 /// Contenedor de botones con layout mejorado
 class ModernButtonGroup extends StatelessWidget {

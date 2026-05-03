@@ -4,14 +4,14 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../domain/entities/map/location.dart';
-import '../../../../domain/entities/map/product.dart';
-import '../../../../domain/entities/map/verification_status.dart';
-import '../../../blocs/map/products_bloc.dart';
-import '../../../blocs/cart/cart_bloc.dart';
-import '../cart/cart_screen.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
+import 'package:meter_app/presentation/blocs/map/products_bloc.dart';
+import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
+import 'package:meter_app/presentation/screens/mapa/cart/cart_screen.dart';
 
 /// Extension para capitalizar strings
 extension StringExtension on String {

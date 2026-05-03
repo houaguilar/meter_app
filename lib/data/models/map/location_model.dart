@@ -1,8 +1,8 @@
 // lib/data/models/map/location_model.dart
 import 'dart:convert';
-import '../../../domain/entities/map/location.dart';
-import '../../../domain/entities/map/verification_status.dart';
-import '../../../domain/entities/map/document_type.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
+import 'package:meter_app/domain/entities/map/document_type.dart';
 
 class LocationModel extends LocationMap {
   LocationModel({

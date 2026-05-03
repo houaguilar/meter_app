@@ -6,18 +6,18 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:meter_app/presentation/screens/mapa/widgets/optimized_place_search_screen.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/map/location.dart';
-import '../../../domain/entities/map/location_with_distance.dart';
-import '../../../domain/entities/map/place_entity.dart';
-import '../../blocs/map/locations_bloc.dart';
-import '../../blocs/map/place/place_bloc.dart';
-import '../../widgets/app_bar/app_bar_widget.dart';
-import '../home/shared/quote/quote_project_selection_screen.dart';
-import 'detail/location_detail_screen.dart';
-import 'widgets/optimized_search_bar.dart';
-import 'widgets/location_permission_dialog.dart';
-import 'widgets/map_loading_overlay.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/location_with_distance.dart';
+import 'package:meter_app/domain/entities/map/place_entity.dart';
+import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
+import 'package:meter_app/presentation/blocs/map/place/place_bloc.dart';
+import 'package:meter_app/presentation/widgets/app_bar/app_bar_widget.dart';
+import 'package:meter_app/presentation/screens/home/shared/quote/quote_project_selection_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/detail/location_detail_screen.dart';
+import 'package:meter_app/presentation/screens/mapa/widgets/optimized_search_bar.dart';
+import 'package:meter_app/presentation/screens/mapa/widgets/location_permission_dialog.dart';
+import 'package:meter_app/presentation/screens/mapa/widgets/map_loading_overlay.dart';
 
 class OptimizedMapScreen extends StatefulWidget {
   const OptimizedMapScreen({super.key});

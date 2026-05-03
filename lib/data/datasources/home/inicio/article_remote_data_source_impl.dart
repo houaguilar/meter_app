@@ -2,10 +2,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/constants/error/exceptions.dart';
-import '../../../../core/constants/error/failures.dart';
-import '../../../../domain/datasources/home/inicio/article_remote_data_source.dart';
-import '../../../models/models.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/datasources/home/inicio/article_remote_data_source.dart';
+import 'package:meter_app/data/models/models.dart';
 
 class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   final SupabaseClient client;

@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:path/path.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../core/app_config.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../blocs/premium/premium_bloc.dart';
-import 'mock_development_panel.dart';
-import 'premium_status_indicator.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
+import 'package:meter_app/presentation/widgets/premium/mock_development_panel.dart';
+import 'package:meter_app/presentation/widgets/premium/premium_status_indicator.dart';
 
 class PremiumPaywallScreen extends StatelessWidget {
   const PremiumPaywallScreen({super.key});

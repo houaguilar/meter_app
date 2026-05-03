@@ -1,6 +1,6 @@
 import 'package:isar_community/isar.dart';
-import '../../../entities.dart';
-import 'mesh_enums.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 
 part 'steel_slab.g.dart';
 

@@ -1,4 +1,4 @@
-import '../entities/entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 class PisoService {
   double? calcularArea(Piso piso) {

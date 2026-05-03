@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../theme/theme.dart';
-import '../security_service.dart';
-import 'auth_error_extensions.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/security_service.dart';
+import 'package:meter_app/core/utils/auth/auth_error_extensions.dart';
 
 /// Manejador especializado para errores de autenticación con mensajes amigables
 class AuthErrorHandler {

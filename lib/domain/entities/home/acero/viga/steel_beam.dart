@@ -1,6 +1,6 @@
 // lib/domain/entities/home/acero/viga/steel_beam.dart
 import 'package:isar_community/isar.dart';
-import '../../../entities.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 part 'steel_beam.g.dart';
 

@@ -1,7 +1,7 @@
 
 import 'package:fpdart/fpdart.dart';
-import '../../../core/constants/error/failures.dart';
-import '../../entities/map/place_entity.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/entities/map/place_entity.dart';
 
 abstract interface class PlaceRepository {
 

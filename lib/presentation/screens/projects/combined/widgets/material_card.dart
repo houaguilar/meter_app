@@ -1,9 +1,9 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/theme.dart';
-import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
-import 'material_helpers.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/services/shared/UnifiedResultsCombiner.dart';
+import 'package:meter_app/presentation/screens/projects/combined/widgets/material_helpers.dart';
 
 /// Redondea un número hacia arriba con la cantidad de decimales especificada
 /// Similar a la función ROUNDUP de Excel

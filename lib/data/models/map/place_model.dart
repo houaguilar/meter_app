@@ -1,4 +1,4 @@
-import '../../../domain/entities/map/place_entity.dart';
+import 'package:meter_app/domain/entities/map/place_entity.dart';
 
 class PlaceModel extends PlaceEntity {
   PlaceModel({

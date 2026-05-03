@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/theme.dart';
-import '../../domain/entities/home/tarrajeo/coating.dart';
-import '../widgets/dialogs/feature_disabled_dialog.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
+import 'package:meter_app/presentation/widgets/dialogs/feature_disabled_dialog.dart';
 
 extension CoatingUI on Coating {
 

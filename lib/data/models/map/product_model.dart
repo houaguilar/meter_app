@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../../../domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
 
 class ProductModel extends Product {
   ProductModel({

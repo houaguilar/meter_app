@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/widgets/premium/premium_paywall_screen.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../blocs/premium/premium_bloc.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/presentation/blocs/premium/premium_bloc.dart';
 
 class PremiumFeatureWidget extends StatelessWidget {
   final Widget child;

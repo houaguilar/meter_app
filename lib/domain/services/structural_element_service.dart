@@ -1,6 +1,6 @@
 // lib/domain/services/structural_element_service.dart
-import '../entities/home/estructuras/columna/columna.dart';
-import '../entities/home/estructuras/viga/viga.dart';
+import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
+import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 
 class StructuralElementService {
 

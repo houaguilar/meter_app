@@ -6,13 +6,13 @@ import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
 import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
 import 'package:meter_app/domain/entities/home/estructuras/zapata/zapata.dart';
 
-import '../../../../../core/constants/error/exceptions.dart';
-import '../../../../../domain/datasources/projects/metrados/result/result_local_data_source.dart';
-import '../../../../../domain/entities/entities.dart';
-import '../../../../../domain/entities/home/acero/columna/steel_column.dart';
-import '../../../../../domain/entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../../../../domain/entities/home/acero/viga/steel_beam.dart';
-import '../../../../../domain/entities/home/acero/zapata/steel_footing.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/domain/datasources/projects/metrados/result/result_local_data_source.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
+import 'package:meter_app/domain/entities/home/acero/viga/steel_beam.dart';
+import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
 
 class ResultIsarDataSource implements ResultLocalDataSource {
   final Isar isarService;

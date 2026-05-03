@@ -8,8 +8,8 @@ import 'package:meter_app/domain/entities/projects/project.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/presentation/blocs/projects/projects_bloc.dart';
 
-import '../../../core/theme/theme.dart';
-import 'new_project/new_project_screen.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/presentation/screens/projects/new_project/new_project_screen.dart';
 
 class ProjectsScreen extends StatefulWidget {
   const ProjectsScreen({super.key});

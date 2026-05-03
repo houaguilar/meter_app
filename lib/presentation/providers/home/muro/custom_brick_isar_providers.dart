@@ -3,16 +3,16 @@ import 'dart:ui';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/presentation/providers/home/muro/wall_material_providers_improved.dart';
-import '../../../../core/usecase/usecase.dart';
-import '../../../../domain/entities/home/muro/custom_brick.dart';
-import '../../../../domain/entities/home/muro/wall_material.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/home/muro/custom_brick.dart';
+import 'package:meter_app/domain/entities/home/muro/wall_material.dart';
 
-import '../../../../domain/usecases/home/muro/custom_brick/check_custom_brick_name.dart';
-import '../../../../domain/usecases/home/muro/custom_brick/delete_custom_brick.dart';
-import '../../../../domain/usecases/home/muro/custom_brick/get_all_custom_bricks.dart';
-import '../../../../domain/usecases/home/muro/custom_brick/save_custom_brick.dart';
-import '../../../../domain/usecases/home/muro/custom_brick/update_custom_brick.dart';
-import '../../../../init_dependencies.dart';
+import 'package:meter_app/features/muro/domain/usecases/custom_brick/check_custom_brick_name.dart';
+import 'package:meter_app/features/muro/domain/usecases/custom_brick/delete_custom_brick.dart';
+import 'package:meter_app/features/muro/domain/usecases/custom_brick/get_all_custom_bricks.dart';
+import 'package:meter_app/features/muro/domain/usecases/custom_brick/save_custom_brick.dart';
+import 'package:meter_app/features/muro/domain/usecases/custom_brick/update_custom_brick.dart';
+import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/core/assets/app_images.dart';
 
 /// Provider para obtener todos los ladrillos personalizados

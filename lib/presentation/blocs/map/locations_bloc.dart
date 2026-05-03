@@ -4,17 +4,17 @@ import 'package:bloc/bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:meta/meta.dart';
 
-import '../../../core/usecase/usecase.dart';
-import '../../../domain/entities/map/location.dart';
-import '../../../domain/entities/map/location_with_distance.dart';
-import '../../../domain/usecases/map/check_postgis_availability.dart';
-import '../../../domain/usecases/map/delete_location.dart';
-import '../../../domain/usecases/map/get_locations_by_user.dart';
-import '../../../domain/usecases/map/get_nearby_locations.dart';
-import '../../../domain/usecases/map/save_location.dart';
-import '../../../domain/usecases/map/get_all_locations.dart';
-import '../../../domain/usecases/map/toggle_location_active.dart';
-import '../../../domain/usecases/map/upload_image.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/location_with_distance.dart';
+import 'package:meter_app/domain/usecases/map/check_postgis_availability.dart';
+import 'package:meter_app/domain/usecases/map/delete_location.dart';
+import 'package:meter_app/domain/usecases/map/get_locations_by_user.dart';
+import 'package:meter_app/domain/usecases/map/get_nearby_locations.dart';
+import 'package:meter_app/domain/usecases/map/save_location.dart';
+import 'package:meter_app/domain/usecases/map/get_all_locations.dart';
+import 'package:meter_app/domain/usecases/map/toggle_location_active.dart';
+import 'package:meter_app/domain/usecases/map/upload_image.dart';
 
 part 'locations_event.dart';
 part 'locations_state.dart';

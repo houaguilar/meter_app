@@ -1,5 +1,5 @@
-import '../steel_base_models.dart';
-import 'mesh_enums.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 
 /// Cálculo de una dirección específica (horizontal o vertical) de la malla
 ///

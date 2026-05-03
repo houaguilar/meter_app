@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/url_launcher_helper.dart';
-import '../../../widgets/dialogs/delete_account_dialog.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/url_launcher_helper.dart';
+import 'package:meter_app/presentation/widgets/dialogs/delete_account_dialog.dart';
 
 class ImprovedProfileSettingsTab extends StatefulWidget {
   const ImprovedProfileSettingsTab({super.key});

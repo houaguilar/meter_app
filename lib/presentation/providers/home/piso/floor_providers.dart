@@ -1,8 +1,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/entities/home/piso/floor.dart';
-import 'package:meter_app/domain/repositories/home/piso/floor_repository.dart';
-import 'package:meter_app/domain/usecases/home/piso/get_floors_usecase.dart';
+import 'package:meter_app/features/pisos/domain/repositories/floor_repository.dart';
+import 'package:meter_app/features/pisos/domain/usecases/get_floors_usecase.dart';
 import 'package:meter_app/init_dependencies.dart';
 
 final floorRepositoryProvider = Provider<FloorRepository>((ref) {

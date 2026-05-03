@@ -1,10 +1,10 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/constants/error/exceptions.dart';
-import '../../../../core/constants/error/failures.dart';
-import '../../../../domain/datasources/projects/metrados/metrados_local_data_source.dart';
-import '../../../../domain/entities/entities.dart';
-import '../../../../domain/repositories/projects/metrados/metrados_local_repository.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/domain/datasources/projects/metrados/metrados_local_data_source.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/repositories/projects/metrados/metrados_local_repository.dart';
 
 class MetradosLocalRepositoryImpl implements MetradosLocalRepository {
   final MetradosLocalDataSource dataSource;

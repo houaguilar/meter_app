@@ -1,6 +1,6 @@
 import 'package:isar_community/isar.dart';
-import '../../entities.dart';
-import 'tipo_losa.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
 
 part 'losa.g.dart';
 

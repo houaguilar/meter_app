@@ -1,3 +1,3 @@
 
 
-export 'entities/home/home_list_item.dart';
+export 'package:meter_app/domain/entities/home/home_list_item.dart';

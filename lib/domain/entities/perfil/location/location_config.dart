@@ -1,4 +1,4 @@
-import 'country.dart';
+import 'package:meter_app/domain/entities/perfil/location/country.dart';
 
 /// Configuración de ubicación para un país específico
 /// Define los labels personalizados para cada nivel administrativo

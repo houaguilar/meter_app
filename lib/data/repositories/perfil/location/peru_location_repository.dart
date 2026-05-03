@@ -1,8 +1,8 @@
 
-import '../../../../domain/entities/perfil/location/country.dart';
-import '../../../../domain/entities/perfil/location/department.dart';
-import '../../../../domain/entities/perfil/location/district.dart';
-import '../../../../domain/entities/perfil/location/province.dart';
+import 'package:meter_app/domain/entities/perfil/location/country.dart';
+import 'package:meter_app/domain/entities/perfil/location/department.dart';
+import 'package:meter_app/domain/entities/perfil/location/district.dart';
+import 'package:meter_app/domain/entities/perfil/location/province.dart';
 
 /// Repositorio que maneja todos los datos de ubicaciones de Perú
 class PeruLocationRepository {

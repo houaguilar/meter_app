@@ -1,8 +1,8 @@
 
 import 'package:isar_community/isar.dart';
-import '../../../domain/datasources/premium/premium_local_data_source.dart';
-import '../../models/premium/premium_status_model.dart';
-import '../../../core/constants/error/exceptions.dart';
+import 'package:meter_app/domain/datasources/premium/premium_local_data_source.dart';
+import 'package:meter_app/data/models/premium/premium_status_model.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
 
 class PremiumLocalDataSourceImpl implements PremiumLocalDataSource {
   final Isar isar;

@@ -2,10 +2,10 @@
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../../core/usecase/usecase.dart';
-import '../../../entities/entities.dart';
-import '../../../repositories/projects/metrados/metrados_local_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/repositories/projects/metrados/metrados_local_repository.dart';
 
 class GetAllMetrados implements UseCase<List<Metrado>, GetAllMetradosParams> {
   final MetradosLocalRepository repository;

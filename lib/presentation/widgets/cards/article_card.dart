@@ -4,8 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/entities.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 class ArticleCard extends StatelessWidget {
   final ArticleEntity article;

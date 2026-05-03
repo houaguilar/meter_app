@@ -1,7 +1,7 @@
 
 import 'dart:convert';
-import '../../../../domain/entities/article/article_content_image.dart';
-import '../../../../domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/article/article_content_image.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 class ArticleModel extends ArticleEntity {
   ArticleModel({

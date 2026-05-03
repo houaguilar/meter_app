@@ -2,20 +2,20 @@ import 'dart:io';
 
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/constants/error/failures.dart';
-import '../../../core/network/connection_checker.dart';
-import '../../../domain/datasources/map/location_data_source.dart';
-import '../../../domain/entities/map/location.dart';
-import '../../../domain/entities/map/location_with_distance.dart';
-import '../../../domain/entities/map/location_category.dart';
-import '../../../domain/entities/map/product.dart';
-import '../../../domain/entities/map/review.dart';
-import '../../../domain/entities/map/review_stats.dart' as stats;
-import '../../../domain/repositories/map/location_repository.dart';
-import '../../models/map/location_model.dart';
-import '../../models/map/location_category_model.dart';
-import '../../models/map/product_model.dart';
-import '../../models/map/review_model.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/network/connection_checker.dart';
+import 'package:meter_app/domain/datasources/map/location_data_source.dart';
+import 'package:meter_app/domain/entities/map/location.dart';
+import 'package:meter_app/domain/entities/map/location_with_distance.dart';
+import 'package:meter_app/domain/entities/map/location_category.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/domain/entities/map/review.dart';
+import 'package:meter_app/domain/entities/map/review_stats.dart' as stats;
+import 'package:meter_app/domain/repositories/map/location_repository.dart';
+import 'package:meter_app/data/models/map/location_model.dart';
+import 'package:meter_app/data/models/map/location_category_model.dart';
+import 'package:meter_app/data/models/map/product_model.dart';
+import 'package:meter_app/data/models/map/review_model.dart';
 
 class LocationRepositoryImpl implements LocationRepository {
   final LocationDataSource locationRemoteDataSource;

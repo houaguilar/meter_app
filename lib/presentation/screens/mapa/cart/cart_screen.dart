@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../domain/entities/map/product.dart';
-import '../../../blocs/cart/cart_bloc.dart';
-import '../checkout/checkout_screen.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/domain/entities/map/product.dart';
+import 'package:meter_app/presentation/blocs/cart/cart_bloc.dart';
+import 'package:meter_app/presentation/screens/mapa/checkout/checkout_screen.dart';
 
 /// Pantalla del carrito de compras integrada con CartBloc
 class CartScreen extends StatelessWidget {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'auth_error_handler.dart';
+import 'package:meter_app/core/utils/auth/auth_error_handler.dart';
 
 /// Extensiones para el AuthErrorHandler con implementaciones específicas
 extension AuthErrorHandlerExtensions on AuthErrorHandler {

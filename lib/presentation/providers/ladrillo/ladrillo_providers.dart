@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/constant.dart';
-import '../../../core/utils/number_formatter.dart';
-import '../../../domain/entities/home/ladrillo/ladrillo.dart';
-import '../../../domain/entities/home/muro/tipo_ladrillo.dart' as enums;
-import '../../../domain/services/ladrillo_service.dart';
-import '../home/muro/custom_brick_providers.dart';
+import 'package:meter_app/core/constants/constant.dart';
+import 'package:meter_app/core/utils/number_formatter.dart';
+import 'package:meter_app/domain/entities/home/ladrillo/ladrillo.dart';
+import 'package:meter_app/domain/entities/home/muro/tipo_ladrillo.dart' as enums;
+import 'package:meter_app/domain/services/ladrillo_service.dart';
+import 'package:meter_app/presentation/providers/home/muro/custom_brick_providers.dart';
 
 class TipoLadrilloNotifier extends Notifier<String> {
   @override

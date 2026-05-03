@@ -1,5 +1,5 @@
-import '../../../domain/entities/map/location_category.dart';
-import '../../../domain/entities/map/category_config.dart';
+import 'package:meter_app/domain/entities/map/location_category.dart';
+import 'package:meter_app/domain/entities/map/category_config.dart';
 
 class LocationCategoryModel extends LocationCategory {
   LocationCategoryModel({

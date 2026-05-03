@@ -1,5 +1,5 @@
-import '../../../entities/home/losas/losa.dart';
-import '../losa_calculation_strategy.dart';
+import 'package:meter_app/domain/entities/home/losas/losa.dart';
+import 'package:meter_app/domain/services/losas/losa_calculation_strategy.dart';
 
 /// Strategy para losa maciza de concreto sólido
 ///

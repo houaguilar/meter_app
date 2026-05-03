@@ -6,7 +6,7 @@ import 'package:meter_app/core/services/review_service.dart';
 import 'package:meter_app/init_dependencies.dart';
 import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
 
-import '../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 class AppBarWidget extends StatelessWidget implements PreferredSizeWidget {
   AppBarWidget({

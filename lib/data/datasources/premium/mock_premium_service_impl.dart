@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../core/app_config.dart';
-import '../../../core/constants/error/exceptions.dart';
-import '../../../core/utils/app_logger.dart';
-import '../../../domain/datasources/premium/premium_service_data_source.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../../domain/entities/premium/purchase_result.dart';
-import '../../models/premium/premium_status_model.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/utils/app_logger.dart';
+import 'package:meter_app/domain/datasources/premium/premium_service_data_source.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/domain/entities/premium/purchase_result.dart';
+import 'package:meter_app/data/models/premium/premium_status_model.dart';
 
 class MockPremiumServiceImpl implements PremiumServiceDataSource {
   final SupabaseClient supabaseClient;

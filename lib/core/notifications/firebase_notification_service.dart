@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
-import 'notification_repository.dart';
+import 'package:meter_app/core/notifications/notification_repository.dart';
 
 /// Handler global para notificaciones en background
 /// Debe ser una función top-level o estática

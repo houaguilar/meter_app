@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/constant.dart';
-import '../../../domain/entities/home/losas/losa.dart';
-import '../../../domain/entities/home/losas/tipo_losa.dart';
-import '../../../domain/services/losas/losa_service.dart';
+import 'package:meter_app/core/constants/constant.dart';
+import 'package:meter_app/domain/entities/home/losas/losa.dart';
+import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
+import 'package:meter_app/domain/services/losas/losa_service.dart';
 
 /// Provider para el tipo de losa seleccionado
 class TipoLosaSelected extends Notifier<TipoLosa?> {

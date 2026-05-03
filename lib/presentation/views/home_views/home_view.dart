@@ -11,11 +11,11 @@ import 'package:meter_app/presentation/widgets/bottom_sheet/measurements_bottom_
 import 'package:meter_app/presentation/widgets/cards/shortcut_card.dart';
 import 'package:meter_app/presentation/widgets/carousels/carousel_cards_articles.dart';
 
-import '../../../core/theme/theme.dart';
-import '../../../domain/entities/entities.dart';
-import '../../blocs/home/inicio/measurement_bloc.dart';
-import '../../providers/providers.dart';
-import '../../widgets/widgets.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/presentation/blocs/home/inicio/measurement_bloc.dart';
+import 'package:meter_app/presentation/providers/providers.dart';
+import 'package:meter_app/presentation/widgets/widgets.dart';
 
 class HomeView extends ConsumerStatefulWidget {
   const HomeView({super.key});

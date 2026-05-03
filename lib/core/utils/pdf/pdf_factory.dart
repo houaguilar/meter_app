@@ -1,17 +1,17 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../presentation/providers/home/estructuras/structural_element_providers.dart';
-import '../../../presentation/providers/ladrillo/ladrillo_providers.dart';
-import '../../../presentation/providers/losas/losa_providers.dart';
-import '../../../presentation/providers/pisos/contrapiso_providers.dart';
-import '../../../presentation/providers/pisos/falso_piso_providers.dart';
-import '../../../presentation/providers/tarrajeo/tarrajeo_providers.dart';
-import '../../../presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
-import '../../../presentation/providers/home/acero/columna/steel_column_providers.dart';
-import '../../../presentation/providers/home/acero/viga/steel_beam_providers.dart';
-import '../../../presentation/providers/home/acero/losa_maciza/steel_slab_providers.dart';
-import '../../../presentation/providers/home/acero/zapata/steel_footing_providers.dart';
-import 'pdf_generator.dart';
+import 'package:meter_app/presentation/providers/home/estructuras/structural_element_providers.dart';
+import 'package:meter_app/presentation/providers/ladrillo/ladrillo_providers.dart';
+import 'package:meter_app/presentation/providers/losas/losa_providers.dart';
+import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
+import 'package:meter_app/presentation/providers/pisos/falso_piso_providers.dart';
+import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
+import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
+import 'package:meter_app/presentation/providers/home/acero/columna/steel_column_providers.dart';
+import 'package:meter_app/presentation/providers/home/acero/viga/steel_beam_providers.dart';
+import 'package:meter_app/presentation/providers/home/acero/losa_maciza/steel_slab_providers.dart';
+import 'package:meter_app/presentation/providers/home/acero/zapata/steel_footing_providers.dart';
+import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
 
 /// Factory para crear PDFs específicos de cada módulo
 class PDFFactory {

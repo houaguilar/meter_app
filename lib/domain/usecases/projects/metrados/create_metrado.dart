@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../../core/usecase/usecase.dart';
-import '../../../repositories/projects/metrados/metrados_local_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/repositories/projects/metrados/metrados_local_repository.dart';
 
 class CreateMetrado implements UseCase<void, CreateMetradoParams> {
   final MetradosLocalRepository repository;

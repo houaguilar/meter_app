@@ -11,15 +11,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:meter_app/domain/entities/map/location.dart';
 
-import '../../../../core/theme/theme.dart';
-import '../../../../core/utils/show_snackbar.dart';
-import '../../../../core/utils/validators.dart';
-import '../../../../domain/entities/auth/user_profile.dart';
-import '../../../../domain/entities/map/document_type.dart';
-import '../../../../domain/entities/map/verification_status.dart';
-import '../../../blocs/map/locations_bloc.dart';
-import '../../../blocs/profile/profile_bloc.dart';
-import 'map_selection_modal.dart';
+import 'package:meter_app/core/theme/theme.dart';
+import 'package:meter_app/core/utils/show_snackbar.dart';
+import 'package:meter_app/core/utils/validators.dart';
+import 'package:meter_app/domain/entities/auth/user_profile.dart';
+import 'package:meter_app/domain/entities/map/document_type.dart';
+import 'package:meter_app/domain/entities/map/verification_status.dart';
+import 'package:meter_app/presentation/blocs/map/locations_bloc.dart';
+import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
+import 'package:meter_app/presentation/screens/perfil/register_location/map_selection_modal.dart';
 
 class RegisterLocationScreen extends StatefulWidget {
   const RegisterLocationScreen({super.key});

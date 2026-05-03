@@ -2,16 +2,16 @@ import 'dart:async';
 import 'package:fpdart/fpdart.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:rxdart/rxdart.dart';
-import '../../../core/app_config.dart';
-import '../../../core/constants/error/failures.dart';
-import '../../../core/utils/app_logger.dart';
-import '../../../domain/datasources/premium/premium_local_data_source.dart';
-import '../../../domain/datasources/premium/premium_remote_data_source.dart';
-import '../../../domain/datasources/premium/premium_service_data_source.dart';
-import '../../../domain/entities/premium/premium_status.dart';
-import '../../../domain/entities/premium/purchase_result.dart';
-import '../../../domain/repositories/premium/premium_repository.dart';
-import '../../models/premium/premium_status_model.dart';
+import 'package:meter_app/core/app_config.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/utils/app_logger.dart';
+import 'package:meter_app/domain/datasources/premium/premium_local_data_source.dart';
+import 'package:meter_app/domain/datasources/premium/premium_remote_data_source.dart';
+import 'package:meter_app/domain/datasources/premium/premium_service_data_source.dart';
+import 'package:meter_app/domain/entities/premium/premium_status.dart';
+import 'package:meter_app/domain/entities/premium/purchase_result.dart';
+import 'package:meter_app/domain/repositories/premium/premium_repository.dart';
+import 'package:meter_app/data/models/premium/premium_status_model.dart';
 
 class PremiumRepositoryImpl implements PremiumRepository {
   final PremiumServiceDataSource serviceDataSource;

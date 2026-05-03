@@ -1,5 +1,5 @@
 
-import '../../entities/projects/project.dart';
+import 'package:meter_app/domain/entities/projects/project.dart';
 
 abstract interface class ProjectsLocalDataSource {
 

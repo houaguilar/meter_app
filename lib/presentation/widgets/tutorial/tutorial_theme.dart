@@ -1,6 +1,6 @@
 // lib/presentation/widgets/tutorial/tutorial_theme.dart
 import 'package:flutter/material.dart';
-import '../../../core/theme/theme.dart';
+import 'package:meter_app/core/theme/theme.dart';
 
 /// Tema personalizado para los tutoriales
 class TutorialTheme {

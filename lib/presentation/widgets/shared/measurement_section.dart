@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../domain/entities/entities.dart';
-import '../cards/measurement_item_card.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/presentation/widgets/cards/measurement_item_card.dart';
 
 class MeasurementSection extends StatelessWidget {
   final List<Measurement> items;

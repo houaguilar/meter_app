@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/constants/constants.dart';
-import '../../../core/utils/number_formatter.dart';
-import '../../../domain/entities/entities.dart';
-import '../../../domain/services/tarrajeo_service.dart';
+import 'package:meter_app/core/constants/constants.dart';
+import 'package:meter_app/core/utils/number_formatter.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/services/tarrajeo_service.dart';
 
 class TipoTarrajeo extends Notifier<String> {
   @override

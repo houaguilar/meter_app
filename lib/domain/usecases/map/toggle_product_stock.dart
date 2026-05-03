@@ -1,8 +1,8 @@
 import 'package:fpdart/fpdart.dart';
 
-import '../../../core/constants/error/failures.dart';
-import '../../../core/usecase/usecase.dart';
-import '../../repositories/map/location_repository.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/repositories/map/location_repository.dart';
 
 /// Parámetros para cambiar disponibilidad de stock
 class ToggleProductStockParams {

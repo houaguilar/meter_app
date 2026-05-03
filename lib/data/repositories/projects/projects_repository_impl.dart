@@ -4,9 +4,9 @@ import 'package:meter_app/domain/datasources/projects/projects_local_data_source
 import 'package:meter_app/domain/datasources/projects/projects_remote_data_source.dart';
 import 'package:meter_app/domain/entities/projects/project.dart';
 
-import '../../../core/network/connection_checker.dart';
-import '../../../domain/repositories/projects/projects_repository.dart';
-import '../../datasources/projects/projects_isar_data_source.dart';
+import 'package:meter_app/core/network/connection_checker.dart';
+import 'package:meter_app/domain/repositories/projects/projects_repository.dart';
+import 'package:meter_app/data/datasources/projects/projects_isar_data_source.dart';
 
 class ProjectsRepositoryImpl implements ProjectsRepository {
   final ProjectsLocalDataSource projectsLocalDataSource;

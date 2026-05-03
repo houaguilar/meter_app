@@ -3,12 +3,12 @@ import 'package:meta/meta.dart';
 
 import 'package:meter_app/domain/usecases/projects/get_all_projects.dart';
 import 'package:meter_app/domain/usecases/projects/save_project.dart';
-import '../../../core/constants/error/failures.dart';
-import '../../../core/usecase/usecase.dart';
-import '../../../domain/entities/entities.dart';
-import '../../../domain/usecases/projects/delete_project.dart';
-import '../../../domain/usecases/projects/edit_project.dart';
-import '../common/error_handler_mixin.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/usecase/usecase.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/usecases/projects/delete_project.dart';
+import 'package:meter_app/domain/usecases/projects/edit_project.dart';
+import 'package:meter_app/presentation/blocs/common/error_handler_mixin.dart';
 
 part 'projects_event.dart';
 part 'projects_state.dart';

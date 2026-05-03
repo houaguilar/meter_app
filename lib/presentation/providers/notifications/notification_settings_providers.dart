@@ -4,9 +4,9 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../core/notifications/notification_repository.dart';
-import '../../../domain/entities/notifications/notification_settings.dart';
-import '../../../init_dependencies.dart';
+import 'package:meter_app/core/notifications/notification_repository.dart';
+import 'package:meter_app/domain/entities/notifications/notification_settings.dart';
+import 'package:meter_app/init_dependencies.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES

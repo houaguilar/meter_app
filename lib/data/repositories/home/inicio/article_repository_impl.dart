@@ -2,10 +2,10 @@
 import 'package:fpdart/fpdart.dart';
 import 'package:meter_app/domain/repositories/home/inicio/article_repository.dart';
 
-import '../../../../core/constants/error/failures.dart';
-import '../../../../core/network/connection_checker.dart';
-import '../../../../domain/datasources/home/inicio/article_remote_data_source.dart';
-import '../../../../domain/entities/entities.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/network/connection_checker.dart';
+import 'package:meter_app/domain/datasources/home/inicio/article_remote_data_source.dart';
+import 'package:meter_app/domain/entities/entities.dart';
 
 class ArticleRepositoryImpl implements ArticleRepository {
   final ArticleRemoteDataSource remoteDataSource;

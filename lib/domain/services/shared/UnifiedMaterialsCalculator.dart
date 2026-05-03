@@ -1,21 +1,21 @@
 import 'package:flutter/foundation.dart';
 
 
-import '../../../domain/entities/entities.dart';
-import '../../../domain/entities/home/estructuras/columna/columna.dart';
-import '../../../domain/entities/home/estructuras/viga/viga.dart';
-import '../../../domain/entities/home/estructuras/zapata/zapata.dart';
-import '../../../domain/entities/home/losas/losa.dart';
-import '../../entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
-import '../../entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
-import '../../entities/home/estructuras/solado/solado.dart';
-import '../../entities/home/acero/columna/steel_column.dart';
-import '../../entities/home/acero/viga/steel_beam.dart';
-import '../../entities/home/acero/losa_maciza/steel_slab.dart';
-import '../../entities/home/acero/zapata/steel_footing.dart';
-import '../../entities/home/acero/steel_constants.dart';
-import '../../entities/home/muro/tipo_ladrillo.dart' as enums;
-import '../losas/losa_service.dart';
+import 'package:meter_app/domain/entities/entities.dart';
+import 'package:meter_app/domain/entities/home/estructuras/columna/columna.dart';
+import 'package:meter_app/domain/entities/home/estructuras/viga/viga.dart';
+import 'package:meter_app/domain/entities/home/estructuras/zapata/zapata.dart';
+import 'package:meter_app/domain/entities/home/losas/losa.dart';
+import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
+import 'package:meter_app/domain/entities/home/estructuras/sobrecimiento/sobrecimiento.dart';
+import 'package:meter_app/domain/entities/home/estructuras/solado/solado.dart';
+import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
+import 'package:meter_app/domain/entities/home/acero/viga/steel_beam.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
+import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/muro/tipo_ladrillo.dart' as enums;
+import 'package:meter_app/domain/services/losas/losa_service.dart';
 
 /// Calculadora unificada de materiales actualizada con los nuevos cálculos de los providers
 class UnifiedMaterialsCalculator {

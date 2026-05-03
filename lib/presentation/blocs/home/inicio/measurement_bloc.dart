@@ -2,7 +2,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 
-import '../../../../domain/usecases/home/inicio/get_measurement_items.dart';
+import 'package:meter_app/domain/usecases/home/inicio/get_measurement_items.dart';
 
 part 'measurement_event.dart';
 part 'measurement_state.dart';

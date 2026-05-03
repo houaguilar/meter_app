@@ -1,4 +1,4 @@
-import 'article_content_image.dart';
+import 'package:meter_app/domain/entities/article/article_content_image.dart';
 
 class ArticleEntity {
   final String id;

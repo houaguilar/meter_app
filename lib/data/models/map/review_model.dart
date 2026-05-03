@@ -1,4 +1,4 @@
-import '../../../domain/entities/map/review.dart';
+import 'package:meter_app/domain/entities/map/review.dart';
 
 class ReviewModel extends Review {
   ReviewModel({

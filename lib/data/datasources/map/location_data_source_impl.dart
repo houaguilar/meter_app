@@ -8,12 +8,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../core/constants/error/exceptions.dart';
-import '../../models/map/location_model.dart';
-import '../../models/map/location_model_with_distance.dart';
-import '../../models/map/location_category_model.dart';
-import '../../models/map/product_model.dart';
-import '../../models/map/review_model.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/data/models/map/location_model.dart';
+import 'package:meter_app/data/models/map/location_model_with_distance.dart';
+import 'package:meter_app/data/models/map/location_category_model.dart';
+import 'package:meter_app/data/models/map/product_model.dart';
+import 'package:meter_app/data/models/map/review_model.dart';
 
 class LocationDataSourceImpl implements LocationDataSource {
   final SupabaseClient supabaseClient;

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../../domain/entities/home/acero/viga/steel_beam.dart';
+import 'package:meter_app/domain/entities/home/acero/viga/steel_beam.dart';
 
 const uuid = Uuid();
 
