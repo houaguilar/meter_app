@@ -1,0 +1,278 @@
+
+import 'package:fpdart/fpdart.dart';
+
+import 'package:meter_app/core/constants/constant.dart';
+import 'package:meter_app/core/constants/error/exceptions.dart';
+import 'package:meter_app/core/constants/error/failures.dart';
+import 'package:meter_app/core/network/connection_checker.dart';
+import 'package:meter_app/features/auth/domain/datasources/auth_remote_data_source.dart';
+import 'package:meter_app/domain/entities/auth/user.dart';
+import 'package:meter_app/domain/entities/auth/user_profile.dart';
+import 'package:meter_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:meter_app/core/local/shared_preferences_helper.dart';
+import 'package:meter_app/features/auth/data/models/user_model.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
+  final AuthRemoteDataSource remoteDataSource;
+  final ConnectionChecker connectionChecker;
+  final SharedPreferencesHelper sharedPreferencesHelper;
+  const AuthRepositoryImpl(
+      this.remoteDataSource,
+      this.connectionChecker,
+      this.sharedPreferencesHelper,
+      );
+
+  @override
+  Future<Either<Failure, User>> currentUser() async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        final session = remoteDataSource.currentUserSession;
+
+        if (session == null) {
+          return left(Failure(message:'User not logged in!'));
+        }
+
+        return right(
+          UserModel(
+            id: session.user.id,
+            name: session.user.userMetadata?['name'] ?? '', // Obtener el nombre de los metadatos, si está presente
+            email: session.user.email ?? '',
+          ),
+        );
+      }
+      final user = await remoteDataSource.getCurrentUserData();
+      if (user == null) {
+        return left(Failure(message:'User not logged in!'));
+      }
+
+      return right(user);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserProfile>> getUserProfile() async {
+    try {
+      final session = remoteDataSource.currentUserSession;
+      if (session == null) {
+        return left(Failure(message: 'User not logged in!'));
+      }
+
+      final profileModel = await remoteDataSource.getUserProfileData(session.user.id);
+
+      if (profileModel == null) {
+        // Si no hay perfil, crear uno vacío con los datos de la sesión
+        final emptyProfile = UserProfile(
+          id: session.user.id,
+          name: session.user.userMetadata?['name'] ?? '',
+          email: session.user.email ?? '',
+          phone: '',
+          employment: '',
+          nationality: '',
+          city: '',
+          province: '',
+          district: '',
+        );
+        return right(emptyProfile);
+      }
+
+      // Convertir el modelo a entidad de dominio
+      final profile = profileModel.toDomain();
+      return right(profile);
+
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    } catch (e) {
+      return left(Failure(message: 'Error inesperado: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> updateUserProfile(
+      UserProfile userProfile) async {
+    try {
+      await remoteDataSource.updateUserProfileData(userProfile);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> loginWithEmailPassword({
+    required String email,
+    required String password,
+    bool rememberMe = false,
+  }) async {
+    return _getUser(
+          () async => await remoteDataSource.loginWithEmailPassword(
+            email: email,
+            password: password,
+          ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, User>> signUpWithEmailPassword({
+    required String name,
+    required String email,
+    required String password,
+  }) async {
+    return _getUser(
+          () async => await remoteDataSource.signUpWithEmailPassword(
+            name: name,
+            email: email,
+            password: password,
+          ),
+    );
+  }
+
+  @override
+  Future<Either<Failure, User>> signInWithGoogle() async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failure(message: "No internet connection"));
+      }
+
+      final userModel = await remoteDataSource.signInWithGoogle();
+
+      if (userModel == null) {
+        return left(Failure(message: "Google sign-in failed"));
+      }
+
+      return right(userModel);
+    } catch (e) {
+      return left(Failure(message: e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, User>> signInWithApple() async {
+    try {
+      if (!await connectionChecker.isConnected) {
+        return left(Failure(message: "No internet connection"));
+      }
+
+      final userModel = await remoteDataSource.signInWithApple();
+
+      if (userModel == null) {
+        return left(Failure(message: "Apple sign-in failed"));
+      }
+
+      return right(userModel);
+    } catch (e) {
+      return left(Failure(message: e.toString()));
+    }
+  }
+
+  Future<Either<Failure, User>> _getUser(
+      Future<User> Function() fn,
+      ) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      final user = await fn();
+
+      return right(user);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> changePassword(String currentPassword, String newPassword) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.changePassword(currentPassword, newPassword);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> logout() async {
+    try {
+      return right(await remoteDataSource.logout());
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteAccount({required String password}) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.deleteAccount(password: password);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPasswordForEmail(String email) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.resetPasswordForEmail(email);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyOTP({required String email, required String token}) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.verifyOTP(email: email, token: token);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resendOTP(String email) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.resendOTP(email);
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyOTPAndUpdatePassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      if (!await (connectionChecker.isConnected)) {
+        return left(Failure(message: Constants.noConnectionErrorMessage));
+      }
+      await remoteDataSource.verifyOTPAndUpdatePassword(
+        email: email,
+        token: token,
+        newPassword: newPassword,
+      );
+      return right(null);
+    } on ServerException catch (e) {
+      return left(Failure(message: e.message));
+    }
+  }
+}

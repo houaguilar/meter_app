@@ -12,7 +12,7 @@ import '../../../core/utils/show_snackbar.dart';
 import '../../widgets/feedback/feedback_bottom_sheet.dart';
 import '../../../domain/entities/map/location.dart';
 import '../../../domain/entities/map/verification_status.dart';
-import '../../blocs/auth/auth_bloc.dart';
+import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
 import '../../blocs/map/locations_bloc.dart';
 import '../../blocs/premium/premium_bloc.dart';
 import '../../widgets/premium/premium_feature_widget.dart';

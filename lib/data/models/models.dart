@@ -1,6 +1,7 @@
 
-// Auth
-export 'auth/user_model.dart';
+// Auth (moved to features/auth)
+export 'package:meter_app/features/auth/data/models/user_model.dart';
+export 'package:meter_app/features/auth/data/models/user_profile_model.dart';
 
 // Home
 export '../../domain/entities/home/ladrillo/ladrillo.dart';

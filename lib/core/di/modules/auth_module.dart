@@ -1,13 +1,13 @@
 import 'package:get_it/get_it.dart';
-import 'package:meter_app/data/datasources/auth/auth_remote_data_source_impl.dart';
-import 'package:meter_app/data/repositories/auth/auth_repository_impl.dart';
-import 'package:meter_app/domain/datasources/auth/auth_remote_data_source.dart';
-import 'package:meter_app/domain/repositories/auth/auth_repository.dart';
-import 'package:meter_app/domain/usecases/auth/change_password.dart';
-import 'package:meter_app/domain/usecases/auth/get_user_profile.dart';
-import 'package:meter_app/domain/usecases/auth/update_user_profile.dart';
+import 'package:meter_app/features/auth/data/datasources/auth_remote_data_source_impl.dart';
+import 'package:meter_app/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:meter_app/features/auth/domain/datasources/auth_remote_data_source.dart';
+import 'package:meter_app/features/auth/domain/repositories/auth_repository.dart';
+import 'package:meter_app/features/auth/domain/usecases/change_password.dart';
+import 'package:meter_app/features/auth/domain/usecases/get_user_profile.dart';
+import 'package:meter_app/features/auth/domain/usecases/update_user_profile.dart';
 import 'package:meter_app/domain/usecases/use_cases.dart';
-import 'package:meter_app/presentation/blocs/auth/auth_bloc.dart';
+import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
 import 'package:meter_app/presentation/blocs/profile/profile_bloc.dart';
 
 /// Módulo de inyección de dependencias para autenticación y perfil

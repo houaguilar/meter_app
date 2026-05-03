@@ -1,16 +1,16 @@
-export 'auth/current_user.dart';
-export 'auth/user_login.dart';
-export 'auth/user_sign_up.dart';
-export 'auth/user_logout.dart';
-export 'auth/user_sign_in_with_google.dart';
-export 'auth/user_sign_in_with_apple.dart';
-export 'auth/delete_account.dart';
-export 'auth/reset_password_for_email.dart';
-export 'auth/verify_otp.dart';
-export 'auth/resend_otp.dart';
-export 'auth/verify_otp_and_update_password.dart';
-
-export 'auth/get_user_profile.dart';
-export 'auth/update_user_profile.dart';
-export 'auth/change_password.dart';
+// Auth (moved to features/auth)
+export 'package:meter_app/features/auth/domain/usecases/current_user.dart';
+export 'package:meter_app/features/auth/domain/usecases/user_login.dart';
+export 'package:meter_app/features/auth/domain/usecases/user_sign_up.dart';
+export 'package:meter_app/features/auth/domain/usecases/user_logout.dart';
+export 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_google.dart';
+export 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_apple.dart';
+export 'package:meter_app/features/auth/domain/usecases/delete_account.dart';
+export 'package:meter_app/features/auth/domain/usecases/reset_password_for_email.dart';
+export 'package:meter_app/features/auth/domain/usecases/verify_otp.dart';
+export 'package:meter_app/features/auth/domain/usecases/resend_otp.dart';
+export 'package:meter_app/features/auth/domain/usecases/verify_otp_and_update_password.dart';
+export 'package:meter_app/features/auth/domain/usecases/get_user_profile.dart';
+export 'package:meter_app/features/auth/domain/usecases/update_user_profile.dart';
+export 'package:meter_app/features/auth/domain/usecases/change_password.dart';
 // Map
