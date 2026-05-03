@@ -75,7 +75,7 @@ class PremiumFeatureWidget extends StatelessWidget {
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Material(
@@ -87,7 +87,7 @@ class PremiumFeatureWidget extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.8),
+                      color: Colors.black.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
@@ -132,7 +132,6 @@ class PremiumFeatureWidget extends StatelessWidget {
   void _handlePremiumRequired(BuildContext context) {
     // Log del feature para analytics
     if (featureName != null) {
-      print('🔒 Feature premium requerido: $featureName');
     }
 
     // Callback personalizado

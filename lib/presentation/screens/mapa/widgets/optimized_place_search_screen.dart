@@ -267,7 +267,7 @@ class _OptimizedPlaceSearchScreenState extends State<OptimizedPlaceSearchScreen>
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-            color: AppColors.success.withOpacity(0.1),
+            color: AppColors.success.withValues(alpha: 0.1),
             child: Row(
               children: [
                 Icon(
@@ -304,7 +304,7 @@ class _OptimizedPlaceSearchScreenState extends State<OptimizedPlaceSearchScreen>
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
+                    color: AppColors.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -456,7 +456,7 @@ class _OptimizedPlaceSearchScreenState extends State<OptimizedPlaceSearchScreen>
         color: AppColors.infoBackground,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.secondary.withOpacity(0.2),
+          color: AppColors.secondary.withValues(alpha: 0.2),
         ),
       ),
       child: Column(

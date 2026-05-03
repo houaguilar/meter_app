@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../data/models/perfil/location/department.dart';
-import '../../../../../data/models/perfil/location/district.dart';
-import '../../../../../data/models/perfil/location/province.dart';
+import '../../../../../domain/entities/perfil/location/department.dart';
+import '../../../../../domain/entities/perfil/location/district.dart';
+import '../../../../../domain/entities/perfil/location/province.dart';
 import '../../../../../data/repositories/perfil/location/peru_location_repository.dart';
 
 /// Widget personalizado para seleccionar ubicaciones de Perú
@@ -265,7 +265,7 @@ class _PeruLocationPickerState extends State<PeruLocationPicker> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: AppColors.border.withOpacity(0.5),
+          color: AppColors.border.withValues(alpha: 0.5),
         ),
       ),
       focusedBorder: OutlineInputBorder(
@@ -278,13 +278,13 @@ class _PeruLocationPickerState extends State<PeruLocationPicker> {
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: AppColors.border.withOpacity(0.5),
+          color: AppColors.border.withValues(alpha: 0.5),
         ),
       ),
       disabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(
-          color: AppColors.border.withOpacity(0.3),
+          color: AppColors.border.withValues(alpha: 0.3),
         ),
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -292,11 +292,11 @@ class _PeruLocationPickerState extends State<PeruLocationPicker> {
         vertical: 14,
       ),
       labelStyle: TextStyle(
-        color: enabled ? AppColors.textSecondary : AppColors.textSecondary.withOpacity(0.5),
+        color: enabled ? AppColors.textSecondary : AppColors.textSecondary.withValues(alpha: 0.5),
         fontSize: 14,
       ),
       hintStyle: TextStyle(
-        color: AppColors.textSecondary.withOpacity(0.7),
+        color: AppColors.textSecondary.withValues(alpha: 0.7),
         fontSize: 14,
       ),
     );
@@ -306,11 +306,11 @@ class _PeruLocationPickerState extends State<PeruLocationPicker> {
       hintText: hintText,
       prefixIcon: Icon(
         icon,
-        color: enabled ? AppColors.primary : AppColors.textSecondary.withOpacity(0.5),
+        color: enabled ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.5),
       ),
       suffixIcon: Icon(
         Icons.arrow_drop_down_rounded,
-        color: enabled ? AppColors.primary : AppColors.textSecondary.withOpacity(0.5),
+        color: enabled ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.5),
         size: 28,
       ),
     );
@@ -468,7 +468,7 @@ class _SelectionDialogState<T> extends State<_SelectionDialog<T>> {
                 prefixIcon: const Icon(Icons.search, color: AppColors.primary),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: AppColors.border.withOpacity(0.5)),
+                  borderSide: BorderSide(color: AppColors.border.withValues(alpha: 0.5)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),

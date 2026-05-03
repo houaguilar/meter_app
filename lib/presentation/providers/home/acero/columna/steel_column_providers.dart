@@ -206,7 +206,6 @@ class SteelColumnResultNotifier extends Notifier<List<SteelColumn>> {
   }
 
   void clearList() {
-    print('🧹 Limpiando lista de columnas de acero');
     state = [];
   }
 }

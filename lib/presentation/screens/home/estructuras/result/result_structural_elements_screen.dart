@@ -96,14 +96,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       final cimientosCorridos = ref.read(cimientoCorridoResultProvider);
       final solados = ref.read(soladoResultProvider);
 
-      print('🔍 Estado en ResultScreen:');
-      print('- Tipo: $tipoElemento');
-      print('- Columnas: ${columnas.length}');
-      print('- Vigas: ${vigas.length}');
-      print('- Zapatas: ${zapatas.length}');
-      print('- Sobrecimientos: ${sobrecimientos.length}');
-      print('- Cimientos corridos: ${cimientosCorridos.length}');
-      print('- Solados: ${solados.length}');
 
       if (tipoElemento.isEmpty ||
           (tipoElemento == 'columna' && columnas.isEmpty) ||
@@ -112,7 +104,6 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           (tipoElemento == 'sobrecimiento' && sobrecimientos.isEmpty) ||
           (tipoElemento == 'cimiento_corrido' && cimientosCorridos.isEmpty) ||
           (tipoElemento == 'solado' && solados.isEmpty)) {
-        print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
         context.pop();
       }
@@ -185,10 +176,10 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.success.withOpacity(0.3),
+                color: AppColors.success.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -282,7 +273,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neutral200.withOpacity(0.3),
+            color: AppColors.neutral200.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -294,7 +285,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -338,7 +329,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.warning.withOpacity(0.1),
+            color: AppColors.warning.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -484,9 +475,9 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Text(
           unit,
@@ -505,7 +496,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
     return TableRow(
       decoration: isTotal ? BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.1),
+        color: AppColors.blueMetraShop.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
       children: cells.asMap().entries.map((entry) {
@@ -546,7 +537,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -5),
           ),
@@ -717,9 +708,9 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(12),
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
         ),
         child: Column(
           children: [
@@ -1016,7 +1007,6 @@ $materialesText
     } else if (tipoElemento == 'solado') {
       ref.read(soladoResultProvider.notifier).clearList();
     }
-    print('🧹 Datos limpiados al salir');
   }
 
   void _showErrorMessage(String message) {

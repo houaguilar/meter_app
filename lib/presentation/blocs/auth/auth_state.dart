@@ -31,3 +31,16 @@ final class AuthFailure extends AuthState {
   final String message;
   const AuthFailure(this.message);
 }
+
+final class AuthPasswordChanged extends AuthState {
+  const AuthPasswordChanged();
+}
+
+final class AuthOTPResent extends AuthState {
+  const AuthOTPResent();
+}
+
+final class AuthPasswordResetEmailSent extends AuthState {
+  final String email;
+  const AuthPasswordResetEmailSent(this.email);
+}

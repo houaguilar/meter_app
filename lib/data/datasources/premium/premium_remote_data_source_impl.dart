@@ -12,7 +12,6 @@ class PremiumRemoteDataSourceImpl implements PremiumRemoteDataSource {
   @override
   Future<PremiumStatusModel> getPremiumStatus(String userId) async {
     try {
-      print('🔍 Remote DataSource: Obteniendo premium status para user: $userId');
 
       final response = await supabaseClient
           .from('profiles')
@@ -30,10 +29,8 @@ class PremiumRemoteDataSourceImpl implements PremiumRemoteDataSource {
           .eq('id', userId)
           .maybeSingle(); // Usar maybeSingle en lugar de single
 
-      print('🔍 Remote DataSource: Response de Supabase: $response');
 
       if (response == null) {
-        print('🔍 Remote DataSource: No se encontró el usuario, creando status default');
 
         // Si no existe el usuario, crear un registro básico
         await supabaseClient
@@ -73,15 +70,12 @@ class PremiumRemoteDataSourceImpl implements PremiumRemoteDataSource {
         'updated_at': response['updated_at'] ?? DateTime.now().toIso8601String(),
       };
 
-      print('🔍 Remote DataSource: Datos seguros preparados: $safeData');
 
       return PremiumStatusModel.fromJson(safeData);
 
     } on PostgrestException catch (e) {
-      print('🔍 Remote DataSource PostgrestException: ${e.message}');
       throw ServerException('Error al obtener premium status: ${e.message}');
     } catch (e) {
-      print('🔍 Remote DataSource Error general: $e');
       throw ServerException('Error inesperado: $e');
     }
   }

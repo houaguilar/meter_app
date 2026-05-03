@@ -322,7 +322,6 @@ class ErrorHandlerIsar {
     };
 
     // En desarrollo: imprimir en consola
-    debugPrint('🔥 ERROR LOG: $errorLog');
 
     // En producción: enviar a servicio de logging (Firebase Crashlytics, Sentry, etc.)
     // CrashlyticsService.recordError(error, stackTrace, context);

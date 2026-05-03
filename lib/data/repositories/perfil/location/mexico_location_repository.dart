@@ -1,11 +1,11 @@
 // lib/data/repositories/location/mexico_location_repository.dart
 
-import '../../../models/perfil/location/administrative_level_2.dart';
-import '../../../models/perfil/location/administrative_level_3.dart';
-import '../../../models/perfil/location/administrative_level_4.dart';
-import '../../../models/perfil/location/country.dart';
-import '../../../models/perfil/location/location_config.dart';
-import 'location_repository.dart';
+import '../../../../domain/entities/perfil/location/administrative_level_2.dart';
+import '../../../../domain/entities/perfil/location/administrative_level_3.dart';
+import '../../../../domain/entities/perfil/location/administrative_level_4.dart';
+import '../../../../domain/entities/perfil/location/country.dart';
+import '../../../../domain/entities/perfil/location/location_config.dart';
+import '../../../../domain/repositories/perfil/location/location_repository.dart';
 
 /// Repositorio de ubicaciones de México 🇲🇽
 /// México tiene 32 estados (31 estados + Ciudad de México), 2,469 municipios

@@ -38,7 +38,7 @@ class MaterialCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neutral200.withOpacity(0.3),
+            color: AppColors.neutral200.withValues(alpha: 0.3),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -72,7 +72,7 @@ class MaterialCard extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: MaterialHelpers.getMaterialColor(material.name).withOpacity(0.2),
+            color: MaterialHelpers.getMaterialColor(material.name).withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -158,10 +158,10 @@ class MaterialCard extends StatelessWidget {
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
+                color: AppColors.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.secondary.withOpacity(0.3),
+                  color: AppColors.secondary.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -181,7 +181,7 @@ class MaterialCard extends StatelessWidget {
                     '${percentage.toStringAsFixed(1)}%',
                     style: TextStyle(
                       fontSize: 10,
-                      color: AppColors.secondary.withOpacity(0.8),
+                      color: AppColors.secondary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],

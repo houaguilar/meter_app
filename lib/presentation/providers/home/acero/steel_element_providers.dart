@@ -1,9 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../domain/entities/home/acero/steel_element.dart';
 import 'package:meter_app/config/assets/app_images.dart';
-
-part 'steel_element_providers.g.dart';
 
 final List<SteelElement> _steelElements = [
   SteelElement(
@@ -32,14 +29,12 @@ final List<SteelElement> _steelElements = [
   ),*/
 ];
 
-@riverpod
-Future<List<SteelElement>> steelElements(Ref ref) async {
+final steelElementsProvider = FutureProvider<List<SteelElement>>((ref) async {
   await Future.delayed(const Duration(milliseconds: 100));
   return _steelElements;
-}
+});
 
-@riverpod
-class SelectedSteelElement extends _$SelectedSteelElement {
+class SelectedSteelElement extends Notifier<SteelElement?> {
   @override
   SteelElement? build() {
     return null;
@@ -53,3 +48,7 @@ class SelectedSteelElement extends _$SelectedSteelElement {
     state = null;
   }
 }
+
+final selectedSteelElementProvider =
+    NotifierProvider<SelectedSteelElement, SteelElement?>(
+        SelectedSteelElement.new);

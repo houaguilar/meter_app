@@ -1,14 +1,11 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/constants/constants.dart';
 import '../../../config/utils/number_formatter.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/services/tarrajeo_service.dart';
 
-part 'tarrajeo_derrame_providers.g.dart';
-
-@riverpod
-class TipoTarrajeoDerrrame extends _$TipoTarrajeoDerrrame {
+class TipoTarrajeoDerrrame extends Notifier<String> {
   @override
   String build() => 'Tarrajeo Derrame';
 
@@ -17,8 +14,10 @@ class TipoTarrajeoDerrrame extends _$TipoTarrajeoDerrrame {
   }
 }
 
-@riverpod
-class TarrajeoDerrameResult extends _$TarrajeoDerrameResult {
+final tipoTarrajeoDerrrameProvider =
+    NotifierProvider<TipoTarrajeoDerrrame, String>(TipoTarrajeoDerrrame.new);
+
+class TarrajeoDerrameResult extends Notifier<List<Tarrajeo>> {
   final TarrajeoService _tarrajeoService = TarrajeoService();
 
   @override
@@ -57,6 +56,10 @@ class TarrajeoDerrameResult extends _$TarrajeoDerrameResult {
     state = [];
   }
 }
+
+final tarrajeoDerrameResultProvider =
+    NotifierProvider<TarrajeoDerrameResult, List<Tarrajeo>>(
+        TarrajeoDerrameResult.new);
 
 // ===== NUEVOS PROVIDERS PARA CÁLCULOS ESPECÍFICOS DE DERRAME =====
 
@@ -156,46 +159,41 @@ class TarrajeoDerrameCalculator {
 }
 
 /// Provider para materiales calculados de tarrajeo derrame
-@riverpod
-class TarrajeoDerrrameMateriales extends _$TarrajeoDerrrameMateriales {
-  @override
-  TarrajeoDerrrameMaterialesData build() {
-    final tarrajeos = ref.watch(tarrajeoDerrameResultProvider);
-    if (tarrajeos.isEmpty) {
-      return TarrajeoDerrrameMaterialesData.empty();
-    }
-
-    final materialesCalculados = TarrajeoDerrameCalculator.calcularMaterialesTotalesDerrrame(tarrajeos);
-
-    return TarrajeoDerrrameMaterialesData(
-      cemento: materialesCalculados['cemento']!,
-      arena: materialesCalculados['arena']!,
-      agua: materialesCalculados['agua']!,
-      volumen: materialesCalculados['volumen']!,
-    );
+final tarrajeoDerrrameMaterialesProvider =
+    Provider<TarrajeoDerrrameMaterialesData>((ref) {
+  final tarrajeos = ref.watch(tarrajeoDerrameResultProvider);
+  if (tarrajeos.isEmpty) {
+    return TarrajeoDerrrameMaterialesData.empty();
   }
-}
+
+  final materialesCalculados =
+      TarrajeoDerrameCalculator.calcularMaterialesTotalesDerrrame(tarrajeos);
+
+  return TarrajeoDerrrameMaterialesData(
+    cemento: materialesCalculados['cemento']!,
+    arena: materialesCalculados['arena']!,
+    agua: materialesCalculados['agua']!,
+    volumen: materialesCalculados['volumen']!,
+  );
+});
 
 /// Provider para metrados de tarrajeo derrame
-@riverpod
-class TarrajeoDerrameMetrados extends _$TarrajeoDerrameMetrados {
-  @override
-  List<TarrajeoDerrameMetradoData> build() {
-    final tarrajeos = ref.watch(tarrajeoDerrameResultProvider);
+final tarrajeoDerrameMetradosProvider =
+    Provider<List<TarrajeoDerrameMetradoData>>((ref) {
+  final tarrajeos = ref.watch(tarrajeoDerrameResultProvider);
 
-    return tarrajeos.map((tarrajeo) {
-      final area = TarrajeoDerrameCalculator.calcularAreaTarrajeoDerrrame(tarrajeo);
-      final volumen = TarrajeoDerrameCalculator.calcularVolumenMorteroDerrrame(tarrajeo);
+  return tarrajeos.map((tarrajeo) {
+    final area = TarrajeoDerrameCalculator.calcularAreaTarrajeoDerrrame(tarrajeo);
+    final volumen = TarrajeoDerrameCalculator.calcularVolumenMorteroDerrrame(tarrajeo);
 
-      return TarrajeoDerrameMetradoData(
-        descripcion: tarrajeo.description,
-        area: area,
-        volumen: volumen,
-        espesor: double.tryParse(tarrajeo.espesor) ?? 0.0,
-      );
-    }).toList();
-  }
-}
+    return TarrajeoDerrameMetradoData(
+      descripcion: tarrajeo.description,
+      area: area,
+      volumen: volumen,
+      espesor: double.tryParse(tarrajeo.espesor) ?? 0.0,
+    );
+  }).toList();
+});
 
 // ===== CLASES DE DATOS =====
 

@@ -96,12 +96,12 @@ class _QuickActionButtonState extends State<QuickActionButton>
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isEnabled
-                    ? widget.color.withOpacity(0.1)
+                    ? widget.color.withValues(alpha: 0.1)
                     : AppColors.neutral100,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: isEnabled
-                      ? widget.color.withOpacity(0.3)
+                      ? widget.color.withValues(alpha: 0.3)
                       : AppColors.neutral300,
                   width: 1,
                 ),

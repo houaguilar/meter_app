@@ -5,14 +5,15 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
-import '../../../../data/local/shared_preferences_helper.dart';
-import '../../../../init_dependencies.dart';
+import '../../../../config/local/shared_preferences_helper.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 
 /// Pantalla de bienvenida mejorada con onboarding interactivo,
 /// animaciones fluidas y una mejor experiencia de usuario.
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  final SharedPreferencesHelper sharedPrefs;
+
+  const WelcomeScreen({super.key, required this.sharedPrefs});
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -82,7 +83,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
   void _initializeScreen() {
     WidgetsBinding.instance.addObserver(this);
-    _sharedPreferencesHelper = serviceLocator<SharedPreferencesHelper>();
+    _sharedPreferencesHelper = widget.sharedPrefs;
     _setupOnboardingData();
     _setupControllers();
     _setupAnimations();
@@ -234,7 +235,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
         }
       }
     } catch (e) {
-      debugPrint('Error verificando primera vez: $e');
       // En caso de error, mostrar la pantalla de bienvenida
     }
   }
@@ -256,7 +256,6 @@ class _WelcomeScreenState extends State<WelcomeScreen>
       _navigateToHome();
 
     } catch (e) {
-      debugPrint('Error completando bienvenida: $e');
       // Navegar de todos modos
       _navigateToHome();
     }
@@ -390,7 +389,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 end: Alignment.bottomRight,
                 colors: [
                   _backgroundColorAnimation.value ?? _pages[0].color,
-                  (_backgroundColorAnimation.value ?? _pages[0].color).withOpacity(0.8),
+                  (_backgroundColorAnimation.value ?? _pages[0].color).withValues(alpha: 0.8),
                 ],
               ),
             ),
@@ -446,7 +445,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(
@@ -475,7 +474,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -525,11 +524,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 height: 400,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.1),
+                  color: AppColors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.white.withValues(alpha: 0.2),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -567,7 +566,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               style: GoogleFonts.poppins(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
-                color: AppColors.white.withOpacity(0.9),
+                color: AppColors.white.withValues(alpha: 0.9),
                 height: 1.4,
               ),
               textAlign: TextAlign.center,
@@ -620,7 +619,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 decoration: BoxDecoration(
                   color: isActive
                       ? AppColors.white
-                      : AppColors.white.withOpacity(0.4),
+                      : AppColors.white.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -712,7 +711,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                           children: [
                             Icon(
                               Icons.arrow_back_rounded,
-                              color: AppColors.white.withOpacity(0.7),
+                              color: AppColors.white.withValues(alpha: 0.7),
                               size: 16, // Reducido de 18 a 16
                             ),
                             const SizedBox(width: 6), // Reducido de 8 a 6
@@ -721,7 +720,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               style: GoogleFonts.poppins(
                                 fontSize: 13, // Reducido de 14 a 13
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.white.withOpacity(0.7),
+                                color: AppColors.white.withValues(alpha: 0.7),
                               ),
                             ),
                           ],

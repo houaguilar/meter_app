@@ -105,7 +105,7 @@ class _ModernOutlinedButtonState extends State<ModernOutlinedButton>
               padding: const EdgeInsets.symmetric(horizontal: 24),
               decoration: BoxDecoration(
                 color: _isPressed
-                    ? widget.borderColor.withOpacity(0.1)
+                    ? widget.borderColor.withValues(alpha: 0.1)
                     : AppColors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
@@ -114,7 +114,7 @@ class _ModernOutlinedButtonState extends State<ModernOutlinedButton>
                 ),
                 boxShadow: isEnabled ? [
                   BoxShadow(
-                    color: widget.borderColor.withOpacity(0.1),
+                    color: widget.borderColor.withValues(alpha: 0.1),
                     blurRadius: 8,
                     spreadRadius: 0,
                     offset: const Offset(0, 2),

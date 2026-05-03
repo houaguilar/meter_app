@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
-import '../../../../config/usecase/usecase.dart';
-import '../../../../domain/usecases/use_cases.dart';
-import '../../../../init_dependencies.dart';
+import '../../../blocs/auth/auth_bloc.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
@@ -30,49 +29,13 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
     super.dispose();
   }
 
-  Future<void> _handleUpdatePassword() async {
+  void _handleUpdatePassword() {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isUpdating = true);
-
-    try {
-      // Actualizar contraseña (la sesión de recovery ya está activa vía magic link)
-      final changePassword = serviceLocator<ChangePassword>();
-      final result = await changePassword(
-        ChangePasswordParams(
-          currentPassword: '',
-          newPassword: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
-        ),
-      );
-
-      if (!mounted) return;
-
-      result.fold(
-        (failure) {
-          setState(() => _isUpdating = false);
-          _showError(failure.message);
-        },
-        (_) async {
-          // Cerrar sesión para que el usuario inicie con la nueva contraseña
-          final logout = serviceLocator<UserLogout>();
-          await logout(NoParams());
-
-          if (mounted) {
-            setState(() => _isUpdating = false);
-            _showSuccess('Contraseña actualizada exitosamente');
-            Future.delayed(const Duration(milliseconds: 1500), () {
-              if (mounted) context.go('/login');
-            });
-          }
-        },
-      );
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isUpdating = false);
-        _showError('Error al actualizar contraseña: $e');
-      }
-    }
+    context.read<AuthBloc>().add(AuthChangePassword(
+      newPassword: _passwordController.text,
+      confirmPassword: _confirmPasswordController.text,
+    ));
   }
 
   void _showError(String message) {
@@ -113,7 +76,22 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthPasswordChanged) {
+          setState(() => _isUpdating = false);
+          _showSuccess('Contraseña actualizada exitosamente');
+          Future.delayed(const Duration(milliseconds: 1500), () {
+            if (mounted) context.go('/login');
+          });
+        } else if (state is AuthFailure) {
+          setState(() => _isUpdating = false);
+          _showError(state.message);
+        } else if (state is AuthLoading) {
+          setState(() => _isUpdating = true);
+        }
+      },
+      builder: (context, state) => Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -144,7 +122,8 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildHeader() {

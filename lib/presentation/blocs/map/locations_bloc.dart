@@ -218,13 +218,8 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
   /// Handler para activar/desactivar ubicación
   void _onToggleLocationActive(
       ToggleLocationActiveEvent event, Emitter<LocationsState> emit) async {
-    debugPrint('🔔 LocationsBloc: Recibido ToggleLocationActiveEvent');
-    debugPrint('   locationId: ${event.locationId}');
-    debugPrint('   isActive: ${event.isActive}');
-
     emit(LocationTogglingActive());
 
-    debugPrint('📞 LocationsBloc: Llamando a toggleLocationActiveUseCase...');
     final result = await toggleLocationActiveUseCase(
       locationId: event.locationId,
       isActive: event.isActive,
@@ -232,11 +227,9 @@ class LocationsBloc extends Bloc<LocationsEvent, LocationsState> {
 
     result.fold(
           (failure) {
-        debugPrint('❌ LocationsBloc: Error - ${failure.message}');
         emit(LocationsError(failure.message));
       },
           (_) {
-        debugPrint('✅ LocationsBloc: Toggle exitoso!');
         emit(LocationActiveToggled(
           locationId: event.locationId,
           isActive: event.isActive,

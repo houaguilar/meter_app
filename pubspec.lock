@@ -202,7 +202,7 @@ packages:
     source: hosted
     version: "1.3.1"
   change_app_package_name:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: change_app_package_name
       sha256: "8e43b754fe960426904d77ed4c62fa8c9834deaf6e293ae40963fa447482c4c5"
@@ -274,7 +274,7 @@ packages:
     source: hosted
     version: "0.8.0"
   connectivity_plus:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: connectivity_plus
       sha256: b5e72753cf63becce2c61fd04dfe0f1c430cc5278b53a1342dc5ad839eab29ec
@@ -993,7 +993,7 @@ packages:
     source: hosted
     version: "2.14.0"
   google_maps_flutter_web:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: google_maps_flutter_web
       sha256: "53e5dbf73ff04153acc55a038248706967c21d5b6ef6657a57fce2be73c2895a"
@@ -1648,14 +1648,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  random_name_generator:
-    dependency: "direct main"
-    description:
-      name: random_name_generator
-      sha256: "7c5b91d60f68b30e7b4c53006047cab8474f06563f7d0cab70fb409a0cb5ff61"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.5.0"
   realtime_client:
     dependency: transitive
     description:

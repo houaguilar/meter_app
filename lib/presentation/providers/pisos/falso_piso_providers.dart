@@ -1,14 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
 import '../../../config/utils/number_formatter.dart';
-import '../../../data/models/models.dart';
+import '../../../domain/entities/home/piso/piso.dart';
 
-part 'falso_piso_providers.g.dart';
-
-@riverpod
-class FalsoPisoResult extends _$FalsoPisoResult {
+class FalsoPisoResult extends Notifier<List<Piso>> {
   final PisoService _pisoService = PisoService();
 
   @override
@@ -47,22 +44,22 @@ class FalsoPisoResult extends _$FalsoPisoResult {
   }
 }
 
-@riverpod
-List<double> areaFalsoPiso(Ref ref) {  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
+final falsoPisoResultProvider =
+    NotifierProvider<FalsoPisoResult, List<Piso>>(FalsoPisoResult.new);
+
+final areaFalsoPisoProvider = Provider<List<double>>((ref) {  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
   final pisoService = PisoService();
   final falsosPisos = ref.watch(falsoPisoResultProvider);
 
   return falsosPisos.map((piso) => pisoService.calcularArea(piso) ?? 0.0).toList();  // ✅ Cambio: calcularVolumen → calcularArea
-}
+});
 
-@riverpod
-List<String> descriptionFalsoPiso(Ref ref) {
+final descriptionFalsoPisoProvider = Provider<List<String>>((ref) {
   final falsosPisos = ref.watch(falsoPisoResultProvider);
   return falsosPisos.map((e) => e.description).toList();
-}
+});
 
-@riverpod
-String datosShareFalsoPiso(Ref ref) {
+final datosShareFalsoPisoProvider = Provider<String>((ref) {
   final description = ref.watch(descriptionFalsoPisoProvider);
   final areas = ref.watch(areaFalsoPisoProvider);  // ✅ Cambio: volumenFalsoPiso → areaFalsoPiso
 
@@ -74,18 +71,16 @@ String datosShareFalsoPiso(Ref ref) {
     datos = datos.substring(0, datos.length - 2);
   }
   return datos;
-}
+});
 
 // 🆕 AGREGAR nuevo provider para área total
-@riverpod
-double areaTotalFalsoPiso(Ref ref) {
+final areaTotalFalsoPisoProvider = Provider<double>((ref) {
   final areas = ref.watch(areaFalsoPisoProvider);
   return areas.fold(0.0, (sum, area) => sum + area);
-}
+});
 
 /// Provider para configuración de falso piso
-@riverpod
-class FalsoPisoConfig extends _$FalsoPisoConfig {
+class FalsoPisoConfig extends Notifier<FalsoPisoConfiguration> {
   @override
   FalsoPisoConfiguration build() => const FalsoPisoConfiguration();
 
@@ -101,6 +96,9 @@ class FalsoPisoConfig extends _$FalsoPisoConfig {
     state = state.copyWith(factorDesperdicio: desperdicio);
   }
 }
+
+final falsoPisoConfigProvider =
+    NotifierProvider<FalsoPisoConfig, FalsoPisoConfiguration>(FalsoPisoConfig.new);
 
 /// Clase de configuración para falso piso
 class FalsoPisoConfiguration {
@@ -128,8 +126,7 @@ class FalsoPisoConfiguration {
 }
 
 /// Provider para cálculos de materiales usando la lógica del Excel (líneas 15-226)
-@riverpod
-FalsoPisoMaterials falsoPisoMaterials(Ref ref) {
+final falsoPisoMaterialsProvider = Provider<FalsoPisoMaterials>((ref) {
   final falsosPisos = ref.watch(falsoPisoResultProvider);
 
   if (falsosPisos.isEmpty) {
@@ -137,7 +134,7 @@ FalsoPisoMaterials falsoPisoMaterials(Ref ref) {
   }
 
   return _calcularMaterialesFalsoPiso(falsosPisos);
-}
+});
 
 /// Función auxiliar para calcular materiales basada en el Excel
 FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {

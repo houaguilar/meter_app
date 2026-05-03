@@ -248,7 +248,6 @@ class SteelBeamResultNotifier extends Notifier<List<SteelBeam>> {
   }
 
   void clearList() {
-    print('🧹 Limpiando lista de vigas de acero');
     state = [];
   }
 }

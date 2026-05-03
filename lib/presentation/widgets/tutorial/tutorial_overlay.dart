@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../config/theme/theme.dart';
-import '../../../data/local/shared_preferences_helper.dart';
+import '../../../config/local/shared_preferences_helper.dart';
 import '../../../domain/entities/tutorial/tutorial_step.dart';
 import '../../../init_dependencies.dart';
 import '../../blocs/tutorial/tutorial_bloc.dart';
@@ -32,8 +32,8 @@ class TutorialOverlay extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              AppColors.primary.withOpacity(0.9),
-              AppColors.secondary.withOpacity(0.9),
+              AppColors.primary.withValues(alpha: 0.9),
+              AppColors.secondary.withValues(alpha: 0.9),
             ],
           ),
         ),
@@ -295,7 +295,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
     return Container(
       height: 6,
       decoration: BoxDecoration(
-        color: AppColors.white.withOpacity(0.3),
+        color: AppColors.white.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(3),
       ),
       child: LayoutBuilder(
@@ -312,7 +312,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
                   borderRadius: BorderRadius.circular(3),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accent.withOpacity(0.4),
+                      color: AppColors.accent.withValues(alpha: 0.4),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -339,15 +339,15 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
               height: 200,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.1),
+                color: AppColors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   width: 2,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.neutral900.withOpacity(0.1),
+                    color: AppColors.neutral900.withValues(alpha: 0.1),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),
@@ -410,7 +410,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
                   widget.step.description,
                   style: TextStyle(
                     fontSize: 16,
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -435,10 +435,10 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppColors.warning.withOpacity(0.15),
+                color: AppColors.warning.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.warning.withOpacity(0.3),
+                  color: AppColors.warning.withValues(alpha: 0.3),
                   width: 1,
                 ),
               ),
@@ -455,7 +455,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
                       widget.config.infoMessage,
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.white.withOpacity(0.9),
+                        color: AppColors.white.withValues(alpha: 0.9),
                         height: 1.4,
                       ),
                     ),
@@ -500,7 +500,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 4,
-                      shadowColor: AppColors.accent.withOpacity(0.4),
+                      shadowColor: AppColors.accent.withValues(alpha: 0.4),
                     ),
                     child: Text(
                       isLastStep ? widget.config.completeButtonText : widget.config.nextButtonText,
@@ -523,7 +523,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
                   child: Text(
                     widget.config.skipButtonText,
                     style: TextStyle(
-                      color: AppColors.white.withOpacity(0.8),
+                      color: AppColors.white.withValues(alpha: 0.8),
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
                     ),
@@ -540,7 +540,7 @@ class _TutorialStepWidgetState extends State<TutorialStepWidget>
   Widget _buildCloseButton() {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.white.withOpacity(0.2),
+        color: AppColors.white.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
       child: IconButton(

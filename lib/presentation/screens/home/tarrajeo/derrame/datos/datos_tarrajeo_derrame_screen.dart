@@ -7,7 +7,7 @@ import 'package:meter_app/config/assets/app_icons.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
 
 import '../../../../../../../config/theme/theme.dart';
-import '../../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../../config/local/shared_preferences_helper.dart';
 import '../../../../../widgets/buttons/modern_action_button.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -183,7 +183,7 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.yellowMetraShop.withOpacity(0.1),
+                    color: AppColors.yellowMetraShop.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: SvgPicture.asset(
@@ -556,7 +556,7 @@ class _DatosTarrajeoDerrameScreenState extends ConsumerState<DatosTarrajeoDerram
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),

@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/constants/constant.dart';
 import '../../../domain/entities/home/losas/losa.dart';
 import '../../../domain/entities/home/losas/tipo_losa.dart';
 import '../../../domain/services/losas/losa_service.dart';
 
-part 'losa_providers.g.dart';
-
 /// Provider para el tipo de losa seleccionado
-@riverpod
-class TipoLosaSelected extends _$TipoLosaSelected {
+class TipoLosaSelected extends Notifier<TipoLosa?> {
   @override
   TipoLosa? build() => null;
 
@@ -23,9 +20,11 @@ class TipoLosaSelected extends _$TipoLosaSelected {
   }
 }
 
+final tipoLosaSelectedProvider =
+    NotifierProvider<TipoLosaSelected, TipoLosa?>(TipoLosaSelected.new);
+
 /// Provider para la altura seleccionada
-@riverpod
-class AlturaLosa extends _$AlturaLosa {
+class AlturaLosa extends Notifier<String> {
   @override
   String build() => '';
 
@@ -34,13 +33,14 @@ class AlturaLosa extends _$AlturaLosa {
   }
 }
 
+final alturaLosaProvider = NotifierProvider<AlturaLosa, String>(AlturaLosa.new);
+
 /// Provider para el material aligerante seleccionado
 ///
 /// Solo aplica para losas aligeradas (tradicional)
 /// Para viguetas es fijo: 'Bovedillas'
 /// Para maciza es null
-@riverpod
-class MaterialAligerante extends _$MaterialAligerante {
+class MaterialAligerante extends Notifier<String> {
   @override
   String build() => '';
 
@@ -49,9 +49,11 @@ class MaterialAligerante extends _$MaterialAligerante {
   }
 }
 
+final materialAligeranteProvider =
+    NotifierProvider<MaterialAligerante, String>(MaterialAligerante.new);
+
 /// Provider para la resistencia del concreto seleccionada
-@riverpod
-class ResistenciaConcreto extends _$ResistenciaConcreto {
+class ResistenciaConcreto extends Notifier<String> {
   @override
   String build() => '';
 
@@ -60,13 +62,15 @@ class ResistenciaConcreto extends _$ResistenciaConcreto {
   }
 }
 
+final resistenciaConcretoProvider =
+    NotifierProvider<ResistenciaConcreto, String>(ResistenciaConcreto.new);
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDER DE RESULTADOS (LISTA DE LOSAS)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Provider que mantiene la lista de losas creadas
-@Riverpod(keepAlive: true)
-class LosaResult extends _$LosaResult {
+class LosaResult extends Notifier<List<Losa>> {
   @override
   List<Losa> build() => [];
 
@@ -83,10 +87,6 @@ class LosaResult extends _$LosaResult {
     String? ancho,
     String? area,
   }) {
-    debugPrint('🏗️ Provider createLosa - Iniciando...');
-    debugPrint('   Tipo: ${tipo.displayName}');
-    debugPrint('   Descripción: $description');
-    debugPrint('   Material aligerante: $materialAligerante');
 
     final newLosa = Losa(
       idLosa: uuid.v4(),
@@ -102,18 +102,14 @@ class LosaResult extends _$LosaResult {
       area: area,
     );
 
-    debugPrint('🔍 Validando losa...');
     // Validar antes de agregar
     final service = LosaService(tipo);
     final error = service.validar(newLosa);
     if (error != null) {
-      debugPrint('❌ Error de validación: $error');
       throw Exception(error);
     }
 
-    debugPrint('✅ Losa válida, agregando al estado...');
     state = [...state, newLosa];
-    debugPrint('✅ Losa agregada. Total en estado: ${state.length}');
   }
 
   /// Limpia la lista de losas
@@ -127,41 +123,41 @@ class LosaResult extends _$LosaResult {
   }
 }
 
+final losaResultProvider =
+    NotifierProvider<LosaResult, List<Losa>>(LosaResult.new);
+
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDER DE SERVICIO
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Provider que proporciona el servicio de losa apropiado según tipo
-@riverpod
-LosaService losaService(Ref ref, TipoLosa tipo) {
+final losaServiceProvider =
+    Provider.family<LosaService, TipoLosa>((ref, tipo) {
   return LosaService(tipo);
-}
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDERS DE CÁLCULO DE ÁREAS
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Provider que calcula las áreas de todas las losas
-@riverpod
-List<double> areaLosas(Ref ref) {
+final areaLosasProvider = Provider<List<double>>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   return losas.map((losa) {
     final service = LosaService(losa.tipoLosa);
     return service.calcularArea(losa);
   }).toList();
-}
+});
 
 /// Provider que obtiene las descripciones de todas las losas
-@riverpod
-List<String> descriptionLosas(Ref ref) {
+final descriptionLosasProvider = Provider<List<String>>((ref) {
   final losas = ref.watch(losaResultProvider);
   return losas.map((e) => e.description).toList();
-}
+});
 
 /// Provider que genera texto para compartir con datos de metrado
-@riverpod
-String datosShareLosa(Ref ref) {
+final datosShareLosaProvider = Provider<String>((ref) {
   final descriptions = ref.watch(descriptionLosasProvider);
   final areas = ref.watch(areaLosasProvider);
 
@@ -175,34 +171,27 @@ String datosShareLosa(Ref ref) {
     }
   }
   return datos;
-}
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDERS DE MATERIALES DE CONCRETO
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Calcula la cantidad total de cemento en bolsas
-@riverpod
-double cantidadCementoLosa(Ref ref) {
+final cantidadCementoLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
   for (var losa in losas) {
     final service = LosaService(losa.tipoLosa);
     final cemento = service.calcularCemento(losa);
-    debugPrint('📊 Cemento para losa "${losa.description}": $cemento bolsas');
-    debugPrint('   - Área: ${service.calcularArea(losa)} m²');
-    debugPrint('   - Volumen concreto: ${service.calcularVolumenConcreto(losa)} m³');
-    debugPrint('   - Resistencia: ${losa.resistenciaConcreto}');
     total += cemento;
   }
-  debugPrint('📊 Total cemento: $total bolsas → redondeado: ${total.ceil()} bolsas');
   return total;
-}
+});
 
 /// Calcula la cantidad total de arena gruesa en m³
-@riverpod
-double cantidadArenaGruesaLosa(Ref ref) {
+final cantidadArenaGruesaLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -211,11 +200,10 @@ double cantidadArenaGruesaLosa(Ref ref) {
     total += service.calcularArenaGruesa(losa);
   }
   return total;
-}
+});
 
 /// Calcula la cantidad total de piedra chancada en m³
-@riverpod
-double cantidadPiedraChancadaLosa(Ref ref) {
+final cantidadPiedraChancadaLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -224,11 +212,10 @@ double cantidadPiedraChancadaLosa(Ref ref) {
     total += service.calcularPiedraChancada(losa);
   }
   return total;
-}
+});
 
 /// Calcula la cantidad total de agua en m³
-@riverpod
-double cantidadAguaLosa(Ref ref) {
+final cantidadAguaLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -237,11 +224,10 @@ double cantidadAguaLosa(Ref ref) {
     total += service.calcularAgua(losa);
   }
   return total;
-}
+});
 
 /// Calcula la cantidad total de aditivo plastificante en litros
-@riverpod
-double cantidadAditivoPlastificanteLosa(Ref ref) {
+final cantidadAditivoPlastificanteLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
@@ -250,7 +236,7 @@ double cantidadAditivoPlastificanteLosa(Ref ref) {
     total += service.calcularAditivoPlastificante(losa);
   }
   return total;
-}
+});
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDERS DE MATERIALES ALIGERANTES
@@ -263,8 +249,7 @@ double cantidadAditivoPlastificanteLosa(Ref ref) {
 /// - Value: Cantidad total en unidades
 ///
 /// Las losas macizas no aportan materiales aligerantes
-@riverpod
-Map<String, double> materialesAligerantes(Ref ref) {
+final materialesAligerantesProvider = Provider<Map<String, double>>((ref) {
   final losas = ref.watch(losaResultProvider);
   final Map<String, double> totales = {};
 
@@ -282,20 +267,17 @@ Map<String, double> materialesAligerantes(Ref ref) {
   }
 
   return totales;
-}
+});
 
 /// Provider para volumen total de concreto (información adicional)
-@riverpod
-double volumenConcretoLosa(Ref ref) {
+final volumenConcretoLosaProvider = Provider<double>((ref) {
   final losas = ref.watch(losaResultProvider);
 
   double total = 0.0;
   for (var losa in losas) {
     final service = LosaService(losa.tipoLosa);
     final volumen = service.calcularVolumenConcreto(losa);
-    debugPrint('📊 Volumen concreto para losa "${losa.description}": $volumen m³');
     total += volumen;
   }
-  debugPrint('📊 Total volumen concreto: $total m³');
   return total;
-}
+});

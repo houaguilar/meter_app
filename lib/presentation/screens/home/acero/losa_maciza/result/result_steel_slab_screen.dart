@@ -82,12 +82,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
       final slabs = ref.read(steelSlabResultProvider);
       final consolidatedResult = ref.read(calculateConsolidatedSlabSteelProvider);
 
-      print('🔍 Estado en ResultSteelSlabScreen:');
-      print('- Losas: ${slabs.length}');
-      print('- Resultado consolidado: ${consolidatedResult != null}');
 
       if (slabs.isEmpty || consolidatedResult == null) {
-        print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
         context.pop();
       }
@@ -100,10 +96,8 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
       canPop: true,
       onPopInvoked: (bool didPop) {
         if (didPop && !_isGeneratingPDF) {
-          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
           ref.read(steelSlabResultProvider.notifier).clearList();
         } else if (didPop && _isGeneratingPDF) {
-          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
         }
       },
       child: Scaffold(
@@ -190,7 +184,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -400,16 +394,16 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -561,7 +555,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
           Icon(
             Icons.view_module,
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -603,13 +597,13 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -623,7 +617,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -664,7 +658,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
           Text(
             label,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
             ),
           ),
           Text(
@@ -689,7 +683,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -802,7 +796,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -907,7 +901,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.1),
+                    color: AppColors.warning.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
@@ -936,7 +930,7 @@ class _ResultSteelSlabScreenState extends ConsumerState<ResultSteelSlabScreen>
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

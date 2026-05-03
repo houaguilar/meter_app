@@ -30,7 +30,7 @@ class PrivacyLegalScreen extends StatelessWidget {
             end: Alignment.bottomRight,
             colors: [
               AppColors.primary,
-              AppColors.primary.withOpacity(0.8),
+              AppColors.primary.withValues(alpha: 0.8),
             ],
           ),
         ),
@@ -56,7 +56,7 @@ class PrivacyLegalScreen extends StatelessWidget {
           end: Alignment.bottomCenter,
           colors: [
             AppColors.backgroundLight,
-            AppColors.backgroundLight.withOpacity(0.95),
+            AppColors.backgroundLight.withValues(alpha: 0.95),
           ],
         ),
       ),
@@ -86,13 +86,13 @@ class PrivacyLegalScreen extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.secondary.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.secondary.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -105,7 +105,7 @@ class PrivacyLegalScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primary.withOpacity(0.2),
+                  color: AppColors.primary.withValues(alpha: 0.2),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -179,8 +179,8 @@ class PrivacyLegalScreen extends StatelessWidget {
           description: 'Cómo recopilamos, usamos y protegemos tu información personal',
           gradient: LinearGradient(
             colors: [
-              AppColors.secondary.withOpacity(0.1),
-              AppColors.secondary.withOpacity(0.05),
+              AppColors.secondary.withValues(alpha: 0.1),
+              AppColors.secondary.withValues(alpha: 0.05),
             ],
           ),
           iconColor: AppColors.secondary,
@@ -205,8 +205,8 @@ class PrivacyLegalScreen extends StatelessWidget {
           description: 'Condiciones de uso, responsabilidades y derechos al usar MetraShop',
           gradient: LinearGradient(
             colors: [
-              AppColors.accent.withOpacity(0.1),
-              AppColors.accent.withOpacity(0.05),
+              AppColors.accent.withValues(alpha: 0.1),
+              AppColors.accent.withValues(alpha: 0.05),
             ],
           ),
           iconColor: AppColors.accent,
@@ -295,12 +295,12 @@ class PrivacyLegalScreen extends StatelessWidget {
             gradient: gradient,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: iconColor.withOpacity(0.3),
+              color: iconColor.withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: iconColor.withOpacity(0.1),
+                color: iconColor.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -315,7 +315,7 @@ class PrivacyLegalScreen extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: iconColor.withOpacity(0.2),
+                      color: iconColor.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -391,12 +391,12 @@ class PrivacyLegalScreen extends StatelessWidget {
             color: AppColors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppColors.border.withOpacity(0.5),
+              color: AppColors.border.withValues(alpha: 0.5),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -407,7 +407,7 @@ class PrivacyLegalScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -466,10 +466,10 @@ class PrivacyLegalScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.info.withOpacity(0.1),
+        color: AppColors.info.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.info.withOpacity(0.3),
+          color: AppColors.info.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -524,10 +524,10 @@ class PrivacyLegalScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: AppColors.success.withOpacity(0.1),
+        color: AppColors.success.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppColors.success.withOpacity(0.3),
+          color: AppColors.success.withValues(alpha: 0.3),
           width: 1,
         ),
       ),

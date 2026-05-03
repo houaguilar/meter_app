@@ -78,9 +78,9 @@ class _MeshDistributionWidgetState extends State<MeshDistributionWidget>
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Row(
             children: [
@@ -165,7 +165,7 @@ class _MeshDistributionWidgetState extends State<MeshDistributionWidget>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -226,12 +226,12 @@ class _MeshDistributionWidgetState extends State<MeshDistributionWidget>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: widget.formData.hasSuperiorMesh
-            ? AppColors.secondary.withOpacity(0.1)
+            ? AppColors.secondary.withValues(alpha: 0.1)
             : AppColors.background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: widget.formData.hasSuperiorMesh
-              ? AppColors.secondary.withOpacity(0.3)
+              ? AppColors.secondary.withValues(alpha: 0.3)
               : AppColors.border,
         ),
       ),
@@ -290,9 +290,9 @@ class _MeshDistributionWidgetState extends State<MeshDistributionWidget>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.secondary.withOpacity(0.05),
+        color: AppColors.secondary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

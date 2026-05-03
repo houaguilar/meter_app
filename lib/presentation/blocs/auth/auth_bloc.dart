@@ -4,7 +4,7 @@ import 'package:meter_app/domain/entities/auth/user.dart';
 
 import '../../../config/common/cubits/app_user/app_user_cubit.dart';
 import '../../../config/usecase/usecase.dart';
-import '../../../data/local/shared_preferences_helper.dart';
+import '../../../config/local/shared_preferences_helper.dart';
 import '../../../domain/usecases/use_cases.dart';
 
 part 'auth_event.dart';
@@ -18,6 +18,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final UserSignInWithGoogle _userSignInWithGoogle;
   final UserSignInWithApple _userSignInWithApple;
   final DeleteAccount _deleteAccount;
+  final ChangePassword _changePassword;
+  final ResendOTP _resendOTP;
+  final ResetPasswordForEmail _resetPasswordForEmail;
   final AppUserCubit _appUserCubit;
   final SharedPreferencesHelper _sharedPrefs;
 
@@ -29,6 +32,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required UserSignInWithGoogle userSignInWithGoogle,
     required UserSignInWithApple userSignInWithApple,
     required DeleteAccount deleteAccount,
+    required ChangePassword changePassword,
+    required ResendOTP resendOTP,
+    required ResetPasswordForEmail resetPasswordForEmail,
     required AppUserCubit appUserCubit,
     required SharedPreferencesHelper sharedPrefs,
   })  : _userSignUp = userSignUp,
@@ -38,10 +44,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         _userSignInWithGoogle = userSignInWithGoogle,
         _userSignInWithApple = userSignInWithApple,
         _deleteAccount = deleteAccount,
+        _changePassword = changePassword,
+        _resendOTP = resendOTP,
+        _resetPasswordForEmail = resetPasswordForEmail,
         _appUserCubit = appUserCubit,
         _sharedPrefs = sharedPrefs,
         super(AuthInitial()) {
-    on<AuthEvent>((_, emit) => emit(AuthLoading()));
     on<AuthSignUp>(_onAuthSignUp);
     on<AuthLogin>(_onAuthLogin);
     on<AuthIsUserLoggedIn>(_isUserLoggedIn);
@@ -49,12 +57,17 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<AuthLoginWithGoogle>(_onAuthLoginWithGoogle);
     on<AuthLoginWithApple>(_onAuthLoginWithApple);
     on<AuthDeleteAccount>(_onAuthDeleteAccount);
+    on<AuthChangePassword>(_onAuthChangePassword);
+    on<AuthResendOTP>(_onAuthResendOTP);
+    on<AuthResetPasswordForEmail>(_onAuthResetPasswordForEmail);
+    on<AuthCancelEmailVerification>(_onAuthCancelEmailVerification);
   }
 
   void _isUserLoggedIn(
       AuthIsUserLoggedIn event,
       Emitter<AuthState> emit,
       ) async {
+    emit(AuthLoading());
     final res = await _currentUser(NoParams());
 
     res.fold(
@@ -168,6 +181,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthLogin event,
       Emitter<AuthState> emit,
       ) async {
+    emit(AuthLoading());
     final res = await _userLogin(
       UserLoginParams(
         email: event.email,
@@ -185,6 +199,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       AuthLogout event,
       Emitter<AuthState> emit,
       ) async {
+    emit(AuthLoading());
     final res = await _userLogout(NoParams());
 
     res.fold(
@@ -195,23 +210,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       },
     );
   }
-
-  // void _emitAuthSuccess(
-  //     User user,
-  //     Emitter<AuthState> emit,
-  //     ) {
-  //   // Actualiza el estado del cubit con el usuario logueado
-  //   _appUserCubit.updateUser(user);
-  //
-  //   /*// Verifica si el estado de AppUserCubit es AppUserLoggedIn antes de acceder a user
-  //   final currentState = _appUserCubit.state;
-  //   if (currentState is AppUserLoggedIn) {
-  //     emit(AuthSuccess(currentState.user)); // Usa el user del estado loggedIn
-  //   } else {
-  //     emit(const AuthFailure('Error al obtener el usuario'));
-  //   }*/
-  //   emit(AuthSuccess(user));
-  // }
 
   void _emitAuthSuccess(
       User user,
@@ -237,5 +235,60 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthAccountDeleted());
       },
     );
+  }
+
+  Future<void> _onAuthChangePassword(
+      AuthChangePassword event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+    final res = await _changePassword(ChangePasswordParams(
+      currentPassword: '',
+      newPassword: event.newPassword,
+      confirmPassword: event.confirmPassword,
+    ));
+
+    await res.fold(
+      (failure) async => emit(AuthFailure(failure.message)),
+      (_) async {
+        await _userLogout(NoParams());
+        _appUserCubit.clearUser();
+        emit(const AuthPasswordChanged());
+      },
+    );
+  }
+
+  Future<void> _onAuthResendOTP(
+      AuthResendOTP event,
+      Emitter<AuthState> emit,
+      ) async {
+    final res = await _resendOTP(ResendOTPParams(email: event.email));
+
+    res.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (_) => emit(const AuthOTPResent()),
+    );
+  }
+
+  Future<void> _onAuthResetPasswordForEmail(
+      AuthResetPasswordForEmail event,
+      Emitter<AuthState> emit,
+      ) async {
+    emit(AuthLoading());
+    final res = await _resetPasswordForEmail(ResetPasswordParams(email: event.email));
+
+    res.fold(
+      (failure) => emit(AuthFailure(failure.message)),
+      (_) => emit(AuthPasswordResetEmailSent(event.email)),
+    );
+  }
+
+  Future<void> _onAuthCancelEmailVerification(
+      AuthCancelEmailVerification event,
+      Emitter<AuthState> emit,
+      ) async {
+    await _sharedPrefs.clearPendingVerificationEmail();
+    _appUserCubit.clearUser();
+    emit(AuthInitial());
   }
 }

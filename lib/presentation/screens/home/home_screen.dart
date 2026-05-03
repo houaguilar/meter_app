@@ -49,7 +49,6 @@ class _HomeScreenState extends State<HomeScreen>
 
     // Log solo en debug
     assert(() {
-      debugPrint('App lifecycle state: $state');
       return true;
     }());
   }

@@ -45,7 +45,6 @@ mixin LocationPermissionsMixin<T extends StatefulWidget> on State<T> {
       return LocationPermissionResult.granted;
 
     } catch (e) {
-      debugPrint('Error checking location permissions: $e');
       return LocationPermissionResult.error;
     }
   }
@@ -180,7 +179,6 @@ mixin LocationPermissionsMixin<T extends StatefulWidget> on State<T> {
       }
       return null;
     } catch (e) {
-      debugPrint('Error getting location: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

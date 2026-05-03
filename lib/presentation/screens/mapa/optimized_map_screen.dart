@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -44,6 +45,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
   LocationWithDistance? _selectedLocation;
   List<LocationWithDistance> _nearbyLocations = [];
+  Set<Marker> _markers = {};
 
   @override
   bool get wantKeepAlive => true;
@@ -171,7 +173,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       _startLocationUpdates();
 
     } catch (e) {
-      debugPrint('Error initializing location: $e');
       setState(() {
         _locationError = e.toString();
         _isLocationLoading = false;
@@ -219,10 +220,10 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       final locationsState = context.read<LocationsBloc>().state;
       if (locationsState is LocationsLoaded) {
         _calculateNearbyLocations(locationsState.locations);
+        _updateMarkers(locationsState.locations);
       }
 
     } catch (e) {
-      debugPrint('Error getting current location: $e');
       setState(() {
         _locationError = 'No se pudo obtener la ubicación actual';
         _isLocationLoading = false;
@@ -245,7 +246,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         });
       },
       onError: (error) {
-        debugPrint('Error in location stream: $error');
       },
     );
   }
@@ -267,8 +267,8 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     return BlocListener<LocationsBloc, LocationsState>(
       listener: (context, state) {
         if (state is LocationsLoaded) {
-          // Calcular ubicaciones cercanas cuando se cargan las ubicaciones
           _calculateNearbyLocations(state.locations);
+          _updateMarkers(state.locations);
         }
       },
       child: _nearbyLocations.isEmpty
@@ -279,7 +279,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -294,7 +294,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
               height: 4,
               margin: const EdgeInsets.only(top: 12, bottom: 8),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.3),
+                color: AppColors.secondary.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -359,20 +359,20 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppColors.primary.withOpacity(0.1)
+              ? AppColors.primary.withValues(alpha: 0.1)
               : AppColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? AppColors.primary
-                : AppColors.secondary.withOpacity(0.2),
+                : AppColors.secondary.withValues(alpha: 0.2),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? AppColors.primary.withOpacity(0.15)
-                  : Colors.black.withOpacity(0.05),
+                  ? AppColors.primary.withValues(alpha: 0.15)
+                  : Colors.black.withValues(alpha: 0.05),
               blurRadius: isSelected ? 8 : 4,
               offset: const Offset(0, 2),
             ),
@@ -395,16 +395,14 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                     child: location.imageUrl?.isNotEmpty == true
                         ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        location.imageUrl!,
+                      child: CachedNetworkImage(
+                        imageUrl: location.imageUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Icon(
-                            Icons.location_on,
-                            color: AppColors.primary,
-                            size: 24,
-                          );
-                        },
+                        errorWidget: (context, url, error) => Icon(
+                          Icons.location_on,
+                          color: AppColors.primary,
+                          size: 24,
+                        ),
                       ),
                     )
                         : Icon(
@@ -488,14 +486,14 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
                           gradient: LinearGradient(
                             colors: [
                               AppColors.primary,
-                              AppColors.primary.withOpacity(0.8),
+                              AppColors.primary.withValues(alpha: 0.8),
                             ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 8,
                               offset: const Offset(0, 4),
                             ),
@@ -609,6 +607,12 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     });
   }
 
+  void _updateMarkers(List<LocationMap> locations) {
+    setState(() {
+      _markers = _buildMarkers(locations);
+    });
+  }
+
   // 🆕 SOLO AGREGAR: Animar a ubicación específica
   Future<void> _animateToLocation(LocationWithDistance location) async {
     if (_mapController == null) return;
@@ -673,19 +677,9 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
     );
   }
 
-  void _goToCurrentLocation() async {
+  void _goToCurrentLocation() {
     if (_currentPosition != null) {
       _animateToPosition(_currentPosition!);
-    } else if (_currentPosition != null) {
-      _animateToPosition(_currentPosition!);
-    }
-  }
-
-  Future<void> _applyMapTheme() async {
-    try {
-      // Tema personalizado del mapa si es necesario
-    } catch (e) {
-      debugPrint('Error applying map theme: $e');
     }
   }
 
@@ -697,58 +691,30 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       );
     }
 
-    return BlocBuilder<LocationsBloc, LocationsState>(
-      builder: (context, state) {
-        Set<Marker> markers = {};
-
-        if (state is LocationsLoaded) {
-          markers = _buildMarkers(state.locations);
-        }
-
-        CameraPosition initialPosition;
-
-        if (_selectedPlace != null) {
-          initialPosition = CameraPosition(
-            target: LatLng(_selectedPlace!.lat, _selectedPlace!.lng),
-            zoom: 16.0,
-          );
-        } else if (_selectedLocation != null) {
-          // 🆕 AGREGAR: Soporte para ubicación seleccionada del carrusel
-          initialPosition = CameraPosition(
-            target: LatLng(_selectedLocation!.latitude, _selectedLocation!.longitude),
-            zoom: 16.0,
-          );
-        } else if (_currentPosition != null) {
-          initialPosition = CameraPosition(
-            target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-            zoom: 15.0,
-          );
-        } else {
-          // 🔧 CORREGIDO: Position por defecto solo como fallback
-          initialPosition = const CameraPosition(
-            target: LatLng(-12.0464, -77.0428), // Lima, Perú como fallback
-            zoom: 12.0,
-          );
-        }
-
-        return GoogleMap(
-          onMapCreated: _onMapCreated,
-          initialCameraPosition: initialPosition,
-          markers: markers,
-          myLocationEnabled: false,
-          myLocationButtonEnabled: false,
-          zoomControlsEnabled: false,
-          mapToolbarEnabled: false,
-          compassEnabled: true,
-          rotateGesturesEnabled: true,
-          scrollGesturesEnabled: true,
-          tiltGesturesEnabled: true,
-          zoomGesturesEnabled: true,
-          buildingsEnabled: true,
-          trafficEnabled: false,
-          mapType: MapType.normal,
-        );
-      },
+    return GoogleMap(
+      onMapCreated: _onMapCreated,
+      initialCameraPosition: _currentPosition != null
+          ? CameraPosition(
+              target: LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+              zoom: 15.0,
+            )
+          : const CameraPosition(
+              target: LatLng(-12.0464, -77.0428), // Lima, Perú como fallback
+              zoom: 12.0,
+            ),
+      markers: _markers,
+      myLocationEnabled: false,
+      myLocationButtonEnabled: false,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
+      compassEnabled: true,
+      rotateGesturesEnabled: true,
+      scrollGesturesEnabled: true,
+      tiltGesturesEnabled: true,
+      zoomGesturesEnabled: true,
+      buildingsEnabled: true,
+      trafficEnabled: false,
+      mapType: MapType.normal,
     );
   }
 
@@ -815,7 +781,6 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
 
   void _onMapCreated(GoogleMapController controller) {
     _mapController = controller;
-    _applyMapTheme();
 
     setState(() {
       _isMapReady = true;
@@ -828,6 +793,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
       final locationsState = context.read<LocationsBloc>().state;
       if (locationsState is LocationsLoaded) {
         _calculateNearbyLocations(locationsState.locations);
+        _updateMarkers(locationsState.locations);
       }
     }
   }
@@ -841,7 +807,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.15),
+              color: Colors.black.withValues(alpha: 0.15),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -861,7 +827,7 @@ class _OptimizedMapScreenState extends State<OptimizedMapScreen>
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 border: _currentPosition != null
-                    ? Border.all(color: AppColors.white.withOpacity(0.3), width: 2)
+                    ? Border.all(color: AppColors.white.withValues(alpha: 0.3), width: 2)
                     : null,
               ),
               child: _buildLocationIcon(),

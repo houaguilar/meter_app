@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 class PlaceSearchAnalytics {
   static final PlaceSearchAnalytics _instance = PlaceSearchAnalytics._internal();
   factory PlaceSearchAnalytics() => _instance;
@@ -135,33 +133,6 @@ class PlaceSearchAnalytics {
     _quotaErrors = 0;
     _queryFrequency.clear();
     _sessionStartTime = null;
-  }
-
-  // Método para imprimir estadísticas (útil para debugging)
-  void printStats() {
-    if (kDebugMode) {
-      print('=== Place Search Analytics ===');
-      print('Total searches: $_totalSearches');
-      print('Cache hits: $_cacheHits');
-      print('API calls: $_apiCalls');
-      print('Errors: $_errors');
-      print('Cache hit ratio: ${(cacheHitRatio * 100).toStringAsFixed(2)}%');
-      print('Error rate: ${(errorRate * 100).toStringAsFixed(2)}%');
-      print('API efficiency: ${(apiEfficiency * 100).toStringAsFixed(2)}%');
-      print('Average response time: ${averageResponseTime.toStringAsFixed(0)}ms');
-      print('Session duration: ${sessionDuration?.inMinutes ?? 0} minutes');
-      print('Cache performance: $cachePerformanceMessage');
-      print('Overall performance: $overallPerformanceMessage');
-      print('Error breakdown:');
-      print('  - Timeout errors: $_timeoutErrors');
-      print('  - Network errors: $_networkErrors');
-      print('  - Quota errors: $_quotaErrors');
-      print('Top queries:');
-      for (final entry in topQueries) {
-        print('  "${entry.key}": ${entry.value} times');
-      }
-      print('==============================');
-    }
   }
 
   // Método para exportar estadísticas (útil para análisis)

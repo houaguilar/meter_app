@@ -160,7 +160,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
               }).toList(),
               indicatorColor: AppColors.white,
               labelColor: AppColors.white,
-              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
               isScrollable: true,
             ),
           ),
@@ -506,7 +506,7 @@ class _DatosSteelSlabScreenState extends ConsumerState<DatosSteelSlabScreen>
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isEnabled
-            ? (isInferior ? AppColors.success.withOpacity(0.05) : AppColors.warning.withOpacity(0.05))
+            ? (isInferior ? AppColors.success.withValues(alpha: 0.05) : AppColors.warning.withValues(alpha: 0.05))
             : AppColors.neutral100,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(

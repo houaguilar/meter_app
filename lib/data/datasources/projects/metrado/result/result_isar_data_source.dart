@@ -201,9 +201,7 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           .metradoIdEqualTo(metradoId)
           .deleteAll();
 
-      print('🧹 Resultados existentes eliminados para metrado $metradoId');
     } catch (e) {
-      print('❌ Error limpiando resultados existentes: $e');
       throw ServerException('Error al limpiar resultados existentes: ${e.toString()}');
     }
   }
@@ -416,8 +414,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           ..separation = dist.separation
         ).toList();
 
-        print('  🔍 SteelColumn - Barras originales: ${result.steelBars.length}, copiadas: ${steelBarsCopy.length}');
-        print('  🔍 SteelColumn - Estribos originales: ${result.stirrupDistributions.length}, copiados: ${stirrupsCopy.length}');
 
         final newResult = SteelColumn(
           idSteelColumn: result.idSteelColumn,
@@ -448,7 +444,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         await isarService.steelColumns.put(newResult);
         await newResult.metrado.save();
 
-        print('  ✅ SteelColumn guardado: ${newResult.description}');
       }
 
       else if (result is SteelBeam) {
@@ -465,8 +460,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           ..separation = dist.separation
         ).toList();
 
-        print('  🔍 SteelBeam - Barras originales: ${result.steelBars.length}, copiadas: ${steelBarsCopy.length}');
-        print('  🔍 SteelBeam - Estribos originales: ${result.stirrupDistributions.length}, copiados: ${stirrupsCopy.length}');
 
         final newResult = SteelBeam(
           idSteelBeam: result.idSteelBeam,
@@ -496,7 +489,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         await isarService.steelBeams.put(newResult);
         await newResult.metrado.save();
 
-        print('  ✅ SteelBeam guardado: ${newResult.description}');
       }
 
       else if (result is SteelSlab) {
@@ -513,7 +505,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
           ..idConfig = result.superiorMeshConfig.idConfig
           ..enabled = result.superiorMeshConfig.enabled;
 
-        print('  🔍 SteelSlab - MeshBars originales: ${result.meshBars.length}, copiadas: ${meshBarsCopy.length}');
 
         final newResult = SteelSlab(
           idSteelSlab: result.idSteelSlab,
@@ -535,11 +526,9 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         await isarService.steelSlabs.put(newResult);
         await newResult.metrado.save();
 
-        print('  ✅ SteelSlab guardado: ${newResult.description}');
       }
 
       else if (result is SteelFooting) {
-        print('  🔍 SteelFooting - Guardando zapata de acero');
 
         final newResult = SteelFooting(
           idSteelFooting: result.idSteelFooting,
@@ -569,14 +558,11 @@ class ResultIsarDataSource implements ResultLocalDataSource {
         await isarService.steelFootings.put(newResult);
         await newResult.metrado.save();
 
-        print('  ✅ SteelFooting guardado: ${newResult.description}');
       } else {
         throw ServerException('Tipo de resultado no soportado: ${result.runtimeType}');
       }
 
-      print('✅ Resultado ${result.runtimeType} guardado correctamente');
     } catch (e) {
-      print('❌ Error guardando resultado ${result.runtimeType}: $e');
       throw ServerException('Error al guardar resultado ${result.runtimeType}: ${e.toString()}');
     }
   }
@@ -584,7 +570,6 @@ class ResultIsarDataSource implements ResultLocalDataSource {
 // ✅ FIX: Método principal mejorado con logging y validaciones
   @override
   Future<void> saveResults(List<dynamic> results, String metradoId) async {
-    print('🔄 Iniciando guardado de ${results.length} resultados para metrado $metradoId');
 
     if (results.isEmpty) {
       throw const ServerException('No hay resultados para guardar');
@@ -606,20 +591,15 @@ class ResultIsarDataSource implements ResultLocalDataSource {
     try {
       await isar.writeTxn(() async {
         // ✅ Paso 1: Limpiar resultados existentes
-        print('🧹 Limpiando resultados existentes...');
         await _clearExistingResults(metradoIdInt);
 
         // ✅ Paso 2: Guardar nuevos resultados
-        print('💾 Guardando ${results.length} nuevos resultados...');
         for (int i = 0; i < results.length; i++) {
-          print('  📝 Guardando resultado ${i + 1}/${results.length}: ${results[i].runtimeType}');
           await _saveResultByType(results[i], metradoIdInt, metrado);
         }
       });
 
-      print('✅ Todos los resultados guardados exitosamente');
     } catch (e) {
-      print('❌ Error en transacción de guardado: $e');
       throw ServerException('Error al guardar resultados: ${e.toString()}');
     }
   }

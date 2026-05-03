@@ -216,21 +216,18 @@ class _MetraShopScreenState extends State<MetraShopScreen>
   // ═══════════════════════════════════════════════════════════════════════════
 
   void _handleInitializationTimeout() {
-    debugPrint('Timeout en inicialización - mostrando UI de autenticación');
     if (mounted) {
       _showAuthenticationUI();
     }
   }
 
   void _handleInitializationError(dynamic error) {
-    debugPrint('Error en inicialización: $error');
     if (mounted) {
       _showAuthenticationUI();
     }
   }
 
   void _handleAuthenticationError(String message) {
-    debugPrint('Error de autenticación: $message');
     if (mounted) {
       ErrorHandler.showErrorSnackBar(
         context,
@@ -242,7 +239,6 @@ class _MetraShopScreenState extends State<MetraShopScreen>
   }
 
   void _handleNetworkError() {
-    debugPrint('Error de red detectado');
     if (mounted) {
       ErrorHandler.showErrorSnackBar(
         context,
@@ -330,7 +326,6 @@ class _MetraShopScreenState extends State<MetraShopScreen>
       _buttonsAnimationController.dispose();
       _backgroundAnimationController.dispose();
     } catch (e) {
-      debugPrint('Error al liberar animaciones: $e');
     }
   }
 
@@ -357,13 +352,11 @@ class _MetraShopScreenState extends State<MetraShopScreen>
     switch (state.runtimeType) {
       case AuthSuccess:
       // Usuario autenticado - ir directamente al home
-        debugPrint('Usuario ya autenticado - navegando a home');
         _navigateToHome();
         break;
 
       case AuthInitial:
       // No hay sesión activa - mostrar UI de autenticación
-        debugPrint('No hay sesión activa - mostrando autenticación');
         _showAuthenticationUI();
         break;
 
@@ -406,8 +399,8 @@ class _MetraShopScreenState extends State<MetraShopScreen>
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                AppColors.primary.withOpacity(_backgroundOpacityAnimation.value),
-                AppColors.primary.withOpacity(_backgroundOpacityAnimation.value * 0.8),
+                AppColors.primary.withValues(alpha: _backgroundOpacityAnimation.value),
+                AppColors.primary.withValues(alpha: _backgroundOpacityAnimation.value * 0.8),
               ],
             ),
           ),
@@ -506,7 +499,7 @@ class _MetraShopScreenState extends State<MetraShopScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.secondary.withOpacity(0.3),
+                          color: AppColors.secondary.withValues(alpha: 0.3),
                           blurRadius: 30,
                           spreadRadius: 10,
                         ),
@@ -559,7 +552,7 @@ class _MetraShopScreenState extends State<MetraShopScreen>
               Text(
                 'Tu plataforma de construcción',
                 style: TextStyle(
-                  color: AppColors.white.withOpacity(0.9),
+                  color: AppColors.white.withValues(alpha: 0.9),
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,
@@ -570,7 +563,7 @@ class _MetraShopScreenState extends State<MetraShopScreen>
               Text(
                 'Calcula materiales, encuentra proveedores y gestiona tus proyectos',
                 style: TextStyle(
-                  color: AppColors.white.withOpacity(0.7),
+                  color: AppColors.white.withValues(alpha: 0.7),
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                 ),
@@ -602,7 +595,7 @@ class _MetraShopScreenState extends State<MetraShopScreen>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, -5),
                   ),
@@ -687,10 +680,10 @@ class _MetraShopScreenState extends State<MetraShopScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.secondary.withOpacity(0.05),
+        color: AppColors.secondary.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: AppColors.secondary.withOpacity(0.1),
+          color: AppColors.secondary.withValues(alpha: 0.1),
         ),
       ),
       child: Row(
@@ -705,7 +698,7 @@ class _MetraShopScreenState extends State<MetraShopScreen>
             child: Text(
               'Tus datos están protegidos con encriptación de extremo a extremo',
               style: TextStyle(
-                color: AppColors.primary.withOpacity(0.8),
+                color: AppColors.primary.withValues(alpha: 0.8),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

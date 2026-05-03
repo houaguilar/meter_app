@@ -294,7 +294,7 @@ class _DatosSteelBeamScreenState extends ConsumerState<DatosSteelBeamScreen>
               }).toList(),
               indicatorColor: AppColors.white,
               labelColor: AppColors.white,
-              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
               isScrollable: true,
             ),
           ),

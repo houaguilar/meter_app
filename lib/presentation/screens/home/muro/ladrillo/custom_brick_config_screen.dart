@@ -141,13 +141,13 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.blueMetraShop.withOpacity(0.1),
-            AppColors.blueMetraShop.withOpacity(0.05),
+            AppColors.blueMetraShop.withValues(alpha: 0.1),
+            AppColors.blueMetraShop.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.blueMetraShop.withOpacity(0.2),
+          color: AppColors.blueMetraShop.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -156,7 +156,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppColors.blueMetraShop.withOpacity(0.1),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -202,7 +202,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -319,12 +319,12 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -362,7 +362,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
               decoration: InputDecoration(
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: color.withOpacity(0.3)),
+                  borderSide: BorderSide(color: color.withValues(alpha: 0.3)),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -405,7 +405,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
           Text(
             '${min.toInt()}-${max.toInt()} cm',
             style: TextStyle(
-              color: color.withOpacity(0.6),
+              color: color.withValues(alpha: 0.6),
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -423,7 +423,7 @@ class _CustomBrickConfigScreenState extends ConsumerState<CustomBrickConfigScree
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -867,7 +867,7 @@ class Brick3DPainter extends CustomPainter {
     canvas.drawPath(topPath, paint);
 
     // Cara derecha (tonalidad media)
-    paint.color = const Color(0xFFD84315).withOpacity(0.8);
+    paint.color = const Color(0xFFD84315).withValues(alpha: 0.8);
     final rightPath = Path()
       ..moveTo(frontRect.right, frontRect.top)
       ..lineTo(frontRect.right + offsetX, frontRect.top - offsetY)

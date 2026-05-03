@@ -90,7 +90,7 @@ class CartScreen extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(context.spacing.xl),
               decoration: BoxDecoration(
-                color: context.colors.primary.withOpacity(0.1),
+                color: context.colors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -173,7 +173,7 @@ class CartScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -186,7 +186,7 @@ class CartScreen extends StatelessWidget {
           Container(
             padding: EdgeInsets.all(context.spacing.md),
             decoration: BoxDecoration(
-              color: context.colors.blue.withOpacity(0.1),
+              color: context.colors.blue.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -231,7 +231,7 @@ class CartScreen extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           bottom: BorderSide(
-            color: context.colors.textSecondary.withOpacity(0.1),
+            color: context.colors.textSecondary.withValues(alpha: 0.1),
           ),
         ),
       ),
@@ -246,7 +246,7 @@ class CartScreen extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   context.colors.blue,
-                  context.colors.blue.withOpacity(0.8),
+                  context.colors.blue.withValues(alpha: 0.8),
                 ],
               ),
               borderRadius: BorderRadius.circular(12),
@@ -312,7 +312,7 @@ class CartScreen extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-          color: context.colors.textSecondary.withOpacity(0.2),
+          color: context.colors.textSecondary.withValues(alpha: 0.2),
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -383,7 +383,7 @@ class CartScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 2),
           ),
@@ -461,7 +461,7 @@ class CartScreen extends StatelessWidget {
         color: context.colors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, -2),
           ),

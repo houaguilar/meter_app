@@ -12,10 +12,6 @@ class NotificationHandler {
     final body = notification['body'] as String? ?? '';
     final data = notification['data'] as Map<String, dynamic>? ?? {};
 
-    debugPrint('📨 Foreground notification:');
-    debugPrint('Title: $title');
-    debugPrint('Body: $body');
-    debugPrint('Data: $data');
 
     // Mostrar un SnackBar cuando la notificación llega en foreground
     _showForegroundNotification(context, title, body, data: data);
@@ -30,10 +26,6 @@ class NotificationHandler {
     final body = notification['body'] as String? ?? '';
     final data = notification['data'] as Map<String, dynamic>? ?? {};
 
-    debugPrint('📲 Notification tapped:');
-    debugPrint('Title: $title');
-    debugPrint('Body: $body');
-    debugPrint('Data: $data');
 
     // Navegar según el tipo de notificación
     _processNotificationData(context, data);
@@ -53,10 +45,8 @@ class NotificationHandler {
     final articleTitle = data['articleTitle'] as String?;
     final videoId = data['videoId'] as String?;
 
-    debugPrint('📍 Processing notification - Type: $type, Route: $route, ID: $id');
 
     if (!context.mounted) {
-      debugPrint('❌ Context not mounted, cannot navigate');
       return;
     }
 
@@ -65,11 +55,9 @@ class NotificationHandler {
       case 'project':
         if (id != null && projectName != null) {
           context.push('/projects/$id/$projectName');
-          debugPrint('✅ Navigating to project: $id');
         } else {
           // Si no hay ID específico, ir a la lista de proyectos
           context.push('/projects');
-          debugPrint('✅ Navigating to projects list');
         }
         break;
 
@@ -79,24 +67,20 @@ class NotificationHandler {
           final title = Uri.encodeComponent(articleTitle);
           final video = videoId ?? '';
           context.push('/home/detail/$id/$title/$video');
-          debugPrint('✅ Navigating to article: $id');
         } else {
           // Si no hay ID específico, ir a la lista de artículos
           context.push('/articles');
-          debugPrint('✅ Navigating to articles list');
         }
         break;
 
       case 'update':
         // Navegar a la pantalla de inicio donde se muestran las actualizaciones
         context.go('/home');
-        debugPrint('✅ Navigating to home (updates)');
         break;
 
       case 'location':
         // Navegar al mapa
         context.push('/home/home-to-provider');
-        debugPrint('✅ Navigating to map/location');
         break;
 
       default:
@@ -104,12 +88,9 @@ class NotificationHandler {
         if (route != null) {
           try {
             context.push(route);
-            debugPrint('✅ Navigating to custom route: $route');
           } catch (e) {
-            debugPrint('❌ Error navigating to route: $route - $e');
           }
         } else {
-          debugPrint('⚠️ Unknown notification type: $type');
         }
     }
   }

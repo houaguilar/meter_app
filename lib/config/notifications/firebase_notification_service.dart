@@ -7,10 +7,6 @@ import 'notification_repository.dart';
 /// Debe ser una función top-level o estática
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('📬 Background message received: ${message.messageId}');
-  debugPrint('Title: ${message.notification?.title}');
-  debugPrint('Body: ${message.notification?.body}');
-  debugPrint('Data: ${message.data}');
 }
 
 class FirebaseNotificationService implements NotificationRepository {
@@ -20,13 +16,18 @@ class FirebaseNotificationService implements NotificationRepository {
   Function(Map<String, dynamic>)? _onMessageReceivedHandler;
   Function(Map<String, dynamic>)? _onMessageOpenedHandler;
 
+  // Subscriptions almacenadas para prevenir duplicados si initialize() se llama más de una vez
+  StreamSubscription<RemoteMessage>? _onMessageSub;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedSub;
+
   @override
   Future<void> initialize() async {
     try {
-      debugPrint('🔔 Initializing Firebase Notifications...');
 
-      // Configurar el handler para mensajes en background
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      // Handler de background deshabilitado hasta que se active el envío de
+      // notificaciones en producción. Habilitarlo crea un segundo Flutter engine
+      // que compite por GPU con el engine principal, pudiendo causar ANR.
+      // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
       // Solicitar permisos automáticamente en iOS
       await requestPermission();
@@ -39,11 +40,8 @@ class FirebaseNotificationService implements NotificationRepository {
 
       // Obtener el token FCM
       final token = await getToken();
-      debugPrint('✅ FCM Token: $token');
 
-      debugPrint('✅ Firebase Notifications initialized successfully');
     } catch (e) {
-      debugPrint('❌ Error initializing Firebase Notifications: $e');
       rethrow;
     }
   }
@@ -64,10 +62,8 @@ class FirebaseNotificationService implements NotificationRepository {
       final isAuthorized = settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
 
-      debugPrint('🔐 Notification permission status: ${settings.authorizationStatus}');
       return isAuthorized;
     } catch (e) {
-      debugPrint('❌ Error requesting permission: $e');
       return false;
     }
   }
@@ -79,7 +75,6 @@ class FirebaseNotificationService implements NotificationRepository {
       return settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
     } catch (e) {
-      debugPrint('❌ Error checking permission: $e');
       return false;
     }
   }
@@ -88,10 +83,8 @@ class FirebaseNotificationService implements NotificationRepository {
   Future<String?> getToken() async {
     try {
       final token = await _messaging.getToken();
-      debugPrint('📱 FCM Token: $token');
       return token;
     } catch (e) {
-      debugPrint('❌ Error getting FCM token: $e');
       return null;
     }
   }
@@ -100,9 +93,7 @@ class FirebaseNotificationService implements NotificationRepository {
   Future<void> subscribeToTopic(String topic) async {
     try {
       await _messaging.subscribeToTopic(topic);
-      debugPrint('✅ Subscribed to topic: $topic');
     } catch (e) {
-      debugPrint('❌ Error subscribing to topic $topic: $e');
       rethrow;
     }
   }
@@ -111,9 +102,7 @@ class FirebaseNotificationService implements NotificationRepository {
   Future<void> unsubscribeFromTopic(String topic) async {
     try {
       await _messaging.unsubscribeFromTopic(topic);
-      debugPrint('✅ Unsubscribed from topic: $topic');
     } catch (e) {
-      debugPrint('❌ Error unsubscribing from topic $topic: $e');
       rethrow;
     }
   }
@@ -132,9 +121,7 @@ class FirebaseNotificationService implements NotificationRepository {
   Future<void> deleteToken() async {
     try {
       await _messaging.deleteToken();
-      debugPrint('✅ FCM Token deleted');
     } catch (e) {
-      debugPrint('❌ Error deleting token: $e');
       rethrow;
     }
   }
@@ -150,12 +137,12 @@ class FirebaseNotificationService implements NotificationRepository {
 
   /// Configura los listeners para diferentes estados de las notificaciones
   void _setupMessageListeners() {
+    // Cancelar subscriptions previas para evitar duplicados
+    _onMessageSub?.cancel();
+    _onMessageOpenedSub?.cancel();
+
     // Cuando la app está en foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('📨 Foreground message received: ${message.messageId}');
-      debugPrint('Title: ${message.notification?.title}');
-      debugPrint('Body: ${message.notification?.body}');
-      debugPrint('Data: ${message.data}');
+    _onMessageSub = FirebaseMessaging.onMessage.listen((RemoteMessage message) {
 
       if (_onMessageReceivedHandler != null) {
         final data = {
@@ -169,11 +156,7 @@ class FirebaseNotificationService implements NotificationRepository {
     });
 
     // Cuando el usuario toca una notificación y abre la app
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('📲 Notification tapped: ${message.messageId}');
-      debugPrint('Title: ${message.notification?.title}');
-      debugPrint('Body: ${message.notification?.body}');
-      debugPrint('Data: ${message.data}');
+    _onMessageOpenedSub = FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
 
       if (_onMessageOpenedHandler != null) {
         final data = {

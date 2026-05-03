@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -36,9 +37,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
     return BlocListener<LocationsBloc, LocationsState>(
       listener: (context, state) {
         if (state is LocationActiveToggled) {
-          debugPrint('✅ LocationActiveToggled: ${state.locationId} -> ${state.isActive}');
         } else if (state is LocationsError) {
-          debugPrint('❌ LocationsError: ${state.message}');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Error: ${state.message}'),
@@ -96,7 +95,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
         ),
       ),
@@ -116,7 +115,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   border: Border.all(color: AppColors.white, width: 4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -124,16 +123,14 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 ),
                 child: widget.location.imageUrl != null
                     ? ClipOval(
-                        child: Image.network(
-                          widget.location.imageUrl!,
+                        child: CachedNetworkImage(
+                          imageUrl: widget.location.imageUrl!,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(
-                              Icons.store,
-                              size: 48,
-                              color: AppColors.primary,
-                            );
-                          },
+                          errorWidget: (context, url, error) => Icon(
+                            Icons.store,
+                            size: 48,
+                            color: AppColors.primary,
+                          ),
                         ),
                       )
                     : Icon(
@@ -162,7 +159,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                 Text(
                   widget.location.description,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.white.withOpacity(0.9),
+                    color: AppColors.white.withValues(alpha: 0.9),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 2,
@@ -185,9 +182,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.1),
+        color: statusColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.3), width: 2),
+        border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
       ),
       child: Column(
         children: [
@@ -196,7 +193,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.2),
+                  color: statusColor.withValues(alpha: 0.2),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(statusIcon, color: statusColor, size: 32),
@@ -475,7 +472,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -548,7 +545,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -585,7 +582,7 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: _isActive
-                        ? AppColors.success.withOpacity(0.1)
+                        ? AppColors.success.withValues(alpha: 0.1)
                         : AppColors.neutral200,
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -703,14 +700,12 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
   }
 
   void _handleToggleActive(bool value) async {
-    debugPrint('🔄 Intentando cambiar is_active a: $value para location: ${widget.location.id}');
 
     setState(() {
       _isTogglingActive = true;
     });
 
     try {
-      debugPrint('📤 Disparando ToggleLocationActiveEvent...');
       context.read<LocationsBloc>().add(
             ToggleLocationActiveEvent(
               locationId: widget.location.id!,
@@ -726,7 +721,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         _isTogglingActive = false;
       });
 
-      debugPrint('✅ Estado local actualizado a: $_isActive');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -742,7 +736,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         );
       }
     } catch (e) {
-      debugPrint('❌ Error en _handleToggleActive: $e');
       setState(() {
         _isTogglingActive = false;
       });
@@ -819,8 +812,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         return AppColors.success;
       case VerificationStatus.rejected:
         return AppColors.error;
-      case VerificationStatus.approved:
-        return AppColors.success;
     }
   }
 
@@ -832,8 +823,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         return Icons.check_circle;
       case VerificationStatus.rejected:
         return Icons.cancel;
-      case VerificationStatus.approved:
-        return Icons.verified;
     }
   }
 
@@ -845,8 +834,6 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
         return 'Tu negocio ha sido verificado y aprobado. Ahora puedes configurar tus productos.';
       case VerificationStatus.rejected:
         return 'Tu solicitud ha sido rechazada. Por favor, revisa las notas del verificador.';
-      case VerificationStatus.approved:
-        return 'Tu negocio está activo y visible en el mapa para los clientes.';
     }
   }
 

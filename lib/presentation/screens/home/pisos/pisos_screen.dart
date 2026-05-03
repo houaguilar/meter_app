@@ -249,9 +249,7 @@ class _PisosScreenState extends ConsumerState<PisosScreen>
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
     assert(() {
-      debugPrint('❌ PisosScreen Error: $message');
       if (stackTrace != null) {
-        debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
@@ -547,7 +545,7 @@ class SelectedFloorInfo extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: info.primaryColor.withOpacity(0.1),
+                  color: info.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(

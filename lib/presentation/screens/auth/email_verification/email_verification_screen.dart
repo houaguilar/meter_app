@@ -7,9 +7,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/theme/theme.dart';
-import '../../../../data/local/shared_preferences_helper.dart';
-import '../../../../domain/usecases/use_cases.dart';
-import '../../../../init_dependencies.dart';
 import '../../../blocs/auth/auth_bloc.dart' as bloc_auth;
 
 class EmailVerificationScreen extends StatefulWidget {
@@ -85,34 +82,11 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     });
   }
 
-  Future<void> _handleResend() async {
+  void _handleResend() {
     if (_resendCountdown > 0 || _isResending) return;
 
     setState(() => _isResending = true);
-
-    try {
-      final resendOTPUseCase = serviceLocator<ResendOTP>();
-      final result = await resendOTPUseCase(ResendOTPParams(email: widget.email));
-
-      if (mounted) {
-        result.fold(
-          (failure) {
-            setState(() => _isResending = false);
-            _showError(failure.message);
-          },
-          (_) {
-            setState(() => _isResending = false);
-            _showSuccess('Enlace reenviado a ${widget.email}');
-            _startResendCountdown();
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _isResending = false);
-        _showError('Error al reenviar: $e');
-      }
-    }
+    context.read<bloc_auth.AuthBloc>().add(bloc_auth.AuthResendOTP(email: widget.email));
   }
 
   void _showError(String message) {
@@ -155,10 +129,14 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
   Widget build(BuildContext context) {
     return BlocListener<bloc_auth.AuthBloc, bloc_auth.AuthState>(
       listener: (context, state) {
-        // Si el BLoC emite AuthFailure mientras el usuario está en esta pantalla
-        // (p. ej. por un enlace de verificación inválido o vencido), mostramos
-        // un mensaje útil en lugar del genérico "error inesperado".
-        if (state is bloc_auth.AuthFailure) {
+        if (state is bloc_auth.AuthOTPResent) {
+          setState(() => _isResending = false);
+          _showSuccess('Enlace reenviado a ${widget.email}');
+          _startResendCountdown();
+        } else if (state is bloc_auth.AuthInitial) {
+          context.go('/login');
+        } else if (state is bloc_auth.AuthFailure) {
+          setState(() => _isResending = false);
           _showError('El enlace de verificación no es válido o ha expirado. Solicita uno nuevo.');
         }
       },
@@ -172,12 +150,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
           onPressed: () {
-            // Cancelar el registro: limpiar estado y volver al login
-            serviceLocator<SharedPreferencesHelper>()
-                .clearPendingVerificationEmail()
-                .then((_) {
-              if (context.mounted) context.go('/login');
-            });
+            context.read<bloc_auth.AuthBloc>().add(bloc_auth.AuthCancelEmailVerification());
           },
         ),
       ),
@@ -214,8 +187,8 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.blueMetraShop.withOpacity(0.2),
-                AppColors.blueMetraShop.withOpacity(0.1),
+                AppColors.blueMetraShop.withValues(alpha: 0.2),
+                AppColors.blueMetraShop.withValues(alpha: 0.1),
               ],
             ),
             shape: BoxShape.circle,
@@ -255,9 +228,9 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.06),
+        color: AppColors.blueMetraShop.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.blueMetraShop.withOpacity(0.15)),
+        border: Border.all(color: AppColors.blueMetraShop.withValues(alpha: 0.15)),
       ),
       child: Column(
         children: [

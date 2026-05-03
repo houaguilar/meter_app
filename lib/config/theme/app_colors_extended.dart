@@ -452,7 +452,7 @@ class FeedbackWidgets {
               Container(
                 padding: const EdgeInsets.all(AppDimensions.spacingLg),
                 decoration: BoxDecoration(
-                  color: (iconColor ?? AppColorsExtended.warning).withOpacity(0.1),
+                  color: (iconColor ?? AppColorsExtended.warning).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(

@@ -259,84 +259,6 @@ class _RegisterScreenState extends State<RegisterScreen>
     return PasswordStrength.strong;
   }
 
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Por favor, introduce tu nombre completo';
-    }
-
-    final name = value.trim();
-    if (name.length < 2) {
-      return 'El nombre debe tener al menos 2 caracteres';
-    }
-
-    if (name.length > 100) {
-      return 'El nombre es demasiado largo';
-    }
-
-    if (!RegExp(r"^[a-zA-ZÀ-ÿ\u00f1\u00d1\s\-'\.]+$").hasMatch(name)) {
-      return 'El nombre contiene caracteres no válidos';
-    }
-
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Por favor, introduce tu correo electrónico';
-    }
-
-    final email = value.trim();
-    if (!Validators.validateEmail(email)) {
-      return 'Por favor, introduce un correo electrónico válido';
-    }
-
-    if (email.length > 254) {
-      return 'El correo electrónico es demasiado largo';
-    }
-
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Por favor, introduce una contraseña';
-    }
-
-    if (value.length < 8) {
-      return 'La contraseña debe tener al menos 8 caracteres';
-    }
-
-    if (value.length > 128) {
-      return 'La contraseña es demasiado larga';
-    }
-
-    if (!value.contains(RegExp(r'[A-Z]'))) {
-      return 'Debe incluir al menos una letra mayúscula';
-    }
-
-    if (!value.contains(RegExp(r'[a-z]'))) {
-      return 'Debe incluir al menos una letra minúscula';
-    }
-
-    if (!value.contains(RegExp(r'[0-9]'))) {
-      return 'Debe incluir al menos un número';
-    }
-
-    return null;
-  }
-
-  String? _validateConfirmPassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Por favor, confirma tu contraseña';
-    }
-
-    if (value != _passwordController.text) {
-      return 'Las contraseñas no coinciden';
-    }
-
-    return null;
-  }
-
   void _clearSensitiveData() {
     _passwordController.clear();
     _confirmPasswordController.clear();
@@ -573,7 +495,7 @@ class _RegisterScreenState extends State<RegisterScreen>
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -683,7 +605,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  AppColors.primary.withOpacity(0.3),
+                  AppColors.primary.withValues(alpha: 0.3),
                 ],
               ),
             ),
@@ -707,7 +629,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                             Shadow(
                               offset: const Offset(0, 2),
                               blurRadius: 8,
-                              color: Colors.black.withOpacity(0.3),
+                              color: Colors.black.withValues(alpha: 0.3),
                             ),
                           ],
                         ),
@@ -718,7 +640,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -833,7 +755,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           textInputAction: TextInputAction.next,
           textCapitalization: TextCapitalization.words,
           autocorrect: false,
-          validator: _validateName,
+          validator: Validators.fullName,
           enabled: !_isLoading,
           decoration: InputDecoration(
             hintText: 'Tu nombre y apellido',
@@ -896,7 +818,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           textInputAction: TextInputAction.next,
           autocorrect: false,
           enableSuggestions: false,
-          validator: _validateEmail,
+          validator: Validators.emailField,
           enabled: !_isLoading,
           decoration: InputDecoration(
             hintText: 'ejemplo@correo.com',
@@ -959,7 +881,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           textInputAction: TextInputAction.next,
           autocorrect: false,
           enableSuggestions: false,
-          validator: _validatePassword,
+          validator: Validators.passwordField,
           enabled: !_isLoading,
           decoration: InputDecoration(
             hintText: 'Mínimo 8 caracteres',
@@ -1138,7 +1060,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           textInputAction: TextInputAction.done,
           autocorrect: false,
           enableSuggestions: false,
-          validator: _validateConfirmPassword,
+          validator: (value) => Validators.confirmPasswordField(value, _passwordController.text),
           enabled: !_isLoading,
           decoration: InputDecoration(
             hintText: 'Repite tu contraseña',

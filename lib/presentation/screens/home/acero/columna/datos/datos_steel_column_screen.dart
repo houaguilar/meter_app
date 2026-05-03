@@ -307,7 +307,7 @@ class _DatosSteelColumnScreenState extends ConsumerState<DatosSteelColumnScreen>
               }).toList(),
               indicatorColor: AppColors.white,
               labelColor: AppColors.white,
-              unselectedLabelColor: AppColors.white.withOpacity(0.7),
+              unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
               isScrollable: true,
             ),
           ),
@@ -699,12 +699,12 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: widget.columnData.hasFooting
-            ? AppColors.primary.withOpacity(0.05)
+            ? AppColors.primary.withValues(alpha: 0.05)
             : AppColors.neutral50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: widget.columnData.hasFooting
-              ? AppColors.primary.withOpacity(0.2)
+              ? AppColors.primary.withValues(alpha: 0.2)
               : AppColors.neutral200,
         ),
       ),
@@ -828,12 +828,12 @@ class _ColumnFormViewState extends State<_ColumnFormView> {
           Container(
             decoration: BoxDecoration(
               color: widget.columnData.useSplice
-                  ? AppColors.success.withOpacity(0.05)
+                  ? AppColors.success.withValues(alpha: 0.05)
                   : AppColors.neutral50,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
                 color: widget.columnData.useSplice
-                    ? AppColors.success.withOpacity(0.2)
+                    ? AppColors.success.withValues(alpha: 0.2)
                     : AppColors.neutral200,
               ),
             ),

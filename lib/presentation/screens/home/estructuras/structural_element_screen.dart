@@ -41,7 +41,6 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       ref.read(tipoStructuralElementProvider.notifier).update('');
       ref.read(columnaResultProvider.notifier).clearList();
       ref.read(vigaResultProvider.notifier).clearList();
-      print('🧹 Estado inicial limpiado');
     });
   }
 
@@ -121,7 +120,6 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       }
 
       // Debug: imprimir información del elemento seleccionado
-      print('🔍 Elemento seleccionado: ${element.name} (ID: ${element.id})');
 
       // Actualizar selección
       ref.read(selectedStructuralElementProvider.notifier).selectElement(element);
@@ -141,19 +139,16 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
       final elementType = _getStructuralElementType(element.id);
 
       // Debug: imprimir el tipo de elemento que se va a establecer
-      print('🏗️ Tipo de elemento a establecer: $elementType');
 
       // FIX: Establecer el tipo de elemento usando NotifierProvider
       ref.read(tipoStructuralElementProvider.notifier).update(elementType);
 
       // Verificar que se estableció correctamente
       final tipoEstablecido = ref.read(tipoStructuralElementProvider);
-      print('✅ Tipo establecido en provider: $tipoEstablecido');
 
       // Esperar un frame para asegurar que el estado se propagó
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final tipoFinal = ref.read(tipoStructuralElementProvider);
-        print('🔍 Tipo final antes de navegar: $tipoFinal');
 
         // Navegar a la pantalla de datos
         context.pushNamed('structural-element-datos');
@@ -173,25 +168,18 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   String _getStructuralElementType(String elementId) {
     switch (elementId) {
       case '1':
-        print('🏛️ Seleccionando COLUMNA para ID: $elementId');
         return 'columna';
       case '2':
-        print('🌉 Seleccionando VIGA para ID: $elementId');
         return 'viga';
       case '3':
-        print('🌉 Seleccionando ZAPATA para ID: $elementId');
         return 'zapata';
       case '4':
-        print('🌉 Seleccionando CIMIENTO CORRIDO para ID: $elementId');
         return 'cimiento_corrido';
       case '5':
-        print('🧱 Seleccionando SOBRECIMIENTO para ID: $elementId');
         return 'sobrecimiento';
       case '6':
-        print('🧱 Seleccionando SOLADO para ID: $elementId');
         return 'solado';
       default:
-        print('❓ ID no reconocido: $elementId, usando columna por defecto');
         return 'columna';
     }
   }
@@ -248,9 +236,7 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
     assert(() {
-      debugPrint('❌ StructuralElementScreen Error: $message');
       if (stackTrace != null) {
-        debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
@@ -367,10 +353,6 @@ class SelectedStructuralElementInfo extends ConsumerWidget {
           if (selectedElement != null)
             ElevatedButton(
               onPressed: () {
-                print('🔍 Estado actual del provider:');
-                print('- Elemento: ${selectedElement.name}');
-                print('- ID: ${selectedElement.id}');
-                print('- Tipo en provider: $tipoElemento');
               },
               child: const Text('Debug Print'),
             ),

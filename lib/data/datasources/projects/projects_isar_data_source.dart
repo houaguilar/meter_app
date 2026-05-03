@@ -50,19 +50,6 @@ class ProjectsIsarDataSource implements ProjectsLocalDataSource {
       // Sanitizar el nombre
       final sanitizedName = _sanitizeProjectName(name.trim());
 
-      // Verificar duplicados - sin filtrar por usuario aquí
-      final existingProject = await isar.projects
-          .filter()
-          .nameEqualTo(sanitizedName)
-          .findFirst();
-
-      if (existingProject != null) {
-        throw Failure(
-          message: 'Ya existe un proyecto con el nombre "$sanitizedName"',
-          type: FailureType.duplicateName,
-        );
-      }
-
       // Crear proyecto sin userId (se asignará en el repository)
       final project = Project(
         name: sanitizedName,

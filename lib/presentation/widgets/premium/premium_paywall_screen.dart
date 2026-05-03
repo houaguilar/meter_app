@@ -567,7 +567,6 @@ class PremiumPaywallScreen extends StatelessWidget {
     Future.delayed(const Duration(seconds: 3), () {
       if (context.mounted && Navigator.of(context).canPop()) {
         Navigator.of(context).pop();
-        print('🔍 Success: Paywall cerrado automáticamente');
       }
     });
   }
@@ -602,7 +601,6 @@ class PremiumPaywallScreen extends StatelessWidget {
     try {
       await launchUrl(Uri.parse(url));
     } catch (e) {
-      print('Error abriendo URL: $e');
     }
   }
 

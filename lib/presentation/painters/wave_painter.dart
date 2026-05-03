@@ -6,7 +6,7 @@ class WavePainters extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = AppColors.blueMetraShop.withOpacity(0.3)
+      ..color = AppColors.blueMetraShop.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
 
     final path = Path();
@@ -33,7 +33,7 @@ class WavePainters extends CustomPainter {
 
     // Segunda onda (más pequeña)
     final path2 = Path();
-    paint.color = AppColors.blueMetraShop.withOpacity(0.2);
+    paint.color = AppColors.blueMetraShop.withValues(alpha: 0.2);
 
     path2.moveTo(0, size.height * 0.8);
     path2.quadraticBezierTo(

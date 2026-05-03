@@ -93,13 +93,13 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withOpacity(0.1),
-            AppColors.primary.withOpacity(0.05),
+            AppColors.primary.withValues(alpha: 0.1),
+            AppColors.primary.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: AppColors.primary.withOpacity(0.2),
+          color: AppColors.primary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -115,7 +115,7 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -157,10 +157,10 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.success.withOpacity(0.1),
+                color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: AppColors.success.withOpacity(0.3),
+                  color: AppColors.success.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
               ),
@@ -293,7 +293,7 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppColors.success.withOpacity(0.05),
+                      AppColors.success.withValues(alpha: 0.05),
                       AppColors.white,
                     ],
                   )
@@ -302,15 +302,15 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isConfigured
-                  ? AppColors.success.withOpacity(0.4)
-                  : AppColors.primary.withOpacity(0.15),
+                  ? AppColors.success.withValues(alpha: 0.4)
+                  : AppColors.primary.withValues(alpha: 0.15),
               width: isConfigured ? 2.5 : 1.5,
             ),
             boxShadow: [
               BoxShadow(
                 color: isConfigured
-                    ? AppColors.success.withOpacity(0.15)
-                    : AppColors.primary.withOpacity(0.08),
+                    ? AppColors.success.withValues(alpha: 0.15)
+                    : AppColors.primary.withValues(alpha: 0.08),
                 blurRadius: 16,
                 spreadRadius: 0,
                 offset: const Offset(0, 6),
@@ -330,8 +330,8 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
                           color: isConfigured
-                              ? AppColors.success.withOpacity(0.1)
-                              : AppColors.primary.withOpacity(0.08),
+                              ? AppColors.success.withValues(alpha: 0.1)
+                              : AppColors.primary.withValues(alpha: 0.08),
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -362,7 +362,7 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.15),
+                            color: AppColors.success.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -405,13 +405,13 @@ class _CategorySelectorScreenState extends State<CategorySelectorScreen> {
                         end: Alignment.bottomRight,
                         colors: [
                           AppColors.success,
-                          AppColors.success.withOpacity(0.8),
+                          AppColors.success.withValues(alpha: 0.8),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.success.withOpacity(0.4),
+                          color: AppColors.success.withValues(alpha: 0.4),
                           blurRadius: 6,
                           offset: const Offset(0, 2),
                         ),

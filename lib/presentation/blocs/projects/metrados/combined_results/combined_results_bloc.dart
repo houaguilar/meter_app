@@ -4,7 +4,7 @@ import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
 import '../../../../../domain/services/shared/UnifiedResultsCombiner.dart';
-import '../../../../../domain/services/shared/combined_results_share_service.dart';
+import '../../../../services/combined_results_share_service.dart';
 import '../../../../../domain/usecases/projects/metrados/result/load_results_use_case.dart';
 import '../../../../../domain/usecases/projects/metrados/get_all_metrados.dart';
 import '../../../common/error_handler_mixin.dart';
@@ -74,37 +74,30 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
             return;
           }
 
-          // Cargar resultados para cada metrado seleccionado
-          final metradosWithResults = <MetradoWithResults>[];
-
-          for (final metrado in selectedMetrados) {
-            logInfo('Cargando resultados para: ${metrado.name}');
-
+          // Cargar resultados para todos los metrados en paralelo
+          final futures = selectedMetrados.map((metrado) async {
             final resultsResult = await _loadResults(
               LoadResultsParams(metradoId: metrado.id.toString()),
             );
-
-            await resultsResult.fold(
-              (failure) async {
+            MetradoWithResults? entry;
+            resultsResult.fold(
+              (failure) {
                 logWarning('Error al cargar resultados de ${metrado.name}: ${failure.message}');
-                // Continuar con otros metrados en caso de error
               },
-              (results) async {
-                logInfo('Resultados cargados para ${metrado.name}: ${results.length} items');
-
+              (results) {
                 if (results.isNotEmpty) {
-                  metradosWithResults.add(
-                    MetradoWithResults(
-                      metrado: metrado,
-                      results: results,
-                    ),
-                  );
+                  entry = MetradoWithResults(metrado: metrado, results: results);
                 } else {
                   logWarning('Metrado ${metrado.name} no tiene resultados');
                 }
               },
             );
-          }
+            return entry;
+          });
+
+          final metradosWithResults = (await Future.wait(futures))
+              .whereType<MetradoWithResults>()
+              .toList();
 
           if (metradosWithResults.isEmpty) {
             logWarning('No se encontraron resultados en ningún metrado seleccionado');

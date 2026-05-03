@@ -83,9 +83,7 @@ class _HomeViewState extends ConsumerState<HomeView>
       ref.read(columnaResultProvider.notifier).clearList();
       ref.read(vigaResultProvider.notifier).clearList();
 
-      print('DEBUG: Providers limpiados al navegar al home');
     } catch (e) {
-      print('ERROR al limpiar providers: $e');
     }
   }
 

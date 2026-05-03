@@ -54,7 +54,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String password,
   }) async {
     try {
-      print('📧 Registrando usuario: $email');
 
       final response = await supabaseClient.auth.signUp(
         password: password,
@@ -69,8 +68,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('User is null!');
       }
 
-      print('✅ Usuario registrado: ${response.user!.id}');
-      print('📧 Email confirmado: ${response.user!.emailConfirmedAt != null}');
       // El perfil se crea automáticamente via trigger en Supabase (handle_new_user)
 
       return UserModel(
@@ -93,7 +90,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String email,
   }) async {
     try {
-      print('👤 Creando perfil inicial para usuario: $userId');
 
       // Verificar si ya existe un perfil para este usuario
       final existingProfiles = await supabaseClient
@@ -102,7 +98,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           .eq('id', userId);
 
       if (existingProfiles.isEmpty) {
-        print('📝 No existe perfil, creando nuevo perfil...');
 
         // Crear un nuevo perfil si no existe
         await supabaseClient.from('profiles').insert({
@@ -118,7 +113,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           'created_at': DateTime.now().toIso8601String(),
         });
 
-        print('✅ Perfil creado exitosamente');
 
         // Verificar que se creó correctamente
         final verifyProfile = await supabaseClient
@@ -127,12 +121,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             .eq('id', userId)
             .single();
 
-        print('✅ Perfil verificado: ${verifyProfile['name']}');
       } else {
-        print('ℹ️ Perfil ya existe, no se crea uno nuevo');
       }
     } catch (e) {
-      print('❌ Error al crear perfil inicial: $e');
       // Lanzar la excepción para que el flujo de registro falle si no se puede crear el perfil
       throw ServerException('Error al crear perfil de usuario: $e');
     }
@@ -141,7 +132,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel?> signInWithApple() async {
     try {
-      print('🍎 Iniciando Sign in with Apple...');
 
       // 1. Generar nonce: el raw va a Supabase, el hash va a Apple
       final rawNonce = supabaseClient.auth.generateRawNonce();
@@ -161,7 +151,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('No se pudo obtener el token de Apple');
       }
 
-      print('✅ Credencial de Apple obtenida');
 
       // 3. Autenticar con Supabase — se pasa el nonce RAW
       final response = await supabaseClient.auth.signInWithIdToken(
@@ -192,7 +181,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         );
       }
 
-      print('✅ Sign in with Apple completado: ${response.user!.email}');
 
       return UserModel(
         id: response.user!.id,
@@ -203,13 +191,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       if (e.code == AuthorizationErrorCode.canceled) {
         throw const ServerException('El usuario canceló el inicio de sesión');
       }
-      print('❌ Error Apple Sign In: ${e.message}');
       throw ServerException(e.message);
     } on AuthException catch (e) {
-      print('❌ Error Supabase Auth: ${e.message}');
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error inesperado en signInWithApple: $e');
       throw ServerException(e.toString());
     }
   }
@@ -223,8 +208,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     final webClientId = AppSecrets.googleWebClientId;
     final iosClientId = AppSecrets.googleIOSClientId;
 
-    print('🔐 Iniciando Google Sign-In...');
-    print('📱 Package: com.mts.metrashop');
 
     final GoogleSignIn googleSignIn = GoogleSignIn(
       clientId: iosClientId,
@@ -233,31 +216,24 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
     try {
       // Paso 1: Obtener usuario de Google
-      print('Paso 1: Solicitando inicio de sesión de Google...');
       final googleUser = await googleSignIn.signIn();
 
       if (googleUser == null) {
-        print('❌ Usuario canceló el inicio de sesión');
         throw const ServerException('El usuario canceló el inicio de sesión');
       }
 
-      print('✅ Usuario de Google obtenido: ${googleUser.email}');
 
       // Paso 2: Obtener tokens de autenticación
-      print('Paso 2: Obteniendo tokens de autenticación...');
       final googleAuth = await googleUser.authentication;
       final accessToken = googleAuth.accessToken;
       final idToken = googleAuth.idToken;
 
       if (idToken == null) {
-        print('❌ No se pudo obtener el ID token');
         throw const ServerException('Error al obtener credenciales de Google');
       }
 
-      print('✅ Tokens obtenidos correctamente');
 
       // Paso 3: Autenticar con Supabase usando el ID token
-      print('Paso 3: Autenticando con Supabase...');
       final response = await supabaseClient.auth.signInWithIdToken(
         provider: OAuthProvider.google,
         idToken: idToken,
@@ -265,13 +241,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       if (response.user == null) {
-        print('❌ Supabase no devolvió un usuario');
         throw const ServerException('Error al autenticar con Supabase');
       }
 
-      print('✅ Usuario autenticado con Supabase: ${response.user!.email}');
       // El perfil se crea/verifica automáticamente via trigger en Supabase (handle_new_user)
-      print('✅ Google Sign-In completado exitosamente');
 
       return UserModel(
         id: response.user!.id,
@@ -282,8 +255,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
     } on AuthException catch (e) {
       // Errores específicos de Supabase Auth
-      print('❌ Error de Supabase Auth: ${e.message}');
-      print('   Status Code: ${e.statusCode}');
 
       if (e.statusCode == '556' || e.statusCode == 556) {
         throw const ServerException(
@@ -299,8 +270,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException(e.message);
     } on PlatformException catch (e) {
       // Errores de la plataforma (Android/iOS)
-      print('❌ Error de plataforma: ${e.message}');
-      print('   Code: ${e.code}');
 
       if (e.code == 'sign_in_failed' || e.code == 'network_error') {
         throw const ServerException(
@@ -322,8 +291,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       }
 
       // Cualquier otro error
-      print('❌ Error inesperado en signInWithGoogle: $e');
-      print('   Stack trace: $stackTrace');
       throw ServerException(e.toString());
     }
   }
@@ -365,7 +332,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return null;
     } catch (e) {
-      print('Error en getCurrentUserData: $e');
       throw ServerException(e.toString());
     }
   }
@@ -455,14 +421,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           throw const ServerException('No se encontró el perfil para actualizar.');
         }
 
-        print('Perfil actualizado exitosamente: ${result.first}');
       }
 
     } on PostgrestException catch (e) {
-      print('Error PostgrestException: ${e.message}');
       throw ServerException('Error de base de datos: ${e.message}');
     } catch (e) {
-      print('Error general en updateUserProfileData: $e');
       throw ServerException('Error al actualizar el perfil: $e');
     }
   }
@@ -488,13 +451,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('Error al actualizar la contraseña');
       }
 
-      print('Contraseña actualizada exitosamente para usuario: ${response.user!.id}');
 
     } on AuthException catch (e) {
-      print('Error AuthException: ${e.message}');
       throw ServerException(e.message);
     } catch (e) {
-      print('Error general en changePassword: $e');
       throw ServerException('Error al cambiar la contraseña: $e');
     }
   }
@@ -504,7 +464,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       await supabaseClient.auth.signOut();
     } catch (e) {
-      print('Error en logout: $e');
       throw ServerException('Error al cerrar sesión: $e');
     }
   }
@@ -522,13 +481,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final userEmail = session.user.email;
       final user = session.user;
 
-      print('🗑️ Iniciando eliminación de cuenta para usuario: $userId');
 
       // Detectar el proveedor de autenticación
       final isGoogleUser = user.appMetadata['provider'] == 'google' ||
           (user.identities?.any((identity) => identity.provider == 'google') ?? false);
 
-      print('🔍 Proveedor de autenticación: ${isGoogleUser ? "Google" : "Email/Password"}');
 
       // Paso 2: Re-autenticar solo si NO es usuario de Google
       if (!isGoogleUser) {
@@ -538,14 +495,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             email: userEmail ?? '',
             password: password,
           );
-          print('✅ Re-autenticación exitosa');
         } on AuthException catch (e) {
-          print('❌ Error en re-autenticación: ${e.message}');
           throw const ServerException('Contraseña incorrecta');
         }
       } else {
         // Para usuarios de Google, verificar que la sesión es válida y reciente
-        print('✅ Usuario de Google verificado por sesión activa');
       }
 
       // Paso 3: Eliminar el usuario de Supabase Auth
@@ -560,7 +514,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // - Sus archivos en storage (via trigger)
       // Por lo tanto, NO es necesario eliminar manualmente cada tabla.
 
-      print('🗑️ Eliminando usuario y todos sus datos (via CASCADE)...');
 
       // Obtener el access token actual para enviarlo explícitamente
       final currentSession = supabaseClient.auth.currentSession;
@@ -584,9 +537,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           );
         }
 
-        print('✅ Usuario y todos sus datos eliminados exitosamente (CASCADE)');
       } catch (e) {
-        print('❌ Error crítico al eliminar usuario de Auth: $e');
         // Si falla la Edge Function, los datos NO se eliminan (CASCADE no se ejecuta)
         throw ServerException(
           'Error al eliminar la cuenta. Por favor intenta nuevamente. '
@@ -597,15 +548,12 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       // Paso 4: Cerrar sesión automáticamente
       await supabaseClient.auth.signOut();
 
-      print('✅ Cuenta eliminada exitosamente');
 
     } on ServerException {
       rethrow;
     } on AuthException catch (e) {
-      print('❌ Error de autenticación: ${e.message}');
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error inesperado en deleteAccount: $e');
       throw ServerException('Error al eliminar la cuenta: $e');
     }
   }
@@ -613,19 +561,15 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> resetPasswordForEmail(String email) async {
     try {
-      print('🔐 Iniciando reset de contraseña para: $email');
 
       await supabaseClient.auth.resetPasswordForEmail(
         email,
         redirectTo: 'com.mts.metrashop:/callback',
       );
 
-      print('✅ Email de recuperación enviado exitosamente');
     } on AuthException catch (e) {
-      print('❌ Error AuthException: ${e.message}');
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error general en resetPasswordForEmail: $e');
       throw ServerException('Error al enviar correo de recuperación: $e');
     }
   }
@@ -633,7 +577,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> verifyOTP({required String email, required String token}) async {
     try {
-      print('🔐 Verificando OTP para: $email');
 
       final response = await supabaseClient.auth.verifyOTP(
         email: email,
@@ -645,9 +588,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('Código de verificación inválido');
       }
 
-      print('✅ OTP verificado exitosamente');
     } on AuthException catch (e) {
-      print('❌ Error AuthException: ${e.message}');
 
       // Detectar códigos expirados o inválidos
       if (e.message.toLowerCase().contains('expired')) {
@@ -658,7 +599,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error general en verifyOTP: $e');
       throw ServerException('Error al verificar código: $e');
     }
   }
@@ -666,7 +606,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<void> resendOTP(String email) async {
     try {
-      print('🔐 Reenviando OTP para: $email');
 
       await supabaseClient.auth.resend(
         type: OtpType.email,
@@ -674,9 +613,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         emailRedirectTo: 'com.mts.metrashop:/callback',
       );
 
-      print('✅ OTP reenviado exitosamente');
     } on AuthException catch (e) {
-      print('❌ Error AuthException: ${e.message}');
 
       // Detectar rate limiting (demasiados intentos)
       if (e.message.toLowerCase().contains('rate limit')) {
@@ -685,7 +622,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error general en resendOTP: $e');
       throw ServerException('Error al reenviar código: $e');
     }
   }
@@ -697,7 +633,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     required String newPassword,
   }) async {
     try {
-      print('🔐 Verificando OTP y actualizando contraseña para: $email');
 
       // Paso 1: Verificar el OTP de tipo recovery
       // IMPORTANTE: esto autentica al usuario automáticamente
@@ -711,20 +646,16 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         throw const ServerException('Código de verificación inválido');
       }
 
-      print('✅ OTP verificado exitosamente');
 
       // Paso 2: Actualizar la contraseña (ya estamos autenticados)
       await supabaseClient.auth.updateUser(
         UserAttributes(password: newPassword),
       );
 
-      print('✅ Contraseña actualizada exitosamente');
 
       // Paso 3: Cerrar la sesión para que el usuario deba iniciar sesión con la nueva contraseña
       await supabaseClient.auth.signOut();
-      print('✅ Sesión cerrada - usuario debe iniciar sesión con nueva contraseña');
     } on AuthException catch (e) {
-      print('❌ Error AuthException: ${e.message}');
 
       // Detectar errores específicos
       if (e.message.toLowerCase().contains('expired')) {
@@ -735,7 +666,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       throw ServerException(e.message);
     } catch (e) {
-      print('❌ Error general en verifyOTPAndUpdatePassword: $e');
       throw ServerException('Error al actualizar contraseña: $e');
     }
   }

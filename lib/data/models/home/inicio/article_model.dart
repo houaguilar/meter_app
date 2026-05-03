@@ -17,12 +17,6 @@ class ArticleModel extends ArticleEntity {
   });
 
   factory ArticleModel.fromMap(Map<String, dynamic> map) {
-    print('🔍 ========== PARSING ARTICLE ==========');
-    print('🔍 Article title: ${map['title']}');
-    print('🔍 Article ID: ${map['id']}');
-    print('🔍 Raw content_images: ${map['content_images']}');
-    print('🔍 Content_images type: ${map['content_images'].runtimeType}');
-    print('🔍 Content_images is null: ${map['content_images'] == null}');
 
     // Parsear content_images
     List<ArticleContentImage> contentImages = [];
@@ -35,12 +29,9 @@ class ArticleModel extends ArticleEntity {
             ? json.decode(map['content_images'])
             : map['content_images']);
 
-        print('🔍 Parsed images JSON: $imagesJson');
-        print('🔍 Images JSON length: ${imagesJson.length}');
 
         contentImages = imagesJson
             .map((imageMap) {
-          print('🔍 Processing image: $imageMap');
           return ArticleContentImageModel.fromMap(imageMap);
         })
             .toList();
@@ -48,19 +39,12 @@ class ArticleModel extends ArticleEntity {
         // Ordenar por order_index
         contentImages.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
 
-        print('🔍 Final content images count: ${contentImages.length}');
         for (var img in contentImages) {
-          print('🔍 Image: ${img.imageUrl}');
-          print('🔍 Caption: ${img.caption}');
-          print('🔍 Order: ${img.orderIndex}');
         }
       } catch (e) {
-        print('🔥 Error parsing content_images: $e');
-        print('🔥 Stack trace: ${StackTrace.current}');
         contentImages = [];
       }
     } else {
-      print('🔍 No content_images found for ${map['title']}');
     }
 
     final article = ArticleModel(
@@ -75,7 +59,6 @@ class ArticleModel extends ArticleEntity {
       updatedAt: DateTime.parse(map['updated_at']),
     );
 
-    print('🔍 Article hasImageContent: ${article.hasImageContent}');
     return article;
   }
 
@@ -104,7 +87,6 @@ class ArticleContentImageModel extends ArticleContentImage {
   });
 
   factory ArticleContentImageModel.fromMap(Map<String, dynamic> map) {
-    print('🔍 Parsing image: ${map['image_url']}');
     return ArticleContentImageModel(
       imageUrl: map['image_url'] ?? '',
       caption: map['caption'],

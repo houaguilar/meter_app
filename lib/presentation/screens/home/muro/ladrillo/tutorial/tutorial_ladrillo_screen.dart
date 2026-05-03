@@ -43,7 +43,6 @@ final VoidCallback onSkip;
         create: (_) => TutorialBloc(totalSteps: steps.length),
         child: BlocBuilder<TutorialBloc, TutorialState>(
           builder: (context, state) {
-            print('Estado actual: $state'); // Verifica el estado en el BlocBuilder
 
             if (state is TutorialInitial) {
               return TutorialStepWidget(step: steps[0], stepIndex: 0, onSkip: onSkip);
@@ -107,7 +106,6 @@ class TutorialStepWidget extends StatelessWidget {
                   if (stepIndex == 2) {
                     onSkip();  // Se asegura de que onSkip se ejecuta al final del tutorial
                   } else {
-                    print("Enviando evento TutorialNext");
                     BlocProvider.of<TutorialBloc>(context).add(TutorialNext());  // Se asegura de que el evento TutorialNext es enviado
                   }
                 },

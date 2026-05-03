@@ -27,7 +27,6 @@ class ArticleRepositoryImpl implements ArticleRepository {
       return result.fold(
             (failure) => Left(failure),
             (models) => Right(models.map((model) {
-          print('🔍 Repository mapping: ${model.title} has ${model.contentImages.length} images');
           return ArticleEntity(
             id: model.id,
             title: model.title,

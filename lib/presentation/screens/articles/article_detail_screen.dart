@@ -90,7 +90,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         });
       }
     } catch (e) {
-      debugPrint('Error initializing video: $e');
       setState(() {
         _hasVideoError = true;
         _isVideoLoading = false;
@@ -117,8 +116,8 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
         progressColors: ProgressBarColors(
           playedColor: AppColors.blueMetraShop,
           handleColor: AppColors.yellowMetraShop,
-          bufferedColor: AppColors.blueMetraShop.withOpacity(0.3),
-          backgroundColor: Colors.grey.withOpacity(0.3),
+          bufferedColor: AppColors.blueMetraShop.withValues(alpha: 0.3),
+          backgroundColor: Colors.grey.withValues(alpha: 0.3),
         ),
         onReady: () {
           if (mounted) {

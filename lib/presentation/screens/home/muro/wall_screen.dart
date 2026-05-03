@@ -114,8 +114,8 @@ class _WallScreenState extends ConsumerState<WallScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.blueMetraShop.withOpacity(0.2),
-                      AppColors.blueMetraShop.withOpacity(0.1),
+                      AppColors.blueMetraShop.withValues(alpha: 0.2),
+                      AppColors.blueMetraShop.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -166,10 +166,10 @@ class _WallScreenState extends ConsumerState<WallScreen>
                     return Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
+                        color: AppColors.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: AppColors.success.withOpacity(0.3),
+                          color: AppColors.success.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -254,12 +254,10 @@ class _WallScreenState extends ConsumerState<WallScreen>
 
       // Para ladrillos predefinidos (lógica existente)
       final materialType = _getMaterialType(material.id);
-      print('🔧 Estableciendo tipo: "$materialType"');
 
       ref.read(tipoLadrilloProvider.notifier).selectLadrillo(materialType);
 
       final verificacion = ref.read(tipoLadrilloProvider);
-      print('🔍 Verificación: "$verificacion"');
       context.pushNamed('ladrillo1');
 
     } catch (e, stackTrace) {
@@ -325,9 +323,7 @@ class _WallScreenState extends ConsumerState<WallScreen>
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
     assert(() {
-      debugPrint('❌ WallScreen Error: $message');
       if (stackTrace != null) {
-        debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
@@ -353,11 +349,11 @@ class _WallScreenState extends ConsumerState<WallScreen>
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppColors.error.withOpacity(0.9),
+                  color: AppColors.error.withValues(alpha: 0.9),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.error.withOpacity(0.3),
+                      color: AppColors.error.withValues(alpha: 0.3),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

@@ -1,14 +1,11 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/constants/constants.dart';
 import '../../../config/utils/number_formatter.dart';
 import '../../../domain/entities/entities.dart';
 import '../../../domain/services/tarrajeo_service.dart';
 
-part 'tarrajeo_providers.g.dart';
-
-@riverpod
-class TipoTarrajeo extends _$TipoTarrajeo {
+class TipoTarrajeo extends Notifier<String> {
   @override
   String build() => '';
 
@@ -17,8 +14,10 @@ class TipoTarrajeo extends _$TipoTarrajeo {
   }
 }
 
-@riverpod
-class TarrajeoResult extends _$TarrajeoResult {
+final tipoTarrajeoProvider =
+    NotifierProvider<TipoTarrajeo, String>(TipoTarrajeo.new);
+
+class TarrajeoResult extends Notifier<List<Tarrajeo>> {
   final TarrajeoService _tarrajeoService = TarrajeoService();
 
   @override
@@ -57,6 +56,9 @@ class TarrajeoResult extends _$TarrajeoResult {
     state = [];
   }
 }
+
+final tarrajeoResultProvider =
+    NotifierProvider<TarrajeoResult, List<Tarrajeo>>(TarrajeoResult.new);
 
 // ===== NUEVOS PROVIDERS PARA CÁLCULOS =====
 
@@ -212,8 +214,7 @@ class TarrajeoMetrado {
 // ===== PROVIDERS REACTIVOS =====
 
 /// Provider que calcula los materiales totales automáticamente
-@riverpod
-TarrajeoMateriales tarrajeoMateriales(Ref ref) {
+final tarrajeoMaterialesProvider = Provider<TarrajeoMateriales>((ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
 
   if (tarrajeos.isEmpty) {
@@ -233,11 +234,10 @@ TarrajeoMateriales tarrajeoMateriales(Ref ref) {
     agua: resultados['agua']!,
     volumenTotal: resultados['volumen']!,
   );
-}
+});
 
 /// Provider que calcula los datos de metrado individuales
-@riverpod
-List<TarrajeoMetrado> tarrajeoMetrados(Ref ref) {
+final tarrajeoMetradosProvider = Provider<List<TarrajeoMetrado>>((ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
 
   return tarrajeos.map((tarrajeo) {
@@ -247,27 +247,24 @@ List<TarrajeoMetrado> tarrajeoMetrados(Ref ref) {
       area: TarrajeoCalculator.calcularAreaTarrajeo(tarrajeo),
     );
   }).toList();
-}
+});
 
 /// Provider para el volumen total (backward compatibility)
-@riverpod
-List<double> volumenTarrajeo(Ref ref) {
+final volumenTarrajeoProvider = Provider<List<double>>((ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   return tarrajeos.map((tarrajeo) =>
       TarrajeoCalculator.calcularVolumenMortero(tarrajeo)
   ).toList();
-}
+});
 
 /// Provider para las descripciones (backward compatibility)
-@riverpod
-List<String> descriptionTarrajeo(Ref ref) {
+final descriptionTarrajeoProvider = Provider<List<String>>((ref) {
   final tarrajeo = ref.watch(tarrajeoResultProvider);
   return tarrajeo.map((e) => e.description).toList();
-}
+});
 
 /// Provider para datos compartidos/PDF
-@riverpod
-String datosShareTarrajeo(Ref ref) {
+final datosShareTarrajeoProvider = Provider<String>((ref) {
   final metrados = ref.watch(tarrajeoMetradosProvider);
 
   if (metrados.isEmpty) return 'No hay datos disponibles.';
@@ -278,11 +275,10 @@ String datosShareTarrajeo(Ref ref) {
   }
 
   return datos.isNotEmpty ? datos.substring(0, datos.length - 1) : datos;
-}
+});
 
 /// Provider para resumen completo (materiales + metrados)
-@riverpod
-String resumenCompleto(Ref ref) {
+final resumenCompletoProvider = Provider<String>((ref) {
   final materiales = ref.watch(tarrajeoMaterialesProvider);
   final datosShare = ref.watch(datosShareTarrajeoProvider);
 
@@ -293,24 +289,22 @@ $datosShare
 -------------
 
 ${materiales.resumenTexto}''';
-}
+});
 
 // ===== PROVIDERS PARA VALIDACIONES =====
 
 /// Provider que verifica si hay datos válidos
-@riverpod
-bool hayDatosValidos(Ref ref) {
+final hayDatosValidosProvider = Provider<bool>((ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   return tarrajeos.isNotEmpty && tarrajeos.every((t) =>
   t.description.isNotEmpty &&
       t.espesor.isNotEmpty &&
       t.proporcionMortero.isNotEmpty
   );
-}
+});
 
 /// Provider que calcula estadísticas adicionales
-@riverpod
-Map<String, dynamic> estadisticasTarrajeo(Ref ref) {
+final estadisticasTarrajeoProvider = Provider<Map<String, dynamic>>((ref) {
   final tarrajeos = ref.watch(tarrajeoResultProvider);
   final materiales = ref.watch(tarrajeoMaterialesProvider);
 
@@ -349,4 +343,4 @@ Map<String, dynamic> estadisticasTarrajeo(Ref ref) {
     'proporcion_mas_usada': proporcionMasUsada,
     'volumen_total': materiales.volumenTotal,
   };
-}
+});

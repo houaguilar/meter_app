@@ -234,16 +234,6 @@ class PlaceBloc extends Bloc<PlaceEvent, PlaceState> {
     }
   }
 
-  // Métodos de utilidad para debugging y monitoreo
-
-  int get sugestionsCacheSize => _suggestionsCache.length;
+  int get suggestionsCacheSize => _suggestionsCache.length;
   int get detailsCacheSize => _detailsCache.length;
-
-  void logCacheStats() {
-    print('PlaceBloc Cache Stats:');
-    print('  Suggestions cache: ${_suggestionsCache.length} entries');
-    print('  Details cache: ${_detailsCache.length} entries');
-    print('  Last query: $_lastQuery');
-    print('  Last request time: $_lastRequestTime');
-  }
 }

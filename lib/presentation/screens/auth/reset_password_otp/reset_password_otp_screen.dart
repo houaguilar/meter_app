@@ -2,12 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../config/theme/theme.dart';
-import '../../../../domain/usecases/use_cases.dart';
-import '../../../../init_dependencies.dart';
+import '../../../blocs/auth/auth_bloc.dart';
 
 class ResetPasswordOTPScreen extends StatefulWidget {
   final String email;
@@ -123,44 +123,11 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> with Si
     }
   }
 
-  Future<void> _handleResendOTP() async {
+  void _handleResendOTP() {
     if (_resendCountdown > 0 || _isResending) return;
 
-    setState(() {
-      _isResending = true;
-    });
-
-    try {
-      final resendOTPUseCase = serviceLocator<ResendOTP>();
-      final result = await resendOTPUseCase(
-        ResendOTPParams(email: widget.email),
-      );
-
-      if (mounted) {
-        result.fold(
-          (failure) {
-            setState(() {
-              _isResending = false;
-            });
-            _showError(failure.message);
-          },
-          (_) {
-            setState(() {
-              _isResending = false;
-            });
-            _showSuccess('Código reenviado exitosamente');
-            _startResendCountdown();
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isResending = false;
-        });
-        _showError('Error al reenviar código: $e');
-      }
-    }
+    setState(() => _isResending = true);
+    context.read<AuthBloc>().add(AuthResendOTP(email: widget.email));
   }
 
   void _showError(String message) {
@@ -211,7 +178,18 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> with Si
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthOTPResent) {
+          setState(() => _isResending = false);
+          _showSuccess('Código reenviado exitosamente');
+          _startResendCountdown();
+        } else if (state is AuthFailure) {
+          setState(() => _isResending = false);
+          _showError(state.message);
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -253,7 +231,8 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> with Si
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildHeader() {

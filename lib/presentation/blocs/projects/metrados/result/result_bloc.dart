@@ -76,17 +76,8 @@ class ResultBloc extends Bloc<ResultEvent, ResultState> with ErrorHandlerMixin {
     }
   }
 
-  void _onResetResultState(ResetResultStateEvent event, Emitter<ResultState> emit) async {
+  void _onResetResultState(ResetResultStateEvent event, Emitter<ResultState> emit) {
     logInfo('Reseteando estado del BLoC');
-
-    // Forzar emisión de estado inicial
-    if (!emit.isDone) {
-      emit(ResultInitial());
-    }
-
-    // Limpiar cualquier cache interno
-    await Future.delayed(const Duration(milliseconds: 50));
-
-    logInfo('Estado reseteado a inicial');
+    emit(ResultInitial());
   }
 }

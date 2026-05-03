@@ -86,13 +86,11 @@ class TutorialAnalytics {
   static void trackTutorialStarted(String moduleId) {
     // Implementar analytics según tu sistema
     // Analytics.track('tutorial_started', {'module': moduleId});
-    print('📊 Tutorial iniciado: $moduleId');
   }
 
   /// Trackea cuando un tutorial es completado
   static void trackTutorialCompleted(String moduleId) {
     // Analytics.track('tutorial_completed', {'module': moduleId});
-    print('✅ Tutorial completado: $moduleId');
   }
 
   /// Trackea cuando un tutorial es omitido
@@ -101,7 +99,6 @@ class TutorialAnalytics {
     //   'module': moduleId,
     //   'step': stepIndex,
     // });
-    print('⏭️ Tutorial omitido: $moduleId en paso $stepIndex');
   }
 
   /// Trackea el progreso en un tutorial
@@ -113,6 +110,5 @@ class TutorialAnalytics {
     //   'step': stepIndex,
     //   'progress_percent': progress,
     // });
-    print('📈 Progreso tutorial $moduleId: $progress%');
   }
 }

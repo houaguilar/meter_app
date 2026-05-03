@@ -103,7 +103,7 @@ class _ModernActionButtonState extends State<ModernActionButton>
   Widget build(BuildContext context) {
     final isEnabled = widget.onPressed != null && !widget.isLoading;
     final secondaryColor = widget.secondaryColor ??
-        widget.primaryColor.withOpacity(0.8);
+        widget.primaryColor.withValues(alpha: 0.8);
 
     return AnimatedBuilder(
       animation: _animationController,
@@ -131,7 +131,7 @@ class _ModernActionButtonState extends State<ModernActionButton>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: isEnabled ? [
                   BoxShadow(
-                    color: widget.primaryColor.withOpacity(0.3),
+                    color: widget.primaryColor.withValues(alpha: 0.3),
                     blurRadius: _isPressed ? _elevationAnimation.value : 4.0,
                     spreadRadius: 0,
                     offset: Offset(0, _isPressed ? 2 : 4),

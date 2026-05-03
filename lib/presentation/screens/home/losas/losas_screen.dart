@@ -242,9 +242,7 @@ class _LosasScreenState extends ConsumerState<LosasScreen>
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
     assert(() {
-      debugPrint('❌ LosasScreen Error: $message');
       if (stackTrace != null) {
-        debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
@@ -605,7 +603,7 @@ class SelectedSlabInfo extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: info.primaryColor.withOpacity(0.1),
+                  color: info.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -650,9 +648,9 @@ class SelectedSlabInfo extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         text,

@@ -55,9 +55,13 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> with ErrorHandlerM
             emit(ProjectFailure(message));
           }
         },
-        (_) {
+        (_) async {
           logInfo('Proyecto creado exitosamente: ${event.name}');
-          add(LoadProjectsEvent());
+          final loadResult = await _getAllProjects(NoParams());
+          loadResult.fold(
+            (failure) => emit(ProjectFailure(mapFailureToMessage(failure))),
+            (projects) => emit(ProjectSuccess(projects)),
+          );
         },
       );
     } catch (e, stackTrace) {
@@ -110,10 +114,14 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> with ErrorHandlerM
             emit(ProjectFailure(message));
           }
         },
-        (_) {
+        (_) async {
           logInfo('Proyecto guardado exitosamente: ${event.project.name}');
           emit(ProjectAdded(project: event.project));
-          add(LoadProjectsEvent());
+          final loadResult = await _getAllProjects(NoParams());
+          loadResult.fold(
+            (failure) => emit(ProjectFailure(mapFailureToMessage(failure))),
+            (projects) => emit(ProjectSuccess(projects)),
+          );
         },
       );
     } catch (e, stackTrace) {
@@ -136,9 +144,13 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> with ErrorHandlerM
           final message = mapFailureToMessage(failure);
           emit(ProjectFailure(message));
         },
-        (_) {
+        (_) async {
           logInfo('Proyecto eliminado exitosamente: ${event.project.name}');
-          add(LoadProjectsEvent());
+          final loadResult = await _getAllProjects(NoParams());
+          loadResult.fold(
+            (failure) => emit(ProjectFailure(mapFailureToMessage(failure))),
+            (projects) => emit(ProjectSuccess(projects)),
+          );
         },
       );
     } catch (e, stackTrace) {
@@ -163,9 +175,13 @@ class ProjectsBloc extends Bloc<ProjectsEvent, ProjectsState> with ErrorHandlerM
             emit(ProjectFailure(message));
           }
         },
-        (_) {
+        (_) async {
           logInfo('Proyecto editado exitosamente: ${event.project.name}');
-          add(LoadProjectsEvent());
+          final loadResult = await _getAllProjects(NoParams());
+          loadResult.fold(
+            (failure) => emit(ProjectFailure(mapFailureToMessage(failure))),
+            (projects) => emit(ProjectSuccess(projects)),
+          );
         },
       );
     } catch (e, stackTrace) {

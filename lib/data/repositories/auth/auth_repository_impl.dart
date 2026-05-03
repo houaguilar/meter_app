@@ -9,7 +9,7 @@ import '../../../domain/datasources/auth/auth_remote_data_source.dart';
 import '../../../domain/entities/auth/user.dart';
 import '../../../domain/entities/auth/user_profile.dart';
 import '../../../domain/repositories/auth/auth_repository.dart';
-import '../../local/shared_preferences_helper.dart';
+import '../../../config/local/shared_preferences_helper.dart';
 import '../../models/auth/user_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
@@ -197,10 +197,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> logout() async {
     try {
-      if (!await (connectionChecker.isConnected)) {
-        return right(await remoteDataSource.logout(),);
-      }
-      return right(await remoteDataSource.logout(),);
+      return right(await remoteDataSource.logout());
     } on ServerException catch (e) {
       return left(Failure(message: e.message));
     }

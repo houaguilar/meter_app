@@ -194,7 +194,6 @@ class SteelSlabResultNotifier extends Notifier<List<SteelSlab>> {
   }
 
   void clearList() {
-    print('🧹 Limpiando lista de losas de acero');
     state = [];
   }
 }

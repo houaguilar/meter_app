@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../../config/constants/error/failures.dart';
@@ -234,12 +233,8 @@ class LocationRepositoryImpl implements LocationRepository {
     required String locationId,
     required bool isActive,
   }) async {
-    debugPrint('📍 LocationRepository: toggleLocationActive llamado');
-    debugPrint('   locationId: $locationId');
-    debugPrint('   isActive: $isActive');
 
     if (!await connectionChecker.isConnected) {
-      debugPrint('❌ LocationRepository: Sin conexión a internet');
       return left(Failure(
         message: 'No internet connection',
         type: FailureType.general,
@@ -248,22 +243,18 @@ class LocationRepositoryImpl implements LocationRepository {
 
     try {
       if (locationId.trim().isEmpty) {
-        debugPrint('❌ LocationRepository: locationId vacío');
         return left(Failure(
           message: 'ID de ubicación no puede estar vacío',
           type: FailureType.validation,
         ));
       }
 
-      debugPrint('🔄 LocationRepository: Llamando a data source...');
       await locationRemoteDataSource.toggleLocationActive(
         locationId: locationId,
         isActive: isActive,
       );
-      debugPrint('✅ LocationRepository: Toggle exitoso');
       return right(null);
     } catch (e) {
-      debugPrint('❌ LocationRepository: Error - $e');
       return left(Failure(
         message: 'Error al actualizar estado: $e',
         type: FailureType.server,

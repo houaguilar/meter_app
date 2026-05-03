@@ -19,7 +19,7 @@ class HeaderWidget extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border.all(
-                color: Theme.of(context).primaryColor.withOpacity(.5),
+                color: Theme.of(context).primaryColor.withValues(alpha: .5),
               ),
               borderRadius: BorderRadius.circular(20.0),
             ),

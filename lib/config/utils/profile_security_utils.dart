@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 
 class ProfileSecurityUtils {
@@ -391,7 +390,6 @@ class ProfileSecurityUtils {
     };
 
     // En un entorno de producción, esto se enviaría a un servicio de logging
-    debugPrint('PROFILE_OPERATION: ${logData.toString()}');
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -499,33 +497,8 @@ class ProfileCompleteness {
     }
   }
 
-  /// Obtiene el color asociado al nivel
-  Color get levelColor {
-    switch (level) {
-      case ProfileCompletenessLevel.excellent:
-        return Colors.green;
-      case ProfileCompletenessLevel.good:
-        return Colors.lightGreen;
-      case ProfileCompletenessLevel.fair:
-        return Colors.orange;
-      case ProfileCompletenessLevel.poor:
-        return Colors.red;
-    }
-  }
-
-  /// Obtiene el icono asociado al nivel
-  IconData get levelIcon {
-    switch (level) {
-      case ProfileCompletenessLevel.excellent:
-        return Icons.check_circle;
-      case ProfileCompletenessLevel.good:
-        return Icons.thumb_up;
-      case ProfileCompletenessLevel.fair:
-        return Icons.info;
-      case ProfileCompletenessLevel.poor:
-        return Icons.warning;
-    }
-  }
+  // levelColor y levelIcon están en:
+  // presentation/extensions/profile_completeness_extensions.dart
 }
 
 /// Niveles de completitud del perfil

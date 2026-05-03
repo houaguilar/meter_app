@@ -1,14 +1,11 @@
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
-import '../../../data/models/models.dart';
+import '../../../domain/entities/home/piso/piso.dart';
 
-part 'pisos_providers.g.dart';
-
-@riverpod
-class TipoPiso extends _$TipoPiso {
+class TipoPiso extends Notifier<String> {
   @override
   String build() => '';
 
@@ -17,8 +14,9 @@ class TipoPiso extends _$TipoPiso {
   }
 }
 
-@riverpod
-class CantidadArenaPisos extends _$CantidadArenaPisos {
+final tipoPisoProvider = NotifierProvider<TipoPiso, String>(TipoPiso.new);
+
+class CantidadArenaPisos extends Notifier<String> {
   @override
   String build() => '';
 
@@ -27,8 +25,10 @@ class CantidadArenaPisos extends _$CantidadArenaPisos {
   }
 }
 
-@riverpod
-class CantidadCementoPisos extends _$CantidadCementoPisos {
+final cantidadArenaPisosProvider =
+    NotifierProvider<CantidadArenaPisos, String>(CantidadArenaPisos.new);
+
+class CantidadCementoPisos extends Notifier<String> {
   @override
   String build() => '';
 
@@ -37,8 +37,10 @@ class CantidadCementoPisos extends _$CantidadCementoPisos {
   }
 }
 
-@riverpod
-class CantidadPiedraChancada extends _$CantidadPiedraChancada {
+final cantidadCementoPisosProvider =
+    NotifierProvider<CantidadCementoPisos, String>(CantidadCementoPisos.new);
+
+class CantidadPiedraChancada extends Notifier<String> {
   @override
   String build() => '';
 
@@ -47,9 +49,12 @@ class CantidadPiedraChancada extends _$CantidadPiedraChancada {
   }
 }
 
-@riverpod
-class PisosResult extends _$PisosResult {
+final cantidadPiedraChancadaProvider =
+    NotifierProvider<CantidadPiedraChancada, String>(CantidadPiedraChancada.new);
+
+class PisosResult extends Notifier<List<Piso>> {
   final PisoService _pisoService = PisoService();
+
   @override
   List<Piso> build() => [];
 
@@ -89,24 +94,24 @@ class PisosResult extends _$PisosResult {
   }
 }
 
-@riverpod
-List<double> volumenPiso(Ref ref) {
+final pisosResultProvider =
+    NotifierProvider<PisosResult, List<Piso>>(PisosResult.new);
+
+final volumenPisoProvider = Provider<List<double>>((ref) {
   final pisoSrevice = PisoService();
-  final pisos = ref.watch( pisosResultProvider );
+  final pisos = ref.watch(pisosResultProvider);
 
   return pisos.map((piso) => pisoSrevice.calcularArea(piso) ?? 0.0).toList();
   //return pisos.map((e) => double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toList();
-}
+});
 
-@riverpod
-List<String> descriptionPiso(Ref ref) {
-  final pisos = ref.watch( pisosResultProvider );
+final descriptionPisoProvider = Provider<List<String>>((ref) {
+  final pisos = ref.watch(pisosResultProvider);
 
   return pisos.map((e) => e.description).toList();
-}
+});
 
-@riverpod
-String datosSharePisos(Ref ref) {
+final datosSharePisosProvider = Provider<String>((ref) {
   final description = ref.watch(descriptionPisoProvider);
   final volumen = ref.watch(volumenPisoProvider);
 
@@ -118,4 +123,4 @@ String datosSharePisos(Ref ref) {
     datos = datos.substring(0,datos.length -2);
   }
   return datos;
-}
+});

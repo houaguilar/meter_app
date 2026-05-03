@@ -1,14 +1,11 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/services/piso_service.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../config/constants/constant.dart';
 import '../../../config/utils/number_formatter.dart';
-import '../../../data/models/models.dart';
+import '../../../domain/entities/home/piso/piso.dart';
 
-part 'contrapiso_providers.g.dart';
-
-@riverpod
-class ContrapisoResult extends _$ContrapisoResult {
+class ContrapisoResult extends Notifier<List<Piso>> {
   final PisoService _pisoService = PisoService();
 
   @override
@@ -47,24 +44,24 @@ class ContrapisoResult extends _$ContrapisoResult {
   }
 }
 
+final contrapisoResultProvider =
+    NotifierProvider<ContrapisoResult, List<Piso>>(ContrapisoResult.new);
+
 // 🔄 CAMBIAR: De volumenContrapiso a areaContrapiso
-@riverpod
-List<double> areaContrapiso(Ref ref) {
+final areaContrapisoProvider = Provider<List<double>>((ref) {
   final pisoService = PisoService();
   final contrapisos = ref.watch(contrapisoResultProvider);
 
   return contrapisos.map((piso) => pisoService.calcularArea(piso) ?? 0.0).toList();
-}
+});
 
-@riverpod
-List<String> descriptionContrapiso(Ref ref) {
+final descriptionContrapisoProvider = Provider<List<String>>((ref) {
   final contrapisos = ref.watch(contrapisoResultProvider);
   return contrapisos.map((e) => e.description).toList();
-}
+});
 
 // 🔄 ACTUALIZAR: datosShareContrapiso para usar áreas
-@riverpod
-String datosShareContrapiso(Ref ref) {
+final datosShareContrapisoProvider = Provider<String>((ref) {
   final description = ref.watch(descriptionContrapisoProvider);
   final areas = ref.watch(areaContrapisoProvider);  // ✅ Cambio aquí
 
@@ -76,18 +73,16 @@ String datosShareContrapiso(Ref ref) {
     datos = datos.substring(0, datos.length - 2);
   }
   return datos;
-}
+});
 
 // 🆕 NUEVO: Provider para área total
-@riverpod
-double areaTotalContrapiso(Ref ref) {
+final areaTotalContrapisoProvider = Provider<double>((ref) {
   final areas = ref.watch(areaContrapisoProvider);
   return areas.fold(0.0, (sum, area) => sum + area);
-}
+});
 
 /// Provider para configuración de contrapiso
-@riverpod
-class ContrapisoConfig extends _$ContrapisoConfig {
+class ContrapisoConfig extends Notifier<ContrapisoConfiguration> {
   @override
   ContrapisoConfiguration build() => const ContrapisoConfiguration();
 
@@ -103,6 +98,10 @@ class ContrapisoConfig extends _$ContrapisoConfig {
     state = state.copyWith(factorDesperdicio: desperdicio);
   }
 }
+
+final contrapisoConfigProvider =
+    NotifierProvider<ContrapisoConfig, ContrapisoConfiguration>(
+        ContrapisoConfig.new);
 
 /// Clase de configuración para contrapiso
 class ContrapisoConfiguration {
@@ -130,8 +129,7 @@ class ContrapisoConfiguration {
 }
 
 // 🔄 ACTUALIZAR: Provider para materiales con área total
-@riverpod
-ContrapisoMaterials contrapisoMaterials(Ref ref) {
+final contrapisoMaterialsProvider = Provider<ContrapisoMaterials>((ref) {
   final contrapisos = ref.watch(contrapisoResultProvider);
 
   if (contrapisos.isEmpty) {
@@ -139,7 +137,7 @@ ContrapisoMaterials contrapisoMaterials(Ref ref) {
   }
 
   return _calcularMaterialesContrapiso(contrapisos);
-}
+});
 
 /// Función auxiliar para calcular materiales
 ContrapisoMaterials _calcularMaterialesContrapiso(List<Piso> pisos) {

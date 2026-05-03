@@ -39,7 +39,7 @@ class ArticleCard extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10.0),
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
             ),
             padding: const EdgeInsets.all(20.0),
             child: Column(

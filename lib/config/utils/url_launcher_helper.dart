@@ -28,7 +28,6 @@ class UrlLauncherHelper {
         return false;
       }
     } catch (e) {
-      print('Error opening URL: $e');
       return false;
     }
   }

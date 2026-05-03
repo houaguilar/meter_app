@@ -25,7 +25,7 @@ class ProfileSettingsScreen extends StatelessWidget {
                 end: Alignment.bottomRight,
                 colors: [
                   AppColors.primary,
-                  AppColors.primary.withOpacity(0.8),
+                  AppColors.primary.withValues(alpha: 0.8),
                 ],
               ),
             ),
@@ -41,7 +41,7 @@ class ProfileSettingsScreen extends StatelessWidget {
           ),
           bottom: TabBar(
             labelColor: AppColors.white,
-            unselectedLabelColor: AppColors.white.withOpacity(0.7),
+            unselectedLabelColor: AppColors.white.withValues(alpha: 0.7),
             indicatorColor: AppColors.accent,
             indicatorWeight: 3,
             indicatorSize: TabBarIndicatorSize.tab,
@@ -192,7 +192,7 @@ class ProfileSettingsScreen extends StatelessWidget {
                 end: Alignment.bottomCenter,
                 colors: [
                   AppColors.background,
-                  AppColors.background.withOpacity(0.95),
+                  AppColors.background.withValues(alpha: 0.95),
                 ],
               ),
             ),

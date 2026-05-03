@@ -4,9 +4,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/config/utils/validators.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../config/local/shared_preferences_helper.dart';
 import '../../../../providers/home/estructuras/structural_element_providers.dart';
 import '../../../../widgets/modern_widgets.dart';
 import '../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -104,10 +105,8 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
   void _validateAndSetElementType() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final tipo = ref.read(tipoStructuralElementProvider);
-      print('🔍 Tipo de elemento obtenido en DatosScreen: $tipo');
 
       if (tipo.isEmpty) {
-        print('⚠️ Tipo de elemento vacío, redirigiendo...');
         context.pop();
         return;
       }
@@ -116,7 +115,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
         tipoElemento = tipo;
       });
 
-      print('✅ Tipo de elemento establecido: $tipoElemento');
     });
   }
 
@@ -150,7 +148,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
 
     // Observar cambios en el provider
     ref.listen(tipoStructuralElementProvider, (previous, next) {
-      print('🔄 Cambio detectado en tipoStructuralElementProvider: $previous -> $next');
       if (next.isNotEmpty && next != tipoElemento) {
         setState(() {
           tipoElemento = next;
@@ -231,15 +228,15 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.blueMetraShop.withOpacity(0.1),
-            AppColors.blueMetraShop.withOpacity(0.05),
+            AppColors.blueMetraShop.withValues(alpha: 0.1),
+            AppColors.blueMetraShop.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.blueMetraShop.withOpacity(0.2),
+          color: AppColors.blueMetraShop.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -251,7 +248,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SvgPicture.asset(
@@ -314,7 +311,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
               controller: _factorController,
               label: 'Desperdicio',
               suffix: '%',
-              validator: _validatePercentage,
+              validator: Validators.percentageField,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               prefixIcon: Icons.construction,
             ),
@@ -456,7 +453,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: _descriptionAreaController,
                 label: 'Descripción',
                 hintText: 'Ej: ${tipoElemento.capitalize()} principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -464,7 +461,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: _volumenTextController,
                 label: 'Volumen',
                 suffix: 'm³',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.view_in_ar,
               ),
@@ -494,7 +491,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: _descriptionMedidasController,
                 label: 'Descripción',
                 hintText: 'Ej: ${tipoElemento.capitalize()} principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -505,7 +502,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                       controller: _lengthTextController,
                       label: 'Largo',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
@@ -516,7 +513,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                       controller: _widthTextController,
                       label: 'Ancho',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.width_full,
                     ),
@@ -528,7 +525,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: _heightTextController,
                 label: 'Altura',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
@@ -555,7 +552,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           controller: field['description']!,
           label: 'Descripción',
           hintText: 'Ej: ${tipoElemento.capitalize()} secundario',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -563,7 +560,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           controller: field['volumen']!,
           label: 'Volumen',
           suffix: 'm³',
-          validator: _validateNumeric,
+          validator: Validators.positiveNumber,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.view_in_ar,
         ),
@@ -580,7 +577,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           controller: field['description']!,
           label: 'Descripción',
           hintText: 'Ej: ${tipoElemento.capitalize()} secundario',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -591,7 +588,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: field['largo']!,
                 label: 'Largo',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
@@ -602,7 +599,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
                 controller: field['ancho']!,
                 label: 'Ancho',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.width_full,
               ),
@@ -614,7 +611,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
           controller: field['altura']!,
           label: 'Altura',
           suffix: 'm',
-          validator: _validateNumeric,
+          validator: Validators.positiveNumber,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.height,
         ),
@@ -629,7 +626,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -691,7 +688,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
 
       // Procesar según el tipo de elemento
       final tipoActual = ref.read(tipoStructuralElementProvider);
-      print('🎯 Procesando datos para tipo: $tipoActual');
 
       if (tipoActual == 'columna') {
         _processColumnaData();
@@ -706,7 +702,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       } else if (tipoActual == 'solado') {
         _processSoladoData();
       } else {
-        print('❌ Tipo no reconocido: $tipoActual');
         _showErrorMessage('Error: Tipo de elemento no válido');
         return;
       }
@@ -813,9 +808,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final columnasCreadas = ref.read(columnaResultProvider);
-      print("✅ Columnas creadas: ${columnasCreadas.length}");
     } catch (e) {
-      print("❌ Error creando columnas: $e");
       _showErrorMessage('Error al procesar datos de columna: $e');
     }
   }
@@ -882,9 +875,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final vigasCreadas = ref.read(vigaResultProvider);
-      print("✅ Vigas creadas: ${vigasCreadas.length}");
     } catch (e) {
-      print("❌ Error creando vigas: $e");
       _showErrorMessage('Error al procesar datos de viga: $e');
     }
   }
@@ -951,9 +942,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final zapatasCreadas = ref.read(zapataResultProvider);
-      print("✅ Zapatas creadas: ${zapatasCreadas.length}");
     } catch (e) {
-      print("❌ Error creando zapatas: $e");
       _showErrorMessage('Error al procesar datos de zapata: $e');
     }
   }
@@ -1020,9 +1009,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final sobrecimientosCreados = ref.read(sobrecimientoResultProvider);
-      print("✅ Sobrecimientos creados: ${sobrecimientosCreados.length}");
     } catch (e) {
-      print("❌ Error creando sobrecimientos: $e");
       _showErrorMessage('Error al procesar datos de sobrecimiento: $e');
     }
   }
@@ -1089,9 +1076,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final cimientosCreados = ref.read(cimientoCorridoResultProvider);
-      print("✅ Cimientos corridos creados: ${cimientosCreados.length}");
     } catch (e) {
-      print("❌ Error creando cimientos corridos: $e");
       _showErrorMessage('Error al procesar datos de cimiento corrido: $e');
     }
   }
@@ -1155,9 +1140,7 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
       }
 
       final soladosCreados = ref.read(soladoResultProvider);
-      print("✅ Solados creados: ${soladosCreados.length}");
     } catch (e) {
-      print("❌ Error creando solados: $e");
       _showErrorMessage('Error al procesar datos de solado: $e');
     }
   }
@@ -1182,47 +1165,6 @@ class _DatosStructuralElementsScreenState extends ConsumerState<DatosStructuralE
     );
   }
 
-  // Validadores
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number <= 0) {
-      return 'El valor debe ser mayor a 0';
-    }
-
-    return null;
-  }
-
-  String? _validatePercentage(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number < 0 || number > 100) {
-      return 'Debe estar entre 0% y 100%';
-    }
-
-    return null;
-  }
 }
 
 // Extension helper para capitalizar strings

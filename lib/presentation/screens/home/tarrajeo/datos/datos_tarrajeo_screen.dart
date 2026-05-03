@@ -4,10 +4,11 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/config/utils/validators.dart';
 import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
 
 import '../../../../../../config/theme/theme.dart';
-import '../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../config/local/shared_preferences_helper.dart';
 import '../../../../widgets/modern_widgets.dart';
 import '../../../../widgets/tutorial/tutorial_overlay.dart';
 import '../../../../widgets/widgets.dart';
@@ -177,15 +178,15 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.yellowMetraShop.withOpacity(0.1),
-            AppColors.yellowMetraShop.withOpacity(0.05),
+            AppColors.yellowMetraShop.withValues(alpha: 0.1),
+            AppColors.yellowMetraShop.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.yellowMetraShop.withOpacity(0.2),
+          color: AppColors.yellowMetraShop.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -197,7 +198,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.yellowMetraShop.withOpacity(0.1),
+                  color: AppColors.yellowMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SvgPicture.asset(
@@ -262,7 +263,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
               controller: _factorController,
               label: 'Desperdicio',
               suffix: '%',
-              validator: _validatePercentage,
+              validator: Validators.percentageField,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               prefixIcon: Icons.construction,
             ),
@@ -412,7 +413,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                 controller: _descriptionAreaController,
                 label: 'Descripción',
                 hintText: 'Ej: Tarrajeo muro principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -420,7 +421,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                 controller: _areaTextController,
                 label: 'Área Total',
                 suffix: 'm²',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.crop_square,
               ),
@@ -450,7 +451,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                 controller: _descriptionMedidasController,
                 label: 'Descripción',
                 hintText: 'Ej: Tarrajeo muro principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -461,7 +462,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                       controller: _lengthTextController,
                       label: 'Largo',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
@@ -472,7 +473,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                       controller: _heightTextController,
                       label: 'Altura',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.height,
                     ),
@@ -502,7 +503,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
           controller: field['description']!,
           label: 'Descripción',
           hintText: 'Ej: Tarrajeo muro lateral',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -510,7 +511,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
           controller: field['measure']!,
           label: 'Área',
           suffix: 'm²',
-          validator: _validateNumeric,
+          validator: Validators.positiveNumber,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.crop_square,
         ),
@@ -527,7 +528,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
           controller: field['descriptionMeasure']!,
           label: 'Descripción',
           hintText: 'Ej: Tarrajeo muro lateral',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -538,7 +539,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                 controller: field['lengthMeasure']!,
                 label: 'Largo',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
@@ -549,7 +550,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
                 controller: field['heightMeasure']!,
                 label: 'Altura',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
@@ -567,7 +568,7 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -753,45 +754,4 @@ class _DatosTarrajeoScreenState extends ConsumerState<DatosTarrajeoScreen>
     );
   }
 
-  // Validadores
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number <= 0) {
-      return 'El valor debe ser mayor a 0';
-    }
-
-    return null;
-  }
-
-  String? _validatePercentage(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number < 0 || number > 100) {
-      return 'Debe estar entre 0% y 100%';
-    }
-
-    return null;
-  }
 }

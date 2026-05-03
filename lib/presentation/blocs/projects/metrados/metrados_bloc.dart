@@ -60,10 +60,14 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> with ErrorHandlerM
             emit(MetradoFailure(message));
           }
         },
-        (metradoId) {
+        (metradoId) async {
           logInfo('Metrado creado exitosamente con ID: $metradoId');
           emit(MetradoAdded(metradoId: metradoId));
-          add(LoadMetradosEvent(projectId: event.projectId));
+          final loadResult = await _getAllMetrados(GetAllMetradosParams(projectId: event.projectId));
+          loadResult.fold(
+            (failure) => emit(MetradoFailure(mapFailureToMessage(failure))),
+            (metrados) => emit(MetradoSuccess(metrados)),
+          );
         },
       );
     } catch (e, stackTrace) {
@@ -115,10 +119,14 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> with ErrorHandlerM
           // Recargar metrados después del error para mantener consistencia
           add(LoadMetradosEvent(projectId: event.metrado.projectId));
         },
-        (_) {
+        (_) async {
           logInfo('Metrado editado exitosamente: ${event.metrado.name}');
           emit(MetradoEdited());
-          add(LoadMetradosEvent(projectId: event.metrado.projectId));
+          final loadResult = await _getAllMetrados(GetAllMetradosParams(projectId: event.metrado.projectId));
+          loadResult.fold(
+            (failure) => emit(MetradoFailure(mapFailureToMessage(failure))),
+            (metrados) => emit(MetradoSuccess(metrados)),
+          );
         },
       );
     } catch (e, stackTrace) {
@@ -139,9 +147,14 @@ class MetradosBloc extends Bloc<MetradosEvent, MetradosState> with ErrorHandlerM
           final message = mapFailureToMessage(failure);
           emit(MetradoFailure(message));
         },
-        (_) {
+        (_) async {
           logInfo('Metrado eliminado exitosamente: ${event.metrado.name}');
           emit(MetradoDeleted());
+          final loadResult = await _getAllMetrados(GetAllMetradosParams(projectId: event.metrado.projectId));
+          loadResult.fold(
+            (failure) => emit(MetradoFailure(mapFailureToMessage(failure))),
+            (metrados) => emit(MetradoSuccess(metrados)),
+          );
         },
       );
     } catch (e, stackTrace) {

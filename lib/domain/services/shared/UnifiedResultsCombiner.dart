@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 // lib/domain/services/shared/unified_results_combiner.dart
 
 import 'dart:math';
@@ -27,20 +28,17 @@ class UnifiedResultsCombiner {
       final metradoSummaries = <MetradoSummary>[];
       double totalArea = 0.0;
 
-      print('🔄 Iniciando combinación de ${metradosWithResults.length} metrados');
 
       // Procesar cada metrado con sus resultados
       for (final metradoData in metradosWithResults) {
         final metrado = metradoData.metrado;
         final results = metradoData.results; // Resultados del metrado
 
-        print('📊 Procesando metrado: ${metrado.name} con ${results.length} resultados');
 
         // ✅ USAR EL MISMO CALCULADOR QUE RESULTSCREEN
         final calculationResult = UnifiedMaterialsCalculator.calculateMaterials(results);
 
         if (calculationResult.hasError) {
-          print('⚠️ Error en cálculo de ${metrado.name}: ${calculationResult.errorMessage}');
           continue; // Saltar este metrado si hay error
         }
 
@@ -48,9 +46,7 @@ class UnifiedResultsCombiner {
         final metradoMaterials = _extractMaterialsFromCalculationResult(calculationResult);
         final metradoArea = calculationResult.totalValue;
 
-        print('✅ Materiales calculados para ${metrado.name}:');
         metradoMaterials.forEach((material, cantidad) {
-          print('   📦 $material: ${cantidad.toStringAsFixed(3)} ${_getMaterialUnit(material)}');
         });
 
         // Crear resumen del metrado individual
@@ -65,17 +61,12 @@ class UnifiedResultsCombiner {
         metradoSummaries.add(summary);
 
         // CLAVE: Sumar materiales calculados
-        print('🔗 Sumando materiales calculados de ${metrado.name}...');
         _combineMaterials(combinedMaterials, metradoMaterials, metrado.name);
 
         totalArea += metradoArea;
       }
 
-      print('🎯 Combinación completada: ${combinedMaterials.length} materiales únicos');
-      print('📊 RESUMEN FINAL DE MATERIALES:');
       combinedMaterials.forEach((name, material) {
-        print('   🧱 $name: ${material.totalQuantity.toStringAsFixed(2)} ${material.unit}');
-        print('      └─ Contribuciones: ${material.contributions.entries.map((e) => '${e.key}(${e.value.toStringAsFixed(2)})').join(', ')}');
       });
 
       return CombinedCalculationResult(
@@ -88,7 +79,6 @@ class UnifiedResultsCombiner {
       );
 
     } catch (e) {
-      print('❌ Error en combinación: $e');
       throw CombinationException(
         'Error al combinar metrados: ${e.toString()}',
       );
@@ -136,7 +126,6 @@ class UnifiedResultsCombiner {
           contributions: newContributions,
         );
 
-        print('➕ Sumando $normalizedName: ${existing.totalQuantity.toStringAsFixed(2)} + ${quantity.toStringAsFixed(2)} = ${(existing.totalQuantity + quantity).toStringAsFixed(2)} ${existing.unit}');
       } else {
         // MATERIAL NUEVO: agregarlo
         combinedMaterials[normalizedName] = CombinedMaterial(
@@ -146,7 +135,6 @@ class UnifiedResultsCombiner {
           contributions: {metradoName: quantity},
         );
 
-        print('🆕 Nuevo material $normalizedName: ${quantity.toStringAsFixed(2)} ${_getMaterialUnit(normalizedName)} (de $metradoName)');
       }
     });
   }

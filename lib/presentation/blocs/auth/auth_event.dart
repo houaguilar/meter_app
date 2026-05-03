@@ -47,3 +47,27 @@ final class AuthDeleteAccount extends AuthEvent {
     required this.password,
   });
 }
+
+final class AuthChangePassword extends AuthEvent {
+  final String newPassword;
+  final String confirmPassword;
+
+  AuthChangePassword({
+    required this.newPassword,
+    required this.confirmPassword,
+  });
+}
+
+final class AuthResendOTP extends AuthEvent {
+  final String email;
+
+  AuthResendOTP({required this.email});
+}
+
+final class AuthResetPasswordForEmail extends AuthEvent {
+  final String email;
+
+  AuthResetPasswordForEmail({required this.email});
+}
+
+final class AuthCancelEmailVerification extends AuthEvent {}

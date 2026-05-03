@@ -81,12 +81,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
       final columns = ref.read(steelColumnResultProvider); // cambio de steelBeamResultProvider
       final consolidatedResult = ref.read(calculateConsolidatedColumnSteelProvider); // cambio de provider
 
-      print('🔍 Estado en ResultSteelColumnScreen:'); // cambio de texto
-      print('- Columnas: ${columns.length}'); // cambio de Vigas a Columnas
-      print('- Resultado consolidado: ${consolidatedResult != null}');
 
       if (columns.isEmpty || consolidatedResult == null) { // cambio de beams a columns
-        print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
         context.pop();
       }
@@ -100,10 +96,8 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
       onPopInvoked: (bool didPop) {
         if (didPop && !_isGeneratingPDF) {
           // ✅ LIMPIA al retroceder solo si NO se está generando PDF
-          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
           ref.read(steelColumnResultProvider.notifier).clearList();
         } else if (didPop && _isGeneratingPDF) {
-          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
         }
       },
       child: Scaffold(
@@ -183,7 +177,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -393,16 +387,16 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -478,18 +472,15 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
 
   Future<void> _generatePDF() async {
     try {
-      print('📄 Iniciando generación de PDF...');
 
       // Activar flag para prevenir limpieza de datos
       if (!mounted) return;
       setState(() {
         _isGeneratingPDF = true;
       });
-      print('✅ Flag activado: $_isGeneratingPDF');
 
       // Mostrar loader (NO cerramos el bottom sheet aún)
       if (!mounted) {
-        print('⚠️ Widget desmontado antes de mostrar loader');
         return;
       }
 
@@ -497,7 +488,6 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         message: 'Generando PDF...',
         description: 'Creando documento con los resultados',
       );
-      print('✅ Loader mostrado');
 
       // Obtener nombre del usuario del ProfileBloc
       final profileState = context.read<ProfileBloc>().state;
@@ -506,45 +496,35 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           : null;
 
       // Generar PDF usando PDFFactory
-      print('📝 Llamando a PDFFactory.generateSteelColumnPDF...');
       final pdfFile = await PDFFactory.generateSteelColumnPDF(
         ref,
         nombreUsuario: nombreUsuario,
       );
-      print('✅ PDF generado exitosamente: ${pdfFile.path}');
 
       // Ocultar loader solo si el widget está montado
       if (mounted) {
         context.hideLoader();
-        print('✅ Loader ocultado');
       } else {
-        print('⚠️ Widget desmontado, no se puede ocultar loader');
         return;
       }
 
       // Compartir PDF (esto cerrará automáticamente el bottom sheet)
-      print('📤 Compartiendo PDF...');
       final result = await Share.shareXFiles(
         [XFile(pdfFile.path)],
         subject: 'Resultados de Columnas de Acero',
       );
-      print('✅ PDF compartido con estado: ${result.status}');
 
       // Mostrar feedback solo si el widget está montado
       if (mounted && result.status == ShareResultStatus.success) {
         _showSuccessMessage('PDF compartido exitosamente');
       }
     } catch (e, stackTrace) {
-      print('❌ ERROR en _generatePDF: $e');
-      print('❌ StackTrace: $stackTrace');
 
       // Asegurarse de ocultar el loader solo si está montado
       if (mounted) {
         try {
           context.hideLoader();
-          print('✅ Loader ocultado después del error');
         } catch (loaderError) {
-          print('⚠️ Error al ocultar loader: $loaderError');
         }
 
         _showErrorMessage('Error al generar PDF: $e');
@@ -555,7 +535,6 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         setState(() {
           _isGeneratingPDF = false;
         });
-        print('✅ Flag desactivado en finally');
       }
     }
   }
@@ -572,7 +551,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           Icon(
             Icons.view_column, // cambio de Icons.construction
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -614,13 +593,13 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -634,7 +613,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -675,7 +654,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
           Text(
             label,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
             ),
           ),
           Text(
@@ -700,7 +679,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -814,7 +793,7 @@ class _ResultSteelColumnScreenState extends ConsumerState<ResultSteelColumnScree
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

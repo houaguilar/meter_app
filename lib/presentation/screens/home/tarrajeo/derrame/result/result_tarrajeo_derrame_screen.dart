@@ -193,7 +193,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.success.withOpacity(0.3),
+                  color: AppColors.success.withValues(alpha: 0.3),
                   blurRadius: 20,
                   spreadRadius: 5,
                 ),
@@ -222,7 +222,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 3),
@@ -237,7 +237,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -291,7 +291,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 3),
@@ -306,7 +306,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
+                  color: AppColors.success.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -358,7 +358,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 3),
@@ -373,7 +373,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -415,7 +415,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         gradient: LinearGradient(
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -423,7 +423,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -434,7 +434,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.surface.withOpacity(0.2),
+              color: AppColors.surface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
             child: SvgPicture.asset(
@@ -465,17 +465,17 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
                   '$cantidadElementos elemento${cantidadElementos != 1 ? 's' : ''} calculado${cantidadElementos != 1 ? 's' : ''}',
                   style: TextStyle(
                     fontSize: 14,
-                    color: AppColors.surface.withOpacity(0.8),
+                    color: AppColors.surface.withValues(alpha: 0.8),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.success.withOpacity(0.2),
+                    color: AppColors.success.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: AppColors.success.withOpacity(0.3),
+                      color: AppColors.success.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -520,7 +520,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -532,7 +532,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -543,7 +543,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: iconColor.withOpacity(0.2),
+                    color: iconColor.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -624,10 +624,10 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.info.withOpacity(0.1),
+            color: AppColors.info.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.info.withOpacity(0.3),
+              color: AppColors.info.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -687,7 +687,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.blueMetraShop.withOpacity(0.1),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(
@@ -716,9 +716,9 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          color: AppColors.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
         ),
         child: Text(
           unit,
@@ -740,7 +740,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
       ) : isTotal ? BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.1),
+        color: AppColors.blueMetraShop.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
       children: cells.asMap().entries.map((entry) {
@@ -780,7 +780,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -924,9 +924,9 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [

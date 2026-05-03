@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/config/utils/validators.dart';
 import 'package:meter_app/presentation/widgets/tutorial/tutorial_overlay.dart';
 
 import '../../../../../config/theme/theme.dart';
-import '../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../config/local/shared_preferences_helper.dart';
 import '../../../../../domain/entities/home/losas/tipo_losa.dart';
 import '../../../../../domain/services/losas/losa_service.dart';
 import '../../../../providers/providers.dart';
@@ -196,15 +197,15 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.blueMetraShop.withOpacity(0.1),
-            AppColors.blueMetraShop.withOpacity(0.05),
+            AppColors.blueMetraShop.withValues(alpha: 0.1),
+            AppColors.blueMetraShop.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.blueMetraShop.withOpacity(0.2),
+          color: AppColors.blueMetraShop.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -216,7 +217,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SvgPicture.asset(
@@ -298,7 +299,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
         controller: _desperdicioConcretoController,
         label: 'Desperdicio Concreto',
         suffix: '%',
-        validator: _validatePercentage,
+        validator: Validators.percentageField,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         prefixIcon: Icons.water_drop,
       );
@@ -312,7 +313,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
             controller: _desperdicioMaterialController,
             label: 'Desperdicio ${_getMaterialLabel()}',
             suffix: '%',
-            validator: _validatePercentage,
+            validator: Validators.percentageField,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             prefixIcon: Icons.construction,
           ),
@@ -323,7 +324,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
             controller: _desperdicioConcretoController,
             label: 'Desperdicio Concreto',
             suffix: '%',
-            validator: _validatePercentage,
+            validator: Validators.percentageField,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             prefixIcon: Icons.water_drop,
           ),
@@ -389,10 +390,10 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.blueMetraShop.withOpacity(0.05),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.blueMetraShop.withOpacity(0.2),
+                color: AppColors.blueMetraShop.withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -564,7 +565,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                 controller: _descriptionAreaController,
                 label: 'Descripción',
                 hintText: 'Ej: Losa Dormitorio',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -572,7 +573,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                 controller: _areaTextController,
                 label: 'Área Total',
                 suffix: 'm²',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.crop_square,
               ),
@@ -602,7 +603,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                 controller: _descriptionMedidasController,
                 label: 'Descripción',
                 hintText: 'Ej: Losa Dormitorio',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -613,7 +614,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                       controller: _largoTextController,
                       label: 'Largo',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
@@ -624,7 +625,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                       controller: _anchoTextController,
                       label: 'Ancho',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.height,
                     ),
@@ -654,7 +655,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
           controller: field['description']!,
           label: 'Descripción',
           hintText: 'Ej: Losa cocina',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -662,7 +663,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
           controller: field['measure']!,
           label: 'Área',
           suffix: 'm²',
-          validator: _validateNumeric,
+          validator: Validators.positiveNumber,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.crop_square,
         ),
@@ -679,7 +680,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
           controller: field['descriptionMeasure']!,
           label: 'Descripción',
           hintText: 'Ej: Losa cocina',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -690,7 +691,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                 controller: field['largoMeasure']!,
                 label: 'Largo',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
@@ -701,7 +702,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
                 controller: field['anchoMeasure']!,
                 label: 'Ancho',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
@@ -719,7 +720,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -828,23 +829,12 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
     final losaResult = ref.read(losaResultProvider.notifier);
     losaResult.clearList();
 
-    debugPrint('🔍 Creando losas - Tipo: ${widget.tipoLosa.displayName}');
-    debugPrint('🔍 Index actual: $_currentIndex');
 
     if (_currentIndex == 0) {
       // Tab de área
-      debugPrint('🔍 Tab de área');
-      debugPrint('🔍 Descripción: ${_descriptionAreaController.text}');
-      debugPrint('🔍 Área: ${_areaTextController.text}');
 
       if (_descriptionAreaController.text.isNotEmpty &&
           _areaTextController.text.isNotEmpty) {
-        debugPrint('✅ Intentando crear losa principal...');
-        debugPrint('   - Altura: $_selectedAlturaLosa');
-        debugPrint('   - Resistencia: $_selectedResistenciaConcreto');
-        debugPrint('   - Desperdicio concreto: ${_desperdicioConcretoController.text}');
-        debugPrint('   - Material aligerante: $_selectedMaterialAligerante');
-        debugPrint('   - Desperdicio material: ${_desperdicioMaterialController.text}');
 
         losaResult.createLosa(
           tipo: widget.tipoLosa,
@@ -858,9 +848,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
               : null,
           area: _areaTextController.text,
         );
-        debugPrint('✅ Losa principal creada exitosamente');
       } else {
-        debugPrint('⚠️ Datos de losa principal incompletos');
       }
 
       for (var field in _areaFields) {
@@ -923,9 +911,7 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
 
     // Verificar cuántas losas se crearon
     final losasCreadas = ref.read(losaResultProvider);
-    debugPrint('📊 Total de losas creadas: ${losasCreadas.length}');
     if (losasCreadas.isEmpty) {
-      debugPrint('❌ ERROR: No se creó ninguna losa!');
     }
   }
 
@@ -949,45 +935,4 @@ class _DatosLosaScreenState extends ConsumerState<DatosLosaScreen>
     );
   }
 
-  // Validadores
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number <= 0) {
-      return 'El valor debe ser mayor a 0';
-    }
-
-    return null;
-  }
-
-  String? _validatePercentage(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number < 0 || number > 100) {
-      return 'Debe estar entre 0% y 100%';
-    }
-
-    return null;
-  }
 }

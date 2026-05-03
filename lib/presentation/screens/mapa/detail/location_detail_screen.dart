@@ -176,15 +176,15 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
       leading: Container(
         margin: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
+          color: Colors.black.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 16,
               offset: const Offset(0, 4),
             ),
@@ -215,15 +215,15 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.6),
+            color: Colors.black.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -306,7 +306,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         child: Icon(
           Icons.store_mall_directory_rounded,
           size: 100,
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -320,10 +320,10 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
           end: Alignment.bottomCenter,
           stops: const [0.0, 0.3, 0.7, 1.0],
           colors: [
-            Colors.black.withOpacity(0.4),
+            Colors.black.withValues(alpha: 0.4),
             Colors.transparent,
-            Colors.black.withOpacity(0.3),
-            Colors.black.withOpacity(0.9),
+            Colors.black.withValues(alpha: 0.3),
+            Colors.black.withValues(alpha: 0.9),
           ],
         ),
       ),
@@ -351,7 +351,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accent.withOpacity(0.5),
+                      color: AppColors.accent.withValues(alpha: 0.5),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -393,7 +393,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                 Shadow(
                   offset: const Offset(0, 4),
                   blurRadius: 12,
-                  color: Colors.black.withOpacity(0.8),
+                  color: Colors.black.withValues(alpha: 0.8),
                 ),
               ],
             ),
@@ -408,7 +408,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.accent.withOpacity(0.5),
+                      color: AppColors.accent.withValues(alpha: 0.5),
                       blurRadius: 8,
                     ),
                   ],
@@ -432,7 +432,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                       Shadow(
                         offset: const Offset(0, 2),
                         blurRadius: 6,
-                        color: Colors.black.withOpacity(0.7),
+                        color: Colors.black.withValues(alpha: 0.7),
                       ),
                     ],
                   ),
@@ -458,7 +458,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -516,7 +516,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -553,12 +553,12 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: AppColors.secondary.withOpacity(0.1),
+          color: AppColors.secondary.withValues(alpha: 0.1),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.06),
+            color: AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -575,13 +575,13 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                   gradient: LinearGradient(
                     colors: [
                       AppColors.secondary,
-                      AppColors.secondary.withOpacity(0.8),
+                      AppColors.secondary.withValues(alpha: 0.8),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.secondary.withOpacity(0.3),
+                      color: AppColors.secondary.withValues(alpha: 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -630,7 +630,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppColors.secondary.withOpacity(0.1),
+                  color: AppColors.secondary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: CircularProgressIndicator(
@@ -672,8 +672,8 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppColors.secondary.withOpacity(0.15),
-                    AppColors.secondary.withOpacity(0.05),
+                    AppColors.secondary.withValues(alpha: 0.15),
+                    AppColors.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -746,7 +746,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent.withOpacity(0.4),
+                  color: AppColors.accent.withValues(alpha: 0.4),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -814,15 +814,15 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isAvailable
-              ? AppColors.secondary.withOpacity(0.2)
+              ? AppColors.secondary.withValues(alpha: 0.2)
               : AppColors.neutral300,
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
             color: isAvailable
-                ? AppColors.secondary.withOpacity(0.12)
-                : Colors.black.withOpacity(0.04),
+                ? AppColors.secondary.withValues(alpha: 0.12)
+                : Colors.black.withValues(alpha: 0.04),
             blurRadius: isAvailable ? 16 : 8,
             offset: const Offset(0, 4),
           ),
@@ -852,7 +852,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                           colors: isAvailable
                               ? [
                                   AppColors.secondary,
-                                  AppColors.secondary.withOpacity(0.8),
+                                  AppColors.secondary.withValues(alpha: 0.8),
                                 ]
                               : [
                                   AppColors.neutral400,
@@ -863,7 +863,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                         boxShadow: isAvailable
                             ? [
                                 BoxShadow(
-                                  color: AppColors.secondary.withOpacity(0.4),
+                                  color: AppColors.secondary.withValues(alpha: 0.4),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -902,10 +902,10 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.error.withOpacity(0.15),
+                          color: AppColors.error.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: AppColors.error.withOpacity(0.4),
+                            color: AppColors.error.withValues(alpha: 0.4),
                           ),
                         ),
                         child: Text(
@@ -932,13 +932,13 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.accent.withOpacity(0.25),
-                              AppColors.accent.withOpacity(0.15),
+                              AppColors.accent.withValues(alpha: 0.25),
+                              AppColors.accent.withValues(alpha: 0.15),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.accent.withOpacity(0.3),
+                            color: AppColors.accent.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Text(
@@ -961,13 +961,13 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
                           gradient: LinearGradient(
                             colors: [
                               AppColors.secondary,
-                              AppColors.secondary.withOpacity(0.9),
+                              AppColors.secondary.withValues(alpha: 0.9),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.secondary.withOpacity(0.4),
+                              color: AppColors.secondary.withValues(alpha: 0.4),
                               blurRadius: 12,
                             ),
                           ],
@@ -998,18 +998,18 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.secondary.withOpacity(0.08),
-            AppColors.primary.withOpacity(0.04),
+            AppColors.secondary.withValues(alpha: 0.08),
+            AppColors.primary.withValues(alpha: 0.04),
           ],
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(
-          color: AppColors.secondary.withOpacity(0.2),
+          color: AppColors.secondary.withValues(alpha: 0.2),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -1029,7 +1029,7 @@ class _LocationDetailScreenState extends State<LocationDetailScreen>
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.accent.withOpacity(0.5),
+                  color: AppColors.accent.withValues(alpha: 0.5),
                   blurRadius: 24,
                   spreadRadius: 4,
                 ),
@@ -1262,7 +1262,7 @@ class _InfoBottomSheet extends StatelessWidget {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accent.withOpacity(0.4),
+                              color: AppColors.accent.withValues(alpha: 0.4),
                               blurRadius: 16,
                             ),
                           ],
@@ -1340,7 +1340,7 @@ class _InfoBottomSheet extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [
                   AppColors.secondary,
-                  AppColors.secondary.withOpacity(0.8),
+                  AppColors.secondary.withValues(alpha: 0.8),
                 ],
               ),
               onTap: () => _makePhoneCall(context, phone),
@@ -1401,8 +1401,8 @@ class _InfoBottomSheet extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: gradient.colors.isNotEmpty
-                    ? gradient.colors.first.withOpacity(0.4)
-                    : Colors.black.withOpacity(0.3),
+                    ? gradient.colors.first.withValues(alpha: 0.4)
+                    : Colors.black.withValues(alpha: 0.3),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -1413,7 +1413,7 @@ class _InfoBottomSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.25),
+                  color: Colors.white.withValues(alpha: 0.25),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -1438,7 +1438,7 @@ class _InfoBottomSheet extends StatelessWidget {
                     Text(
                       subtitle,
                       style: AppTypography.bodySmall.copyWith(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                         fontSize: 12,
                       ),
                     ),
@@ -1496,8 +1496,8 @@ class _InfoBottomSheet extends StatelessWidget {
                   gradient: isToday
                       ? LinearGradient(
                           colors: [
-                            AppColors.accent.withOpacity(0.15),
-                            AppColors.accent.withOpacity(0.08),
+                            AppColors.accent.withValues(alpha: 0.15),
+                            AppColors.accent.withValues(alpha: 0.08),
                           ],
                         )
                       : null,
@@ -1505,7 +1505,7 @@ class _InfoBottomSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isToday
-                        ? AppColors.accent.withOpacity(0.4)
+                        ? AppColors.accent.withValues(alpha: 0.4)
                         : AppColors.neutral200,
                     width: isToday ? 2 : 1,
                   ),
@@ -1521,7 +1521,7 @@ class _InfoBottomSheet extends StatelessWidget {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.accent.withOpacity(0.6),
+                              color: AppColors.accent.withValues(alpha: 0.6),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -1548,13 +1548,13 @@ class _InfoBottomSheet extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: hours.closed
-                            ? AppColors.error.withOpacity(0.15)
-                            : AppColors.success.withOpacity(0.15),
+                            ? AppColors.error.withValues(alpha: 0.15)
+                            : AppColors.success.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: hours.closed
-                              ? AppColors.error.withOpacity(0.3)
-                              : AppColors.success.withOpacity(0.3),
+                              ? AppColors.error.withValues(alpha: 0.3)
+                              : AppColors.success.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Text(
@@ -1764,13 +1764,13 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                 end: Alignment.bottomRight,
                                 colors: [
                                   AppColors.secondary,
-                                  AppColors.secondary.withOpacity(0.8),
+                                  AppColors.secondary.withValues(alpha: 0.8),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(28),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppColors.secondary.withOpacity(0.4),
+                                  color: AppColors.secondary.withValues(alpha: 0.4),
                                   blurRadius: 24,
                                   offset: const Offset(0, 8),
                                   spreadRadius: 4,
@@ -1805,10 +1805,10 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.secondary.withOpacity(0.15),
+                            color: AppColors.secondary.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: AppColors.secondary.withOpacity(0.3),
+                              color: AppColors.secondary.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Text(
@@ -1828,13 +1828,13 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
-                              AppColors.accent.withOpacity(0.2),
-                              AppColors.accent.withOpacity(0.1),
+                              AppColors.accent.withValues(alpha: 0.2),
+                              AppColors.accent.withValues(alpha: 0.1),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppColors.accent.withOpacity(0.4),
+                            color: AppColors.accent.withValues(alpha: 0.4),
                             width: 2,
                           ),
                         ),
@@ -1852,7 +1852,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                 borderRadius: BorderRadius.circular(14),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.accent.withOpacity(0.4),
+                                    color: AppColors.accent.withValues(alpha: 0.4),
                                     blurRadius: 12,
                                   ),
                                 ],
@@ -1935,7 +1935,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                           color: AppColors.background,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: AppColors.secondary.withOpacity(0.3),
+                            color: AppColors.secondary.withValues(alpha: 0.3),
                             width: 2,
                           ),
                         ),
@@ -1956,7 +1956,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                             colors: [
                                               AppColors.secondary,
                                               AppColors.secondary
-                                                  .withOpacity(0.9),
+                                                  .withValues(alpha: 0.9),
                                             ],
                                           )
                                         : null,
@@ -2039,14 +2039,14 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                     gradient: LinearGradient(
                                       colors: [
                                         AppColors.secondary,
-                                        AppColors.secondary.withOpacity(0.9),
+                                        AppColors.secondary.withValues(alpha: 0.9),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
                                         color:
-                                            AppColors.secondary.withOpacity(0.4),
+                                            AppColors.secondary.withValues(alpha: 0.4),
                                         blurRadius: 12,
                                       ),
                                     ],
@@ -2070,13 +2070,13 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                           gradient: LinearGradient(
                             colors: [
                               AppColors.primary,
-                              AppColors.primary.withOpacity(0.9),
+                              AppColors.primary.withValues(alpha: 0.9),
                             ],
                           ),
                           borderRadius: BorderRadius.circular(18),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.primary.withOpacity(0.3),
+                              color: AppColors.primary.withValues(alpha: 0.3),
                               blurRadius: 16,
                               offset: const Offset(0, 6),
                             ),
@@ -2091,7 +2091,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                 Text(
                                   'Total a pagar',
                                   style: AppTypography.bodyMedium.copyWith(
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -2110,7 +2110,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                 vertical: 10,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -2151,7 +2151,7 @@ class _ModernProductDetailModalState extends State<_ModernProductDetailModal>
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               elevation: 0,
-                              shadowColor: AppColors.accent.withOpacity(0.5),
+                              shadowColor: AppColors.accent.withValues(alpha: 0.5),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,

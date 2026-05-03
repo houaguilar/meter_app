@@ -27,12 +27,12 @@ class ModernCard extends StatelessWidget {
         color: backgroundColor ?? AppColors.surface,
         borderRadius: borderRadius ?? BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border.withOpacity(0.5),
+          color: AppColors.border.withValues(alpha: 0.5),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 1,
             offset: const Offset(0, 4),
@@ -66,7 +66,7 @@ class ModernSectionHeader extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.blueMetraShop.withOpacity(0.1),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -225,7 +225,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                 boxShadow: _isFocused
                     ? [
                   BoxShadow(
-                    color: AppColors.blueMetraShop.withOpacity(0.2),
+                    color: AppColors.blueMetraShop.withValues(alpha: 0.2),
                     blurRadius: 8,
                     spreadRadius: 0,
                   ),
@@ -258,7 +258,7 @@ class _ModernTextFieldState extends State<ModernTextField>
                 decoration: InputDecoration(
                   hintText: widget.hintText,
                   hintStyle: TextStyle(
-                    color: AppColors.textSecondary.withOpacity(0.6),
+                    color: AppColors.textSecondary.withValues(alpha: 0.6),
                     fontSize: 16,
                   ),
                   prefixIcon: widget.prefixIcon != null
@@ -370,7 +370,7 @@ class ModernChoiceChips extends StatelessWidget {
                   boxShadow: isSelected
                       ? [
                     BoxShadow(
-                      color: AppColors.blueMetraShop.withOpacity(0.3),
+                      color: AppColors.blueMetraShop.withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 0,
                     ),
@@ -431,12 +431,12 @@ class ModernMeasurementCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.border.withOpacity(0.3),
+          color: AppColors.border.withValues(alpha: 0.3),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 8,
             spreadRadius: 0,
             offset: const Offset(0, 2),
@@ -451,7 +451,7 @@ class ModernMeasurementCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -559,10 +559,10 @@ class _ModernAddButtonState extends State<ModernAddButton>
                   vertical: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: AppColors.blueMetraShop.withOpacity(0.3),
+                    color: AppColors.blueMetraShop.withValues(alpha: 0.3),
                     width: 2,
                     style: BorderStyle.solid,
                   ),
@@ -680,7 +680,7 @@ class _ModernActionButtonDState extends State<ModernActionButtonD>
                     colors: [
                       widget.backgroundColor ?? AppColors.blueMetraShop,
                       (widget.backgroundColor ?? AppColors.blueMetraShop)
-                          .withOpacity(0.8),
+                          .withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -694,7 +694,7 @@ class _ModernActionButtonDState extends State<ModernActionButtonD>
                       ? [
                     BoxShadow(
                       color: (widget.backgroundColor ?? AppColors.blueMetraShop)
-                          .withOpacity(0.3),
+                          .withValues(alpha: 0.3),
                       blurRadius: 12,
                       spreadRadius: 0,
                       offset: const Offset(0, 4),

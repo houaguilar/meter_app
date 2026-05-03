@@ -275,7 +275,6 @@ class PremiumRepositoryImpl implements PremiumRepository {
 
       _statusController.add(status);
     } catch (e) {
-      print('Error actualizando cache y remoto: $e');
     }
   }
 
@@ -289,7 +288,6 @@ class PremiumRepositoryImpl implements PremiumRepository {
   void _syncInBackground() {
     if (_currentUserId != null) {
       _syncFromRemoteAndCache().catchError((error) {
-        print('Error en sincronización background: $error');
       });
     }
   }

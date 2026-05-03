@@ -1,5 +1,5 @@
 import 'colombia_location_repository.dart';
-import 'location_repository.dart';
+import '../../../../domain/repositories/perfil/location/location_repository.dart';
 import 'mexico_location_repository.dart';
 import 'peru_location_repository_v2.dart';
 

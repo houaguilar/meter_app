@@ -35,7 +35,7 @@ import 'package:meter_app/presentation/screens/save/save_result_screen.dart';
 import 'package:meter_app/presentation/screens/screens.dart';
 import 'package:meter_app/presentation/views/views.dart';
 
-import '../../data/local/shared_preferences_helper.dart';
+import '../local/shared_preferences_helper.dart';
 import '../../init_dependencies.dart';
 import '../../presentation/blocs/auth/auth_bloc.dart';
 import '../../presentation/screens/auth/init/metra_shop_screen.dart';
@@ -168,7 +168,9 @@ class AppRouter {
       GoRoute(
         path: '/welcome',
         name: 'welcome',
-        builder: (context, state) => const WelcomeScreen(),
+        builder: (context, state) => WelcomeScreen(
+          sharedPrefs: serviceLocator<SharedPreferencesHelper>(),
+        ),
       ),
       ShellRoute(
         navigatorKey: _shellNavigator,
@@ -662,7 +664,8 @@ class AppRouter {
                     name: 'combined-results',
                     builder: (context, state) {
                       final projectId = int.parse(state.pathParameters['projectId']!);
-                      final extra = state.extra as Map<String, dynamic>;
+                      final extra = state.extra as Map<String, dynamic>?;
+                      if (extra == null) return const SizedBox.shrink();
                       return CombinedResultsScreen(
                         projectId: projectId,
                         selectedMetradoIds: List<int>.from(extra['selectedMetrados']),
@@ -733,7 +736,8 @@ class AppRouter {
                 path: 'provider-profile/:locationId',
                 name: 'provider-profile',
                 builder: (context, state) {
-                  final extra = state.extra as Map<String, dynamic>;
+                  final extra = state.extra as Map<String, dynamic>?;
+                  if (extra == null) return const SizedBox.shrink();
                   return ProviderProfileScreen(
                     location: extra['location'],
                   );

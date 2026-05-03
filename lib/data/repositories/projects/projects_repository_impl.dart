@@ -13,6 +13,8 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
   final ProjectsRemoteDataSource projectsRemoteDataSource;
   final ConnectionChecker connectionChecker;
 
+  DateTime? _lastSyncTime;
+
   ProjectsRepositoryImpl(
       this.projectsLocalDataSource,
       this.projectsRemoteDataSource,
@@ -94,13 +96,20 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
         localProjects = allProjects.where((p) => p.userId == currentUserId).toList();
       }
 
-      // Intentar sincronizar con remoto si hay conexión
-      await _trySyncFromRemote(currentUserId);
+      // Sincronizar con remoto solo si pasó suficiente tiempo desde la última vez
+      final now = DateTime.now();
+      final shouldSync = _lastSyncTime == null ||
+          now.difference(_lastSyncTime!) > const Duration(minutes: 15);
 
-      // Recargar después de la sincronización
-      if (projectsLocalDataSource is ProjectsIsarDataSource) {
-        final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
-        localProjects = await isarDataSource.loadProjectsByUser(currentUserId);
+      if (shouldSync) {
+        _lastSyncTime = now;
+        await _trySyncFromRemote(currentUserId);
+
+        // Recargar después de la sincronización
+        if (projectsLocalDataSource is ProjectsIsarDataSource) {
+          final isarDataSource = projectsLocalDataSource as ProjectsIsarDataSource;
+          localProjects = await isarDataSource.loadProjectsByUser(currentUserId);
+        }
       }
 
       return Right(localProjects);
@@ -312,7 +321,6 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       }
     } catch (e) {
       // Ignorar errores de sincronización - no deben afectar la operación principal
-      print('Error en sincronización hacia remoto: $e');
     }
   }
 
@@ -356,7 +364,6 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       }
     } catch (e) {
       // Ignorar errores de sincronización
-      print('Error en sincronización desde remoto: $e');
     }
   }
 }

@@ -5,9 +5,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/config/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/config/assets/app_icons.dart';
+import 'package:meter_app/config/utils/validators.dart';
 
 import '../../../../../../config/theme/theme.dart';
-import '../../../../../../data/local/shared_preferences_helper.dart';
+import '../../../../../../config/local/shared_preferences_helper.dart';
 import '../../../../../providers/providers.dart';
 import '../../../../../widgets/modern_widgets.dart';
 import '../../../../../widgets/tutorial/tutorial_overlay.dart';
@@ -181,15 +182,15 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.blueMetraShop.withOpacity(0.1),
-            AppColors.blueMetraShop.withOpacity(0.05),
+            AppColors.blueMetraShop.withValues(alpha: 0.1),
+            AppColors.blueMetraShop.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppColors.blueMetraShop.withOpacity(0.2),
+          color: AppColors.blueMetraShop.withValues(alpha: 0.2),
           width: 1,
         ),
       ),
@@ -201,7 +202,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blueMetraShop.withOpacity(0.1),
+                  color: AppColors.blueMetraShop.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: SvgPicture.asset(
@@ -269,7 +270,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                     controller: _factorController,
                     label: 'Desperdicio Ladrillo',
                     suffix: '%',
-                    validator: _validatePercentage,
+                    validator: Validators.percentageField,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     prefixIcon: Icons.construction,
                   ),
@@ -280,7 +281,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                     controller: _factorMorteroController,
                     label: 'Desperdicio Mortero',
                     suffix: '%',
-                    validator: _validatePercentage,
+                    validator: Validators.percentageField,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     prefixIcon: Icons.water_drop,
                   ),
@@ -435,7 +436,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                 controller: _descriptionAreaController,
                 label: 'Descripción',
                 hintText: 'Ej: Muro principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -443,7 +444,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                 controller: _areaTextController,
                 label: 'Área Total',
                 suffix: 'm²',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.crop_square,
               ),
@@ -473,7 +474,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                 controller: _descriptionMedidasController,
                 label: 'Descripción',
                 hintText: 'Ej: Muro principal',
-                validator: _validateRequired,
+                validator: Validators.requiredField,
                 prefixIcon: Icons.description,
               ),
               const SizedBox(height: 16),
@@ -484,7 +485,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                       controller: _lengthTextController,
                       label: 'Largo',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.straighten,
                     ),
@@ -495,7 +496,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                       controller: _heightTextController,
                       label: 'Altura',
                       suffix: 'm',
-                      validator: _validateNumeric,
+                      validator: Validators.positiveNumber,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       prefixIcon: Icons.height,
                     ),
@@ -525,7 +526,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
           controller: field['description']!,
           label: 'Descripción',
           hintText: 'Ej: Muro lateral',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -533,7 +534,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
           controller: field['measure']!,
           label: 'Área',
           suffix: 'm²',
-          validator: _validateNumeric,
+          validator: Validators.positiveNumber,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
           prefixIcon: Icons.crop_square,
         ),
@@ -550,7 +551,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
           controller: field['descriptionMeasure']!,
           label: 'Descripción',
           hintText: 'Ej: Muro lateral',
-          validator: _validateRequired,
+          validator: Validators.requiredField,
           prefixIcon: Icons.description,
         ),
         const SizedBox(height: 16),
@@ -561,7 +562,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                 controller: field['lengthMeasure']!,
                 label: 'Largo',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.straighten,
               ),
@@ -572,7 +573,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
                 controller: field['heightMeasure']!,
                 label: 'Altura',
                 suffix: 'm',
-                validator: _validateNumeric,
+                validator: Validators.positiveNumber,
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 prefixIcon: Icons.height,
               ),
@@ -590,7 +591,7 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
         color: AppColors.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -690,11 +691,9 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
 
   Future<void> _createLadrilloData(String tipoLadrillo) async {
     final tipoLadrilloActual = ref.read(tipoLadrilloProvider);
-    print('🔍 Tipo ladrillo del provider: "$tipoLadrilloActual"');
 
     // ✅ Si el provider está vacío, usar el parámetro como fallback
     final tipoAUsar = tipoLadrilloActual.isNotEmpty ? tipoLadrilloActual : tipoLadrillo;
-    print('🔧 Tipo a usar para cálculos: "$tipoAUsar"');
 
     final datosLadrillo = ref.read(ladrilloResultProvider.notifier);
     datosLadrillo.clearList();
@@ -786,45 +785,4 @@ class _DatosLadrilloScreenState extends ConsumerState<DatosLadrilloScreen>
     );
   }
 
-  // Validadores
-  String? _validateRequired(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-    return null;
-  }
-
-  String? _validateNumeric(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number <= 0) {
-      return 'El valor debe ser mayor a 0';
-    }
-
-    return null;
-  }
-
-  String? _validatePercentage(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Este campo es obligatorio';
-    }
-
-    final number = double.tryParse(value);
-    if (number == null) {
-      return 'Ingresa un número válido';
-    }
-
-    if (number < 0 || number > 100) {
-      return 'Debe estar entre 0% y 100%';
-    }
-
-    return null;
-  }
 }

@@ -30,10 +30,6 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
 
         // Verificar si hay errores en la respuesta de Google
         if (data['status'] != 'OK' && data['status'] != 'ZERO_RESULTS') {
-          print(
-              'Google Places API Error: ${data['status']} - ${data['error_message'] ??
-                  'Unknown error'}');
-
           // Manejar errores específicos
           switch (data['status']) {
             case 'OVER_QUERY_LIMIT':
@@ -68,15 +64,11 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
       } else if (e.type == DioExceptionType.receiveTimeout) {
         throw Exception("Tiempo de respuesta agotado. Inténtelo nuevamente.");
       } else if (e.response != null) {
-        print('DioError Response: ${e.response}');
         throw Exception("Error del servidor: ${e.response?.statusCode}");
       } else {
-        print('DioError Request: ${e.requestOptions}');
-        print('DioError Message: ${e.message}');
         throw Exception("Error de conexión. Verifique su conexión a internet.");
       }
     } catch (e) {
-      print('Error general en getPlaceSuggestions: $e');
       throw Exception("Error inesperado: ${e.toString()}");
     }
   }
@@ -100,9 +92,6 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
 
         // Verificar errores en la respuesta
         if (data['status'] != 'OK') {
-          print(
-              'Google Places Details API Error: ${data['status']} - ${data['error_message'] ??
-                  'Unknown error'}');
           throw Exception("Error al obtener detalles: ${data['status']}");
         }
 
@@ -122,7 +111,6 @@ class PlaceRemoteDataSourceImpl implements PlaceRemoteDataSource {
         throw Exception("Error de conexión. Verifique su conexión a internet.");
       }
     } catch (e) {
-      print('Error general en getPlaceDetails: $e');
       throw Exception("Error inesperado: ${e.toString()}");
     }
   }

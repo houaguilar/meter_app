@@ -1,14 +1,12 @@
 // lib/presentation/providers/notifications/notification_settings_providers.dart
 import 'dart:convert';
 
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../config/notifications/notification_repository.dart';
 import '../../../domain/entities/notifications/notification_settings.dart';
 import '../../../init_dependencies.dart';
-
-part 'notification_settings_providers.g.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTES
@@ -33,8 +31,7 @@ enum NotificationLoadingState {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Provider para el estado de carga
-@riverpod
-class NotificationLoadingStatus extends _$NotificationLoadingStatus {
+class NotificationLoadingStatus extends Notifier<NotificationLoadingState> {
   @override
   NotificationLoadingState build() => NotificationLoadingState.idle;
 
@@ -44,9 +41,12 @@ class NotificationLoadingStatus extends _$NotificationLoadingStatus {
   void setIdle() => state = NotificationLoadingState.idle;
 }
 
+final notificationLoadingStatusProvider =
+    NotifierProvider<NotificationLoadingStatus, NotificationLoadingState>(
+        NotificationLoadingStatus.new);
+
 /// Provider para mensajes de error
-@riverpod
-class NotificationErrorMessage extends _$NotificationErrorMessage {
+class NotificationErrorMessage extends Notifier<String?> {
   @override
   String? build() => null;
 
@@ -54,10 +54,13 @@ class NotificationErrorMessage extends _$NotificationErrorMessage {
   void clear() => state = null;
 }
 
+final notificationErrorMessageProvider =
+    NotifierProvider<NotificationErrorMessage, String?>(
+        NotificationErrorMessage.new);
+
 /// Provider principal para las configuraciones de notificaciones
 /// Mantiene el estado en memoria y sincroniza con SharedPreferences
-@Riverpod(keepAlive: true)
-class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
+class NotificationSettingsNotifier extends Notifier<NotificationSettings> {
   late final NotificationRepository _notificationService;
   late final SharedPreferences _prefs;
 
@@ -95,7 +98,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error cargando configuración de notificaciones: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -108,9 +110,7 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
     try {
       final jsonString = jsonEncode(state.toJson());
       await _prefs.setString(_kNotificationSettingsKey, jsonString);
-      debugPrint('✅ Configuración de notificaciones guardada');
     } catch (e) {
-      debugPrint('❌ Error guardando configuración: $e');
       throw Exception('Error al guardar configuración');
     }
   }
@@ -153,9 +153,7 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
         await _notificationService.unsubscribeFromTopic('location');
       }
 
-      debugPrint('✅ Suscripciones de tópicos actualizadas');
     } catch (e) {
-      debugPrint('❌ Error actualizando suscripciones: $e');
       throw Exception('Error al actualizar suscripciones');
     }
   }
@@ -186,7 +184,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       return granted;
     } catch (e) {
-      debugPrint('❌ Error solicitando permiso: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -202,7 +199,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
       state = state.copyWith(systemPermissionGranted: hasPermission);
       await _saveSettings();
     } catch (e) {
-      debugPrint('❌ Error verificando permisos: $e');
     }
   }
 
@@ -218,7 +214,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error actualizando notificaciones generales: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -240,7 +235,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error actualizando notificaciones de updates: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -261,7 +255,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error actualizando notificaciones de proyectos: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -282,7 +275,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error actualizando notificaciones de artículos: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -303,7 +295,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error actualizando notificaciones de ubicación: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -331,7 +322,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error habilitando todas las notificaciones: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -358,7 +348,6 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
 
       ref.read(notificationLoadingStatusProvider.notifier).setLoaded();
     } catch (e) {
-      debugPrint('❌ Error deshabilitando todas las notificaciones: $e');
       ref.read(notificationLoadingStatusProvider.notifier).setError();
       ref
           .read(notificationErrorMessageProvider.notifier)
@@ -377,33 +366,32 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
       await _prefs.remove(_kNotificationSettingsKey);
       state = const NotificationSettings();
       await _updateTopicSubscriptions();
-      debugPrint('✅ Configuración de notificaciones reseteada');
     } catch (e) {
-      debugPrint('❌ Error reseteando configuración: $e');
     }
   }
 }
+
+final notificationSettingsProvider =
+    NotifierProvider<NotificationSettingsNotifier, NotificationSettings>(
+        NotificationSettingsNotifier.new);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROVIDERS AUXILIARES
 // ═══════════════════════════════════════════════════════════════════════════
 
 /// Provider que indica si alguna notificación está habilitada
-@riverpod
-bool hasAnyNotificationEnabled(Ref ref) {
+final hasAnyNotificationEnabledProvider = Provider<bool>((ref) {
   final settings = ref.watch(notificationSettingsProvider);
   return settings.hasAnyEnabled;
-}
+});
 
 /// Provider que indica si el loading está activo
-@riverpod
-bool isNotificationLoading(Ref ref) {
+final isNotificationLoadingProvider = Provider<bool>((ref) {
   final status = ref.watch(notificationLoadingStatusProvider);
   return status == NotificationLoadingState.loading;
-}
+});
 
 /// Función auxiliar para debugPrint (para evitar import flutter)
 void debugPrint(String message) {
   // ignore: avoid_print
-  print(message);
 }

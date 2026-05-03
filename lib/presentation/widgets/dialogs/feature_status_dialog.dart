@@ -125,7 +125,7 @@ class FeatureStatusDialog extends StatefulWidget {
     return showDialog(
       context: context,
       barrierDismissible: true,
-      barrierColor: AppColors.neutral900.withOpacity(0.5),
+      barrierColor: AppColors.neutral900.withValues(alpha: 0.5),
       builder: (context) => FeatureStatusDialog(
         type: type,
         title: title,
@@ -206,7 +206,7 @@ class _FeatureStatusDialogState extends State<FeatureStatusDialog>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.neutral900.withOpacity(0.1),
+                  color: AppColors.neutral900.withValues(alpha: 0.1),
                   blurRadius: 20,
                   spreadRadius: 5,
                   offset: const Offset(0, 10),
@@ -237,7 +237,7 @@ class _FeatureStatusDialogState extends State<FeatureStatusDialog>
           end: Alignment.bottomRight,
           colors: [
             config.color,
-            config.color.withOpacity(0.8),
+            config.color.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: const BorderRadius.only(
@@ -254,7 +254,7 @@ class _FeatureStatusDialogState extends State<FeatureStatusDialog>
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.2),
+                color: AppColors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: Icon(

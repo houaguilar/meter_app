@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
 import 'package:isar_community/isar.dart';
@@ -8,7 +9,7 @@ import 'package:meter_app/config/common/cubits/app_user/app_user_cubit.dart';
 import 'package:meter_app/config/common/cubits/shimmer/loader_cubit.dart';
 import 'package:meter_app/config/constants/secrets/app_secrets.dart';
 import 'package:meter_app/config/network/connection_checker.dart';
-import 'package:meter_app/data/local/shared_preferences_helper.dart';
+import 'package:meter_app/config/local/shared_preferences_helper.dart';
 import 'package:meter_app/domain/entities/entities.dart';
 import 'package:meter_app/domain/entities/home/acero/viga/steel_beam.dart';
 import 'package:meter_app/domain/entities/home/estructuras/cimiento_corrido/cimiento_corrido.dart';
@@ -80,7 +81,7 @@ Future<void> registerCoreModule(GetIt sl) async {
       ReviewSchema,
     ],
     directory: isarDirectory,
-    inspector: true,
+    inspector: !kReleaseMode,
   );
 
   sl.registerLazySingleton<Isar>(() => isar);

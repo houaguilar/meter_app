@@ -99,7 +99,6 @@ class LocationDataSourceImpl implements LocationDataSource {
     required int maxResults,
   }) async {
     try {
-      print('🚀 Usando PostGIS para ubicaciones cercanas');
 
       final response = await supabaseClient.rpc('get_nearby_locations', params: {
         'user_lat': userLat,
@@ -116,11 +115,9 @@ class LocationDataSourceImpl implements LocationDataSource {
           .map((json) => LocationModelWithDistance.fromMap(json))
           .toList();
 
-      print('🎯 PostGIS encontró ${locations.length} ubicaciones');
 
       return locations;
     } catch (e) {
-      print('❌ Error con PostGIS: $e');
       throw ServerException('Error con PostGIS: $e');
     }
   }
@@ -133,7 +130,6 @@ class LocationDataSourceImpl implements LocationDataSource {
     required int maxResults,
   }) async {
     try {
-      print('🔄 Usando cálculo en cliente para ubicaciones cercanas');
 
       // Cargar todas las ubicaciones
       final allLocations = await loadLocations();
@@ -170,7 +166,6 @@ class LocationDataSourceImpl implements LocationDataSource {
       locationsWithDistance.sort((a, b) => a.distanceKm!.compareTo(b.distanceKm!));
       final result = locationsWithDistance.take(maxResults).toList();
 
-      print('🎯 Cliente encontró ${result.length} ubicaciones');
 
       return result;
     } catch (e) {
@@ -260,7 +255,6 @@ class LocationDataSourceImpl implements LocationDataSource {
           })
           .eq('id', locationId);
 
-      debugPrint('✅ Location $locationId is_active set to: $isActive');
     } on PostgrestException catch (e) {
       throw ServerException('Error al actualizar estado: ${e.message}');
     } catch (e) {
@@ -439,43 +433,6 @@ class LocationDataSourceImpl implements LocationDataSource {
     }
   }
 
-  /// Obtener ubicaciones por usuario específico
-  Future<List<LocationModel>> _getLocationsByUserInternal(String userId) async {
-    try {
-      final response = await supabaseClient
-          .from('locations')
-          .select()
-          .eq('user_id', userId)
-          .order('created_at', ascending: false);
-
-      if (response == null) {
-        return [];
-      }
-
-      return (response as List)
-          .map((json) => LocationModel.fromMap(json))
-          .toList();
-    } on PostgrestException catch (e) {
-      throw ServerException('Error al cargar ubicaciones del usuario: ${e.message}');
-    } catch (e) {
-      throw ServerException('Error inesperado: $e');
-    }
-  }
-
-  /// Eliminar una ubicación (para funcionalidad futura)
-  Future<void> _deleteLocationInternal(String locationId) async {
-    try {
-      await supabaseClient
-          .from('locations')
-          .delete()
-          .eq('id', locationId);
-    } on PostgrestException catch (e) {
-      throw ServerException('Error al eliminar ubicación: ${e.message}');
-    } catch (e) {
-      throw ServerException('Error inesperado al eliminar: $e');
-    }
-  }
-
   /// Verificar si el bucket de almacenamiento existe
   Future<bool> checkStorageBucket() async {
     try {
@@ -560,13 +517,15 @@ class LocationDataSourceImpl implements LocationDataSource {
   @override
   Future<void> updateCategoriesOrder(String locationId, List<String> categoryIds) async {
     try {
-      for (var i = 0; i < categoryIds.length; i++) {
-        await supabaseClient
-            .from('location_categories')
-            .update({'display_order': i})
-            .eq('id', categoryIds[i])
-            .eq('location_id', locationId);
-      }
+      final updates = categoryIds.asMap().entries.map((entry) => {
+        'id': entry.value,
+        'location_id': locationId,
+        'display_order': entry.key,
+      }).toList();
+
+      await supabaseClient
+          .from('location_categories')
+          .upsert(updates);
     } on PostgrestException catch (e) {
       throw ServerException('Error al actualizar orden: ${e.message}');
     }

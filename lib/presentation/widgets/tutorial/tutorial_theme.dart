@@ -58,7 +58,7 @@ class TutorialTheme {
   // Sombras
   static List<BoxShadow> get cardShadow => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 20,
       spreadRadius: 5,
     ),
@@ -66,7 +66,7 @@ class TutorialTheme {
 
   static List<BoxShadow> get accentShadow => [
     BoxShadow(
-      color: accentColor.withOpacity(0.4),
+      color: accentColor.withValues(alpha: 0.4),
       blurRadius: 8,
       spreadRadius: 1,
     ),

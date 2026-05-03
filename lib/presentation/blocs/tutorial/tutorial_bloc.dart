@@ -10,15 +10,12 @@ class TutorialBloc extends Bloc<TutorialEvent, TutorialState> {
   TutorialBloc({required this.totalSteps}) : super(TutorialInitial()) {
     on<TutorialNext>((event, emit) {
       if (state is TutorialInitial) {
-        print("Cambiando de TutorialInitial a TutorialStep(1)");
         emit(TutorialStep(1));
       } else if (state is TutorialStep) {
         final currentIndex = (state as TutorialStep).stepIndex;
         if (currentIndex < totalSteps) {
-          print("Avanzando al siguiente paso: TutorialStep(${currentIndex + 1})");
           emit(TutorialStep(currentIndex + 1));
         } else {
-          print("Tutorial completado");
           emit(TutorialCompleted());
         }
       }
@@ -36,7 +33,6 @@ class TutorialBloc extends Bloc<TutorialEvent, TutorialState> {
     });
 
     on<TutorialSkip>((event, emit) {
-      print("Tutorial saltado");
       emit(TutorialCompleted());
     });
   }

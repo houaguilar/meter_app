@@ -43,7 +43,6 @@ Future<void> main() async {
   // Cargar variables de entorno segun el ambiente
   await dotenv.load(fileName: envFile);
 
-  debugPrint('🚀 Running in $environment mode with $envFile');
 
   // Inicializar Firebase
   await Firebase.initializeApp(
@@ -87,6 +86,7 @@ class _MyAppState extends ConsumerState<MyApp> {
   late final NotificationRepository notificationService;
   late final GoRouter _appRouter;
   StreamSubscription<supabase.AuthState>? _authStateSubscription;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -144,7 +144,6 @@ class _MyAppState extends ConsumerState<MyApp> {
   void _setupNotificationHandlers() {
     // Handler para notificaciones recibidas en foreground
     notificationService.onMessageReceived((notification) {
-      debugPrint('🔔 Notification received in foreground');
       // Usar el context del root navigator
       final context = _getRootContext();
       if (context != null) {
@@ -154,7 +153,6 @@ class _MyAppState extends ConsumerState<MyApp> {
 
     // Handler para cuando el usuario toca una notificación
     notificationService.onMessageOpenedApp((notification) {
-      debugPrint('📲 User tapped on notification');
       // Navegar a la pantalla correspondiente
       final context = _getRootContext();
       if (context != null) {
@@ -177,8 +175,6 @@ class _MyAppState extends ConsumerState<MyApp> {
       final initialMessage = await notificationService.getInitialMessage();
 
       if (initialMessage != null) {
-        debugPrint('📱 App opened from notification');
-        debugPrint('Initial message: $initialMessage');
 
         final context = _getRootContext();
         if (context != null) {
@@ -186,17 +182,22 @@ class _MyAppState extends ConsumerState<MyApp> {
         }
       }
     } catch (e) {
-      debugPrint('❌ Error handling initial message: $e');
     }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // Guardia para que los eventos de arranque se disparen una sola vez.
+    // Los re-disparos por cambios de auth ya están cubiertos por
+    // _authStateSubscription y el BlocListener<AuthBloc> en build().
+    if (_initialized) return;
+    _initialized = true;
+
     authBloc.add(AuthIsUserLoggedIn());
-    projectsBloc.add(LoadProjectsEvent());
-    locationsBloc.add(LoadLocations());
-    profileBloc.add(LoadProfile());
+    // Perfil se carga en el BlocListener<AuthBloc> de build() cuando AuthSuccess se emite.
+    // Projects se carga en ProjectsScreen.initState() al navegar — no cargar aquí (falla sin auth).
+    // Locations se carga bajo demanda en la pantalla del mapa con LoadNearbyLocations.
 
     // Manejar notificación inicial (si la app se abrió desde una notificación)
     _handleInitialMessage();

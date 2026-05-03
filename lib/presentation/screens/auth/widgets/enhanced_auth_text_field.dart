@@ -159,11 +159,11 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                 duration: const Duration(milliseconds: 200),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
-                  color: widget.enabled ? AppColors.white : AppColors.textSecondary.withOpacity(0.1),
+                  color: widget.enabled ? AppColors.white : AppColors.textSecondary.withValues(alpha: 0.1),
                   boxShadow: widget.focusNode.hasFocus
                       ? [
                     BoxShadow(
-                      color: AppColors.secondary.withOpacity(0.2),
+                      color: AppColors.secondary.withValues(alpha: 0.2),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -200,7 +200,7 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16),
                       borderSide: BorderSide(
-                        color: AppColors.textSecondary.withOpacity(0.3),
+                        color: AppColors.textSecondary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -237,7 +237,7 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                       vertical: 16,
                     ),
                     hintStyle: TextStyle(
-                      color: AppColors.textSecondary.withOpacity(0.6),
+                      color: AppColors.textSecondary.withValues(alpha: 0.6),
                     ),
                   ),
                   onFieldSubmitted: widget.handleLogin,
@@ -334,7 +334,7 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
                   borderRadius: BorderRadius.circular(2),
                   child: LinearProgressIndicator(
                     value: Validators.getPasswordStrengthProgress(_passwordResult!),
-                    backgroundColor: AppColors.textSecondary.withOpacity(0.3),
+                    backgroundColor: AppColors.textSecondary.withValues(alpha: 0.3),
                     valueColor: AlwaysStoppedAnimation(_passwordResult!.color),
                     minHeight: 4,
                   ),
@@ -404,13 +404,13 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: isCompleted
-            ? AppColors.success.withOpacity(0.1)
-            : AppColors.textSecondary.withOpacity(0.1),
+            ? AppColors.success.withValues(alpha: 0.1)
+            : AppColors.textSecondary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isCompleted
-              ? AppColors.success.withOpacity(0.3)
-              : AppColors.textSecondary.withOpacity(0.3),
+              ? AppColors.success.withValues(alpha: 0.3)
+              : AppColors.textSecondary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -441,10 +441,10 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
       margin: const EdgeInsets.only(top: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: AppColors.warning.withOpacity(0.3),
+          color: AppColors.warning.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -503,7 +503,7 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
 
   Color _getBorderColor() {
     if (!widget.enabled) {
-      return AppColors.textSecondary.withOpacity(0.3);
+      return AppColors.textSecondary.withValues(alpha: 0.3);
     }
 
     if (_validationResult?.isValid == true && widget.controller.text.isNotEmpty) {
@@ -514,12 +514,12 @@ class _EnhancedAuthTextFieldState extends State<EnhancedAuthTextField>
       return AppColors.error;
     }
 
-    return AppColors.textSecondary.withOpacity(0.3);
+    return AppColors.textSecondary.withValues(alpha: 0.3);
   }
 
   Color _getIconColor() {
     if (!widget.enabled) {
-      return AppColors.textSecondary.withOpacity(0.5);
+      return AppColors.textSecondary.withValues(alpha: 0.5);
     }
 
     if (widget.focusNode.hasFocus) {

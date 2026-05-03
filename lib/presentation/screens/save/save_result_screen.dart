@@ -65,9 +65,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         }
       });
 
-      print('🚀 Pantalla inicializada correctamente'); // Debug
     } catch (e) {
-      print('❌ Error inicializando pantalla: $e'); // Debug
     }
   }
 
@@ -485,15 +483,12 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   // Métodos de lógica
 
   void _handleSave() async {
-    print('🚀 Iniciando proceso de guardado...');
 
     if (!_formKey.currentState!.validate()) {
-      print('❌ Formulario no válido');
       return;
     }
 
     final results = _getCalculatedResults();
-    print('📊 Resultados obtenidos: ${results.length}');
 
     if (results.isEmpty) {
       _showMessage('No hay resultados para guardar', isError: true);
@@ -512,7 +507,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
     try {
       // ✅ PASO 1: Reset completo y agresivo
-      print('🔄 Reseteando BLoCs...');
       context.read<ResultBloc>().add(ResetResultStateEvent());
       context.read<MetradosBloc>().add(ResetMetradoStateEvent());
 
@@ -525,11 +519,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       final resultState = context.read<ResultBloc>().state;
       final metradoState = context.read<MetradosBloc>().state;
 
-      print('📊 Estado ResultBloc: ${resultState.runtimeType}');
-      print('📊 Estado MetradosBloc: ${metradoState.runtimeType}');
 
       if (resultState is! ResultInitial || metradoState is! MetradoInitial) {
-        print('⚠️ Estados no se resetearon correctamente, forzando...');
 
         // Forzar reset adicional
         await Future.delayed(const Duration(milliseconds: 200));
@@ -538,7 +529,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
       // ✅ PASO 4: Crear metrado
       final sanitizedName = SecurityService.sanitizeText(_descriptionController.text.trim());
-      print('📝 Creando metrado: "$sanitizedName" en proyecto $selectedProjectId');
 
       context.read<MetradosBloc>().add(
         CreateMetradoEvent(
@@ -548,7 +538,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       );
 
     } catch (e) {
-      print('❌ Error en proceso de guardado: $e');
       setState(() {
         _isLoading = false;
       });
@@ -587,17 +576,12 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           final results = providerReader();
           if (results.isNotEmpty) {
             allResults.addAll(results);
-            print('📊 Agregados ${results.length} resultados de tipo ${results.first.runtimeType}');
           }
         } catch (e) {
-          print('⚠️ Error leyendo provider: $e');
         }
       }
 
-      print('📈 Total de resultados obtenidos: ${allResults.length}');
     } catch (e) {
-      print('❌ Error obteniendo resultados: $e');
-      debugPrint('Error obteniendo resultados: $e');
     }
 
     return allResults;
@@ -652,10 +636,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   // Manejadores de estado
 
   void _handleResultState(BuildContext context, ResultState state) {
-    print('🔍 ResultState: ${state.runtimeType}'); // Debug
 
     if (state is ResultSuccess) {
-      print('✅ Resultados guardados exitosamente'); // Debug
       setState(() {
         _isLoading = false;
       });
@@ -670,7 +652,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       });
 
     } else if (state is ResultFailure) {
-      print('❌ Error al guardar resultados: ${state.message}'); // Debug
       setState(() {
         _isLoading = false;
       });
@@ -680,14 +661,11 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   }
 
   void _handleMetradoState(BuildContext context, MetradosState state) {
-    print('🔍 MetradosState recibido: ${state.runtimeType}');
 
     if (state is MetradoAdded) {
-      print('✅ Metrado creado exitosamente con ID: ${state.metradoId}');
 
       final results = _getCalculatedResults();
       if (results.isEmpty) {
-        print('❌ Error: No hay resultados para guardar');
         setState(() {
           _isLoading = false;
         });
@@ -697,10 +675,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
 
       // ✅ Verificar estado de ResultBloc antes de proceder
       final currentResultState = context.read<ResultBloc>().state;
-      print('📊 Estado actual de ResultBloc: ${currentResultState.runtimeType}');
 
       if (currentResultState is ResultLoading) {
-        print('⚠️ ResultBloc está cargando, esperando...');
         Future.delayed(const Duration(milliseconds: 300), () {
           if (mounted) {
             _handleMetradoState(context, state);
@@ -710,24 +686,13 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       }
 
       // ✅ Guardar resultados con copia para evitar modificaciones
-      print('💾 Guardando ${results.length} resultados...');
 
       // 🔍 Debug: Verificar tipos de resultados
       for (final result in results) {
-        print('  📊 Tipo de resultado: ${result.runtimeType}');
         if (result is SteelColumn) {
-          print('    - SteelColumn: ${result.description}');
-          print('    - Barras: ${result.steelBars.length}');
-          print('    - Estribos: ${result.stirrupDistributions.length}');
         } else if (result is SteelBeam) {
-          print('    - SteelBeam: ${result.description}');
-          print('    - Barras: ${result.steelBars.length}');
-          print('    - Estribos: ${result.stirrupDistributions.length}');
         } else if (result is SteelSlab) {
-          print('    - SteelSlab: ${result.description}');
-          print('    - MeshBars: ${result.meshBars.length}');
         } else if (result is SteelFooting) {
-          print('    - SteelFooting: ${result.description}');
         }
       }
 
@@ -735,9 +700,7 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
         final copiedResults = results.map((r) => _createCopyOfResult(r)).toList();
 
         // 🔍 Debug: Verificar copias
-        print('  📝 Resultados copiados: ${copiedResults.length}');
         for (final copied in copiedResults) {
-          print('  📊 Copia tipo: ${copied.runtimeType}');
         }
 
         context.read<ResultBloc>().add(
@@ -747,8 +710,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
           ),
         );
       } catch (e) {
-        print('❌ Error al disparar SaveResultEvent: $e');
-        print('❌ Stack trace: ${StackTrace.current}');
         setState(() {
           _isLoading = false;
         });
@@ -757,7 +718,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       }
 
     } else if (state is MetradoFailure) {
-      print('❌ Error creando metrado: ${state.message}');
       setState(() {
         _isLoading = false;
       });
@@ -765,7 +725,6 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       _resetBlocs();
 
     } else if (state is MetradoNameAlreadyExists) {
-      print('❌ Nombre de metrado duplicado: ${state.message}');
       setState(() {
         _isLoading = false;
       });
@@ -822,10 +781,8 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
       if (mounted) {
         context.read<ResultBloc>().add(ResetResultStateEvent());
         context.read<MetradosBloc>().add(ResetMetradoStateEvent());
-        print('🔄 BLoCs reseteados'); // Debug
       }
     } catch (e) {
-      print('⚠️ Error al resetear BLoCs: $e'); // Debug
     }
   }
 

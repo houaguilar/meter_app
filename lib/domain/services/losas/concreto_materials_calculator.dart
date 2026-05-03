@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Calculadora de materiales de concreto compartida por todos los tipos de losas
 ///
 /// Centraliza los factores y cálculos de cemento, arena, piedra, agua y aditivo
@@ -55,15 +57,11 @@ class ConcretoMaterialsCalculator {
   /// Obtiene los factores para una resistencia específica
   Map<String, double> _getFactores(String resistencia) {
     // Debug: Mostrar la resistencia recibida
-    print('🔍 _getFactores - Resistencia recibida: "$resistencia"');
-    print('🔍 _getFactores - ¿Existe en FACTORES_MATERIALES? ${FACTORES_MATERIALES.containsKey(resistencia)}');
 
     final factores = FACTORES_MATERIALES[resistencia] ?? FACTORES_MATERIALES[RESISTENCIA_DEFAULT]!;
 
     if (!FACTORES_MATERIALES.containsKey(resistencia)) {
-      print('⚠️  Resistencia "$resistencia" no encontrada. Usando default: $RESISTENCIA_DEFAULT');
     } else {
-      print('✅ Factores encontrados para "$resistencia": $factores');
     }
 
     return factores;
@@ -76,10 +74,8 @@ class ConcretoMaterialsCalculator {
   ///
   /// Returns: Cantidad de cemento en bolsas
   double calcularCemento(double volumen, String resistencia) {
-    print('📊 calcularCemento - Volumen: $volumen m³, Resistencia: "$resistencia"');
     final factores = _getFactores(resistencia);
     final cemento = volumen * factores['cemento']!;
-    print('📊 calcularCemento - Factor cemento: ${factores['cemento']}, Resultado: $cemento bolsas');
     return cemento;
   }
 

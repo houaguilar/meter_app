@@ -137,7 +137,7 @@ class _EnhancedRegisterButtonState extends State<EnhancedRegisterButton>
   Widget build(BuildContext context) {
     final canPress = widget.isEnabled && !widget.isLoading;
     final backgroundColor = widget.backgroundColor ??
-        (canPress ? AppColors.primary : AppColors.textSecondary.withOpacity(0.3));
+        (canPress ? AppColors.primary : AppColors.textSecondary.withValues(alpha: 0.3));
     final foregroundColor = widget.foregroundColor ?? AppColors.white;
 
     return AnimatedBuilder(
@@ -156,7 +156,7 @@ class _EnhancedRegisterButtonState extends State<EnhancedRegisterButton>
               borderRadius: BorderRadius.circular(widget.borderRadius),
               boxShadow: canPress ? [
                 BoxShadow(
-                  color: backgroundColor.withOpacity(0.3),
+                  color: backgroundColor.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -353,7 +353,7 @@ class _EnhancedSecondaryButtonState extends State<EnhancedSecondaryButton>
                 side: BorderSide(
                   color: widget.isEnabled
                       ? borderColor
-                      : AppColors.textSecondary.withOpacity(0.3),
+                      : AppColors.textSecondary.withValues(alpha: 0.3),
                 ),
                 foregroundColor: widget.isEnabled
                     ? textColor

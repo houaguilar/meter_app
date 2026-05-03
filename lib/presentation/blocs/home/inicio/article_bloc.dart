@@ -140,9 +140,4 @@ class ArticleBloc extends Bloc<ArticleEvent, ArticleState> {
     _lastFetchTime = null;
   }
 
-  @override
-  Future<void> close() {
-    // Limpiar recursos si es necesario
-    return super.close();
-  }
 }

@@ -119,7 +119,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -219,7 +219,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -272,7 +272,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -297,7 +297,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fillColor: context.colors.background,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: context.colors.primary.withOpacity(0.3)),
+                borderSide: BorderSide(color: context.colors.primary.withValues(alpha: 0.3)),
               ),
             ),
             maxLines: 2,
@@ -322,7 +322,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -389,7 +389,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           border: Border.all(
             color: _scheduledDate != null
                 ? context.colors.primary
-                : context.colors.primary.withOpacity(0.3),
+                : context.colors.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -442,7 +442,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           border: Border.all(
             color: _scheduledTime != null
                 ? context.colors.primary
-                : context.colors.primary.withOpacity(0.3),
+                : context.colors.primary.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -481,7 +481,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -505,7 +505,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fillColor: context.colors.background,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: context.colors.primary.withOpacity(0.3)),
+                borderSide: BorderSide(color: context.colors.primary.withValues(alpha: 0.3)),
               ),
             ),
             maxLines: 3,

@@ -9,8 +9,6 @@ import '../../../../config/theme/theme.dart';
 import '../../../../config/utils/auth/auth_error_handler.dart';
 import '../../../../config/utils/auth/auth_success_utils.dart';
 import '../../../../config/utils/validators.dart';
-import '../../../../domain/usecases/use_cases.dart';
-import '../../../../init_dependencies.dart';
 import 'package:meter_app/config/assets/app_images.dart';
 import '../../../blocs/auth/auth_bloc.dart';
 import '../widgets/enhanced_auth_text_field.dart';
@@ -63,6 +61,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _showValidationHints = false;
   int _loginAttempts = 0;
   DateTime? _lastAttemptTime;
+  bool _pendingPasswordReset = false;
 
   // Configuración de timeouts
   static const Duration _loginTimeout = Duration(seconds: 30);
@@ -220,23 +219,6 @@ class _LoginScreenState extends State<LoginScreen>
     return _emailController.text.isNotEmpty &&
         _passwordController.text.isNotEmpty &&
         (_emailValidation?.isValid != false);
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Por favor, introduce tu correo electrónico';
-    }
-
-    final email = value.trim();
-    if (!Validators.validateEmail(email)) {
-      return 'Por favor, introduce un correo electrónico válido';
-    }
-
-    if (email.length > 254) {
-      return 'El correo electrónico es demasiado largo';
-    }
-
-    return null;
   }
 
   String? _validatePassword(String? value) {
@@ -628,77 +610,11 @@ class _LoginScreenState extends State<LoginScreen>
                   ),
                 );
 
-                try {
-                  // Enviar email de recuperación usando Supabase
-                  final resetPasswordUseCase = serviceLocator<ResetPasswordForEmail>();
-                  final result = await resetPasswordUseCase(
-                    ResetPasswordParams(email: email),
-                  );
-
-                  if (mounted) {
-                    result.fold(
-                      // Error
-                      (failure) {
-                        ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                          SnackBar(
-                            content: Text(failure.message ?? 'Error al enviar código'),
-                            backgroundColor: AppColors.error,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                      // Éxito
-                      (_) {
-                        ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
-                        ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.check_circle, color: AppColors.white, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text('Código de verificación enviado a tu email.'),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: AppColors.success,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-
-                        // Navegar a la pantalla de OTP
-                        Future.delayed(const Duration(milliseconds: 800), () {
-                          if (mounted) {
-                            scaffoldContext.pushNamed(
-                              'reset-password-otp',
-                              queryParameters: {'email': email},
-                            );
-                          }
-                        });
-                      },
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(scaffoldContext).hideCurrentSnackBar();
-                    ScaffoldMessenger.of(scaffoldContext).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            const Icon(Icons.check_circle, color: AppColors.white, size: 20),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text('Si existe una cuenta con ese email, recibirás un correo de recuperación.'),
-                            ),
-                          ],
-                        ),
-                        backgroundColor: AppColors.success,
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                }
+                // Dispatch event via AuthBloc — result handled in _handleAuthStateChanges
+                _pendingPasswordReset = true;
+                scaffoldContext.read<AuthBloc>().add(
+                  AuthResetPasswordForEmail(email: email),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
@@ -752,7 +668,7 @@ class _LoginScreenState extends State<LoginScreen>
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -768,6 +684,33 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   void _handleAuthStateChanges(BuildContext context, AuthState state) {
+    if (state is AuthPasswordResetEmailSent) {
+      _pendingPasswordReset = false;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: AppColors.white, size: 20),
+              const SizedBox(width: 8),
+              const Expanded(child: Text('Código de verificación enviado a tu email.')),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted) {
+          context.pushNamed(
+            'reset-password-otp',
+            queryParameters: {'email': state.email},
+          );
+        }
+      });
+      return;
+    }
+
     switch (state.runtimeType) {
       case AuthSuccess:
         final successState = state as AuthSuccess;
@@ -782,13 +725,25 @@ class _LoginScreenState extends State<LoginScreen>
       case AuthFailure:
         final failureState = state as AuthFailure;
 
-        // Incrementar contador de intentos
-        setState(() {
-          _loginAttempts++;
-          _lastAttemptTime = DateTime.now();
-        });
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-        _handleLoginError(failureState.message);
+        if (_pendingPasswordReset) {
+          _pendingPasswordReset = false;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(failureState.message),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        } else {
+          // Incrementar contador de intentos solo para errores de login
+          setState(() {
+            _loginAttempts++;
+            _lastAttemptTime = DateTime.now();
+          });
+          _handleLoginError(failureState.message);
+        }
         break;
     }
   }
@@ -855,7 +810,7 @@ class _LoginScreenState extends State<LoginScreen>
                 end: Alignment.bottomCenter,
                 colors: [
                   Colors.transparent,
-                  AppColors.primary.withOpacity(0.3),
+                  AppColors.primary.withValues(alpha: 0.3),
                 ],
               ),
             ),
@@ -881,7 +836,7 @@ class _LoginScreenState extends State<LoginScreen>
                         'Inicia sesión para continuar',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          color: AppColors.white.withOpacity(0.9),
+                          color: AppColors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -910,7 +865,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -993,13 +948,13 @@ class _LoginScreenState extends State<LoginScreen>
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: _loginAttempts >= 3
-            ? AppColors.error.withOpacity(0.1)
-            : AppColors.warning.withOpacity(0.1),
+            ? AppColors.error.withValues(alpha: 0.1)
+            : AppColors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _loginAttempts >= 3
-              ? AppColors.error.withOpacity(0.3)
-              : AppColors.warning.withOpacity(0.3),
+              ? AppColors.error.withValues(alpha: 0.3)
+              : AppColors.warning.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -1112,7 +1067,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Row(
       children: [
         Expanded(
-          child: Divider(color: AppColors.textSecondary.withOpacity(0.3)),
+          child: Divider(color: AppColors.textSecondary.withValues(alpha: 0.3)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1125,7 +1080,7 @@ class _LoginScreenState extends State<LoginScreen>
           ),
         ),
         Expanded(
-          child: Divider(color: AppColors.textSecondary.withOpacity(0.3)),
+          child: Divider(color: AppColors.textSecondary.withValues(alpha: 0.3)),
         ),
       ],
     );
@@ -1166,8 +1121,8 @@ class _LoginScreenState extends State<LoginScreen>
         style: OutlinedButton.styleFrom(
           side: BorderSide(
             color: _isLoading
-                ? AppColors.textSecondary.withOpacity(0.3)
-                : AppColors.textSecondary.withOpacity(0.5),
+                ? AppColors.textSecondary.withValues(alpha: 0.3)
+                : AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -1199,8 +1154,8 @@ class _LoginScreenState extends State<LoginScreen>
         style: OutlinedButton.styleFrom(
           side: BorderSide(
             color: _isLoading
-                ? AppColors.textSecondary.withOpacity(0.3)
-                : AppColors.textSecondary.withOpacity(0.5),
+                ? AppColors.textSecondary.withValues(alpha: 0.3)
+                : AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),

@@ -28,7 +28,7 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24.0)),
           boxShadow: [
             BoxShadow(
-              color: AppColors.blueMetraShop.withOpacity(0.1),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.1),
               blurRadius: 20,
               spreadRadius: 5,
               offset: const Offset(0, -5),
@@ -47,8 +47,8 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.blueMetraShop.withOpacity(0.3),
-                      AppColors.blueMetraShop.withOpacity(0.5),
+                      AppColors.blueMetraShop.withValues(alpha: 0.3),
+                      AppColors.blueMetraShop.withValues(alpha: 0.5),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(2.5),
@@ -62,8 +62,8 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                     colors: [
-                      AppColors.blueMetraShop.withOpacity(0.05),
-                      AppColors.blueMetraShop.withOpacity(0.02),
+                      AppColors.blueMetraShop.withValues(alpha: 0.05),
+                      AppColors.blueMetraShop.withValues(alpha: 0.02),
                     ],
                   ),
                 ),
@@ -76,8 +76,8 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            AppColors.blueMetraShop.withOpacity(0.15),
-                            AppColors.blueMetraShop.withOpacity(0.25),
+                            AppColors.blueMetraShop.withValues(alpha: 0.15),
+                            AppColors.blueMetraShop.withValues(alpha: 0.25),
                           ],
                         ),
                         borderRadius: BorderRadius.circular(12),
@@ -120,7 +120,7 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.neutral300.withOpacity(0.3),
+                            color: AppColors.neutral300.withValues(alpha: 0.3),
                             blurRadius: 4,
                             spreadRadius: 1,
                           ),
@@ -143,7 +143,7 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                   gradient: LinearGradient(
                     colors: [
                       Colors.transparent,
-                      AppColors.blueMetraShop.withOpacity(0.1),
+                      AppColors.blueMetraShop.withValues(alpha: 0.1),
                       Colors.transparent,
                     ],
                   ),
@@ -158,7 +158,7 @@ class MeasurementItemsBottomSheet extends StatelessWidget {
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        AppColors.backgroundLight.withOpacity(0.3),
+                        AppColors.backgroundLight.withValues(alpha: 0.3),
                         AppColors.white,
                       ],
                     ),

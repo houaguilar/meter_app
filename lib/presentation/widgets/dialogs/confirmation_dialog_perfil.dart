@@ -61,7 +61,7 @@ class ConfirmationDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (isDestructive ? AppColors.error : AppColors.warning).withOpacity(0.1),
+              color: (isDestructive ? AppColors.error : AppColors.warning).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Icon(

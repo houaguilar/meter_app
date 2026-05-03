@@ -47,16 +47,12 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   @override
   void initState() {
     super.initState();
-    debugPrint('🎬 ResultLosaScreen - initState()');
 
     // Verificar el estado del provider al inicializar
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final losas = ref.read(losaResultProvider);
-      debugPrint('🎬 Provider al inicializar: ${losas.length} losas');
       if (losas.isNotEmpty) {
-        debugPrint('🎬 Primera losa: ${losas.first.description}');
       } else {
-        debugPrint('⚠️ Provider está vacío en initState!');
       }
     });
 
@@ -134,18 +130,13 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   Widget _buildBody() {
     final losas = ref.watch(losaResultProvider);
 
-    debugPrint('📺 ResultLosaScreen - _buildBody()');
-    debugPrint('📺 Losas en el provider: ${losas.length}');
     if (losas.isNotEmpty) {
-      debugPrint('📺 Primera losa: ${losas.first.description}');
     }
 
     if (losas.isEmpty) {
-      debugPrint('⚠️ Losas está vacío, mostrando empty state');
       return _buildEmptyState();
     }
 
-    debugPrint('✅ Mostrando resultados de ${losas.length} losas');
     return SingleChildScrollView(
       padding: const EdgeInsets.only(
         right: 24,
@@ -217,10 +208,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.success.withOpacity(0.1),
+              color: AppColors.success.withValues(alpha: 0.1),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppColors.success.withOpacity(0.3),
+                color: AppColors.success.withValues(alpha: 0.3),
                 width: 2,
               ),
             ),
@@ -345,7 +336,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.neutral200.withOpacity(0.3),
+            color: AppColors.neutral200.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -357,7 +348,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -401,7 +392,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.secondary.withOpacity(0.1),
+            color: AppColors.secondary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Text(
@@ -492,7 +483,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   TableRow _buildTableRow(List<String> cells, {bool isHeader = false, bool isTotal = false}) {
     return TableRow(
       decoration: isTotal ? BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.1),
+        color: AppColors.blueMetraShop.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ) : null,
       children: cells.asMap().entries.map((entry) {
@@ -530,7 +521,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -745,9 +736,9 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
           borderRadius: BorderRadius.circular(12),
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
         ),
         child: Column(
           children: [

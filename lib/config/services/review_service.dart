@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:meter_app/data/local/shared_preferences_helper.dart';
+import 'package:meter_app/config/local/shared_preferences_helper.dart';
 
 /// Servicio que gestiona el timing del requestReview() nativo.
 ///

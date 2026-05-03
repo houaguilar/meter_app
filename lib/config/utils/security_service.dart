@@ -341,7 +341,6 @@ class SecurityService {
     };
 
     // En un entorno de producción, esto se enviaría a un servicio de logging
-    print('🚨 ACTIVIDAD SOSPECHOSA: $logEntry');
   }
 
   /// Limpia caché y datos temporales por seguridad
@@ -350,11 +349,13 @@ class SecurityService {
     // En un entorno de producción, esto limpiaría caches, tokens temporales, etc.
   }
 
+  static const String _integrityHashSalt = 'ms_integrity_salt_v1';
+
   /// Verifica integridad de datos
   static bool verifyDataIntegrity(Map<String, dynamic> data, String expectedHash) {
     final currentHash = generateSecureHash(
         data.toString(),
-        'integrity_salt_${DateTime.now().day}'
+        _integrityHashSalt,
     );
     return currentHash == expectedHash;
   }

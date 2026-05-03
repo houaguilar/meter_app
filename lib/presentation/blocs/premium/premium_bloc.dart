@@ -315,8 +315,8 @@ class PremiumBloc extends Bloc<PremiumEvent, PremiumState> {
     // Forzar una nueva carga desde Supabase
     final result = await premiumRepository.syncFromSupabase();
     result.fold(
-          (failure) => print('Error refrescando premium status: ${failure.message}'),
-          (_) => print('Premium status refrescado exitosamente'),
+          (failure) => AppLogger.premium.e('Error refrescando premium status: ${failure.message}'),
+          (_) => AppLogger.premium.i('Premium status refrescado exitosamente'),
     );
   }
 

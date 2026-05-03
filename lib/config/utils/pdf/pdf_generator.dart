@@ -17,20 +17,14 @@ class MetraShopPDFGenerator {
     String? customFileName,
   }) async {
     try {
-      print('🔧 MetraShopPDFGenerator.generatePDF - Iniciando...');
       final pdf = pw.Document();
 
       // Cargar logo
-      print('🔧 Cargando logo...');
       final Uint8List? logoBytes = await _loadLogo();
-      print('🔧 Logo cargado: ${logoBytes != null}');
 
       // Construir footer
-      print('🔧 Construyendo footer...');
       final pw.Widget footer = _buildFooter();
-      print('🔧 Footer listo');
 
-      print('🔧 Construyendo página PDF...');
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -69,23 +63,17 @@ class MetraShopPDFGenerator {
           ),
         ),
       );
-      print('🔧 Página PDF construida');
 
       // Guardar archivo
-      print('🔧 Obteniendo directorio temporal...');
       final output = await getTemporaryDirectory();
       final fileName = customFileName ??
           'lista_materiales_${DateTime.now().millisecondsSinceEpoch}.pdf';
       final file = File('${output.path}/$fileName');
 
-      print('🔧 Guardando PDF en: ${file.path}');
       await file.writeAsBytes(await pdf.save());
-      print('🔧 PDF guardado exitosamente');
 
       return file;
     } catch (e, stackTrace) {
-      print('❌ ERROR en MetraShopPDFGenerator.generatePDF: $e');
-      print('❌ StackTrace: $stackTrace');
       rethrow;
     }
   }
@@ -96,7 +84,6 @@ class MetraShopPDFGenerator {
     try {
       // La librería pdf NO soporta SVG
       if (_logoPath.toLowerCase().endsWith('.svg')) {
-        print('⚠️ Logo SVG no soportado para PDF: $_logoPath - usando placeholder');
         return null;
       }
 
@@ -105,7 +92,6 @@ class MetraShopPDFGenerator {
 
       // Validación: verificar que los bytes correspondan a PNG o JPEG
       if (bytes.length < 4) {
-        print('⚠️ Archivo de logo muy pequeño: $_logoPath');
         return null;
       }
 
@@ -113,13 +99,11 @@ class MetraShopPDFGenerator {
       final isJpeg = bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF;
 
       if (!isPng && !isJpeg) {
-        print('⚠️ Formato de logo no reconocido (no es PNG ni JPEG): $_logoPath');
         return null;
       }
 
       return bytes;
     } catch (e) {
-      print('⚠️ No se pudo cargar el logo: $e');
       return null;
     }
   }

@@ -49,7 +49,7 @@ class FeatureDisabledDialog extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: AppColors.warning.withOpacity(0.1),
+        color: AppColors.warning.withValues(alpha: 0.1),
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(16),
           topRight: Radius.circular(16),
@@ -67,7 +67,7 @@ class FeatureDisabledDialog extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.warning.withOpacity(0.2),
+                    color: AppColors.warning.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: SvgPicture.asset(
@@ -122,7 +122,7 @@ class FeatureDisabledDialog extends StatelessWidget {
               color: AppColors.infoBackground,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: AppColors.secondary.withOpacity(0.2),
+                color: AppColors.secondary.withValues(alpha: 0.2),
               ),
             ),
             child: Row(

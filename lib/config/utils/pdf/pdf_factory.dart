@@ -795,14 +795,10 @@ class PDFFactory {
   static Future<File> generateSteelColumnPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final columns = ref.read(steelColumnResultProvider);
-    print('🔍 generateSteelColumnPDF - Columnas en provider: ${columns.length}');
 
     final result = ref.read(calculateConsolidatedColumnSteelProvider);
-    print('🔍 generateSteelColumnPDF - Resultado consolidado: ${result != null}');
 
     if (result != null) {
-      print('🔍 generateSteelColumnPDF - Número de columnas en resultado: ${result.numberOfColumns}');
-      print('🔍 generateSteelColumnPDF - Materiales: ${result.consolidatedMaterials.length}');
     }
 
     if (result == null || result.numberOfColumns == 0) {
@@ -859,14 +855,10 @@ class PDFFactory {
   static Future<File> generateSteelBeamPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final beams = ref.read(steelBeamResultProvider);
-    print('🔍 generateSteelBeamPDF - Vigas en provider: ${beams.length}');
 
     final result = ref.read(calculateConsolidatedSteelProvider);
-    print('🔍 generateSteelBeamPDF - Resultado consolidado: ${result != null}');
 
     if (result != null) {
-      print('🔍 generateSteelBeamPDF - Número de vigas en resultado: ${result.numberOfBeams}');
-      print('🔍 generateSteelBeamPDF - Materiales: ${result.consolidatedMaterials.length}');
     }
 
     if (result == null || result.numberOfBeams == 0) {
@@ -923,14 +915,10 @@ class PDFFactory {
   static Future<File> generateSteelSlabPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final slabs = ref.read(steelSlabResultProvider);
-    print('🔍 generateSteelSlabPDF - Losas en provider: ${slabs.length}');
 
     final result = ref.read(calculateConsolidatedSlabSteelProvider);
-    print('🔍 generateSteelSlabPDF - Resultado consolidado: ${result != null}');
 
     if (result != null) {
-      print('🔍 generateSteelSlabPDF - Número de losas en resultado: ${result.numberOfSlabs}');
-      print('🔍 generateSteelSlabPDF - Materiales: ${result.consolidatedMaterials.length}');
     }
 
     if (result == null || result.numberOfSlabs == 0) {
@@ -986,14 +974,10 @@ class PDFFactory {
   static Future<File> generateSteelFootingPDF(WidgetRef ref, {String? nombreUsuario}) async {
     // Debug: Verificar estado de los providers
     final footings = ref.read(steelFootingResultProvider);
-    print('🔍 generateSteelFootingPDF - Zapatas en provider: ${footings.length}');
 
     final result = ref.read(calculateConsolidatedFootingSteelProvider);
-    print('🔍 generateSteelFootingPDF - Resultado consolidado: ${result != null}');
 
     if (result != null) {
-      print('🔍 generateSteelFootingPDF - Número de zapatas en resultado: ${result.numberOfElements}');
-      print('🔍 generateSteelFootingPDF - Materiales: ${result.consolidatedMaterials.length}');
     }
 
     if (result == null || result.numberOfElements == 0) {

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:logger/logger.dart';
 
 import '../constants/error/failures.dart';
@@ -124,15 +123,6 @@ class ErrorHandler {
     ];
 
     return connectionKeywords.any((keyword) => error.contains(keyword));
-  }
-
-  static Future<bool> hasInternetConnection() async {
-    try {
-      final connectivityResult = await Connectivity().checkConnectivity();
-      return connectivityResult != ConnectivityResult.none;
-    } catch (e) {
-      return false;
-    }
   }
 
   static void showErrorSnackBar(

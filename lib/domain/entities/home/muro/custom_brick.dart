@@ -1,5 +1,4 @@
 import 'package:isar_community/isar.dart';
-import 'package:meter_app/config/assets/app_images.dart';
 
 part 'custom_brick.g.dart';
 
@@ -69,7 +68,7 @@ class CustomBrick {
     return {
       'id': 'custom_$customId',
       'name': name,
-      'image': AppImages.personalizadoImg,
+      'image': 'assets/images/products/bricks/personalizado.png',
       'size': displaySize,
       'lengthBrick': length,
       'widthBrick': width,

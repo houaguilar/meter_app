@@ -1,9 +1,6 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-part 'state_providers.g.dart';
-
-@riverpod
-class DarkMode extends _$DarkMode {
+class DarkMode extends Notifier<bool> {
   @override
   bool build() => false;
 
@@ -12,8 +9,9 @@ class DarkMode extends _$DarkMode {
   }
 }
 
-@Riverpod(keepAlive: true)
-class Username extends _$Username {
+final darkModeProvider = NotifierProvider<DarkMode, bool>(DarkMode.new);
+
+class Username extends Notifier<String> {
   @override
   String build() => 'Jordy Aguilar';
 
@@ -22,8 +20,9 @@ class Username extends _$Username {
   }
 }
 
-@riverpod
-class Dropdown extends _$Dropdown {
+final usernameProvider = NotifierProvider<Username, String>(Username.new);
+
+class Dropdown extends Notifier<String> {
   @override
   String build() => 'k1';
 
@@ -32,8 +31,9 @@ class Dropdown extends _$Dropdown {
   }
 }
 
-@riverpod
-class ListMode extends _$ListMode {
+final dropdownProvider = NotifierProvider<Dropdown, String>(Dropdown.new);
+
+class ListMode extends Notifier<bool> {
   @override
   bool build() => false;
 
@@ -41,3 +41,5 @@ class ListMode extends _$ListMode {
     state = !state;
   }
 }
+
+final listModeProvider = NotifierProvider<ListMode, bool>(ListMode.new);

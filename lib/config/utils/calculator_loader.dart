@@ -166,7 +166,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
     return Material(
       type: MaterialType.transparency,
       child: Container(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         width: double.infinity,
         height: double.infinity,
         child: Center(
@@ -174,7 +174,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
             padding: const EdgeInsets.all(24),
             margin: const EdgeInsets.symmetric(horizontal: 32),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
@@ -194,7 +194,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: widget.color.withOpacity(0.3),
+                              color: widget.color.withValues(alpha: 0.3),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -232,7 +232,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
                   Text(
                     widget.description!,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                       fontSize: 12,
                     ),
                     textAlign: TextAlign.center,
@@ -250,7 +250,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
                         width: 150,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: FractionallySizedBox(
@@ -275,7 +275,7 @@ class _CalculationLoaderState extends State<CalculationLoader> with TickerProvid
                     child: Text(
                       'Cancelar',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.8),
+                        color: Colors.white.withValues(alpha: 0.8),
                         fontSize: 14,
                       ),
                     ),

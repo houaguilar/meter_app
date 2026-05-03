@@ -709,6 +709,73 @@ class Validators {
         return 1.0;
     }
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FORM FIELD VALIDATORS (String? — compatibles con TextFormField.validator)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /// Campo requerido genérico
+  static String? requiredField(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Este campo es obligatorio';
+    return null;
+  }
+
+  /// Campo numérico positivo (> 0)
+  static String? positiveNumber(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Este campo es obligatorio';
+    final number = double.tryParse(value);
+    if (number == null) return 'Ingresa un número válido';
+    if (number <= 0) return 'El valor debe ser mayor a 0';
+    return null;
+  }
+
+  /// Porcentaje entre 0% y 100%
+  static String? percentageField(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Este campo es obligatorio';
+    final number = double.tryParse(value);
+    if (number == null) return 'Ingresa un número válido';
+    if (number < 0 || number > 100) return 'Debe estar entre 0% y 100%';
+    return null;
+  }
+
+  /// Nombre completo para formularios de auth
+  static String? fullName(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Por favor, introduce tu nombre completo';
+    final name = value.trim();
+    if (name.length < 2) return 'El nombre debe tener al menos 2 caracteres';
+    if (name.length > 100) return 'El nombre es demasiado largo';
+    if (!RegExp(r"^[a-zA-ZÀ-ÿ\u00f1\u00d1\s\-'\.]+$").hasMatch(name)) {
+      return 'El nombre contiene caracteres no válidos';
+    }
+    return null;
+  }
+
+  /// Email para formularios de auth
+  static String? emailField(String? value) {
+    if (value == null || value.trim().isEmpty) return 'Por favor, introduce tu correo electrónico';
+    final email = value.trim();
+    if (!validateEmail(email)) return 'Por favor, introduce un correo electrónico válido';
+    if (email.length > 254) return 'El correo electrónico es demasiado largo';
+    return null;
+  }
+
+  /// Contraseña para formularios de auth
+  static String? passwordField(String? value) {
+    if (value == null || value.isEmpty) return 'Por favor, introduce una contraseña';
+    if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+    if (value.length > 128) return 'La contraseña es demasiado larga';
+    if (!value.contains(RegExp(r'[A-Z]'))) return 'Debe incluir al menos una letra mayúscula';
+    if (!value.contains(RegExp(r'[a-z]'))) return 'Debe incluir al menos una letra minúscula';
+    if (!value.contains(RegExp(r'[0-9]'))) return 'Debe incluir al menos un número';
+    return null;
+  }
+
+  /// Confirmación de contraseña para formularios de auth
+  static String? confirmPasswordField(String? value, String password) {
+    if (value == null || value.isEmpty) return 'Por favor, confirma tu contraseña';
+    if (value != password) return 'Las contraseñas no coinciden';
+    return null;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

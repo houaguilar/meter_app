@@ -33,7 +33,6 @@ class _PerfilScreenState extends State<PerfilScreen>
 
   @override
   bool get wantKeepAlive => true;
-  bool _isMounted = true;
   UserProfile? _cachedProfile;
 
   @override
@@ -43,14 +42,12 @@ class _PerfilScreenState extends State<PerfilScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final premiumBloc = context.read<PremiumBloc>();
-      print('🔍 PerfilScreen: Forzando carga inicial de premium status');
       premiumBloc.add(LoadPremiumStatus());
     });
   }
 
   @override
   void dispose() {
-    _isMounted = false;
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -96,14 +93,6 @@ class _PerfilScreenState extends State<PerfilScreen>
     super.build(context);
     return MultiBlocListener(
       listeners: [
-        // Listener existente del ProfileBloc
-        BlocListener<ProfileBloc, ProfileState>(
-          listener: (context, state) {
-            if (state is ProfileError) {
-              _showErrorMessage(state.message);
-            }
-          },
-        ),
         BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthInitial) {
@@ -131,7 +120,7 @@ class _PerfilScreenState extends State<PerfilScreen>
   }
 
   void _handleProfileStateChanges(BuildContext context, ProfileState state) {
-    if (!_isMounted) return;
+    if (!mounted) return;
 
     if (state is ProfileError) {
       _showErrorMessage(state.message);
@@ -175,7 +164,7 @@ class _PerfilScreenState extends State<PerfilScreen>
               end: Alignment.bottomCenter,
               colors: [
                 AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
+                AppColors.primary.withValues(alpha: 0.8),
               ],
             ),
           ),
@@ -220,9 +209,9 @@ class _PerfilScreenState extends State<PerfilScreen>
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withOpacity(0.2),
+                  color: AppColors.accent.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   userProfile.employment,
@@ -263,7 +252,7 @@ class _PerfilScreenState extends State<PerfilScreen>
               border: Border.all(color: Colors.amber.shade200),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.amber.withOpacity(0.1),
+                  color: Colors.amber.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -322,11 +311,11 @@ class _PerfilScreenState extends State<PerfilScreen>
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.95),
+              color: AppColors.white.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.textSecondary.withOpacity(0.1),
+                  color: AppColors.textSecondary.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -416,8 +405,8 @@ class _PerfilScreenState extends State<PerfilScreen>
                 boxShadow: [
                   BoxShadow(
                     color: isPremium
-                        ? Colors.amber.withOpacity(0.3)
-                        : AppColors.accent.withOpacity(0.3),
+                        ? Colors.amber.withValues(alpha: 0.3)
+                        : AppColors.accent.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -451,7 +440,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                     border: Border.all(color: Colors.white, width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.amber.withOpacity(0.5),
+                        color: Colors.amber.withValues(alpha: 0.5),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -503,7 +492,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.amber.withOpacity(0.3),
+                      color: Colors.amber.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -557,9 +546,9 @@ class _PerfilScreenState extends State<PerfilScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.white.withOpacity(0.1),
+        color: AppColors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.white.withOpacity(0.2)),
+        border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -594,7 +583,7 @@ class _PerfilScreenState extends State<PerfilScreen>
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: percentage / 100,
-              backgroundColor: AppColors.white.withOpacity(0.2),
+              backgroundColor: AppColors.white.withValues(alpha: 0.2),
               valueColor: AlwaysStoppedAnimation<Color>(
                 _getProgressColor(percentage),
               ),
@@ -607,7 +596,7 @@ class _PerfilScreenState extends State<PerfilScreen>
             '$completedFields de 6 campos completados',
             style: TextStyle(
               fontSize: 11,
-              color: AppColors.white.withOpacity(0.8),
+              color: AppColors.white.withValues(alpha: 0.8),
             ),
             textAlign: TextAlign.center,
           ),
@@ -652,9 +641,9 @@ class _PerfilScreenState extends State<PerfilScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.error.withOpacity(0.1),
+              color: AppColors.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.error.withOpacity(0.3)),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: Icon(
               Icons.error_outline_rounded,
@@ -709,9 +698,9 @@ class _PerfilScreenState extends State<PerfilScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.accent.withOpacity(0.1),
+              color: AppColors.accent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
             ),
             child: Icon(
               Icons.person_outline_rounded,
@@ -871,7 +860,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.textSecondary.withOpacity(0.08),
+                    color: AppColors.textSecondary.withValues(alpha: 0.08),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -970,9 +959,9 @@ class _PerfilScreenState extends State<PerfilScreen>
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: statusColor.withOpacity(0.1),
+            color: statusColor.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: statusColor.withOpacity(0.3), width: 2),
+            border: Border.all(color: statusColor.withValues(alpha: 0.3), width: 2),
           ),
           child: Column(
             children: [
@@ -981,7 +970,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.2),
+                      color: statusColor.withValues(alpha: 0.2),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(statusIcon, color: statusColor, size: 24),
@@ -1425,7 +1414,7 @@ class _PerfilScreenState extends State<PerfilScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1534,7 +1523,7 @@ class _PerfilScreenState extends State<PerfilScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -1552,7 +1541,7 @@ class _PerfilScreenState extends State<PerfilScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.error.withOpacity(0.1),
+                        color: AppColors.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
@@ -1628,7 +1617,7 @@ class _PerfilScreenState extends State<PerfilScreen>
   }
 
   void _showErrorMessage(String message) {
-    if (!_isMounted) return;
+    if (!mounted) return;
     showSnackBar(context, message);
   }
 
@@ -1699,7 +1688,7 @@ class _PerfilScreenState extends State<PerfilScreen>
 
   /// Muestra un mensaje de "próximamente" para funcionalidades no implementadas
   void _showComingSoon(String feature) {
-    if (!_isMounted || !context.mounted) return;
+    if (!mounted || !context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -1752,7 +1741,7 @@ class _ActionItem extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1787,7 +1776,7 @@ class _ActionItem extends StatelessWidget {
               ),
               Icon(
                 Icons.chevron_right_rounded,
-                color: AppColors.textSecondary.withOpacity(0.5),
+                color: AppColors.textSecondary.withValues(alpha: 0.5),
                 size: 20,
               ),
             ],

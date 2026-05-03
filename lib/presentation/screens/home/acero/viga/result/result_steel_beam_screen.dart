@@ -81,12 +81,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
       final beams = ref.read(steelBeamResultProvider);
       final consolidatedResult = ref.read(calculateConsolidatedSteelProvider);
 
-      print('🔍 Estado en ResultSteelBeamScreen:');
-      print('- Vigas: ${beams.length}');
-      print('- Resultado consolidado: ${consolidatedResult != null}');
 
       if (beams.isEmpty || consolidatedResult == null) {
-        print('❌ No hay datos válidos, regresando...');
         _showErrorMessage('No hay datos para mostrar. Vuelve a intentar.');
         context.pop();
       }
@@ -100,10 +96,8 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
       onPopInvoked: (bool didPop) {
         if (didPop && !_isGeneratingPDF) {
           // ✅ LIMPIA al retroceder solo si NO se está generando PDF
-          print('🗑️ PopScope activado - Limpiando datos (isGeneratingPDF: $_isGeneratingPDF)');
           ref.read(steelBeamResultProvider.notifier).clearList();
         } else if (didPop && _isGeneratingPDF) {
-          print('⚠️ PopScope activado pero NO se limpia porque se está generando PDF');
         }
       },
       child: Scaffold(
@@ -187,7 +181,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -395,16 +389,16 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -550,7 +544,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           Icon(
             Icons.construction,
             size: 80,
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
           Text(
@@ -592,13 +586,13 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           end: Alignment.bottomRight,
           colors: [
             AppColors.primary,
-            AppColors.primary.withOpacity(0.8),
+            AppColors.primary.withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -612,7 +606,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.white.withOpacity(0.2),
+                  color: AppColors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -653,7 +647,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
           Text(
             label,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.white.withOpacity(0.9),
+              color: AppColors.white.withValues(alpha: 0.9),
             ),
           ),
           Text(
@@ -678,7 +672,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -791,7 +785,7 @@ class _ResultSteelBeamScreenState extends ConsumerState<ResultSteelBeamScreen>
         border: Border.all(color: AppColors.neutral200),
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.05),
+            color: AppColors.primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

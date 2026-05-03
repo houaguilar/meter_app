@@ -53,9 +53,11 @@ class CartBloc extends Bloc<CartEvent, CartState> {
     final currentItems = _getCurrentItems();
     final items = List<CartItem>.from(currentItems);
 
-    final removedItem = items.firstWhere(
+    final removedIndex = items.indexWhere(
       (item) => item.product.supabaseId == event.productId,
     );
+    if (removedIndex == -1) return;
+    final removedItem = items[removedIndex];
 
     items.removeWhere((item) => item.product.supabaseId == event.productId);
 

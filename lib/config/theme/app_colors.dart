@@ -219,7 +219,7 @@ class AppColors {
   @Deprecated('Usar AppColors.textPrimary en su lugar')
   static const Color leadTextColor = textPrimary;
 
-  @Deprecated('Usar AppColors.secondary.withOpacity(0.6) en su lugar')
+  @Deprecated('Usar AppColors.secondary.withValues(alpha: 0.6) en su lugar')
   static const Color blueLightIndicator = Color(0xFF9AAAFF);
 
   @Deprecated('Usar AppColors.cardBackground en su lugar')
@@ -260,19 +260,19 @@ class AppColors {
   /// Obtiene una variación del color primario con opacidad
   static Color primaryWithOpacity(double opacity) {
     assert(opacity >= 0.0 && opacity <= 1.0, 'La opacidad debe estar entre 0.0 y 1.0');
-    return primary.withOpacity(opacity);
+    return primary.withValues(alpha: opacity);
   }
 
   /// Obtiene una variación del color secundario con opacidad
   static Color secondaryWithOpacity(double opacity) {
     assert(opacity >= 0.0 && opacity <= 1.0, 'La opacidad debe estar entre 0.0 y 1.0');
-    return secondary.withOpacity(opacity);
+    return secondary.withValues(alpha: opacity);
   }
 
   /// Obtiene una variación del color de acento con opacidad
   static Color accentWithOpacity(double opacity) {
     assert(opacity >= 0.0 && opacity <= 1.0, 'La opacidad debe estar entre 0.0 y 1.0');
-    return accent.withOpacity(opacity);
+    return accent.withValues(alpha: opacity);
   }
 
   /// Obtiene el color de texto apropiado para un fondo dado

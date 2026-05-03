@@ -413,7 +413,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.primary),
           ),
@@ -445,7 +445,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
@@ -762,13 +762,13 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                AppColors.success.withOpacity(0.1),
-                AppColors.success.withOpacity(0.05),
+                AppColors.success.withValues(alpha: 0.1),
+                AppColors.success.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: AppColors.success.withOpacity(0.3),
+              color: AppColors.success.withValues(alpha: 0.3),
             ),
           ),
           child: Row(
@@ -827,12 +827,12 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
         color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isEditing ? AppColors.primary : AppColors.success.withOpacity(0.3),
+          color: isEditing ? AppColors.primary : AppColors.success.withValues(alpha: 0.3),
           width: 2,
         ),
         boxShadow: [
           BoxShadow(
-            color: (isEditing ? AppColors.primary : AppColors.success).withOpacity(0.1),
+            color: (isEditing ? AppColors.primary : AppColors.success).withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -847,7 +847,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: (isEditing ? AppColors.primary : AppColors.success).withOpacity(0.1),
+                    color: (isEditing ? AppColors.primary : AppColors.success).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -879,7 +879,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppColors.success.withOpacity(0.15),
+                                color: AppColors.success.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
@@ -1012,7 +1012,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.05),
+                color: AppColors.primary.withValues(alpha: 0.05),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(14),
                   bottomRight: Radius.circular(14),
@@ -1145,7 +1145,7 @@ class _BrandConfiguratorScreenState extends State<BrandConfiguratorScreen> {
         color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, -2),
           ),

@@ -657,7 +657,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
             fillColor: context.colors.surface,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: context.colors.primary.withOpacity(0.3)),
+              borderSide: BorderSide(color: context.colors.primary.withValues(alpha: 0.3)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -678,10 +678,10 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: context.colors.primary.withOpacity(0.1),
+        color: context.colors.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: context.colors.primary.withOpacity(0.3),
+          color: context.colors.primary.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -771,13 +771,13 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: isSelected
-              ? context.colors.primary.withOpacity(0.1)
+              ? context.colors.primary.withValues(alpha: 0.1)
               : context.colors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? context.colors.primary
-                : context.colors.primary.withOpacity(0.3),
+                : context.colors.primary.withValues(alpha: 0.3),
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -894,7 +894,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           border: Border.all(
             color: _selectedDate != null
                 ? context.colors.primary
-                : context.colors.primary.withOpacity(0.3),
+                : context.colors.primary.withValues(alpha: 0.3),
             width: _selectedDate != null ? 2 : 1,
           ),
         ),
@@ -961,7 +961,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           border: Border.all(
             color: _selectedTime != null
                 ? context.colors.primary
-                : context.colors.primary.withOpacity(0.3),
+                : context.colors.primary.withValues(alpha: 0.3),
             width: _selectedTime != null ? 2 : 1,
           ),
         ),
@@ -1035,10 +1035,10 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppColors.blueMetraShop.withOpacity(0.1),
+              color: AppColors.blueMetraShop.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.blueMetraShop.withOpacity(0.3),
+                color: AppColors.blueMetraShop.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -1126,7 +1126,7 @@ class _RegisterLocationScreenState extends State<RegisterLocationScreen>
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: context.colors.primary.withOpacity(0.3),
+                color: context.colors.primary.withValues(alpha: 0.3),
                 width: 2,
                 style: BorderStyle.solid,
               ),

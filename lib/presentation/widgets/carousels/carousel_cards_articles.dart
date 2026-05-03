@@ -232,7 +232,7 @@ class _CarouselCardsArticlesState extends State<CarouselCardsArticles>
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
       margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
       decoration: BoxDecoration(
-        color: AppColors.blueMetraShop.withOpacity(0.1),
+        color: AppColors.blueMetraShop.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: const Row(
@@ -269,7 +269,7 @@ class _CarouselCardsArticlesState extends State<CarouselCardsArticles>
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
         margin: const EdgeInsets.only(bottom: 8, left: 16, right: 16),
         decoration: BoxDecoration(
-          color: Colors.orange.withOpacity(0.1),
+          color: Colors.orange.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(

@@ -89,8 +89,8 @@ class MeasurementItemCard extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          AppColors.blueMetraShop.withOpacity(0.12),
-                          AppColors.blueMetraShop.withOpacity(0.18),
+                          AppColors.blueMetraShop.withValues(alpha: 0.12),
+                          AppColors.blueMetraShop.withValues(alpha: 0.18),
                         ],
                       ),
                       shape: BoxShape.circle,

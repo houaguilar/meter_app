@@ -1,4 +1,5 @@
 // lib/presentation/widgets/cards/generic_item_card.dart
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -125,7 +126,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: _isPressed
-                ? (AppColors.blueMetraShop).withOpacity(0.3)
+                ? (AppColors.blueMetraShop).withValues(alpha: 0.3)
                 : Colors.transparent,
             width: 2.0,
           ),
@@ -184,13 +185,13 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              primaryColor.withOpacity(0.08),
-              primaryColor.withOpacity(0.15),
+              primaryColor.withValues(alpha: 0.08),
+              primaryColor.withValues(alpha: 0.15),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: primaryColor.withOpacity(0.15),
+              color: primaryColor.withValues(alpha: 0.15),
               blurRadius: 12,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -201,7 +202,7 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: AppColors.white.withOpacity(0.5),
+            color: AppColors.white.withValues(alpha: 0.5),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
@@ -218,16 +219,13 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
     final isNetwork = imagePath.startsWith('http://') || imagePath.startsWith('https://');
 
     if (isNetwork) {
-      return Image.network(
-        imagePath,
+      return CachedNetworkImage(
+        imageUrl: imagePath,
         fit: BoxFit.contain,
         width: size,
         height: size,
-        errorBuilder: (context, error, stackTrace) => _buildImagePlaceholder(size),
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return _buildImagePlaceholder(size);
-        },
+        errorWidget: (context, url, error) => _buildImagePlaceholder(size),
+        placeholder: (context, url) => _buildImagePlaceholder(size),
       );
     } else if (isSvg) {
       return SvgPicture.asset(
@@ -319,7 +317,6 @@ class _GenericItemCardState<T> extends State<GenericItemCard<T>>
       widget.onTap();
     } catch (e) {
       assert(() {
-        debugPrint('Error en GenericItemCard onTap: $e');
         return true;
       }());
 

@@ -257,9 +257,7 @@ class _TarrajeoScreenState extends ConsumerState<TarrajeoScreen>
   /// Sistema de logging para debugging
   void _logError(String message, [StackTrace? stackTrace]) {
     assert(() {
-      debugPrint('❌ TarrajeoScreen Error: $message');
       if (stackTrace != null) {
-        debugPrint('Stack trace: $stackTrace');
       }
       return true;
     }());
@@ -569,7 +567,7 @@ class SelectedCoatingInfo extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: info.primaryColor.withOpacity(0.1),
+                  color: info.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -635,10 +633,10 @@ class CoatingApplicationTips extends StatelessWidget {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: (accentColor ?? AppColors.blueMetraShop).withOpacity(0.05),
+        color: (accentColor ?? AppColors.blueMetraShop).withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: (accentColor ?? AppColors.blueMetraShop).withOpacity(0.2),
+          color: (accentColor ?? AppColors.blueMetraShop).withValues(alpha: 0.2),
         ),
       ),
       child: Column(

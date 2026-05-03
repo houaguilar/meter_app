@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 import '../../../config/theme/theme.dart';
-import '../../../data/models/perfil/location/administrative_level_2.dart';
-import '../../../data/models/perfil/location/administrative_level_3.dart';
-import '../../../data/models/perfil/location/administrative_level_4.dart';
-import '../../../data/models/perfil/location/country.dart';
-import '../../../data/repositories/perfil/location/location_repository.dart';
+import '../../../domain/entities/perfil/location/administrative_level_2.dart';
+import '../../../domain/entities/perfil/location/administrative_level_3.dart';
+import '../../../domain/entities/perfil/location/administrative_level_4.dart';
+import '../../../domain/entities/perfil/location/country.dart';
+import '../../../domain/repositories/perfil/location/location_repository.dart';
 import '../../../data/repositories/perfil/location/location_repository_factory.dart';
 
 /// Widget genérico para seleccionar ubicaciones de múltiples países

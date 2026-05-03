@@ -17,7 +17,7 @@ class MeasurementBloc extends Bloc<MeasurementEvent, MeasurementState> {
         final items = await getMeasurementItems();
         emit(MeasurementLoaded(items));
       } catch (e) {
-        emit(MeasurementError('Failed to load measurement items'));
+        emit(MeasurementError('Error al cargar los elementos de medición'));
       }
     });
   }

@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 
 import '../../../domain/entities/entities.dart';
 import '../../../domain/entities/home/estructuras/columna/columna.dart';
@@ -95,15 +97,8 @@ class UnifiedMaterialsCalculator {
 
   static CalculationResult _calculateLadrilloMaterials(List<Ladrillo> ladrillos) {
     // 🔍 DEBUG: Log cuántos ladrillos se están procesando
-    print('🔍 [_calculateLadrilloMaterials] Procesando ${ladrillos.length} ladrillo(s)');
     for (int i = 0; i < ladrillos.length; i++) {
       final l = ladrillos[i];
-      print('   Ladrillo ${i + 1}:');
-      print('     - Tipo: "${l.tipoLadrillo}"');
-      print('     - Descripción: "${l.description}"');
-      print('     - brickLength: ${l.brickLength}');
-      print('     - brickWidth: ${l.brickWidth}');
-      print('     - brickHeight: ${l.brickHeight}');
     }
 
     // NOTA: Las dimensiones ahora vienen del ENUM TipoLadrillo
@@ -166,18 +161,11 @@ class UnifiedMaterialsCalculator {
         largo = ladrillo.brickLength!;
         ancho = ladrillo.brickWidth!;
         alto = ladrillo.brickHeight!;
-        print('✅ [UnifiedMaterialsCalculator] Custom brick - usando dimensiones guardadas: ${largo}×${ancho}×${alto} cm');
       } else {
         largo = tipoEnum.largo;
         ancho = tipoEnum.ancho;
         alto = tipoEnum.alto;
         if (tipoEnum == enums.TipoLadrillo.custom) {
-          print('⚠️ [UnifiedMaterialsCalculator] Custom brick PERO dimensiones son NULL!');
-          print('   - tipoLadrillo: "${ladrillo.tipoLadrillo}"');
-          print('   - brickLength: ${ladrillo.brickLength}');
-          print('   - brickWidth: ${ladrillo.brickWidth}');
-          print('   - brickHeight: ${ladrillo.brickHeight}');
-          print('   - Fallback a enum: ${largo}×${ancho}×${alto} cm (esto causará resultados = 0)');
         }
       }
 

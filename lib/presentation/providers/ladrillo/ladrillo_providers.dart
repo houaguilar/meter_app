@@ -1,17 +1,13 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/constants/constant.dart';
 import '../../../config/utils/number_formatter.dart';
-import '../../../data/models/models.dart';
+import '../../../domain/entities/home/ladrillo/ladrillo.dart';
 import '../../../domain/entities/home/muro/tipo_ladrillo.dart' as enums;
 import '../../../domain/services/ladrillo_service.dart';
 import '../home/muro/custom_brick_providers.dart';
 
-part 'ladrillo_providers.g.dart';
-
-@Riverpod(keepAlive: true)
-@riverpod
-class TipoLadrilloNotifier extends _$TipoLadrilloNotifier {
+class TipoLadrilloNotifier extends Notifier<String> {
   @override
   String build() => '';
 
@@ -20,8 +16,10 @@ class TipoLadrilloNotifier extends _$TipoLadrilloNotifier {
   }
 }
 
-@riverpod
-class LadrilloResult extends _$LadrilloResult {
+final tipoLadrilloProvider =
+    NotifierProvider<TipoLadrilloNotifier, String>(TipoLadrilloNotifier.new);
+
+class LadrilloResult extends Notifier<List<Ladrillo>> {
   final LadrilloService _ladrilloService = LadrilloService();
 
   @override
@@ -53,12 +51,9 @@ class LadrilloResult extends _$LadrilloResult {
         brickLength = customConfig.length;
         brickWidth = customConfig.width;
         brickHeight = customConfig.height;
-        print('✅ [createLadrillo] Tipo: "$tipoLadrillo" - Guardando dimensiones custom: ${brickLength}×${brickWidth}×${brickHeight} cm');
       } catch (e) {
-        print('⚠️ [createLadrillo] Error obteniendo dimensiones custom para tipo "$tipoLadrillo": $e');
       }
     } else {
-      print('ℹ️ [createLadrillo] Tipo: "$tipoLadrillo" - No es custom, dimensiones = null');
     }
 
     final newLadrillo = Ladrillo(
@@ -78,10 +73,6 @@ class LadrilloResult extends _$LadrilloResult {
     );
 
     // 🔍 Log para debugging
-    print('🏗️ [createLadrillo] Ladrillo creado:');
-    print('   - Tipo: "$tipoLadrillo"');
-    print('   - Descripción: "$description"');
-    print('   - Dimensiones brick: ${brickLength ?? "null"}×${brickWidth ?? "null"}×${brickHeight ?? "null"} cm');
 
     if (!_ladrilloService.esValido(newLadrillo)) {
       throw Exception("El ladrillo debe tener largo y altura o área definida.");
@@ -95,24 +86,24 @@ class LadrilloResult extends _$LadrilloResult {
   }
 }
 
-@riverpod
-List<double> areaLadrillo(Ref ref) {
+final ladrilloResultProvider =
+    NotifierProvider<LadrilloResult, List<Ladrillo>>(LadrilloResult.new);
+
+final areaLadrilloProvider = Provider<List<double>>((ref) {
   final ladrilloService = LadrilloService();
   final ladrillos = ref.watch(ladrilloResultProvider);
 
   return ladrillos
       .map((ladrillo) => ladrilloService.calcularArea(ladrillo) ?? 0.0)
       .toList();
-}
+});
 
-@riverpod
-List<String> descriptionLadrillo(Ref ref) {
+final descriptionLadrilloProvider = Provider<List<String>>((ref) {
   final ladrillos = ref.watch(ladrilloResultProvider);
   return ladrillos.map((e) => e.description).toList();
-}
+});
 
-@riverpod
-String datosShareLadrillo(Ref ref) {
+final datosShareLadrilloProvider = Provider<String>((ref) {
   final description = ref.watch(descriptionLadrilloProvider);
   final area = ref.watch(areaLadrilloProvider);
 
@@ -124,11 +115,10 @@ String datosShareLadrillo(Ref ref) {
     datos = datos.substring(0, datos.length - 2);
   }
   return datos;
-}
+});
 
 /// Provider para configuración de ladrillo
-@riverpod
-class LadrilloConfig extends _$LadrilloConfig {
+class LadrilloConfig extends Notifier<LadrilloConfiguration> {
   @override
   LadrilloConfiguration build() => const LadrilloConfiguration();
 
@@ -148,6 +138,9 @@ class LadrilloConfig extends _$LadrilloConfig {
     state = state.copyWith(tipoAsentado: tipo);
   }
 }
+
+final ladrilloConfigProvider =
+    NotifierProvider<LadrilloConfig, LadrilloConfiguration>(LadrilloConfig.new);
 
 /// Clase de configuración para ladrillo
 class LadrilloConfiguration {
@@ -179,8 +172,7 @@ class LadrilloConfiguration {
 }
 
 /// Provider principal para cálculos de materiales de ladrillo - CORREGIDO 100% VALIDADO
-@riverpod
-LadrilloMaterials ladrilloMaterials(Ref ref) {
+final ladrilloMaterialsProvider = Provider<LadrilloMaterials>((ref) {
   final ladrillos = ref.watch(ladrilloResultProvider);
 
   if (ladrillos.isEmpty) {
@@ -188,7 +180,7 @@ LadrilloMaterials ladrilloMaterials(Ref ref) {
   }
 
   return _calcularMaterialesLadrillo(ladrillos, ref);
-}
+});
 
 /// Función auxiliar para calcular materiales basada en el análisis 100% validado vs Excel
 LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ref ref) {
@@ -252,22 +244,13 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ref ref)
       largo = ladrillo.brickLength!;
       ancho = ladrillo.brickWidth!;
       alto = ladrillo.brickHeight!;
-      print('✅ [ladrilloMaterials] Custom brick - usando dimensiones guardadas: ${largo}×${ancho}×${alto} cm');
     } else {
       largo = tipoEnum.largo;
       ancho = tipoEnum.ancho;
       alto = tipoEnum.alto;
       if (tipoEnum == enums.TipoLadrillo.custom) {
-        print('⚠️ [ladrilloMaterials] Custom brick PERO dimensiones son NULL!');
-        print('   - tipoLadrillo: "${ladrillo.tipoLadrillo}"');
-        print('   - brickLength: ${ladrillo.brickLength}');
-        print('   - brickWidth: ${ladrillo.brickWidth}');
-        print('   - brickHeight: ${ladrillo.brickHeight}');
-        print('   - Fallback a enum: ${largo}×${ancho}×${alto} cm (esto causará resultados = 0)');
       }
     }
-    print('  Forma asentado: "${ladrillo.tipoAsentado}"');
-    print('---');
 
     // ALGORITMO VALIDADO: Determinar grosor del muro y dimensiones según forma
     double grosorMuro, dim1, dim2;

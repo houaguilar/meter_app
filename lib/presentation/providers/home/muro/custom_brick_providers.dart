@@ -1,14 +1,11 @@
 // lib/presentation/providers/home/muro/custom_brick_providers.dart
 
 import 'dart:convert';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-part 'custom_brick_providers.g.dart';
-
 /// Provider para dimensiones del ladrillo personalizado actual
-@Riverpod(keepAlive: true)
-class CustomBrickDimensions extends _$CustomBrickDimensions {
+class CustomBrickDimensions extends Notifier<CustomDimensions> {
   @override
   CustomDimensions build() => const CustomDimensions();
 
@@ -24,7 +21,6 @@ class CustomBrickDimensions extends _$CustomBrickDimensions {
       height: height,
       customName: name,
     );
-    print('✅ CustomBrickDimensions ACTUALIZADO: ${state.toString()}');
   }
 
   void clearDimensions() {
@@ -41,9 +37,12 @@ class CustomBrickDimensions extends _$CustomBrickDimensions {
   }
 }
 
+final customBrickDimensionsProvider =
+    NotifierProvider<CustomBrickDimensions, CustomDimensions>(
+        CustomBrickDimensions.new);
+
 /// Provider para ladrillos personalizados guardados
-@riverpod
-class SavedCustomBricks extends _$SavedCustomBricks {
+class SavedCustomBricks extends AsyncNotifier<List<CustomBrickConfig>> {
   static const String _storageKey = 'saved_custom_bricks';
 
   @override
@@ -63,7 +62,6 @@ class SavedCustomBricks extends _$SavedCustomBricks {
           .map((json) => CustomBrickConfig.fromJson(json))
           .toList();
     } catch (e) {
-      print('Error loading custom bricks: $e');
       return [];
     }
   }
@@ -74,7 +72,6 @@ class SavedCustomBricks extends _$SavedCustomBricks {
       final jsonString = jsonEncode(bricks.map((brick) => brick.toJson()).toList());
       await prefs.setString(_storageKey, jsonString);
     } catch (e) {
-      print('Error saving custom bricks: $e');
     }
   }
 
@@ -117,9 +114,12 @@ class SavedCustomBricks extends _$SavedCustomBricks {
   }
 }
 
+final savedCustomBricksProvider =
+    AsyncNotifierProvider<SavedCustomBricks, List<CustomBrickConfig>>(
+        SavedCustomBricks.new);
+
 /// Provider para el ladrillo personalizado seleccionado actualmente
-@riverpod
-class SelectedCustomBrick extends _$SelectedCustomBrick {
+class SelectedCustomBrick extends Notifier<CustomBrickConfig?> {
   @override
   CustomBrickConfig? build() => null;
 
@@ -136,6 +136,10 @@ class SelectedCustomBrick extends _$SelectedCustomBrick {
     state = null;
   }
 }
+
+final selectedCustomBrickProvider =
+    NotifierProvider<SelectedCustomBrick, CustomBrickConfig?>(
+        SelectedCustomBrick.new);
 
 /// Clase para almacenar dimensiones personalizadas
 class CustomDimensions {

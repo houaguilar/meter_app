@@ -170,13 +170,13 @@ class _SuccessContentState extends State<_SuccessContent>
                 gradient: LinearGradient(
                   colors: [
                     AppColors.success,
-                    AppColors.success.withOpacity(0.8),
+                    AppColors.success.withValues(alpha: 0.8),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.success.withOpacity(0.3),
+                    color: AppColors.success.withValues(alpha: 0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -187,7 +187,7 @@ class _SuccessContentState extends State<_SuccessContent>
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppColors.white.withOpacity(0.2),
+                      color: AppColors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
@@ -214,7 +214,7 @@ class _SuccessContentState extends State<_SuccessContent>
                         Text(
                           widget.message,
                           style: TextStyle(
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                             fontSize: 14,
                           ),
                         ),
@@ -300,7 +300,7 @@ class _WelcomeDialogState extends State<_WelcomeDialog>
                   end: Alignment.bottomRight,
                   colors: [
                     AppColors.primary,
-                    AppColors.primary.withOpacity(0.8),
+                    AppColors.primary.withValues(alpha: 0.8),
                   ],
                 ),
               ),
@@ -316,7 +316,7 @@ class _WelcomeDialogState extends State<_WelcomeDialog>
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: AppColors.white.withOpacity(0.2),
+                              color: AppColors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -350,7 +350,7 @@ class _WelcomeDialogState extends State<_WelcomeDialog>
                           '¡Hola ${widget.userName}!',
                           style: TextStyle(
                             fontSize: 18,
-                            color: AppColors.white.withOpacity(0.9),
+                            color: AppColors.white.withValues(alpha: 0.9),
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -359,7 +359,7 @@ class _WelcomeDialogState extends State<_WelcomeDialog>
                           'Tu cuenta ha sido creada exitosamente. ¡Estamos emocionados de tenerte con nosotros!',
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.white.withOpacity(0.8),
+                            color: AppColors.white.withValues(alpha: 0.8),
                             height: 1.5,
                           ),
                           textAlign: TextAlign.center,

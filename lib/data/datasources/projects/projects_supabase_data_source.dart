@@ -28,19 +28,11 @@ class ProjectsSupabaseDataSource implements ProjectsRemoteDataSource {
           .from('projects')
           .select()
           .eq('user_id', userId);
-      print('load');
-      print(response);
-
-     /* if (response.isEmpty) {
-        print('.empty');
-        throw const ServerException('Error loading projects');
-      }*/
 
       return (response as List<dynamic>)
           .map((json) => ProjectModel.fromJson(json as Map<String, dynamic>).toDomain())
           .toList();
     } on PostgrestException catch (e) {
-      print('first error load');
       throw ServerException('PostgrestException: ${e.message}');
     } catch (e) {
       throw ServerException('Unknown error: ${e.toString()}');
@@ -62,10 +54,8 @@ class ProjectsSupabaseDataSource implements ProjectsRemoteDataSource {
           .insert(projectModel.toJson());
 
     } on PostgrestException catch (e) {
-      print('segundo');
       throw ServerException('PostgrestException: ${e.message}');
     } catch (e) {
-      print('tercero');
       throw ServerException('Unknown error: ${e.toString()}');
     }
   }

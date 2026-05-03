@@ -163,7 +163,6 @@ final wallMaterialsWithCustomProvider = FutureProvider<List<WallMaterial>>((ref)
 
   } catch (e) {
     // Si hay error cargando custom bricks, solo devolver predefinidos
-    print('⚠️ Error cargando ladrillos personalizados: $e');
     return await ref.watch(wallMaterialsProvider.future);
   }
 });
