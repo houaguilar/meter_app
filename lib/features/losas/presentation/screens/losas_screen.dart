@@ -5,12 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/losas/slab.dart';
 import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
-import 'package:meter_app/presentation/providers/home/losa/slab_providers.dart';
-import 'package:meter_app/presentation/widgets/cards/generic_item_card.dart';
-import 'package:meter_app/presentation/widgets/core/generic_module_config.dart';
-import 'package:meter_app/presentation/widgets/dialogs/unified_feature_disabled_dialog.dart';
-import 'package:meter_app/presentation/widgets/shared/responsive_grid_builder.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/losas/presentation/providers/slab_providers.dart';
+import 'package:meter_app/core/widgets/cards/generic_item_card.dart';
+import 'package:meter_app/core/widgets/core/generic_module_config.dart';
+import 'package:meter_app/core/widgets/dialogs/unified_feature_disabled_dialog.dart';
+import 'package:meter_app/core/widgets/shared/responsive_grid_builder.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 class LosasScreen extends ConsumerStatefulWidget {
   const LosasScreen({super.key});

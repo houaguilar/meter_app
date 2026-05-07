@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_derrame_providers.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/tarrajeo/coating.dart';
-import 'package:meter_app/presentation/providers/home/tarrajeo/coating_providers.dart';
-import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
-import 'package:meter_app/presentation/widgets/cards/generic_item_card.dart';
-import 'package:meter_app/presentation/widgets/core/generic_module_config.dart';
-import 'package:meter_app/presentation/widgets/dialogs/unified_feature_disabled_dialog.dart';
-import 'package:meter_app/presentation/widgets/shared/responsive_grid_builder.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/coating_providers.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_providers.dart';
+import 'package:meter_app/core/widgets/cards/generic_item_card.dart';
+import 'package:meter_app/core/widgets/core/generic_module_config.dart';
+import 'package:meter_app/core/widgets/dialogs/unified_feature_disabled_dialog.dart';
+import 'package:meter_app/core/widgets/shared/responsive_grid_builder.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 /// TarrajeoScreen unificada usando componentes genéricos reutilizables
 ///

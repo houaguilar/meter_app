@@ -15,9 +15,9 @@ import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/domain/entities/home/ladrillo/ladrillo.dart';
 import 'package:meter_app/domain/entities/home/muro/tipo_ladrillo.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
-import 'package:meter_app/presentation/providers/providers.dart';
-import 'package:meter_app/presentation/providers/home/muro/custom_brick_providers.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/muro/presentation/providers/ladrillo_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/custom_brick_providers.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 /// Redondea un número hacia arriba con la cantidad de decimales especificada
 /// Similar a la función ROUNDUP de Excel

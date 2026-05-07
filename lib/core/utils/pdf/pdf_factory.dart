@@ -1,16 +1,16 @@
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:meter_app/presentation/providers/home/estructuras/structural_element_providers.dart';
-import 'package:meter_app/presentation/providers/ladrillo/ladrillo_providers.dart';
-import 'package:meter_app/presentation/providers/losas/losa_providers.dart';
-import 'package:meter_app/presentation/providers/pisos/contrapiso_providers.dart';
-import 'package:meter_app/presentation/providers/pisos/falso_piso_providers.dart';
-import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
-import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_derrame_providers.dart';
-import 'package:meter_app/presentation/providers/home/acero/columna/steel_column_providers.dart';
-import 'package:meter_app/presentation/providers/home/acero/viga/steel_beam_providers.dart';
-import 'package:meter_app/presentation/providers/home/acero/losa_maciza/steel_slab_providers.dart';
-import 'package:meter_app/presentation/providers/home/acero/zapata/steel_footing_providers.dart';
+import 'package:meter_app/features/estructuras/presentation/providers/structural_element_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/ladrillo_providers.dart';
+import 'package:meter_app/features/losas/presentation/providers/losa_providers.dart';
+import 'package:meter_app/features/pisos/presentation/providers/contrapiso_providers.dart';
+import 'package:meter_app/features/pisos/presentation/providers/falso_piso_providers.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_providers.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_derrame_providers.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_column_providers.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_beam_providers.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_slab_providers.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_footing_providers.dart';
 import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
 
 /// Factory para crear PDFs específicos de cada módulo

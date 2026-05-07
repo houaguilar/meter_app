@@ -5,14 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/muro/wall_material.dart';
 import 'package:meter_app/domain/entities/home/muro/tipo_ladrillo.dart';
-import 'package:meter_app/presentation/providers/home/muro/custom_brick_providers.dart';
-import 'package:meter_app/presentation/providers/home/muro/wall_material_providers_improved.dart';
-import 'package:meter_app/presentation/providers/home/muro/custom_brick_isar_providers.dart';
-import 'package:meter_app/presentation/providers/providers.dart';
-import 'package:meter_app/presentation/widgets/cards/generic_item_card.dart';
-import 'package:meter_app/presentation/widgets/core/generic_module_config.dart';
-import 'package:meter_app/presentation/widgets/shared/responsive_grid_builder.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/muro/presentation/providers/custom_brick_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/wall_material_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/custom_brick_isar_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/ladrillo_providers.dart';
+import 'package:meter_app/core/widgets/cards/generic_item_card.dart';
+import 'package:meter_app/core/widgets/core/generic_module_config.dart';
+import 'package:meter_app/core/widgets/shared/responsive_grid_builder.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 class WallScreen extends ConsumerStatefulWidget {
   const WallScreen({super.key});

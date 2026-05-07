@@ -5,13 +5,13 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
-import 'package:meter_app/presentation/providers/tarrajeo/tarrajeo_providers.dart';
+import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_providers.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 class ResultTarrajeoScreen extends ConsumerStatefulWidget {
   const ResultTarrajeoScreen({super.key});

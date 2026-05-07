@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:meter_app/core/constants/error/exceptions.dart';
 import 'package:meter_app/core/constants/error/failures.dart';
 import 'package:meter_app/features/inicio/domain/datasources/article_remote_data_source.dart';
-import 'package:meter_app/data/models/models.dart';
+import 'package:meter_app/features/inicio/data/models/article_model.dart';
 
 class ArticleRemoteDataSourceImpl implements ArticleRemoteDataSource {
   final SupabaseClient client;

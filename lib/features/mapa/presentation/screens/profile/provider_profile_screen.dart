@@ -2,13 +2,13 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/widgets/app_bar/app_bar_perfil_widget.dart';
+import 'package:meter_app/core/widgets/app_bar/app_bar_perfil_widget.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/features/mapa/domain/entities/location.dart';
 import 'package:meter_app/features/mapa/domain/entities/verification_status.dart';
 import 'package:meter_app/features/mapa/presentation/blocs/locations_bloc.dart';
-import 'package:meter_app/presentation/widgets/app_bar/app_bar_widget.dart';
+import 'package:meter_app/core/widgets/app_bar/app_bar_widget.dart';
 
 class ProviderProfileScreen extends StatefulWidget {
   final LocationMap location;

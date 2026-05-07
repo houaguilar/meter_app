@@ -8,7 +8,7 @@ import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/show_snackbar.dart';
 import 'package:meter_app/features/mapa/domain/entities/product.dart';
 import 'package:meter_app/features/mapa/presentation/blocs/products_bloc.dart';
-import 'package:meter_app/presentation/widgets/app_bar/app_bar_widget.dart';
+import 'package:meter_app/core/widgets/app_bar/app_bar_widget.dart';
 
 /// Pantalla para configurar marcas y precios de una categoría específica
 class BrandConfiguratorScreen extends StatefulWidget {

@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
-import 'package:meter_app/domain/services/shared/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/features/projects/presentation/blocs/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/features/projects/presentation/screens/combined/widgets/material_card.dart';

@@ -9,10 +9,10 @@ import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overla
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/local/shared_preferences_helper.dart';
 import 'package:meter_app/domain/entities/home/losas/tipo_losa.dart';
-import 'package:meter_app/domain/services/losas/losa_service.dart';
-import 'package:meter_app/presentation/providers/providers.dart';
-import 'package:meter_app/presentation/widgets/modern_widgets.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/losas/domain/services/losa_service.dart';
+import 'package:meter_app/features/losas/presentation/providers/losa_providers.dart';
+import 'package:meter_app/core/widgets/modern_widgets.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 /// Pantalla adaptativa de datos para todos los tipos de losas
 ///

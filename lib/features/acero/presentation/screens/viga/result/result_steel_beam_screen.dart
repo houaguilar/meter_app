@@ -9,8 +9,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
-import 'package:meter_app/presentation/providers/home/acero/viga/steel_beam_providers.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_beam_providers.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 class ResultSteelBeamScreen extends ConsumerStatefulWidget {
   const ResultSteelBeamScreen({super.key});

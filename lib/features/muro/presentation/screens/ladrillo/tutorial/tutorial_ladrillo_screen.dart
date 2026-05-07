@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:meter_app/presentation/widgets/buttons/custom_elevated_button.dart';
-import 'package:meter_app/presentation/widgets/buttons/custom_text_blue_button.dart';
-import 'package:meter_app/presentation/widgets/shared/info_box.dart';
+import 'package:meter_app/core/widgets/buttons/custom_elevated_button.dart';
+import 'package:meter_app/core/widgets/buttons/custom_text_blue_button.dart';
+import 'package:meter_app/core/widgets/shared/info_box.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/tutorial/tutorial_step.dart';

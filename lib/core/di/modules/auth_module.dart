@@ -6,7 +6,17 @@ import 'package:meter_app/features/auth/domain/repositories/auth_repository.dart
 import 'package:meter_app/features/auth/domain/usecases/change_password.dart';
 import 'package:meter_app/features/auth/domain/usecases/get_user_profile.dart';
 import 'package:meter_app/features/auth/domain/usecases/update_user_profile.dart';
-import 'package:meter_app/domain/usecases/use_cases.dart';
+import 'package:meter_app/features/auth/domain/usecases/current_user.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_login.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_up.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_logout.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_google.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_apple.dart';
+import 'package:meter_app/features/auth/domain/usecases/delete_account.dart';
+import 'package:meter_app/features/auth/domain/usecases/reset_password_for_email.dart';
+import 'package:meter_app/features/auth/domain/usecases/verify_otp.dart';
+import 'package:meter_app/features/auth/domain/usecases/resend_otp.dart';
+import 'package:meter_app/features/auth/domain/usecases/verify_otp_and_update_password.dart';
 import 'package:meter_app/features/auth/presentation/blocs/auth_bloc.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 

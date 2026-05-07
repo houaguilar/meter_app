@@ -5,7 +5,16 @@ import 'package:meter_app/domain/entities/auth/user.dart';
 import 'package:meter_app/core/common/cubits/app_user/app_user_cubit.dart';
 import 'package:meter_app/core/usecase/usecase.dart';
 import 'package:meter_app/core/local/shared_preferences_helper.dart';
-import 'package:meter_app/domain/usecases/use_cases.dart';
+import 'package:meter_app/features/auth/domain/usecases/current_user.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_login.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_up.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_logout.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_google.dart';
+import 'package:meter_app/features/auth/domain/usecases/user_sign_in_with_apple.dart';
+import 'package:meter_app/features/auth/domain/usecases/delete_account.dart';
+import 'package:meter_app/features/auth/domain/usecases/change_password.dart';
+import 'package:meter_app/features/auth/domain/usecases/resend_otp.dart';
+import 'package:meter_app/features/auth/domain/usecases/reset_password_for_email.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';

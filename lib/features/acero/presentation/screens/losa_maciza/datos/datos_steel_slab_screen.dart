@@ -11,9 +11,9 @@ import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
-import 'package:meter_app/presentation/providers/home/acero/losa_maciza/steel_slab_providers.dart';
-import 'package:meter_app/presentation/widgets/dialogs/confirm_dialog.dart';
-import 'package:meter_app/presentation/widgets/modern_widgets.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_slab_providers.dart';
+import 'package:meter_app/core/widgets/dialogs/confirm_dialog.dart';
+import 'package:meter_app/core/widgets/modern_widgets.dart';
 import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_floating_action_button.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_text_form_field.dart';

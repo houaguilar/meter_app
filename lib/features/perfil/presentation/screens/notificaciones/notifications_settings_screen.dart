@@ -7,7 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/show_snackbar.dart';
 import 'package:meter_app/domain/entities/notifications/notification_settings.dart';
-import 'package:meter_app/presentation/providers/notifications/notification_settings_providers.dart';
+import 'package:meter_app/features/perfil/presentation/providers/notification_settings_providers.dart';
 
 /// Versión mejorada de NotificationsSettingsScreen usando Riverpod
 /// con notificaciones granulares y manejo robusto de errores

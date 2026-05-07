@@ -6,11 +6,11 @@ import 'package:share_plus/share_plus.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/error_handler.dart';
 import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
-import 'package:meter_app/domain/services/shared/UnifiedMaterialsCalculator.dart';
+import 'package:meter_app/core/services/UnifiedMaterialsCalculator.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/features/projects/presentation/blocs/metrados/result/result_bloc.dart';
-import 'package:meter_app/presentation/widgets/app_bar/app_bar_projects_widget.dart';
+import 'package:meter_app/core/widgets/app_bar/app_bar_projects_widget.dart';
 
 class ResultScreen extends StatefulWidget {
   final String metradoId;

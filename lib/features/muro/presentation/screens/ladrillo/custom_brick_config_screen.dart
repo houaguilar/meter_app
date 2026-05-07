@@ -5,9 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/muro/custom_brick.dart';
-import 'package:meter_app/presentation/providers/home/muro/custom_brick_providers.dart';
-import 'package:meter_app/presentation/providers/home/muro/custom_brick_isar_providers.dart';
-import 'package:meter_app/presentation/providers/providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/custom_brick_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/custom_brick_isar_providers.dart';
+import 'package:meter_app/features/muro/presentation/providers/ladrillo_providers.dart';
 
 class CustomBrickConfigScreen extends ConsumerStatefulWidget {
   const CustomBrickConfigScreen({super.key});

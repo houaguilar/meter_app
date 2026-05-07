@@ -4,7 +4,8 @@ import 'package:meta/meta.dart';
 import 'package:meter_app/core/usecase/usecase.dart';
 import 'package:meter_app/domain/entities/auth/user_profile.dart';
 import 'package:meter_app/features/auth/domain/usecases/change_password.dart';
-import 'package:meter_app/domain/usecases/use_cases.dart';
+import 'package:meter_app/features/auth/domain/usecases/get_user_profile.dart';
+import 'package:meter_app/features/auth/domain/usecases/update_user_profile.dart';
 
 part 'profile_event.dart';
 part 'profile_state.dart';

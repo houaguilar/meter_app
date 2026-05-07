@@ -13,8 +13,8 @@ import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/piso/piso.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
-import 'package:meter_app/presentation/providers/pisos/falso_piso_providers.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/pisos/presentation/providers/falso_piso_providers.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 /// Redondea un número hacia arriba con la cantidad de decimales especificada
 /// Similar a la función ROUNDUP de Excel

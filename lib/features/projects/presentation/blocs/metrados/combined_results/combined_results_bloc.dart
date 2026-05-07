@@ -3,8 +3,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
 
-import 'package:meter_app/domain/services/shared/UnifiedResultsCombiner.dart';
-import 'package:meter_app/presentation/services/combined_results_share_service.dart';
+import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
+import 'package:meter_app/features/projects/presentation/services/combined_results_share_service.dart';
 import 'package:meter_app/features/projects/domain/usecases/metrados/result/load_results_use_case.dart';
 import 'package:meter_app/features/projects/domain/usecases/metrados/get_all_metrados.dart';
 import 'package:meter_app/features/common/presentation/blocs/error_handler_mixin.dart';

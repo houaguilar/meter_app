@@ -18,7 +18,7 @@ import 'package:meter_app/features/premium/presentation/blocs/premium_bloc.dart'
 import 'package:meter_app/features/premium/presentation/widgets/premium_feature_widget.dart';
 import 'package:meter_app/features/premium/presentation/widgets/premium_paywall_screen.dart';
 import 'package:meter_app/features/premium/presentation/widgets/premium_status_indicator.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 import 'package:meter_app/features/mapa/presentation/screens/profile/provider_profile_screen.dart';
 
 class PerfilScreen extends StatefulWidget {

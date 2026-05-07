@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_element.dart';
-import 'package:meter_app/presentation/widgets/shared/responsive_grid_builder.dart';
+import 'package:meter_app/core/widgets/shared/responsive_grid_builder.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
-import 'package:meter_app/presentation/providers/home/acero/steel_element_providers.dart';
-import 'package:meter_app/presentation/widgets/cards/generic_item_card.dart';
-import 'package:meter_app/presentation/widgets/core/generic_module_config.dart';
-import 'package:meter_app/presentation/widgets/widgets.dart';
+import 'package:meter_app/features/acero/presentation/providers/steel_element_providers.dart';
+import 'package:meter_app/core/widgets/cards/generic_item_card.dart';
+import 'package:meter_app/core/widgets/core/generic_module_config.dart';
+import 'package:meter_app/core/widgets/widgets.dart';
 
 class SteelMainScreen extends ConsumerStatefulWidget {
   const SteelMainScreen({super.key});
