@@ -1,4 +1,3 @@
-// lib/presentation/screens/home/acero/losa/datos/models/slab_form_data.dart
 import 'package:flutter/material.dart';
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 
@@ -157,7 +156,6 @@ class SlabFormData {
 
   /// Valida si todos los campos obligatorios están completos
   bool get isValid {
-    // Validar campos básicos
     if (descriptionController.text.isEmpty ||
         lengthController.text.isEmpty ||
         widthController.text.isEmpty ||
@@ -167,13 +165,11 @@ class SlabFormData {
       return false;
     }
 
-    // Validar malla inferior (siempre obligatoria)
     if (inferiorHorizontalSeparationController.text.isEmpty ||
         inferiorVerticalSeparationController.text.isEmpty) {
       return false;
     }
 
-    // Validar malla superior si está habilitada
     if (useSuperiorMesh) {
       if (superiorHorizontalSeparationController.text.isEmpty ||
           superiorVerticalSeparationController.text.isEmpty) {
@@ -193,11 +189,9 @@ class SlabFormData {
       int.parse(elementsController.text);
       double.parse(wasteController.text);
 
-      // Validar separaciones de malla inferior
       double.parse(inferiorHorizontalSeparationController.text);
       double.parse(inferiorVerticalSeparationController.text);
 
-      // Validar separaciones de malla superior si está habilitada
       if (useSuperiorMesh) {
         double.parse(superiorHorizontalSeparationController.text);
         double.parse(superiorVerticalSeparationController.text);

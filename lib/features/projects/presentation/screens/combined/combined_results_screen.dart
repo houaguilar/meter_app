@@ -1,10 +1,11 @@
 
 import 'package:flutter/material.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
-import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/services/unified_results_combiner.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/features/projects/presentation/blocs/metrados/combined_results/combined_results_bloc.dart';
 import 'package:meter_app/features/projects/presentation/screens/combined/widgets/material_card.dart';
@@ -462,6 +463,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
     // Capturar el BLoC antes de abrir el modal para evitar usar
     // el context del modal (que estará deactivado cuando Future.delayed dispare)
     final bloc = context.read<CombinedResultsBloc>();
+    final shareOrigin = ShareUtils.getOrigin(context);
 
     showModalBottomSheet(
       context: context,
@@ -474,6 +476,7 @@ class _CombinedResultsScreenState extends State<CombinedResultsScreen>
             ShareCombinedResultsEvent(
               format: format,
               nombreUsuario: nombreUsuario,
+              sharePositionOrigin: shareOrigin,
             ),
           );
         },

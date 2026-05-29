@@ -78,7 +78,7 @@ class LadrilloResult extends Notifier<List<Ladrillo>> {
       throw Exception("El ladrillo debe tener largo y altura o área definida.");
     }
 
-    state = [...state, newLadrillo];
+    state = [newLadrillo];
   }
 
   void clearList() {
@@ -222,7 +222,7 @@ LadrilloMaterials _calcularMaterialesLadrillo(List<Ladrillo> ladrillos, Ref ref)
   double areaTotal = 0.0;
 
   for (var ladrillo in ladrillos) {
-    final area = _obtenerAreaLadrillo(ladrillo);
+    final area = LadrilloService().calcularArea(ladrillo) ?? 0.0;
     areaTotal += area;
 
     // Factores de desperdicio
@@ -316,16 +316,6 @@ enums.TipoLadrillo _obtenerTipoLadrilloEnum(String tipo) {
   return enums.TipoLadrillo.pandereta1;
 }
 
-/// Función auxiliar para obtener el área de un ladrillo
-double _obtenerAreaLadrillo(Ladrillo ladrillo) {
-  if (ladrillo.area != null && ladrillo.area!.isNotEmpty) {
-    return double.tryParse(ladrillo.area!) ?? 0.0;
-  } else {
-    final largo = double.tryParse(ladrillo.largo ?? '') ?? 0.0;
-    final altura = double.tryParse(ladrillo.altura ?? '') ?? 0.0;
-    return largo * altura;
-  }
-}
 
 /// Clase para almacenar materiales calculados de ladrillo
 class LadrilloMaterials {

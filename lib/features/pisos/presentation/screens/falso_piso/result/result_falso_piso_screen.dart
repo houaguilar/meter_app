@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/piso/piso.dart';
@@ -737,6 +738,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
       await Share.shareXFiles(
         [xFile],
         text: 'Resultados del metrado de falso piso - METRASHOP',
+        sharePositionOrigin: ShareUtils.getOrigin(context),
       );
     } catch (e) {
       context.hideLoader();
@@ -755,7 +757,7 @@ class _ResultFalsoPisoScreenState extends ConsumerState<ResultFalsoPisoScreen>
 
       final shareText = _generateShareText(materials, datosMetrado, falsosPisos);
 
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorSnackBar('Error al compartir: $e');
     }

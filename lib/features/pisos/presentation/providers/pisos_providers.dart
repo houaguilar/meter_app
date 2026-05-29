@@ -16,41 +16,6 @@ class TipoPiso extends Notifier<String> {
 
 final tipoPisoProvider = NotifierProvider<TipoPiso, String>(TipoPiso.new);
 
-class CantidadArenaPisos extends Notifier<String> {
-  @override
-  String build() => '';
-
-  void arena(String name) {
-    state = name;
-  }
-}
-
-final cantidadArenaPisosProvider =
-    NotifierProvider<CantidadArenaPisos, String>(CantidadArenaPisos.new);
-
-class CantidadCementoPisos extends Notifier<String> {
-  @override
-  String build() => '';
-
-  void cemento(String name) {
-    state = name;
-  }
-}
-
-final cantidadCementoPisosProvider =
-    NotifierProvider<CantidadCementoPisos, String>(CantidadCementoPisos.new);
-
-class CantidadPiedraChancada extends Notifier<String> {
-  @override
-  String build() => '';
-
-  void piedra(String name) {
-    state = name;
-  }
-}
-
-final cantidadPiedraChancadaProvider =
-    NotifierProvider<CantidadPiedraChancada, String>(CantidadPiedraChancada.new);
 
 class PisosResult extends Notifier<List<Piso>> {
   final PisoService _pisoService = PisoService();
@@ -83,14 +48,14 @@ class PisosResult extends Notifier<List<Piso>> {
     );
 
     if (!_pisoService.esValido(newPiso)) {
-      throw Exception("El ladrillo debe tener largo y altura o área definida.");
+      throw Exception("El piso debe tener largo y ancho o área definida.");
     }
 
     state = [...state, newPiso];
   }
 
   void clearList() {
-    state.clear();
+    state = [];
   }
 }
 
@@ -102,7 +67,6 @@ final volumenPisoProvider = Provider<List<double>>((ref) {
   final pisos = ref.watch(pisosResultProvider);
 
   return pisos.map((piso) => pisoSrevice.calcularArea(piso) ?? 0.0).toList();
-  //return pisos.map((e) => double.parse(e.largo) * double.parse(e.altura) * double.parse(e.ancho)).toList();
 });
 
 final descriptionPisoProvider = Provider<List<String>>((ref) {

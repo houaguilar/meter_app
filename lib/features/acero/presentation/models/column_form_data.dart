@@ -1,7 +1,6 @@
-
 import 'package:flutter/material.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/steel_bar_data.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/stirrup_distribution_data.dart';
+import 'package:meter_app/features/acero/presentation/models/steel_bar_data.dart';
+import 'package:meter_app/features/acero/presentation/models/stirrup_distribution_data.dart';
 
 class ColumnFormData {
   // Controladores de texto para datos generales

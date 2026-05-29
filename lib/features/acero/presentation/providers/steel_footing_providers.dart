@@ -1,21 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
 import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing.dart';
 import 'package:meter_app/domain/entities/home/acero/zapata/steel_footing_models.dart';
+import 'package:meter_app/core/constants/constant.dart';
 
-const uuid = Uuid();
 
-// Helper functions para cálculos
-double calcularVolumenZapata(SteelFooting footing) {
+double _calcularVolumenZapata(SteelFooting footing) {
   return footing.length * footing.width;
 }
 
-double aplicarDesperdicio(double cantidad, double factorDesperdicio) {
-  return cantidad * (1 + factorDesperdicio);
-}
 
 // ============================================================================
 // PROVIDERS PRINCIPALES
@@ -345,7 +340,7 @@ class SteelFootingResultNotifier extends Notifier<List<SteelFooting>> {
     );
 
     // Validar que la zapata tenga datos suficientes
-    final area = calcularVolumenZapata(newSteelFooting);
+    final area = _calcularVolumenZapata(newSteelFooting);
     if (area <= 0) {
       throw Exception("La zapata debe tener dimensiones válidas.");
     }
@@ -354,11 +349,11 @@ class SteelFootingResultNotifier extends Notifier<List<SteelFooting>> {
       throw Exception("Si se habilita la malla superior, debe configurar las separaciones.");
     }
 
-    state = [...state, newSteelFooting];
+    state = [newSteelFooting];
   }
 
   void addFooting(SteelFooting footing) {
-    state = [...state, footing];
+    state = [footing];
   }
 
   void updateFooting(String footingId, SteelFooting updatedFooting) {

@@ -36,7 +36,7 @@ class ContrapisoResult extends Notifier<List<Piso>> {
       throw Exception("El contrapiso debe tener largo y ancho o área definida.");
     }
 
-    state = [...state, newPiso];
+    state = [newPiso];
   }
 
   void clearList() {
@@ -179,7 +179,7 @@ ContrapisoMaterials _calcularMaterialesContrapiso(List<Piso> pisos) {
     final factores = factoresMortero[proporcion] ?? factoresMortero['5']!;
 
     // Calcular área
-    final area = _obtenerArea(piso);
+    final area = PisoService().calcularArea(piso) ?? 0.0;
     areaTotalCalculada += area;  // 🆕 Sumar área
 
     // Calcular volumen de mortero (para materiales)
@@ -206,15 +206,6 @@ ContrapisoMaterials _calcularMaterialesContrapiso(List<Piso> pisos) {
   );
 }
 
-double _obtenerArea(Piso piso) {
-  if (piso.area != null && piso.area!.isNotEmpty) {
-    return double.tryParse(piso.area!) ?? 0.0;
-  } else {
-    final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-    final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-    return largo * ancho;
-  }
-}
 
 /// Clase para almacenar materiales calculados
 class ContrapisoMaterials {

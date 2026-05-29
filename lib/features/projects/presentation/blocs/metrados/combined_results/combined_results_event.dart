@@ -30,10 +30,12 @@ class GenerateCombinedPdfEvent extends CombinedResultsEvent {
 class ShareCombinedResultsEvent extends CombinedResultsEvent {
   final ShareFormat format;
   final String? nombreUsuario;
+  final Rect? sharePositionOrigin;
 
   ShareCombinedResultsEvent({
     required this.format,
     this.nombreUsuario,
+    this.sharePositionOrigin,
   });
 }
 

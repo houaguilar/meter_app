@@ -8,6 +8,7 @@ import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_derrame_providers.dart';
 import 'package:meter_app/core/utils/number_formatter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
@@ -977,6 +978,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
       final result = await Share.shareXFiles(
         [XFile(pdfFile.path)],
         subject: 'Resultados de Tarrajeo Derrame',
+        sharePositionOrigin: ShareUtils.getOrigin(context),
       );
 
       if (result.status == ShareResultStatus.success) {
@@ -1007,7 +1009,7 @@ class _ResultTarrajeoDerrameScreenState extends ConsumerState<ResultTarrajeoDerr
 Calculado con MetraShop 📱
       ''';
 
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorMessage('Error al compartir: ${e.toString()}');
     }
@@ -1037,7 +1039,10 @@ Calculado con MetraShop 📱
         _showSuccessMessage('PDF generado exitosamente');
 
         // Compartir PDF
-        final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+        final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        sharePositionOrigin: ShareUtils.getOrigin(context),
+      );
 
         if (result.status == ShareResultStatus.success) {
           _showSuccessMessage('PDF compartido exitosamente');

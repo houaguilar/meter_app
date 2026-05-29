@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:meter_app/core/theme/theme.dart';
-import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/services/unified_results_combiner.dart';
 import 'package:meter_app/features/projects/presentation/screens/combined/widgets/material_helpers.dart';
 
 /// Redondea un número hacia arriba con la cantidad de decimales especificada
@@ -56,7 +56,7 @@ class MaterialCard extends StatelessWidget {
               children: [
                 _buildHeader(),
                 const SizedBox(height: 12),
-                if (material.contributions.length > 1) _buildContributions(),
+                if (material.contributions.isNotEmpty) _buildContributions(),
               ],
             ),
           ),

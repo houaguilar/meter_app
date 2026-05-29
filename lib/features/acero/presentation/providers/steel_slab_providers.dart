@@ -1,11 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/mesh_enums.dart';
 import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/losa_maciza/steel_slab_models.dart';
+import 'package:meter_app/core/constants/constant.dart';
 
-const uuid = Uuid();
 
 // ============================================================================
 // PROVIDERS PRINCIPALES
@@ -75,29 +76,71 @@ final calculateConsolidatedSlabSteelProvider = Provider<ConsolidatedSteelSlabRes
 SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
   final Map<String, double> totalesPorDiametro = {};
 
-  // **CÁLCULO DE BARRAS DE MALLA** - Ahora usando slab.meshBars directamente
-  for (final meshBar in slab.meshBars) {
-    double longitudTotal = 0;
-
-    // Calcular longitud según dirección
-    if (meshBar.direction == MeshDirection.horizontal) {
-      // Cantidad de barras: ancho / separación + 1
-      final cantidad = ((slab.width / meshBar.separation) + 1).floor();
-      // Longitud por barra: largo + 2*doblez
-      final longitudPorBarra = slab.length + (2 * slab.bendLength);
-      longitudTotal = slab.elements * cantidad * longitudPorBarra;
-    } else {
-      // Vertical
-      // Cantidad de barras: largo / separación + 1
-      final cantidad = ((slab.length / meshBar.separation) + 1).floor();
-      // Longitud por barra: ancho + 2*doblez
-      final longitudPorBarra = slab.width + (2 * slab.bendLength);
-      longitudTotal = slab.elements * cantidad * longitudPorBarra;
+  // Calcula los detalles de una dirección de malla y acumula el total por diámetro
+  SlabDirectionCalculation _buildDirection(SteelMeshBarEmbedded? bar, MeshDirection dir) {
+    if (bar == null || bar.diameter.isEmpty || bar.separation <= 0) {
+      return const SlabDirectionCalculation(
+        diameter: '', separation: 0, quantity: 0,
+        lengthPerBar: 0, totalLength: 0, weight: 0,
+      );
     }
+    final int quantity;
+    final double lengthPerBar;
+    if (dir == MeshDirection.horizontal) {
+      quantity = ((slab.width / bar.separation) + 1).floor();
+      lengthPerBar = slab.length + (2 * slab.bendLength);
+    } else {
+      quantity = ((slab.length / bar.separation) + 1).floor();
+      lengthPerBar = slab.width + (2 * slab.bendLength);
+    }
+    final totalLength = slab.elements * quantity * lengthPerBar;
+    final weightPerMeter = SteelConstants.steelWeights[bar.diameter] ?? 0.0;
+    final weight = totalLength * weightPerMeter;
+    totalesPorDiametro[bar.diameter] =
+        (totalesPorDiametro[bar.diameter] ?? 0.0) + totalLength;
+    return SlabDirectionCalculation(
+      diameter: bar.diameter,
+      separation: bar.separation,
+      quantity: quantity,
+      lengthPerBar: lengthPerBar,
+      totalLength: totalLength,
+      weight: weight,
+    );
+  }
 
-    // Agregar al total por diámetro
-    totalesPorDiametro[meshBar.diameter] =
-        (totalesPorDiametro[meshBar.diameter] ?? 0.0) + longitudTotal;
+  // **CÁLCULO DE MALLA INFERIOR** (siempre presente)
+  final inferiorH = slab.meshBars
+      .where((b) => b.meshType == MeshType.inferior && b.direction == MeshDirection.horizontal)
+      .firstOrNull;
+  final inferiorV = slab.meshBars
+      .where((b) => b.meshType == MeshType.inferior && b.direction == MeshDirection.vertical)
+      .firstOrNull;
+  final inferiorHCalc = _buildDirection(inferiorH, MeshDirection.horizontal);
+  final inferiorVCalc = _buildDirection(inferiorV, MeshDirection.vertical);
+  final inferiorMesh = SlabMeshCalculation(
+    type: MeshType.inferior,
+    horizontal: inferiorHCalc,
+    vertical: inferiorVCalc,
+    totalWeight: inferiorHCalc.weight + inferiorVCalc.weight,
+  );
+
+  // **CÁLCULO DE MALLA SUPERIOR** (opcional)
+  SlabMeshCalculation? superiorMesh;
+  if (slab.superiorMeshConfig.enabled) {
+    final superiorH = slab.meshBars
+        .where((b) => b.meshType == MeshType.superior && b.direction == MeshDirection.horizontal)
+        .firstOrNull;
+    final superiorV = slab.meshBars
+        .where((b) => b.meshType == MeshType.superior && b.direction == MeshDirection.vertical)
+        .firstOrNull;
+    final superiorHCalc = _buildDirection(superiorH, MeshDirection.horizontal);
+    final superiorVCalc = _buildDirection(superiorV, MeshDirection.vertical);
+    superiorMesh = SlabMeshCalculation(
+      type: MeshType.superior,
+      horizontal: superiorHCalc,
+      vertical: superiorVCalc,
+      totalWeight: superiorHCalc.weight + superiorVCalc.weight,
+    );
   }
 
   // **CÁLCULO DE TOTALES CON DESPERDICIO**
@@ -134,7 +177,8 @@ SteelSlabCalculationResult _calculateSteelForSlab(SteelSlab slab) {
     wireWeight: alambreKg,
     materials: materials,
     totalsByDiameter: totalesPorDiametro,
-    hasSuperiorMesh: slab.superiorMeshConfig.enabled,
+    inferiorMesh: inferiorMesh,
+    superiorMesh: superiorMesh,
   );
 }
 
@@ -170,11 +214,11 @@ class SteelSlabResultNotifier extends Notifier<List<SteelSlab>> {
       updatedAt: DateTime.now(),
     );
 
-    state = [...state, newSteelSlab];
+    state = [newSteelSlab];
   }
 
   void addSlab(SteelSlab slab) {
-    state = [...state, slab];
+    state = [slab];
   }
 
   void updateSlab(int index, SteelSlab updatedSlab) {
@@ -206,7 +250,7 @@ final consolidatedSlabSummaryProvider = Provider<String>((ref) {
   String summary = "=== RESUMEN CONSOLIDADO DE ACERO EN LOSAS ===\n\n";
 
   summary += "📊 RESULTADOS GENERALES:\n";
-  summary += "• Número de losas: ${result.numberOfSlabs}\n";
+  summary += "• Número de losas: ${result.numberOfElements}\n";
   summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
   summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n\n";
 
@@ -255,58 +299,10 @@ final quickSlabStatsProvider = Provider<Map<String, dynamic>>((ref) {
   }
 
   return {
-    'totalSlabs': result.numberOfSlabs,
+    'totalSlabs': result.numberOfElements,
     'totalWeight': result.totalWeight,
     'totalWire': result.totalWire,
   };
 });
 
 // ============================================================================
-// CLASES DE DATOS PARA RESULTADOS
-// ============================================================================
-
-class MaterialQuantity {
-  final double quantity;
-  final String unit;
-
-  const MaterialQuantity({
-    required this.quantity,
-    required this.unit,
-  });
-}
-
-class SteelSlabCalculationResult {
-  final String slabId;
-  final String description;
-  final double totalWeight;
-  final double wireWeight;
-  final Map<String, MaterialQuantity> materials;
-  final Map<String, double> totalsByDiameter;
-  final bool hasSuperiorMesh;
-
-  const SteelSlabCalculationResult({
-    required this.slabId,
-    required this.description,
-    required this.totalWeight,
-    required this.wireWeight,
-    required this.materials,
-    required this.totalsByDiameter,
-    required this.hasSuperiorMesh,
-  });
-}
-
-class ConsolidatedSteelSlabResult {
-  final int numberOfSlabs;
-  final double totalWeight;
-  final double totalWire;
-  final List<SteelSlabCalculationResult> slabResults;
-  final Map<String, MaterialQuantity> consolidatedMaterials;
-
-  const ConsolidatedSteelSlabResult({
-    required this.numberOfSlabs,
-    required this.totalWeight,
-    required this.totalWire,
-    required this.slabResults,
-    required this.consolidatedMaterials,
-  });
-}

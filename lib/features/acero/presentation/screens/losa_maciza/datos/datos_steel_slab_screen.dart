@@ -14,10 +14,10 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/acero/presentation/providers/steel_slab_providers.dart';
 import 'package:meter_app/core/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/core/widgets/modern_widgets.dart';
-import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:meter_app/core/tutorial/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_floating_action_button.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/slab_text_form_field.dart';
-import 'package:meter_app/features/acero/presentation/screens/losa_maciza/datos/models/slab_form_data.dart';
+import 'package:meter_app/features/acero/presentation/models/slab_form_data.dart';
 
 class DatosSteelSlabScreen extends ConsumerStatefulWidget {
   const DatosSteelSlabScreen({super.key});

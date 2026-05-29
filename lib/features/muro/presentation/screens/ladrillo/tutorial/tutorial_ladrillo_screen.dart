@@ -8,7 +8,7 @@ import 'package:meter_app/core/widgets/shared/info_box.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/tutorial/tutorial_step.dart';
-import 'package:meter_app/features/tutorial/presentation/blocs/tutorial_bloc.dart';
+import 'package:meter_app/core/tutorial/blocs/tutorial_bloc.dart';
 
 
 class TutorialOverlay extends StatelessWidget {

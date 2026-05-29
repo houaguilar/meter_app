@@ -5,7 +5,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/features/acero/presentation/screens/columna/datos/models/column_form_data.dart';
+import 'package:meter_app/features/acero/presentation/models/column_form_data.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/modern_steel_text_form_field.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
@@ -15,7 +15,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/acero/presentation/providers/steel_column_providers.dart';
 import 'package:meter_app/core/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/core/widgets/modern_widgets.dart';
-import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:meter_app/core/tutorial/widgets/tutorial_overlay.dart';
 import 'package:meter_app/core/widgets/widgets.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_steel_bars_widget.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_stirrup_distributions_widget.dart';

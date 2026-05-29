@@ -6,11 +6,12 @@ import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/estructuras/structural_element.dart';
 import 'package:meter_app/features/estructuras/presentation/providers/structural_element_providers.dart';
-import 'package:meter_app/core/widgets/cards/generic_item_card.dart';
-import 'package:meter_app/core/widgets/core/generic_module_config.dart';
 import 'package:meter_app/core/widgets/dialogs/unified_feature_disabled_dialog.dart';
-import 'package:meter_app/core/widgets/shared/responsive_grid_builder.dart';
 import 'package:meter_app/core/widgets/widgets.dart';
+import 'package:meter_app/features/estructuras/presentation/widgets/structural_element_widgets.dart';
+
+import '../../../../core/widgets/core/generic_module_config.dart';
+import '../../../../core/widgets/shared/responsive_grid_builder.dart';
 
 class StructuralElementScreen extends ConsumerStatefulWidget {
   const StructuralElementScreen({super.key});
@@ -243,121 +244,3 @@ class _StructuralElementScreenState extends ConsumerState<StructuralElementScree
   }
 }
 
-/// Factory method para StructuralElementCard usando GenericItemCard
-class StructuralElementCard extends StatelessWidget {
-  final StructuralElement structuralElement;
-  final VoidCallback onTap;
-  final bool enabled;
-
-  const StructuralElementCard({
-    super.key,
-    required this.structuralElement,
-    required this.onTap,
-    this.enabled = true,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GenericItemCard<StructuralElement>(
-      item: structuralElement,
-      onTap: onTap,
-      getId: (item) => item.id,
-      getName: (item) => item.name,
-      getImage: (item) => item.image,
-      imageType: ImageType.svg,
-      primaryColor: AppColors.primary,
-    );
-  }
-}
-
-/// GridBuilder específico para elementos estructurales
-class StructuralElementGridBuilder<T> extends StatelessWidget {
-  final AsyncValue<List<T>> asyncValue;
-  final Widget Function(T element, int index) itemBuilder;
-  final VoidCallback? onRetry;
-  final Widget? header;
-
-  const StructuralElementGridBuilder({
-    super.key,
-    required this.asyncValue,
-    required this.itemBuilder,
-    this.onRetry,
-    this.header,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ResponsiveGridBuilder<T>(
-      asyncValue: asyncValue,
-      itemBuilder: itemBuilder,
-      moduleConfig: GenericModuleConfig.structuralModuleConfig,
-      loadingText: 'Cargando elementos estructurales...',
-      emptyText: 'No hay elementos estructurales disponibles',
-      errorText: 'Error al cargar elementos estructurales',
-      onRetry: onRetry,
-      header: header,
-    );
-  }
-}
-
-/// Factory method para mostrar elementos estructurales no disponibles
-void showStructuralElementNotAvailable(
-    BuildContext context, {
-      required String elementName,
-      String? customMessage,
-      VoidCallback? onContactSupport,
-    }) {
-  context.showFeatureDisabledDialog(
-    title: '$elementName no disponible',
-    message: customMessage ??
-        'Este elemento estructural está en desarrollo y estará disponible próximamente.',
-    featureType: FeatureType.structural,
-    onContactSupport: onContactSupport,
-  );
-}
-
-/// Widget de debug para mostrar información del elemento seleccionado
-class SelectedStructuralElementInfo extends ConsumerWidget {
-  const SelectedStructuralElementInfo({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selectedElement = ref.watch(selectedStructuralElementProvider);
-    final tipoElemento = ref.watch(tipoStructuralElementProvider);
-
-    // Debug widget para mostrar el estado actual
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'DEBUG INFO:',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: AppColors.error,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text('Elemento seleccionado: ${selectedElement?.name ?? 'Ninguno'}'),
-          Text('ID del elemento: ${selectedElement?.id ?? 'N/A'}'),
-          Text('Tipo en provider: $tipoElemento'),
-          const SizedBox(height: 8),
-          if (selectedElement != null)
-            ElevatedButton(
-              onPressed: () {
-              },
-              child: const Text('Debug Print'),
-            ),
-        ],
-      ),
-    );
-  }
-}

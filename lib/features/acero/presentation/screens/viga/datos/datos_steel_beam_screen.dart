@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/beam_form_data.dart';
+import 'package:meter_app/features/acero/presentation/models/beam_form_data.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/modern_steel_text_form_field.dart';
 import 'package:uuid/uuid.dart';
 
@@ -15,7 +15,7 @@ import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/acero/presentation/providers/steel_beam_providers.dart';
 import 'package:meter_app/core/widgets/dialogs/confirm_dialog.dart';
 import 'package:meter_app/core/widgets/modern_widgets.dart';
-import 'package:meter_app/features/tutorial/presentation/widgets/tutorial_overlay.dart';
+import 'package:meter_app/core/tutorial/widgets/tutorial_overlay.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_steel_bars_widget.dart';
 import 'package:meter_app/features/acero/presentation/screens/widgets/dynamic_stirrup_distributions_widget.dart';
 

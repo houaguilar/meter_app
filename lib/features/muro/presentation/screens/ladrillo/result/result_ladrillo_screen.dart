@@ -9,6 +9,7 @@ import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/core/utils/number_formatter.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
@@ -746,7 +747,10 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
         ref,
         nombreUsuario: nombreUsuario,
       );
-      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        sharePositionOrigin: ShareUtils.getOrigin(context),
+      );
 
       if (result.status == ShareResultStatus.success) {
         _showSuccessSnackBar('PDF compartido exitosamente');
@@ -770,7 +774,7 @@ class _ResultLadrilloScreenState extends ConsumerState<ResultLadrilloScreen>
       final shareText = materials.toShareString(datosMetrado) +
           materials.getConfigInfo(ladrillos);
 
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorSnackBar('Error al compartir: $e');
     }

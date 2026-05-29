@@ -109,7 +109,7 @@ class LosaResult extends Notifier<List<Losa>> {
       throw Exception(error);
     }
 
-    state = [...state, newLosa];
+    state = [newLosa];
   }
 
   /// Limpia la lista de losas
@@ -154,6 +154,12 @@ final areaLosasProvider = Provider<List<double>>((ref) {
 final descriptionLosasProvider = Provider<List<String>>((ref) {
   final losas = ref.watch(losaResultProvider);
   return losas.map((e) => e.description).toList();
+});
+
+/// Provider que calcula el área total de todas las losas
+final areaTotalLosasProvider = Provider<double>((ref) {
+  final areas = ref.watch(areaLosasProvider);
+  return areas.fold(0.0, (sum, area) => sum + area);
 });
 
 /// Provider que genera texto para compartir con datos de metrado

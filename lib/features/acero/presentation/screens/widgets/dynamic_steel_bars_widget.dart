@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/beam_form_data.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/steel_bar_data.dart';
+import 'package:meter_app/features/acero/presentation/models/steel_bar_data.dart';
 
 class DynamicSteelBarsWidget extends StatefulWidget {
   final List<SteelBarData> steelBars;

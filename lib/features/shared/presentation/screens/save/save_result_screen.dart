@@ -29,7 +29,6 @@ import 'package:meter_app/features/muro/presentation/providers/ladrillo_provider
 import 'package:meter_app/features/pisos/presentation/providers/falso_piso_providers.dart';
 import 'package:meter_app/features/pisos/presentation/providers/contrapiso_providers.dart';
 import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_providers.dart';
-import 'package:meter_app/features/losas/presentation/providers/losa_providers.dart';
 import 'package:meter_app/features/estructuras/presentation/providers/structural_element_providers.dart';
 
 class SaveResultScreen extends ConsumerStatefulWidget {
@@ -639,6 +638,25 @@ class _SaveResultScreenState extends ConsumerState<SaveResultScreen> {
   }
 
   // Manejadores de estado
+
+  void _clearAllResultProviders() {
+    ref.invalidate(ladrilloResultProvider);
+    ref.invalidate(falsoPisoResultProvider);
+    ref.invalidate(contrapisoResultProvider);
+    ref.invalidate(tarrajeoResultProvider);
+    ref.invalidate(tarrajeoDerrameResultProvider);
+    ref.invalidate(losaResultProvider);
+    ref.invalidate(columnaResultProvider);
+    ref.invalidate(vigaResultProvider);
+    ref.invalidate(sobrecimientoResultProvider);
+    ref.invalidate(cimientoCorridoResultProvider);
+    ref.invalidate(soladoResultProvider);
+    ref.invalidate(zapataResultProvider);
+    ref.invalidate(steelColumnResultProvider);
+    ref.invalidate(steelBeamResultProvider);
+    ref.invalidate(steelSlabResultProvider);
+    ref.invalidate(steelFootingResultProvider);
+  }
 
   void _handleResultState(BuildContext context, ResultState state) {
 

@@ -36,7 +36,7 @@ class FalsoPisoResult extends Notifier<List<Piso>> {
       throw Exception("El falso piso debe tener largo y ancho o área definida.");
     }
 
-    state = [...state, newPiso];
+    state = [newPiso];
   }
 
   void clearList() {
@@ -190,7 +190,7 @@ FalsoPisoMaterials _calcularMaterialesFalsoPiso(List<Piso> pisos) {
     final factores = factoresConcreto[resistenciaStr] ?? factoresConcreto['175']!;
 
     // Calcular área
-    final area = _obtenerAreaFalsoPiso(piso);
+    final area = PisoService().calcularArea(piso) ?? 0.0;
     areaTotalCalculada += area;  // 🆕 SUMA área total
 
     // Calcular volumen de concreto
@@ -235,15 +235,6 @@ String _extractResistenciaValue(String resistencia) {
   return valor;
 }
 
-double _obtenerAreaFalsoPiso(Piso piso) {
-  if (piso.area != null && piso.area!.isNotEmpty) {
-    return double.tryParse(piso.area!) ?? 0.0;
-  } else {
-    final largo = double.tryParse(piso.largo ?? '') ?? 0.0;
-    final ancho = double.tryParse(piso.ancho ?? '') ?? 0.0;
-    return largo * ancho;
-  }
-}
 
 /// Clase para almacenar materiales calculados de falso piso
 class FalsoPisoMaterials {

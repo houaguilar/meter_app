@@ -1,11 +1,12 @@
 // lib/presentation/providers/home/acero/viga/steel_beam_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
-import 'package:uuid/uuid.dart';
 
 import 'package:meter_app/domain/entities/home/acero/viga/steel_beam.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/viga/steel_beam_models.dart';
+import 'package:meter_app/core/constants/constant.dart';
 
-const uuid = Uuid();
 
 // ============================================================================
 // PROVIDERS PRINCIPALES
@@ -224,11 +225,11 @@ class SteelBeamResultNotifier extends Notifier<List<SteelBeam>> {
       updatedAt: DateTime.now(),
     );
 
-    state = [...state, newBeam];
+    state = [newBeam];
   }
 
   void addBeam(SteelBeam beam) {
-    state = [...state, beam];
+    state = [beam];
   }
 
   void updateBeam(int index, SteelBeam updatedBeam) {
@@ -260,7 +261,7 @@ final consolidatedSummaryProvider = Provider<String>((ref) {
   String summary = "=== RESUMEN CONSOLIDADO DE ACERO ===\n\n";
 
   summary += "📊 RESULTADOS GENERALES:\n";
-  summary += "• Número de vigas: ${result.numberOfBeams}\n";
+  summary += "• Número de vigas: ${result.numberOfElements}\n";
   summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
   summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n";
   summary += "• Total de estribos: ${result.totalStirrups}\n\n";
@@ -309,7 +310,7 @@ final quickStatsProvider = Provider<Map<String, dynamic>>((ref) {
   }
 
   return {
-    'totalBeams': result.numberOfBeams,
+    'totalBeams': result.numberOfElements,
     'totalWeight': result.totalWeight,
     'totalWire': result.totalWire,
     'totalStirrups': result.totalStirrups,
@@ -317,55 +318,3 @@ final quickStatsProvider = Provider<Map<String, dynamic>>((ref) {
 });
 
 // ============================================================================
-// CLASES DE DATOS PARA RESULTADOS
-// ============================================================================
-
-class MaterialQuantity {
-  final double quantity;
-  final String unit;
-
-  const MaterialQuantity({
-    required this.quantity,
-    required this.unit,
-  });
-}
-
-class SteelBeamCalculationResult {
-  final String beamId;
-  final String description;
-  final double totalWeight;
-  final double wireWeight;
-  final int totalStirrups;
-  final double stirrupPerimeter;
-  final Map<String, MaterialQuantity> materials;
-  final Map<String, double> totalsByDiameter;
-
-  const SteelBeamCalculationResult({
-    required this.beamId,
-    required this.description,
-    required this.totalWeight,
-    required this.wireWeight,
-    required this.totalStirrups,
-    required this.stirrupPerimeter,
-    required this.materials,
-    required this.totalsByDiameter,
-  });
-}
-
-class ConsolidatedBeamSteelResult {
-  final int numberOfBeams;
-  final double totalWeight;
-  final double totalWire;
-  final int totalStirrups;
-  final List<SteelBeamCalculationResult> beamResults;
-  final Map<String, MaterialQuantity> consolidatedMaterials;
-
-  const ConsolidatedBeamSteelResult({
-    required this.numberOfBeams,
-    required this.totalWeight,
-    required this.totalWire,
-    required this.totalStirrups,
-    required this.beamResults,
-    required this.consolidatedMaterials,
-  });
-}

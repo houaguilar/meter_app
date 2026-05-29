@@ -1,8 +1,9 @@
 import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
-import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/services/unified_results_combiner.dart';
 
 /// Servicio para compartir resultados combinados en diferentes formatos
 class CombinedResultsShareService {
@@ -11,6 +12,7 @@ class CombinedResultsShareService {
   static Future<bool> sharePdf(
     CombinedCalculationResult result, {
     String? nombreUsuario,
+    Rect? sharePositionOrigin,
   }) async {
     try {
       final file = await _generatePdf(result, nombreUsuario: nombreUsuario);
@@ -19,6 +21,7 @@ class CombinedResultsShareService {
         [XFile(file.path)],
         subject: 'Resultados Combinados - ${result.projectName}',
         text: 'Resultados combinados de ${result.metradoCount} metrados',
+        sharePositionOrigin: sharePositionOrigin,
       );
       return shareResult.status == ShareResultStatus.success;
     } catch (e) {
@@ -28,12 +31,16 @@ class CombinedResultsShareService {
 
   /// Genera y comparte un texto con los resultados combinados.
   /// Retorna true si el usuario completó la acción de compartir.
-  static Future<bool> shareText(CombinedCalculationResult result) async {
+  static Future<bool> shareText(
+    CombinedCalculationResult result, {
+    Rect? sharePositionOrigin,
+  }) async {
     try {
       final text = _generateText(result);
       final shareResult = await Share.share(
         text,
         subject: 'Resultados Combinados - ${result.projectName}',
+        sharePositionOrigin: sharePositionOrigin,
       );
       return shareResult.status == ShareResultStatus.success;
     } catch (e) {

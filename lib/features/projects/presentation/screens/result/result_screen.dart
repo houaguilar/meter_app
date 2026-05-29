@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/utils/error_handler.dart';
 import 'package:meter_app/core/utils/pdf/pdf_generator.dart';
-import 'package:meter_app/core/services/UnifiedMaterialsCalculator.dart';
+import 'package:meter_app/core/services/unified_materials_calculator.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/features/projects/presentation/blocs/metrados/result/result_bloc.dart';
@@ -864,7 +865,7 @@ class _ResultScreenState extends State<ResultScreen>
       if (result.hasError) return;
 
       final shareText = _generateShareText(result);
-      await Share.share(shareText, subject: 'Resultados de MetraShop');
+      await Share.share(shareText, subject: 'Resultados de MetraShop', sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _handleError('Error al compartir: $e');
     }
@@ -906,7 +907,7 @@ class _ResultScreenState extends State<ResultScreen>
         Navigator.of(context).pop(); // Cerrar indicador de carga
         await Future.delayed(const Duration(milliseconds: 350));
         if (!mounted) return;
-        await Share.shareXFiles([XFile(file.path)], text: 'Resultados de MetraShop');
+        await Share.shareXFiles([XFile(file.path)], text: 'Resultados de MetraShop', sharePositionOrigin: ShareUtils.getOrigin(context));
       }
     } catch (e) {
       if (mounted) {

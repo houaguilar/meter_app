@@ -1,7 +1,6 @@
-// lib/presentation/screens/home/acero/viga/datos/models/beam_form_data.dart
 import 'package:flutter/material.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/steel_bar_data.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/stirrup_distribution_data.dart';
+import 'package:meter_app/features/acero/presentation/models/steel_bar_data.dart';
+import 'package:meter_app/features/acero/presentation/models/stirrup_distribution_data.dart';
 
 // Modelo para los datos del formulario de una viga
 class BeamFormData {

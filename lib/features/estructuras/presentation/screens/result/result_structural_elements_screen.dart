@@ -10,6 +10,7 @@ import 'package:meter_app/core/utils/number_formatter.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
@@ -905,6 +906,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       await Share.shareXFiles(
         [xFile],
         text: 'Resultados del metrado de elementos estructurales - METRASHOP',
+        sharePositionOrigin: ShareUtils.getOrigin(context),
       );
     } catch (e) {
       context.hideLoader();
@@ -918,7 +920,7 @@ class _ResultStructuralElementsScreenState extends ConsumerState<ResultStructura
       await Future.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
       final shareText = _generateShareText();
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorMessage('Error al compartir: $e');
     }

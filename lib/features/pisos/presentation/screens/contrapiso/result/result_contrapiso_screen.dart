@@ -7,6 +7,7 @@ import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/features/pisos/presentation/providers/contrapiso_providers.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/entities.dart';
@@ -672,7 +673,10 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
         ref,
         nombreUsuario: nombreUsuario,
       );
-      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        sharePositionOrigin: ShareUtils.getOrigin(context),
+      );
 
       if (result.status == ShareResultStatus.success) {
         _showSuccessSnackBar('PDF compartido exitosamente');
@@ -695,7 +699,7 @@ class _ResultContrapisoScreenState extends ConsumerState<ResultContrapisoScreen>
 
       final shareText = _buildShareText(materials, datosMetrado, pisos);
 
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorSnackBar('Error al compartir: $e');
     }

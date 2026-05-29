@@ -21,16 +21,9 @@ final List<SteelElement> _steelElements = [
     image: AppImages.zapataAceroImg,
     details: 'Cálculo de materiales de acero para zapatas.',
   ),
-  /*SteelElement(
-    id: '4',
-    name: 'Acero en Losa Maciza',
-    image: AppImages.concretoImg,
-    details: 'Cálculo de materiales de acero para losa maciza.',
-  ),*/
 ];
 
 final steelElementsProvider = FutureProvider<List<SteelElement>>((ref) async {
-  await Future.delayed(const Duration(milliseconds: 100));
   return _steelElements;
 });
 

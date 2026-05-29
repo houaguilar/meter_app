@@ -7,6 +7,7 @@ import 'package:meter_app/core/utils/calculation_loader_extensions.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/features/tarrajeo/presentation/providers/tarrajeo_providers.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
@@ -702,7 +703,10 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
         ref,
         nombreUsuario: nombreUsuario,
       );
-      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        sharePositionOrigin: ShareUtils.getOrigin(context),
+      );
 
       if (result.status == ShareResultStatus.success) {
         _showSuccessMessage('PDF compartido exitosamente');
@@ -720,7 +724,7 @@ class _ResultTarrajeoScreenState extends ConsumerState<ResultTarrajeoScreen>
       await Future.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
       final resumen = ref.read(resumenCompletoProvider);
-      await Share.share(resumen, subject: 'Resultados de Tarrajeo');
+      await Share.share(resumen, subject: 'Resultados de Tarrajeo', sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorMessage('Error al compartir texto: $e');
     }

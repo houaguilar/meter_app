@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:meter_app/domain/entities/home/acero/columna/steel_column.dart';
 import 'package:meter_app/domain/entities/home/acero/steel_constants.dart';
+import 'package:meter_app/domain/entities/home/acero/steel_base_models.dart';
+import 'package:meter_app/domain/entities/home/acero/columna/steel_column_models.dart';
 
 // ============================================================================
 // PROVIDERS PRINCIPALES
@@ -60,7 +62,7 @@ final calculateConsolidatedColumnSteelProvider = Provider<ConsolidatedColumnStee
     numberOfColumns: columns.length,
     totalWeight: totalWeight,
     totalWire: totalWire,
-    totalStirrups: totalStirrups,
+    totalStirrups: totalStirrups.toInt(),
     columnResults: columnResults,
     consolidatedMaterials: consolidatedMaterials,
   );
@@ -186,7 +188,7 @@ class SteelColumnResultNotifier extends Notifier<List<SteelColumn>> {
   List<SteelColumn> build() => [];
 
   void addColumn(SteelColumn column) {
-    state = [...state, column];
+    state = [column];
   }
 
   void updateColumn(int index, SteelColumn updatedColumn) {
@@ -218,7 +220,7 @@ final consolidatedColumnSummaryProvider = Provider<String>((ref) {
   String summary = "=== RESUMEN CONSOLIDADO DE ACERO EN COLUMNAS ===\n\n";
 
   summary += "📊 RESULTADOS GENERALES:\n";
-  summary += "• Número de columnas: ${result.numberOfColumns}\n";
+  summary += "• Número de columnas: ${result.numberOfElements}\n";
   summary += "• Peso total de acero: ${result.totalWeight.toStringAsFixed(1)} kg\n";
   summary += "• Alambre #16: ${result.totalWire.toStringAsFixed(1)} kg\n";
   summary += "• Total de estribos: ${result.totalStirrups}\n\n";
@@ -270,7 +272,7 @@ final quickStatsColumnProvider = Provider<Map<String, dynamic>>((ref) {
   }
 
   return {
-    'totalColumns': result.numberOfColumns,
+    'totalColumns': result.numberOfElements,
     'totalWeight': result.totalWeight,
     'totalWire': result.totalWire,
     'totalStirrups': result.totalStirrups,
@@ -296,57 +298,3 @@ final clearAllColumnDataProvider = Provider<void Function()>((ref) {
 });
 
 // ============================================================================
-// CLASES DE DATOS PARA RESULTADOS
-// ============================================================================
-
-class MaterialQuantity {
-  final double quantity;
-  final String unit;
-
-  const MaterialQuantity({
-    required this.quantity,
-    required this.unit,
-  });
-}
-
-class SteelColumnCalculationResult {
-  final String columnId;
-  final String description;
-  final double totalWeight;
-  final double wireWeight;
-  final double totalStirrups;
-  final double stirrupPerimeter;
-  final Map<String, MaterialQuantity> materials;
-  final Map<String, double> totalsByDiameter;
-  final bool hasFooting;
-
-  const SteelColumnCalculationResult({
-    required this.columnId,
-    required this.description,
-    required this.totalWeight,
-    required this.wireWeight,
-    required this.totalStirrups,
-    required this.stirrupPerimeter,
-    required this.materials,
-    required this.totalsByDiameter,
-    required this.hasFooting,
-  });
-}
-
-class ConsolidatedColumnSteelResult {
-  final int numberOfColumns;
-  final double totalWeight;
-  final double totalWire;
-  final double totalStirrups;
-  final List<SteelColumnCalculationResult> columnResults;
-  final Map<String, MaterialQuantity> consolidatedMaterials;
-
-  const ConsolidatedColumnSteelResult({
-    required this.numberOfColumns,
-    required this.totalWeight,
-    required this.totalWire,
-    required this.totalStirrups,
-    required this.columnResults,
-    required this.consolidatedMaterials,
-  });
-}

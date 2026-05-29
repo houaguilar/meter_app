@@ -10,10 +10,10 @@ import 'package:meter_app/core/utils/number_formatter.dart';
 import 'package:meter_app/core/utils/pdf/pdf_factory.dart';
 import 'package:meter_app/core/assets/app_icons.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:meter_app/core/utils/share_utils.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
 import 'package:meter_app/domain/entities/home/losas/losa.dart';
-import 'package:meter_app/features/losas/domain/services/losa_service.dart';
 import 'package:meter_app/features/perfil/presentation/blocs/profile_bloc.dart';
 import 'package:meter_app/features/losas/presentation/providers/losa_providers.dart';
 import 'package:meter_app/core/widgets/widgets.dart';
@@ -409,7 +409,8 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
   }
 
   Widget _buildDataTable(List<Losa> losas) {
-    final areaTotal = _calcularAreaTotal(losas);
+    final areas = ref.watch(areaLosasProvider);
+    final areaTotal = ref.watch(areaTotalLosasProvider);
 
     return Table(
       columnWidths: const {
@@ -419,10 +420,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       },
       children: [
         _buildTableRow(['Descripción', 'Und.', 'Área'], isHeader: true),
-        ...losas.map((losa) {
-          final area = _calcularAreaLosa(losa);
+        ...losas.asMap().entries.map((entry) {
+          final area = entry.key < areas.length ? areas[entry.key] : 0.0;
           return _buildTableRow([
-            losa.description,
+            entry.value.description,
             'm²',
             area.toStringAsFixed(2),
           ]);
@@ -594,20 +595,6 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
         ),
       ),
     );
-  }
-
-  // Métodos auxiliares
-  double _calcularAreaTotal(List<Losa> losas) {
-    double total = 0.0;
-    for (var losa in losas) {
-      total += _calcularAreaLosa(losa);
-    }
-    return total;
-  }
-
-  double _calcularAreaLosa(Losa losa) {
-    final service = LosaService(losa.tipoLosa);
-    return service.calcularArea(losa);
   }
 
   void _handleSaveAction() {
@@ -785,7 +772,10 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       context.hideLoader();
 
       // Compartir PDF
-      final result = await Share.shareXFiles([XFile(pdfFile.path)]);
+      final result = await Share.shareXFiles(
+        [XFile(pdfFile.path)],
+        sharePositionOrigin: ShareUtils.getOrigin(context),
+      );
 
       if (result.status == ShareResultStatus.success) {
         _showSuccessSnackBar('PDF compartido exitosamente');
@@ -804,7 +794,7 @@ class _ResultLosaScreenState extends ConsumerState<ResultLosaScreen>
       await Future.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
       final shareText = _generateShareText();
-      await Share.share(shareText);
+      await Share.share(shareText, sharePositionOrigin: ShareUtils.getOrigin(context));
     } catch (e) {
       _showErrorSnackBar('Error al compartir: $e');
     }

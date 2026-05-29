@@ -2,8 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:meter_app/core/theme/theme.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/beam_form_data.dart';
-import 'package:meter_app/features/acero/presentation/screens/viga/datos/models/stirrup_distribution_data.dart';
+import 'package:meter_app/features/acero/presentation/models/stirrup_distribution_data.dart';
 
 class DynamicStirrupDistributionsWidget extends StatefulWidget {
   final List<StirrupDistributionData> stirrupDistributions;

@@ -1,9 +1,10 @@
 // lib/presentation/blocs/projects/metrados/combined_results/combined_results_bloc.dart
 
 import 'package:bloc/bloc.dart';
+import 'package:flutter/widgets.dart';
 import 'package:meta/meta.dart';
 
-import 'package:meter_app/core/services/UnifiedResultsCombiner.dart';
+import 'package:meter_app/core/services/unified_results_combiner.dart';
 import 'package:meter_app/features/projects/presentation/services/combined_results_share_service.dart';
 import 'package:meter_app/features/projects/domain/usecases/metrados/result/load_results_use_case.dart';
 import 'package:meter_app/features/projects/domain/usecases/metrados/get_all_metrados.dart';
@@ -203,11 +204,15 @@ class CombinedResultsBloc extends Bloc<CombinedResultsEvent, CombinedResultsStat
           shared = await CombinedResultsShareService.sharePdf(
             currentState.combinedResult,
             nombreUsuario: event.nombreUsuario,
+            sharePositionOrigin: event.sharePositionOrigin,
           );
           logInfo('PDF compartido exitosamente');
           break;
         case ShareFormat.text:
-          shared = await CombinedResultsShareService.shareText(currentState.combinedResult);
+          shared = await CombinedResultsShareService.shareText(
+            currentState.combinedResult,
+            sharePositionOrigin: event.sharePositionOrigin,
+          );
           logInfo('Texto compartido exitosamente');
           break;
       }

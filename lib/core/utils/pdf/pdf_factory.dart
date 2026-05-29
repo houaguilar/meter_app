@@ -801,7 +801,7 @@ class PDFFactory {
     if (result != null) {
     }
 
-    if (result == null || result.numberOfColumns == 0) {
+    if (result == null || result.numberOfElements == 0) {
       throw Exception("No hay datos de columnas de acero para generar el PDF");
     }
 
@@ -838,7 +838,7 @@ class PDFFactory {
       materiales: materiales,
       metrado: metrado,
       observaciones: [
-        'Número de columnas: ${result.numberOfColumns}',
+        'Número de columnas: ${result.numberOfElements}',
         'Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg',
         'Total de estribos: ${result.totalStirrups}',
         'Los cálculos incluyen desperdicio de material',
@@ -861,7 +861,7 @@ class PDFFactory {
     if (result != null) {
     }
 
-    if (result == null || result.numberOfBeams == 0) {
+    if (result == null || result.numberOfElements == 0) {
       throw Exception("No hay datos de vigas de acero para generar el PDF");
     }
 
@@ -898,7 +898,7 @@ class PDFFactory {
       materiales: materiales,
       metrado: metrado,
       observaciones: [
-        'Número de vigas: ${result.numberOfBeams}',
+        'Número de vigas: ${result.numberOfElements}',
         'Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg',
         'Total de estribos: ${result.totalStirrups}',
         'Los cálculos incluyen desperdicio de material',
@@ -921,7 +921,7 @@ class PDFFactory {
     if (result != null) {
     }
 
-    if (result == null || result.numberOfSlabs == 0) {
+    if (result == null || result.numberOfElements == 0) {
       throw Exception("No hay datos de losas de acero para generar el PDF");
     }
 
@@ -958,7 +958,7 @@ class PDFFactory {
       materiales: materiales,
       metrado: metrado,
       observaciones: [
-        'Número de losas: ${result.numberOfSlabs}',
+        'Número de losas: ${result.numberOfElements}',
         'Peso total de acero: ${result.totalWeight.toStringAsFixed(2)} kg',
         'Los cálculos incluyen desperdicio de material',
       ],
